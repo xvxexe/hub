@@ -2,7 +2,7 @@
 
 ## Task attuale
 
-Sito pubblico completo mock v0.5.5 completato.
+Miglioramento area interna UI/UX e logica operativa v0.5.6 completato.
 
 ## Da fare ora
 
@@ -64,7 +64,7 @@ Sito pubblico completo mock v0.5.5 completato.
 
 ## Prossima fase
 
-v0.6 — Preparazione Supabase setup
+v0.5.7 — Flussi interni avanzati mock oppure v0.6 — Preparazione Supabase setup
 
 ## Completato in v0.2.1
 
@@ -129,4 +129,20 @@ v0.6 — Preparazione Supabase setup
 - Aggiunti componenti pubblici riutilizzabili in `src/components/PublicComponents.jsx`
 - Nessun backend reale, Supabase, IA o upload reale implementato
 - Area interna, ruoli, cantieri, upload e contabilità mantenuti funzionanti
+- Verifiche eseguite: `npm run lint`, `npm run build`
+
+## Completato in v0.5.6
+
+- Migliorata struttura area interna con topbar, breadcrumb, header gestionali e indicatore dati mock
+- Aggiunti componenti interni riutilizzabili: `DashboardHeader`, `StatCard`, `ActivityFeed`, `WorkflowStepper`, `DataModeBadge`
+- Badge di stato centralizzati con colori coerenti per documenti, foto, cantieri, preventivi e priorità
+- Dashboard admin/capo migliorata con cantieri attivi, documenti da verificare, foto recenti, preventivi, spese mock, alert, problemi e ultime attività
+- Dashboard contabilità migliorata con fatture da verificare, bonifici da collegare, FIR incompleti, duplicati, IVA mock, categorie e attività contabili
+- Dashboard dipendente semplificata con scelta cantiere, carica foto, carica documento, nota rapida e soli caricamenti propri
+- Aggiunti flussi operativi mock per documenti, foto e preventivi
+- Lista cantieri interna migliorata con filtro responsabile, ordinamento e indicatori documenti/foto/spese/problemi
+- Dettaglio cantiere interno migliorato con header più chiaro, attività recenti e dati economici nascosti al dipendente
+- Pagina caricamenti migliorata con ricerca, filtri e box per documenti da verificare e possibili duplicati
+- Pagina accesso negato resa più chiara con pulsante “Torna alla dashboard”
+- Nessun Supabase, backend, upload reale, IA, OCR, export o login reale implementato
 - Verifiche eseguite: `npm run lint`, `npm run build`

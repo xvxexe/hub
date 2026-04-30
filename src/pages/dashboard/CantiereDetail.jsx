@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
+import { ActivityFeed, DashboardHeader } from '../../components/InternalComponents'
 import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
 import { StatusBadge } from '../../components/StatusBadge'
@@ -38,20 +39,30 @@ export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads =
   const availableTabs = canViewEconomics ? tabs : tabs.filter((tab) => tab !== 'Spese')
   const currentTab = availableTabs.includes(activeTab) ? activeTab : 'Panoramica'
   const linkedFotoUploads = fotoUploads.filter((upload) => upload.cantiereId === cantiere.id)
-  const linkedDocumentUploads = documentUploads.filter((upload) => upload.cantiereId === cantiere.id)
+  const linkedDocumentUploads = documentUploads.filter((upload) => {
+    const isSameSite = upload.cantiereId === cantiere.id
+    const isAllowedForEmployee = session?.role !== 'employee' || upload.caricatoDa === session.name
+    return isSameSite && isAllowedForEmployee
+  })
   const movimentiContabili = canViewEconomics ? getMovimentiByCantiere(cantiere.id) : []
   const accountingTotals = getAccountingTotals(movimentiContabili)
 
   return (
     <>
-      <section className="cantiere-detail-header">
+      <DashboardHeader
+        eyebrow="Dettaglio cantiere interno"
+        title={cantiere.nome}
+        description={cantiere.descrizione}
+      >
+        <StatusBadge>{cantiere.stato}</StatusBadge>
+      </DashboardHeader>
+      <section className="cantiere-detail-header compact-detail-header">
         <div className="detail-title">
           <a className="text-link" href="#/dashboard/cantieri">
             Torna alla lista
           </a>
-          <p className="eyebrow">Dettaglio cantiere interno</p>
-          <h1>{cantiere.nome}</h1>
-          <p>{cantiere.descrizione}</p>
+          <h2>{cantiere.cliente}</h2>
+          <p>{cantiere.indirizzo} · {cantiere.localita}</p>
         </div>
         <div className="detail-status-card">
           <StatusBadge>{cantiere.stato}</StatusBadge>
@@ -91,6 +102,7 @@ export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads =
           movimentiContabili,
           accountingTotals,
           canViewEconomics,
+          session,
         )}
       </section>
     </>
@@ -115,6 +127,7 @@ function renderTab(
   movimentiContabili,
   accountingTotals,
   canViewEconomics,
+  session,
 ) {
   if (activeTab === 'Panoramica') {
     return (
@@ -206,15 +219,17 @@ function renderTab(
   if (activeTab === 'Documenti') {
     return (
       <>
-        <div className="table-card">
-          {cantiere.documenti.map((documento) => (
-            <div className="table-row table-row-4" key={documento.id}>
-              <strong>{documento.nome}</strong>
-              <span>{documento.tipo}</span>
-              <StatusBadge>{documento.stato}</StatusBadge>
-            </div>
-          ))}
-        </div>
+        {session?.role !== 'employee' ? (
+          <div className="table-card">
+            {cantiere.documenti.map((documento) => (
+              <div className="table-row table-row-4" key={documento.id}>
+                <strong>{documento.nome}</strong>
+                <span>{documento.tipo}</span>
+                <StatusBadge>{documento.stato}</StatusBadge>
+              </div>
+            ))}
+          </div>
+        ) : null}
         <LinkedUploads title="Caricamenti documenti collegati">
           {linkedDocumentUploads.map((documento) => (
             <article className="recent-upload-card" key={documento.id}>
@@ -226,8 +241,8 @@ function renderTab(
                 </div>
                 <p>{documento.descrizione}</p>
                 <small>
-                  {formatDate(documento.dataCaricamento)} · {documento.caricatoDa} ·{' '}
-                  {formatCurrency(documento.importoTotale)}
+                  {formatDate(documento.dataCaricamento)} · {documento.caricatoDa}
+                  {session?.role !== 'employee' ? ` · ${formatCurrency(documento.importoTotale)}` : ''}
                 </small>
               </div>
             </article>
@@ -283,6 +298,43 @@ function renderTab(
           </article>
         ))}
       </div>
+    )
+  }
+
+  if (activeTab === 'Problemi') {
+    const activityItems = [
+      ...linkedFotoUploads.slice(0, 2).map((item) => ({
+        title: `Foto caricata: ${item.lavorazione}`,
+        meta: `${item.zona} · ${item.caricatoDa}`,
+        status: item.stato,
+      })),
+      ...linkedDocumentUploads.slice(0, 2).map((item) => ({
+        title: `Documento: ${item.tipoDocumento}`,
+        meta: `${item.fornitore} · ${item.caricatoDa}`,
+        status: item.stato,
+      })),
+    ]
+
+    return (
+      <>
+        <div className="detail-list-grid">
+          {cantiere.problemi.length > 0 ? (
+            cantiere.problemi.map((problema) => (
+              <article className="info-card problem-card" key={problema.id}>
+                <StatusBadge>{problema.priorita}</StatusBadge>
+                <h3>{problema.titolo}</h3>
+                <p>{problema.stato}</p>
+              </article>
+            ))
+          ) : (
+            <article className="info-card">
+              <h3>Nessun problema aperto</h3>
+              <p>Il cantiere non ha elementi da controllare nei dati mock.</p>
+            </article>
+          )}
+        </div>
+        <ActivityFeed title="Attività recenti cantiere" items={activityItems} />
+      </>
     )
   }
 

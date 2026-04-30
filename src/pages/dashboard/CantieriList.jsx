@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { ProgressBar } from '../../components/ProgressBar'
 import { StatusBadge } from '../../components/StatusBadge'
 import {
@@ -12,32 +13,42 @@ import {
 export function CantieriList() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('tutti')
+  const [manager, setManager] = useState('tutti')
+  const [sort, setSort] = useState('avanzamento-desc')
+  const managers = [...new Set(mockCantieri.map((cantiere) => cantiere.responsabile))]
 
   const filteredCantieri = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
 
-    return mockCantieri.filter((cantiere) => {
+    return mockCantieri
+      .filter((cantiere) => {
       const matchesSearch =
         normalizedSearch === '' ||
         cantiere.nome.toLowerCase().includes(normalizedSearch) ||
         cantiere.cliente.toLowerCase().includes(normalizedSearch) ||
         cantiere.localita.toLowerCase().includes(normalizedSearch)
       const matchesStatus = status === 'tutti' || cantiere.stato === status
+      const matchesManager = manager === 'tutti' || cantiere.responsabile === manager
 
-      return matchesSearch && matchesStatus
+      return matchesSearch && matchesStatus && matchesManager
     })
-  }, [search, status])
+      .sort((a, b) => {
+        if (sort === 'avanzamento-desc') return b.avanzamento - a.avanzamento
+        if (sort === 'avanzamento-asc') return a.avanzamento - b.avanzamento
+        if (sort === 'data') return new Date(a.dataInizio) - new Date(b.dataInizio)
+        return a.nome.localeCompare(b.nome)
+      })
+  }, [manager, search, sort, status])
 
   return (
     <>
-      <section className="dashboard-header">
-        <p className="eyebrow">Cantieri mock</p>
-        <h1>Gestione cantieri</h1>
-        <p>
-          Elenco operativo con ricerca, stato, avanzamento e riepiloghi collegati a foto,
-          documenti e spese mock.
-        </p>
-      </section>
+      <DashboardHeader
+        eyebrow="Cantieri mock"
+        title="Gestione cantieri"
+        description="Elenco operativo con ricerca, stato, responsabile, ordinamento e indicatori collegati."
+      >
+        <DataModeBadge />
+      </DashboardHeader>
 
       <section className="cantieri-tools" aria-label="Filtri cantieri">
         <label>
@@ -58,6 +69,22 @@ export function CantieriList() {
                 {item}
               </option>
             ))}
+          </select>
+        </label>
+        <label>
+          Responsabile
+          <select value={manager} onChange={(event) => setManager(event.target.value)}>
+            <option value="tutti">Tutti</option>
+            {managers.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+        <label>
+          Ordina
+          <select value={sort} onChange={(event) => setSort(event.target.value)}>
+            <option value="avanzamento-desc">Avanzamento alto</option>
+            <option value="avanzamento-asc">Avanzamento basso</option>
+            <option value="data">Data inizio</option>
+            <option value="nome">Nome</option>
           </select>
         </label>
       </section>
@@ -97,6 +124,7 @@ export function CantieriList() {
                 <span>{totals.documenti} documenti</span>
                 <span>{totals.foto} foto</span>
                 <span>{formatCurrency(totals.spese)}</span>
+                <span>{totals.problemi} problemi</span>
               </div>
 
               <a className="button button-secondary" href={`#/dashboard/cantieri/${cantiere.id}`}>

@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { EmptyState } from '../../components/EmptyState'
+import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { RecentUploadList } from '../../components/RecentUploadList'
+import { StatusBadge } from '../../components/StatusBadge'
 import { mockCantieri } from '../../data/mockCantieri'
 import { statiDocumenti, statiFoto, tipiDocumento } from '../../data/mockUploads'
 
@@ -8,6 +10,7 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
   const [cantiereId, setCantiereId] = useState('tutti')
   const [tipo, setTipo] = useState('tutti')
   const [stato, setStato] = useState('tutti')
+  const [search, setSearch] = useState('')
   const canSeePhotos = session.role !== 'accounting'
   const canSeeDocuments = true
   const scopedFotoUploads =
@@ -21,34 +24,48 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
     if (!canSeePhotos) return []
 
     return scopedFotoUploads.filter((upload) => {
+      const normalizedSearch = search.trim().toLowerCase()
       const matchCantiere = cantiereId === 'tutti' || upload.cantiereId === cantiereId
       const matchTipo = tipo === 'tutti' || tipo === 'foto'
       const matchStato = stato === 'tutti' || upload.stato === stato
-      return matchCantiere && matchTipo && matchStato
+      const matchSearch =
+        normalizedSearch === '' ||
+        upload.lavorazione.toLowerCase().includes(normalizedSearch) ||
+        upload.zona.toLowerCase().includes(normalizedSearch) ||
+        upload.fileName.toLowerCase().includes(normalizedSearch)
+      return matchCantiere && matchTipo && matchStato && matchSearch
     })
-  }, [canSeePhotos, cantiereId, scopedFotoUploads, stato, tipo])
+  }, [canSeePhotos, cantiereId, scopedFotoUploads, search, stato, tipo])
 
   const filteredDocuments = useMemo(() => {
     if (!canSeeDocuments) return []
 
     return scopedDocumentUploads.filter((upload) => {
+      const normalizedSearch = search.trim().toLowerCase()
       const matchCantiere = cantiereId === 'tutti' || upload.cantiereId === cantiereId
       const matchTipo = tipo === 'tutti' || tipo === 'documento' || upload.tipoDocumento === tipo
       const matchStato = stato === 'tutti' || upload.stato === stato
-      return matchCantiere && matchTipo && matchStato
+      const matchSearch =
+        normalizedSearch === '' ||
+        upload.fornitore.toLowerCase().includes(normalizedSearch) ||
+        upload.descrizione.toLowerCase().includes(normalizedSearch) ||
+        upload.fileName.toLowerCase().includes(normalizedSearch)
+      return matchCantiere && matchTipo && matchStato && matchSearch
     })
-  }, [canSeeDocuments, cantiereId, scopedDocumentUploads, stato, tipo])
+  }, [canSeeDocuments, cantiereId, scopedDocumentUploads, search, stato, tipo])
+
+  const toCheck = filteredDocuments.filter((upload) => upload.stato === 'da verificare')
+  const duplicates = filteredDocuments.filter((upload) => upload.stato === 'possibile duplicato')
 
   return (
     <>
-      <section className="dashboard-header">
-        <p className="eyebrow">Caricamenti recenti</p>
-        <h1>{session.role === 'employee' ? 'I miei caricamenti' : 'Foto e documenti caricati'}</h1>
-        <p>
-          Registro mock dei caricamenti locali, filtrabile per cantiere, tipo e stato. Nessun file
-          viene salvato su servizi esterni.
-        </p>
-      </section>
+      <DashboardHeader
+        eyebrow="Caricamenti recenti"
+        title={session.role === 'employee' ? 'I miei caricamenti' : 'Foto e documenti caricati'}
+        description="Registro mock dei caricamenti locali con filtri operativi. Nessun file viene salvato su servizi esterni."
+      >
+        <DataModeBadge />
+      </DashboardHeader>
 
       <section className="cantieri-tools upload-filters" aria-label="Filtri caricamenti">
         <label>
@@ -93,7 +110,23 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
             ))}
           </select>
         </label>
+        <label>
+          Ricerca
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Fornitore, file, lavorazione..."
+          />
+        </label>
       </section>
+
+      {session.role !== 'employee' ? (
+        <section className="internal-two-column internal-padded">
+          <HighlightBox title="Documenti da verificare" rows={toCheck} />
+          <HighlightBox title="Possibili duplicati" rows={duplicates} />
+        </section>
+      ) : null}
 
       <section className="upload-recent-layout">
         {canSeePhotos ? (
@@ -118,5 +151,22 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
         )}
       </section>
     </>
+  )
+}
+
+function HighlightBox({ title, rows }) {
+  return (
+    <section className="internal-panel">
+      <div className="section-heading"><h2>{title}</h2></div>
+      <div className="activity-feed">
+        {rows.length > 0 ? rows.slice(0, 4).map((row) => (
+          <article className="activity-item" key={row.id}>
+            <span />
+            <div><strong>{row.fornitore}</strong><small>{row.cantiere} · {row.descrizione}</small></div>
+            <StatusBadge>{row.stato}</StatusBadge>
+          </article>
+        )) : <p>Nessun elemento nei filtri attuali.</p>}
+      </div>
+    </section>
   )
 }

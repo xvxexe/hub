@@ -13,7 +13,7 @@ export function Unauthorized({ path, role }) {
       </p>
       <div className="unauthorized-actions">
         <a className="button button-primary" href="#/dashboard">
-          Vai alla dashboard
+          Torna alla dashboard
         </a>
         <span>Route richiesta: {path}</span>
       </div>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
 import { formatDate, mockCantieri } from '../../data/mockCantieri'
@@ -52,11 +53,13 @@ export function ContabilitaMock() {
 
   return (
     <>
-      <section className="dashboard-header">
-        <p className="eyebrow">Contabilità mock</p>
-        <h1>Contabilità</h1>
-        <p>Movimenti, documenti e riepiloghi per cantiere.</p>
-      </section>
+      <DashboardHeader
+        eyebrow="Contabilità mock"
+        title="Contabilità"
+        description="Movimenti, documenti, alert e riepiloghi per cantiere."
+      >
+        <DataModeBadge />
+      </DashboardHeader>
 
       <AccountingFilters filters={filters} onChange={updateFilter} />
       <AccountingSummaryCards totals={totals} />

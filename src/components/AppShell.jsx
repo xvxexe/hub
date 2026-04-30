@@ -83,7 +83,20 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
               </a>
             )}
           </aside>
-          <main className="dashboard-main">{children}</main>
+          <main className="dashboard-main">
+            <div className="internal-topbar">
+              <div>
+                <span>EuropaService Hub</span>
+                <strong>{activeRole?.label ?? 'Login mock'}</strong>
+              </div>
+              <a className="button button-secondary" href="#/">Sito pubblico</a>
+            </div>
+            <div className="breadcrumb">
+              <a href="#/dashboard">Area interna</a>
+              <span>{currentPath.replace('/dashboard', '') || '/dashboard'}</span>
+            </div>
+            {children}
+          </main>
         </div>
       ) : (
         <main>{children}</main>

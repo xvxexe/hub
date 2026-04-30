@@ -605,6 +605,64 @@ p {
   min-width: 0;
 }
 
+.internal-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--white);
+}
+
+.internal-topbar div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.internal-topbar span,
+.breadcrumb {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.internal-topbar strong {
+  color: var(--heading);
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.breadcrumb a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.internal-header-side {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.data-mode-badge {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0.3rem 0.65rem;
+}
+
 .dev-role-panel {
   display: grid;
   gap: 0.65rem;
@@ -762,6 +820,31 @@ p {
   padding: 0.25rem 0.6rem;
 }
 
+.status-success {
+  background: #e8f6ee;
+  color: #1d6b3a;
+}
+
+.status-warning {
+  background: var(--copper-soft);
+  color: var(--copper);
+}
+
+.status-danger {
+  background: #fdecec;
+  color: #a3332a;
+}
+
+.status-muted {
+  background: var(--surface-strong);
+  color: var(--muted);
+}
+
+.status-info {
+  background: #e9f1f8;
+  color: var(--blue);
+}
+
 .cantieri-tools {
   display: grid;
   gap: 1rem;
@@ -867,7 +950,7 @@ p {
 
 .cantiere-totals {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
@@ -1186,6 +1269,102 @@ p {
   font-weight: 800;
 }
 
+.internal-panel {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--white);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+
+.internal-two-column,
+.internal-three-column,
+.internal-padded {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.activity-feed {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.activity-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: start;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+}
+
+.activity-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.activity-item > span:first-child {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: var(--copper);
+  margin-top: 0.35rem;
+}
+
+.activity-item div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.activity-item small,
+.internal-stat-card small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.workflow-stepper {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.workflow-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.workflow-step span {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--blue);
+  color: var(--white);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.workflow-step strong {
+  color: var(--heading);
+}
+
+.employee-action-panel-strong {
+  margin: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.compact-detail-header {
+  border-top: 0;
+}
+
 .money-value {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -1477,6 +1656,24 @@ p {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .internal-two-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 1.5rem;
+  }
+
+  .internal-three-column {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 1.5rem;
+  }
+
+  .internal-padded {
+    padding: 1.5rem;
+  }
+
+  .cantiere-totals {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .accounting-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 1.5rem;
@@ -1582,6 +1779,9 @@ p {
   .dashboard-main .employee-upload-layout,
   .dashboard-main .upload-recent-layout,
   .dashboard-main .employee-action-panel,
+  .dashboard-main .internal-two-column,
+  .dashboard-main .internal-three-column,
+  .dashboard-main .internal-padded,
   .dashboard-main .accounting-filters,
   .dashboard-main .accounting-summary-grid,
   .dashboard-main .accounting-section {
