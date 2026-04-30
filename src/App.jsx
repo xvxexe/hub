@@ -1,122 +1,226 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useState } from 'react'
+import { AppShell } from './components/AppShell'
+import {
+  accountingRows,
+  documents,
+  employees,
+  internalProjects,
+  mockUsers,
+  quotes,
+  roles,
+  sitePhotos,
+} from './data/mockData'
+import { canAccessDashboardPath, normalizePath } from './lib/navigation'
+import { DashboardHome } from './pages/dashboard/DashboardHome'
+import { DashboardListPage } from './pages/dashboard/DashboardListPage'
+import { LoginMock } from './pages/dashboard/LoginMock'
+import { Contacts } from './pages/public/Contacts'
+import { Home } from './pages/public/Home'
+import { ProjectDetail } from './pages/public/ProjectDetail'
+import { Projects } from './pages/public/Projects'
+import { QuoteRequest } from './pages/public/QuoteRequest'
+import { Services } from './pages/public/Services'
+import './styles/global.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+function useHashPath() {
+  const [path, setPath] = useState(() => normalizePath(window.location.hash))
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+  useEffect(() => {
+    const onHashChange = () => setPath(normalizePath(window.location.hash))
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  return path
 }
 
-export default App
+function navigateTo(path) {
+  window.location.assign(`#${path}`)
+}
+
+function renderRoute(path, session, selectedRole, handlers) {
+  if (path === '/') return <Home />
+  if (path === '/servizi') return <Services />
+  if (path === '/cantieri') return <Projects />
+  if (path.startsWith('/cantieri/')) return <ProjectDetail projectId={path.split('/').at(-1)} />
+  if (path === '/preventivo') return <QuoteRequest />
+  if (path === '/contatti') return <Contacts />
+
+  if (path === '/dashboard/login') {
+    return (
+      <LoginMock
+        selectedRole={selectedRole}
+        onRoleSelect={handlers.onRoleSelect}
+        onLogin={handlers.onLogin}
+      />
+    )
+  }
+
+  if (path.startsWith('/dashboard') && !session) {
+    return (
+      <LoginMock
+        selectedRole={selectedRole}
+        onRoleSelect={handlers.onRoleSelect}
+        onLogin={handlers.onLogin}
+      />
+    )
+  }
+
+  if (path.startsWith('/dashboard') && !canAccessDashboardPath(path, session.role)) {
+    return (
+      <DashboardListPage
+        eyebrow="Accesso limitato"
+        title="Sezione non disponibile per questo ruolo"
+        description="Il menu mostra solo le aree abilitate per il ruolo mock selezionato."
+        rows={[{ section: path.replace('/dashboard/', ''), role: session.role, status: 'Non abilitato' }]}
+        columns={[
+          { label: 'Sezione', key: 'section' },
+          { label: 'Ruolo', key: 'role' },
+          { label: 'Stato', key: 'status', badge: true },
+        ]}
+      />
+    )
+  }
+
+  if (path === '/dashboard') return <DashboardHome session={session} />
+  if (path === '/dashboard/cantieri') {
+    return (
+      <DashboardListPage
+        eyebrow="Cantieri"
+        title="Cantieri interni"
+        description="Elenco mock dei cantieri gestiti nell'area interna."
+        rows={internalProjects}
+        columns={[
+          { label: 'Codice', key: 'code' },
+          { label: 'Cantiere', key: 'name' },
+          { label: 'Cliente', key: 'client' },
+          { label: 'Stato', key: 'status', badge: true },
+          { label: 'Budget', key: 'budget' },
+        ]}
+      />
+    )
+  }
+  if (path === '/dashboard/documenti') {
+    return (
+      <DashboardListPage
+        eyebrow="Documenti"
+        title="Archivio documenti mock"
+        description="Fatture, ricevute e FIR dimostrativi senza upload reale."
+        rows={documents}
+        columns={[
+          { label: 'Nome', key: 'name' },
+          { label: 'Cantiere', key: 'project' },
+          { label: 'Tipo', key: 'type' },
+          { label: 'Stato', key: 'status', badge: true },
+        ]}
+      />
+    )
+  }
+  if (path === '/dashboard/foto') {
+    return (
+      <DashboardListPage
+        eyebrow="Foto cantiere"
+        title="Foto recenti mock"
+        description="Registro dimostrativo dei caricamenti foto, senza storage reale."
+        rows={sitePhotos}
+        columns={[
+          { label: 'Titolo', key: 'title' },
+          { label: 'Cantiere', key: 'project' },
+          { label: 'Data', key: 'date' },
+          { label: 'Autore', key: 'author' },
+        ]}
+      />
+    )
+  }
+  if (path === '/dashboard/preventivi') {
+    return (
+      <DashboardListPage
+        eyebrow="Preventivi"
+        title="Richieste preventivo"
+        description="Pipeline mock delle richieste ricevute dal sito pubblico."
+        rows={quotes}
+        columns={[
+          { label: 'Cliente', key: 'client' },
+          { label: 'Richiesta', key: 'request' },
+          { label: 'Stato', key: 'status', badge: true },
+          { label: 'Valore', key: 'value' },
+        ]}
+      />
+    )
+  }
+  if (path === '/dashboard/contabilita') {
+    return (
+      <DashboardListPage
+        eyebrow="Contabilita"
+        title="Movimenti contabili mock"
+        description="Prima vista contabile con importi e categorie dimostrative."
+        rows={accountingRows}
+        columns={[
+          { label: 'Voce', key: 'item' },
+          { label: 'Cantiere', key: 'project' },
+          { label: 'Categoria', key: 'category' },
+          { label: 'Importo', key: 'amount' },
+        ]}
+      />
+    )
+  }
+  if (path === '/dashboard/dipendenti') {
+    return (
+      <DashboardListPage
+        eyebrow="Dipendenti"
+        title="Squadra e assegnazioni"
+        description="Anagrafica mock per preparare ruoli e permessi nelle fasi successive."
+        rows={employees}
+        columns={[
+          { label: 'Nome', key: 'name' },
+          { label: 'Ruolo', key: 'role' },
+          { label: 'Assegnazione', key: 'currentProject' },
+        ]}
+      />
+    )
+  }
+
+  return <Home />
+}
+
+export default function App() {
+  const path = useHashPath()
+  const [selectedRole, setSelectedRole] = useState('admin')
+  const [session, setSession] = useState(null)
+
+  function loginWithSelectedRole() {
+    const user = mockUsers.find((item) => item.role === selectedRole) ?? mockUsers[0]
+    setSession(user)
+    navigateTo('/dashboard')
+  }
+
+  function changeRole(role) {
+    const user = mockUsers.find((item) => item.role === role) ?? mockUsers[0]
+    setSelectedRole(role)
+    setSession(user)
+
+    if (!canAccessDashboardPath(path, role)) {
+      navigateTo('/dashboard')
+    }
+  }
+
+  function logout() {
+    setSession(null)
+    navigateTo('/dashboard/login')
+  }
+
+  return (
+    <AppShell
+      currentPath={path}
+      session={session}
+      onLogout={logout}
+      onRoleChange={changeRole}
+      roles={roles}
+    >
+      {renderRoute(path, session, selectedRole, {
+        onLogin: loginWithSelectedRole,
+        onRoleSelect: setSelectedRole,
+      })}
+    </AppShell>
+  )
+}
