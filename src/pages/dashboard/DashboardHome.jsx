@@ -1,5 +1,6 @@
 import { Section } from '../../components/Section'
-import { dashboardStats, documents, internalProjects, roles } from '../../data/mockData'
+import { dashboardStats, documents, roles } from '../../data/mockData'
+import { formatCurrency, getCantiereTotals, mockCantieri } from '../../data/mockCantieri'
 
 const roleIntro = {
   admin: 'Vista completa per capo/admin: cantieri, documenti, foto, preventivi, contabilità e dipendenti.',
@@ -29,14 +30,20 @@ export function DashboardHome({ session }) {
       </div>
 
       <Section title="Cantieri prioritari">
-        <div className="table-card">
-          {internalProjects.map((project) => (
-            <div className="table-row" key={project.code}>
-              <strong>{project.code}</strong>
-              <span>{project.name}</span>
-              <small>{project.status} · {project.progress}%</small>
-            </div>
-          ))}
+        <div className="dashboard-card-grid">
+          {mockCantieri.slice(0, 3).map((cantiere) => {
+            const totals = getCantiereTotals(cantiere)
+
+            return (
+              <a className="dashboard-cantiere-link" href="#/dashboard/cantieri" key={cantiere.id}>
+                <span>{cantiere.stato}</span>
+                <strong>{cantiere.nome}</strong>
+                <small>
+                  {cantiere.localita} · {cantiere.avanzamento}% · {formatCurrency(totals.spese)}
+                </small>
+              </a>
+            )
+          })}
         </div>
       </Section>
 

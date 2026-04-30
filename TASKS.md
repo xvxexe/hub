@@ -2,7 +2,7 @@
 
 ## Task attuale
 
-Ruoli mock v0.2 completati.
+Gestione cantieri mock v0.3 completata.
 
 ## Da fare ora
 
@@ -46,3 +46,22 @@ Ruoli mock v0.2 completati.
 - Dipendente vede dashboard, cantieri, documenti e foto cantiere
 - Nessun backend reale, Supabase o autenticazione reale implementati
 - Verifiche eseguite: `npm run build`, `npm run lint`
+
+## Completato in v0.3
+
+- Creato dataset centralizzato `src/data/mockCantieri.js`
+- Aggiunti almeno 5 cantieri realistici: Barcelo Roma, Residenza Verdi, Negozio Centro, Hotel Interno Milano, Condominio Bianchi
+- Creata lista cantieri interna con ricerca per nome/cliente/localita
+- Aggiunto filtro stato: attivo, completato, sospeso, da avviare
+- Ogni card mostra nome, cliente, localita, stato, responsabile, data inizio, avanzamento, documenti, foto e spese mock
+- Creata pagina dettaglio cantiere interno
+- Dettaglio con intestazione, dati principali, avanzamento, riepilogo economico, foto, documenti, spese, note e problemi
+- Aggiunte sezioni dettaglio: Panoramica, Foto, Documenti, Spese, Note, Problemi
+- Dashboard collegata alla lista cantieri
+- Lista cantieri collegata al dettaglio singolo
+- Nessun backend reale, Supabase, upload reale o IA reale implementati
+- Verifiche eseguite: `npm run lint`, `npm run build`
+
+## Prossima fase
+
+v0.4 — Upload mock foto e documenti

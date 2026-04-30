@@ -513,6 +513,33 @@ p {
   padding: 1rem;
 }
 
+.dashboard-card-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.dashboard-cantiere-link {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--white);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+  text-decoration: none;
+}
+
+.dashboard-cantiere-link span {
+  color: var(--copper);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.dashboard-cantiere-link small {
+  color: var(--muted);
+}
+
 .stat-card {
   display: grid;
   gap: 0.5rem;
@@ -572,6 +599,256 @@ p {
   padding: 0.25rem 0.6rem;
 }
 
+.cantieri-tools {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.cantieri-tools label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--heading);
+  font-weight: 800;
+}
+
+.cantieri-tools input,
+.cantieri-tools select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: var(--white);
+  padding: 0.75rem 0.85rem;
+}
+
+.cantieri-grid {
+  display: grid;
+  gap: 1rem;
+  padding: 0 1rem 1rem;
+}
+
+.cantiere-card {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--white);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+
+.cantiere-card-header {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.compact-meta {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.compact-meta div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.compact-meta dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.compact-meta dd {
+  margin: 0;
+  color: var(--heading);
+  font-weight: 800;
+}
+
+.progress-block {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.progress-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.progress-label span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.progress-label strong {
+  color: var(--heading);
+}
+
+.progress-track {
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-strong);
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--copper);
+}
+
+.cantiere-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.cantiere-totals span {
+  border-radius: 0.45rem;
+  background: var(--surface);
+  color: var(--heading);
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 0.65rem;
+  text-align: center;
+}
+
+.empty-state {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0 1rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--white);
+  padding: 1.25rem;
+}
+
+.cantiere-detail-header {
+  display: grid;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--white);
+}
+
+.detail-title {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.detail-status-card {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  padding: 1rem;
+}
+
+.detail-summary-grid {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.summary-item {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--white);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+
+.summary-item span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.summary-item strong {
+  color: var(--heading);
+}
+
+.detail-tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0 1rem 1rem;
+}
+
+.detail-tabs button {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: var(--white);
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0.7rem 0.85rem;
+}
+
+.detail-tabs button[aria-pressed='true'] {
+  border-color: var(--copper);
+  background: var(--copper-soft);
+  color: var(--copper);
+}
+
+.detail-tab-panel {
+  padding: 0 1rem 1rem;
+}
+
+.detail-two-column,
+.detail-list-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.clean-list {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.clean-list li {
+  color: var(--text);
+}
+
+.mock-photo-card {
+  display: grid;
+  gap: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--white);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+
+.mock-photo-thumb {
+  display: grid;
+  min-height: 8rem;
+  place-items: center;
+  border-radius: 0.45rem;
+  background:
+    linear-gradient(135deg, rgba(23, 50, 77, 0.74), rgba(184, 100, 43, 0.5)),
+    var(--surface-strong);
+  color: var(--white);
+  font-weight: 900;
+}
+
+.problem-card {
+  border-left: 4px solid var(--copper);
+}
+
 @media (min-width: 720px) {
   h1 {
     font-size: 3.25rem;
@@ -605,6 +882,48 @@ p {
   .stats-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     padding: 1.5rem;
+  }
+
+  .dashboard-card-grid,
+  .cantieri-grid,
+  .detail-summary-grid,
+  .detail-list-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cantieri-tools {
+    align-items: end;
+    grid-template-columns: minmax(0, 1fr) 15rem;
+    padding: 1.5rem;
+  }
+
+  .cantieri-grid {
+    padding: 0 1.5rem 1.5rem;
+  }
+
+  .cantiere-card-header {
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .compact-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cantiere-detail-header {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    padding: 3rem 1.5rem;
+  }
+
+  .detail-summary-grid,
+  .detail-tabs,
+  .detail-tab-panel {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .detail-two-column {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.8fr);
   }
 
   .detail-layout {
@@ -652,5 +971,23 @@ p {
 
   .dashboard-main .stats-grid {
     padding: 2rem;
+  }
+
+  .dashboard-main .cantieri-tools,
+  .dashboard-main .cantieri-grid,
+  .dashboard-main .detail-summary-grid,
+  .dashboard-main .detail-tabs,
+  .dashboard-main .detail-tab-panel,
+  .dashboard-main .cantiere-detail-header {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .dashboard-main .cantieri-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-main .detail-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

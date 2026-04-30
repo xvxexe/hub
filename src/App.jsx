@@ -4,13 +4,14 @@ import {
   accountingRows,
   documents,
   employees,
-  internalProjects,
   mockUsers,
   quotes,
   roles,
   sitePhotos,
 } from './data/mockData'
 import { canAccessDashboardPath, normalizePath } from './lib/navigation'
+import { CantiereDetail } from './pages/dashboard/CantiereDetail'
+import { CantieriList } from './pages/dashboard/CantieriList'
 import { DashboardHome } from './pages/dashboard/DashboardHome'
 import { DashboardListPage } from './pages/dashboard/DashboardListPage'
 import { LoginMock } from './pages/dashboard/LoginMock'
@@ -83,22 +84,11 @@ function renderRoute(path, session, selectedRole, handlers) {
   }
 
   if (path === '/dashboard') return <DashboardHome session={session} />
+  if (path.startsWith('/dashboard/cantieri/')) {
+    return <CantiereDetail cantiereId={path.split('/').at(-1)} />
+  }
   if (path === '/dashboard/cantieri') {
-    return (
-      <DashboardListPage
-        eyebrow="Cantieri"
-        title="Cantieri interni"
-        description="Elenco mock dei cantieri gestiti nell'area interna."
-        rows={internalProjects}
-        columns={[
-          { label: 'Codice', key: 'code' },
-          { label: 'Cantiere', key: 'name' },
-          { label: 'Cliente', key: 'client' },
-          { label: 'Stato', key: 'status', badge: true },
-          { label: 'Budget', key: 'budget' },
-        ]}
-      />
-    )
+    return <CantieriList />
   }
   if (path === '/dashboard/documenti') {
     return (

@@ -25,7 +25,10 @@ export function canAccessDashboardPath(path, role) {
     return true
   }
 
-  return dashboardNav.some((item) => item.path === path && item.roles.includes(role))
+  return dashboardNav.some((item) => {
+    const matchesPath = path === item.path || path.startsWith(`${item.path}/`)
+    return matchesPath && item.roles.includes(role)
+  })
 }
 
 export function normalizePath(hash) {
