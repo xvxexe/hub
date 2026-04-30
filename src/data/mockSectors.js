@@ -1,83 +1,69 @@
 import { placeholderImages, sectorImages } from './publicImages'
 
 export const sectors = [
-  {
+  sector({
     id: 'privati',
     title: 'Privati',
-    image: sectorImages.privati.src,
-    fallbackImage: placeholderImages.sector.src,
-    imageAlt: sectorImages.privati.alt,
-    seoTitle: 'Lavori in cartongesso per privati',
-    seoDescription: 'Ristrutturazioni interne, cartongesso e finiture per abitazioni private.',
-    text: 'Ristrutturazioni interne, cartongesso, controsoffitti, rasature e finiture per abitazioni curate.',
-  },
-  {
+    imageRef: sectorImages.privati,
+    seoTitle: 'Ristrutturazioni interne e cartongesso per privati',
+    seoDescription: 'Ristrutturazioni interne, pareti divisorie, finiture e piccoli interventi per abitazioni private.',
+    text: 'Ristrutturazioni interne, pareti divisorie, controsoffitti, rasature e piccoli interventi per abitazioni più ordinate e funzionali.',
+    needs: ['Ristrutturazioni interne', 'Pareti divisorie', 'Finiture pulite', 'Piccoli interventi programmati'],
+  }),
+  sector({
     id: 'aziende',
     title: 'Aziende',
-    image: sectorImages.aziende.src,
-    fallbackImage: placeholderImages.sector.src,
-    imageAlt: sectorImages.aziende.alt,
-    seoTitle: 'Lavori interni per aziende',
-    seoDescription: 'Interventi per uffici, spazi operativi e ambienti aziendali.',
-    text: 'Uffici, aree operative e spazi rappresentativi con interventi ordinati e programmati.',
-  },
-  {
+    imageRef: sectorImages.aziende,
+    seoTitle: 'Lavori interni per aziende e uffici',
+    seoDescription: 'Interventi per uffici, spazi operativi, manutenzioni e modifiche interne aziendali.',
+    text: 'Uffici, spazi operativi e ambienti rappresentativi con lavorazioni coordinate e tempi compatibili con l’attività.',
+    needs: ['Uffici', 'Spazi operativi', 'Manutenzioni', 'Modifiche interne'],
+  }),
+  sector({
     id: 'hotel',
     title: 'Hotel',
-    image: sectorImages.hotel.src,
-    fallbackImage: placeholderImages.sector.src,
-    imageAlt: sectorImages.hotel.alt,
-    seoTitle: 'Lavori per hotel',
-    seoDescription: 'Cartongesso, controsoffitti e finiture per hotel e strutture ricettive.',
-    text: 'Camere, corridoi, sale comuni e manutenzioni con attenzione a tempi, pulizia e ospiti.',
-  },
-  {
+    imageRef: sectorImages.hotel,
+    seoTitle: 'Lavori per hotel, camere e aree comuni',
+    seoDescription: 'Cartongesso, controsoffitti e finiture per camere, corridoi, reception e aree comuni hotel.',
+    text: 'Camere, corridoi, reception e aree comuni con interventi organizzati per ridurre disagi e mantenere ordine.',
+    needs: ['Camere', 'Corridoi', 'Reception', 'Aree comuni'],
+  }),
+  sector({
     id: 'negozi',
-    title: 'Negozi',
-    image: sectorImages.negozi.src,
-    fallbackImage: placeholderImages.sector.src,
-    imageAlt: sectorImages.negozi.alt,
+    title: 'Negozi e locali commerciali',
+    imageRef: sectorImages.negozi,
     seoTitle: 'Lavori per negozi e locali commerciali',
-    seoDescription: 'Allestimenti e finiture interne per negozi e locali retail.',
-    text: 'Allestimenti e restyling per locali commerciali, vetrine e spazi vendita.',
-  },
-  {
+    seoDescription: 'Allestimenti, controsoffitti, pareti, finiture e interventi rapidi per negozi.',
+    text: 'Allestimenti, controsoffitti, pareti e finiture per locali che devono comunicare qualità ed essere pronti nei tempi.',
+    needs: ['Allestimenti', 'Controsoffitti', 'Pareti e finiture', 'Tempi rapidi'],
+  }),
+  sector({
     id: 'studi-tecnici',
     title: 'Studi tecnici',
-    image: sectorImages.studiTecnici.src,
-    fallbackImage: placeholderImages.sector.src,
-    imageAlt: sectorImages.studiTecnici.alt,
+    imageRef: sectorImages.studiTecnici,
     seoTitle: 'Supporto operativo per studi tecnici',
-    seoDescription: 'Supporto a progettisti e studi tecnici per cantieri interni.',
-    text: 'Supporto operativo a progettisti, direzione lavori e studi che cercano squadre affidabili.',
-  },
-  {
+    seoDescription: 'Collaborazione con progettisti e studi tecnici per esecuzione lavori e supporto operativo.',
+    text: 'Supporto a progettisti, direzione lavori e studi che cercano un referente operativo per lavorazioni interne.',
+    needs: ['Supporto operativo', 'Collaborazione su progetti', 'Esecuzione lavori', 'Confronto tecnico chiaro'],
+  }),
+  sector({
     id: 'general-contractor',
     title: 'General contractor',
-    image: sectorImages.generalContractor.src,
-    fallbackImage: placeholderImages.sector.src,
-    imageAlt: sectorImages.generalContractor.alt,
-    seoTitle: 'Lavorazioni per general contractor',
-    seoDescription: 'Pacchetti di cartongesso, finiture e assistenze per cantieri strutturati.',
-    text: 'Esecuzione di pacchetti cartongesso, finiture e assistenze edili dentro cantieri strutturati.',
-  },
-  {
+    imageRef: sectorImages.generalContractor,
+    seoTitle: 'Supporto a general contractor e imprese',
+    seoDescription: 'Supporto su cantieri, lavorazioni specialistiche e affidabilità operativa per general contractor.',
+    text: 'Pacchetti di cartongesso, controsoffitti, finiture e assistenze per cantieri strutturati e fasi coordinate.',
+    needs: ['Supporto su cantieri', 'Lavorazioni specialistiche', 'Affidabilità operativa', 'Documentazione fasi'],
+  }),
+  sector({
     id: 'amministratori',
-    title: 'Amministratori immobili',
-    image: sectorImages.amministratori.src,
-    fallbackImage: placeholderImages.sector.src,
-    imageAlt: sectorImages.amministratori.alt,
-    seoTitle: 'Manutenzioni per amministratori immobili',
-    seoDescription: 'Ripristini e lavori su parti comuni per amministratori immobiliari.',
-    text: 'Manutenzioni, ripristini e parti comuni condominiali con comunicazione semplice e chiara.',
-  },
-]
-
-export const whyChooseUs = [
-  'Cantiere ordinato e protezione degli ambienti',
-  'Comunicazione chiara con cliente e tecnici',
-  'Squadre coordinate e tempi controllati',
-  'Finiture pulite per abitazioni e spazi professionali',
+    title: 'Amministratori immobiliari',
+    imageRef: sectorImages.amministratori,
+    seoTitle: 'Manutenzioni per amministratori immobiliari',
+    seoDescription: 'Manutenzioni, ripristini, lavori condominiali e interventi programmati per amministratori immobiliari.',
+    text: 'Manutenzioni, ripristini e interventi programmati su parti comuni con comunicazione semplice e tempi chiari.',
+    needs: ['Manutenzioni', 'Ripristini', 'Lavori condominiali', 'Interventi programmati'],
+  }),
 ]
 
 export const mockTestimonials = [
@@ -90,3 +76,17 @@ export const mockTestimonials = [
     author: 'Cliente residenziale, Verona',
   },
 ]
+
+function sector({ id, title, imageRef, seoTitle, seoDescription, text, needs }) {
+  return {
+    id,
+    title,
+    image: imageRef.src,
+    fallbackImage: placeholderImages.sector.src,
+    imageAlt: imageRef.alt,
+    seoTitle,
+    seoDescription,
+    text,
+    needs,
+  }
+}

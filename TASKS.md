@@ -2,7 +2,7 @@
 
 ## Task attuale
 
-Immagini prototipo locali scaricate e collegate al sito pubblico.
+v0.5.5c completata: sito pubblico premium con testi, immagini, CTA e SEO base.
 
 ## Da fare ora
 
@@ -64,7 +64,24 @@ Immagini prototipo locali scaricate e collegate al sito pubblico.
 
 ## Prossima fase
 
-v0.5.7 — Flussi interni avanzati mock oppure v0.6 — Preparazione Supabase setup
+v0.5.6 — Area interna UI/UX e logica operativa
+
+## Completato in v0.5.5c
+
+- Sito pubblico riscritto con tono più professionale, concreto e orientato a fiducia, precisione, organizzazione e qualità delle finiture
+- Home migliorata con hero forte, micro-frasi di fiducia, servizi principali, motivi di scelta, metodo in 4 step, cantieri, settori serviti e CTA finale
+- Pagina Servizi ampliata con 10 servizi completi: descrizione, approfondimento, quando serve, vantaggi, esempi, immagine e CTA
+- Pagina Cantieri migliorata con introduzione professionale, filtri, card progetto più ricche, immagini, lavorazioni, tipo cliente, stato, località e CTA dettaglio
+- Dettaglio cantiere pubblico trasformato in scheda portfolio con hero, informazioni principali, obiettivo, lavorazioni, fasi, galleria, risultato finale e CTA
+- Pagina Settori rafforzata per privati, aziende, hotel, negozi, studi tecnici, general contractor e amministratori immobiliari
+- Pagina Chi siamo riscritta con metodo, lavoro in cantiere, ordine, documentazione, qualità delle finiture, collaborazione e valori aziendali
+- Pagina Preventivo ampliata con spiegazioni, form completo, allegato foto mock, preferenza contatto, consenso, riepilogo richiesta e FAQ
+- Pagina Contatti migliorata con schede contatto, modulo, sopralluogo, zone servite, orari e CTA preventivo
+- Aggiunto componente SEO base per title e meta description delle pagine pubbliche
+- Footer pubblico completato con descrizione, link rapidi, servizi principali, contatti, CTA preventivo e area riservata
+- Continuato uso di dati mock, immagini locali e SafeImage con fallback
+- Nessun Supabase, backend reale, IA reale o upload reale implementato
+- Area interna, ruoli, cantieri, upload, caricamenti e contabilità non modificati nella logica
 
 ## Completato in v0.2.1
 

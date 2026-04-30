@@ -1,1 +1,1 @@
-export { mockTestimonials, sectors, whyChooseUs } from './mockSectors'
+export { mockTestimonials, sectors } from './mockSectors'

@@ -1,7 +1,7 @@
 import { StatusBadge } from './StatusBadge'
 import { SafeImage } from './SafeImage'
 
-export function HeroSection({ eyebrow, title, text, image, children }) {
+export function HeroSection({ eyebrow, title, text, image, trustItems = [], children }) {
   return (
     <section className="hero-section public-hero">
       <div className="hero-copy">
@@ -12,6 +12,11 @@ export function HeroSection({ eyebrow, title, text, image, children }) {
           <a className="button button-primary" href="#/preventivo">Richiedi preventivo</a>
           <a className="button button-secondary" href="#/cantieri">Guarda i cantieri</a>
         </div>
+        {trustItems.length > 0 ? (
+          <div className="hero-trust-list">
+            {trustItems.map((item) => <span key={item}>{item}</span>)}
+          </div>
+        ) : null}
       </div>
       <div className="hero-media">
         {image ? (
@@ -66,10 +71,11 @@ export function ProjectCard({ project }) {
         <h2>{project.title}</h2>
         <p>{project.summary}</p>
         <small>{project.type} · {project.location} · {project.year}</small>
+        {project.clientType ? <small>Cliente: {project.clientType}</small> : null}
         <div className="tag-list">
           {project.services.map((service) => <span key={service}>{service}</span>)}
         </div>
-        <a className="button button-secondary" href={`#/cantieri/${project.id}`}>Vedi dettaglio</a>
+        <a className="button button-secondary" href={`#/cantieri/${project.id}`}>Vedi progetto</a>
       </div>
     </article>
   )
@@ -127,7 +133,25 @@ export function SectorCard({ sector }) {
       />
       <h2>{sector.title}</h2>
       <p>{sector.text}</p>
+      {sector.needs ? (
+        <ul className="clean-list">
+          {sector.needs.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+      ) : null}
     </article>
+  )
+}
+
+export function FAQ({ items }) {
+  return (
+    <div className="faq-list">
+      {items.map((item) => (
+        <article className="public-card" key={item.question}>
+          <h3>{item.question}</h3>
+          <p>{item.answer}</p>
+        </article>
+      ))}
+    </div>
   )
 }
 

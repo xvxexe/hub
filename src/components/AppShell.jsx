@@ -99,7 +99,45 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
           </main>
         </div>
       ) : (
-        <main>{children}</main>
+        <>
+          <main>{children}</main>
+          <footer className="public-footer">
+            <div className="footer-brand">
+              <a className="brand" href="#/">
+                <span className="brand-mark">ES</span>
+                <span>
+                  <strong>{company.name}</strong>
+                  <small>{company.payoff}</small>
+                </span>
+              </a>
+              <p>
+                Edilizia, cartongesso, controsoffitti, pareti divisorie e finiture interne per
+                privati, aziende, hotel, negozi e cantieri organizzati.
+              </p>
+              <a className="button button-primary" href="#/preventivo">Richiedi preventivo</a>
+            </div>
+            <nav aria-label="Link rapidi footer">
+              <h2>Link rapidi</h2>
+              {publicNav.map((item) => <a href={`#${item.path}`} key={item.path}>{item.label}</a>)}
+              <a href="#/dashboard/login">Area riservata</a>
+            </nav>
+            <div>
+              <h2>Servizi principali</h2>
+              <p>Cartongesso</p>
+              <p>Controsoffitti</p>
+              <p>Pareti divisorie</p>
+              <p>Rasature e finiture interne</p>
+              <p>Manutenzioni e lavori edili</p>
+            </div>
+            <div>
+              <h2>Contatti</h2>
+              <p>{company.phone}</p>
+              <p>{company.email}</p>
+              <p>{company.area}</p>
+              <p>Lun-Ven 8:00-18:00</p>
+            </div>
+          </footer>
+        </>
       )}
     </div>
   )

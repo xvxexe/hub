@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ProjectCard } from '../../components/PublicComponents'
 import { PageHeader } from '../../components/PageHeader'
+import { SEO } from '../../components/SEO'
 import { projectStatuses, projectTypes, publicProjects } from '../../data/publicProjects'
 
 export function Projects() {
@@ -19,8 +20,14 @@ export function Projects() {
 
   return (
     <>
-      <PageHeader eyebrow="Cantieri EuropaService" title="Portfolio lavori e cantieri mock">
-        Cantieri in evidenza per hotel, residenze, negozi e condomini. Le schede mostrano solo dati pubblicabili.
+      <SEO
+        title="Cantieri e portfolio lavori"
+        description="Portfolio EuropaService con esempi di cantieri organizzati, cartongesso, controsoffitti, finiture interne e lavori edili per hotel, privati, negozi e aziende."
+      />
+      <PageHeader eyebrow="Cantieri EuropaService" title="Cantieri organizzati, lavorazioni interne e portfolio lavori">
+        Ogni cantiere racconta un metodo di lavoro: organizzazione, attenzione ai dettagli,
+        documentazione delle fasi e cura del risultato finale. In questa sezione raccogliamo
+        esempi di lavorazioni interne, cartongesso, controsoffitti, finiture e interventi edili.
       </PageHeader>
       <section className="public-filter-bar">
         <label>
@@ -40,6 +47,7 @@ export function Projects() {
         <div className="public-project-grid">
           {filteredProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
         </div>
+        <a className="button button-primary section-action" href="#/preventivo">Richiedi un lavoro simile</a>
       </section>
     </>
   )

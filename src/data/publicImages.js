@@ -27,6 +27,7 @@ export const serviceImages = {
   manutenzioni: image('/assets/images/services/manutenzioni-edili.jpg', 'Manutenzioni edili con strumenti da cantiere', 'Manutenzioni edili'),
   hotel: image('/assets/images/projects/hotel-lavori-interni-cartongesso.jpg', 'Lavori interni in hotel con cartongesso e finiture', 'Lavori interni per hotel'),
   negozi: image('/assets/images/projects/negozio-finiture-interne.jpg', 'Finiture interne per negozio e locale commerciale', 'Finiture interne negozio'),
+  supportoCantieri: image('/assets/images/projects/cantiere-controsoffitto.jpg', 'Supporto operativo in cantiere con controsoffitti e cartongesso', 'Supporto cantieri e imprese'),
 }
 
 export const projectImages = {

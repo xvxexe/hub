@@ -1,1 +1,7 @@
-export { companyStats, publicServices, workProcess } from './mockPublicServices'
+export {
+  companyStats,
+  homeTrustItems,
+  publicServices,
+  whyChooseUs,
+  workProcess,
+} from './mockPublicServices'
