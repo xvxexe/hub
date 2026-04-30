@@ -2,7 +2,7 @@
 
 ## Task attuale
 
-v0.5.6 completata: area interna UI/UX e logica operativa migliorata.
+v0.5.10 completata: correzione bug emersi dal primo check manuale mock.
 
 ## Da fare ora
 
@@ -64,7 +64,7 @@ v0.5.6 completata: area interna UI/UX e logica operativa migliorata.
 
 ## Prossima fase
 
-v0.5.7 — Interazioni mock avanzate: stati modificabili, dettaglio documento/foto/preventivo
+v0.5.11 — Secondo check finale mock pre-Supabase
 
 ## Completato in v0.5.5c
 
@@ -167,6 +167,70 @@ v0.5.7 — Interazioni mock avanzate: stati modificabili, dettaglio documento/fo
 - Pagina accesso negato resa più chiara con pulsante “Torna alla dashboard”
 - Nessun Supabase, backend, upload reale, IA, OCR, export o login reale implementato
 - Verifiche eseguite: `npm run lint`, `npm run build`
+
+## Completato in v0.5.7
+
+- Creato store mock centralizzato `src/hooks/useMockStore.js` con localStorage, reset sviluppo, documenti, foto, preventivi, note e attività recenti
+- Aggiunte funzioni mock per aggiornare stati e dati di documenti, foto e preventivi
+- Aggiunte note interne mock per documento, foto, preventivo e cantiere
+- Aggiunto storico attività centralizzato per cambi stato, modifiche e note
+- Creata pagina dettaglio documento `#/dashboard/documenti/:id` con modifica dati, cambio stato, controlli importi, note e timeline
+- Creata pagina foto interattiva e dettaglio foto `#/dashboard/foto/:id` con approvazione, pubblicabilità, pubblicazione mock, note e timeline
+- Creata pagina preventivi interattiva e dettaglio preventivo `#/dashboard/preventivi/:id` con cambio stato, priorità, note e placeholder conversione cantiere
+- Lista documenti resa interattiva con pulsante Apri, azioni rapide, filtri rapidi e alert importi da controllare
+- Lista foto resa interattiva con filtri stato/cantiere/pubblicabilità e azioni rapide per admin
+- Lista preventivi resa interattiva con filtri stato, urgenza, tipo cliente e azioni rapide
+- Dettaglio cantiere collegato ai dettagli documento/foto, con note mock e attività recenti
+- Ruoli rispettati: admin modifica tutto, contabilità gestisce documenti/contabilità, dipendente vede solo ciò che è consentito e non vede contabilità/importi
+- Nessun Supabase, backend, login reale, upload reale, IA, OCR, export, email o notifiche reali implementati
+- Verifiche eseguite: `npm run lint`, `npm run build`, controllo route/permessi mock e render headless
+
+## Completato in v0.5.8
+
+- Rifinita UX mobile-first generale con focus su bottoni, azioni, overflow testuale, tabelle e card dati
+- Migliorata coerenza visuale di bottoni, stati, focus accessibile, azioni rapide e layout dettagli
+- Aggiunta route dettaglio movimento contabile `#/dashboard/contabilita/:id`, collegata ai documenti/movimenti mock
+- Aggiunti link “Apri” ai movimenti contabili desktop e mobile
+- Verificati e mantenuti ruoli mock: admin completo, contabilità su documenti/contabilità/preventivi, dipendente senza contabilità/importi
+- Rafforzata leggibilità mobile di documenti, foto, preventivi, contabilità e dettagli interattivi
+- Aggiornata ROADMAP con blocco Supabase fino a check manuale completo v0.5.9
+- Nessun Supabase, backend reale, login reale, upload reale, IA, OCR, export o notifiche reali implementati
+- Verifiche eseguite: `npm run lint`, `npm run build`, controllo route/permessi mock e smoke test browser headless
+
+## Completato in v0.5.9
+
+- Creata documentazione QA pre-Supabase in `docs/PRE_SUPABASE_CHECKLIST.md`
+- Creata tabella bug QA in `docs/MOCK_QA_BUGS.md`
+- Creato script operativo di test manuale in `docs/MANUAL_TEST_SCRIPT.md`
+- Documentati controlli su sito pubblico, area interna, ruoli, mobile, desktop, dati mock, documenti, foto, preventivi, contabilità, cantieri, accessibilità, performance e sicurezza mock
+- Aggiornata ROADMAP con condizioni obbligatorie per mantenere Supabase bloccato finché il mock non è verificato
+- Nessun Supabase, backend reale, login reale, upload reale, IA, OCR, export o notifiche reali implementati
+- Verifiche eseguite: `npm run build`
+
+## Completato in v0.5.10
+
+- Corretti i permessi mock nel dettaglio foto: il dipendente può modificare solo la nota delle proprie foto ancora da revisionare
+- Bloccata la modifica dipendente di zona, lavorazione, pubblicabilità e descrizione pubblica foto
+- Nascosto al dipendente l'alert di incoerenza importi nel dettaglio documento
+- Limitata l'aggiunta note dipendente ai propri documenti/foto ancora in stato iniziale di verifica o revisione
+- Corretti i pulsanti di ritorno nei dettagli documento/foto per il ruolo dipendente, evitando link verso liste non autorizzate
+- Resa coerente l'approvazione foto mock: una foto approvata non resta marcata come pubblicata
+- Agganciati riepiloghi, alert e totali contabili della dashboard ai documenti dello store mock modificabile
+- Aggiornato `docs/MOCK_QA_BUGS.md` con i bug corretti
+- Nessun Supabase, backend reale, login reale, upload reale, IA, OCR, export o notifiche reali implementati
+- Verifiche eseguite: `npm run lint`, controllo permessi mock, `npm run build`
+
+## Pre-Supabase checklist
+
+- [x] Sito pubblico mock ok
+- [x] Area interna mock ok
+- [x] Ruoli mock ok
+- [x] Mobile-first ok per check manuale
+- [x] Build ok
+- [x] Dati mock centralizzati e modificabili ok
+- [x] Nessun dato sensibile interno esposto nel sito pubblico
+- [x] Interazioni mock documenti/foto/preventivi ok
+- [ ] Secondo check finale mock v0.5.11 da eseguire prima di Supabase
 
 ## Completato — Asset pubblici e documenti pubblici
 

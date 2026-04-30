@@ -24,6 +24,9 @@ export function RecentUploadList({ title, type, uploads, showAmount = true }) {
                 {formatDate(upload.dataCaricamento)} · {upload.caricatoDa}
                 {type === 'documento' && showAmount ? ` · ${formatCurrency(upload.importoTotale)}` : ''}
               </small>
+              <a className="text-link" href={type === 'foto' ? `#/dashboard/foto/${upload.id}` : `#/dashboard/documenti/${upload.id}`}>
+                Apri dettaglio
+              </a>
             </div>
           </article>
         ))}

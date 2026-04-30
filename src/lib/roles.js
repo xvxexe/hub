@@ -81,6 +81,10 @@ export function canAccessDashboardPath(path, roleId) {
     return true
   }
 
+  if (roleId === 'employee' && (path.startsWith('/dashboard/foto/') || path.startsWith('/dashboard/documenti/'))) {
+    return true
+  }
+
   return getDashboardNavForRole(roleId).some((item) => {
     if (item.path === '/dashboard') {
       return path === '/dashboard'

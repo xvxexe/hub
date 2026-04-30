@@ -15,7 +15,7 @@ import {
   tipiDocumentoContabili,
 } from '../../data/mockMovimentiContabili'
 
-export function ContabilitaMock() {
+export function ContabilitaMock({ documents }) {
   const [filters, setFilters] = useState({
     cantiereId: 'tutti',
     categoria: 'tutte',
@@ -24,10 +24,15 @@ export function ContabilitaMock() {
     search: '',
   })
 
+  const sourceRows = useMemo(
+    () => documents?.map(documentToAccountingRow) ?? mockMovimentiContabili,
+    [documents],
+  )
+
   const filteredRows = useMemo(() => {
     const search = filters.search.trim().toLowerCase()
 
-    return mockMovimentiContabili.filter((row) => {
+    return sourceRows.filter((row) => {
       const matchesCantiere = filters.cantiereId === 'tutti' || row.cantiereId === filters.cantiereId
       const matchesCategoria = filters.categoria === 'tutte' || row.categoria === filters.categoria
       const matchesStato = filters.statoVerifica === 'tutti' || row.statoVerifica === filters.statoVerifica
@@ -41,7 +46,7 @@ export function ContabilitaMock() {
 
       return matchesCantiere && matchesCategoria && matchesStato && matchesTipo && matchesSearch
     })
-  }, [filters])
+  }, [filters, sourceRows])
 
   const totals = getAccountingTotals(filteredRows)
   const siteSummaries = getSiteAccountingSummaries(mockCantieri, filteredRows)
@@ -70,6 +75,26 @@ export function ContabilitaMock() {
       <CategoryBreakdown rows={categoryTotals} />
     </>
   )
+}
+
+function documentToAccountingRow(document) {
+  return {
+    id: document.id,
+    cantiereId: document.cantiereId,
+    data: document.dataDocumento,
+    descrizione: document.descrizione,
+    fornitore: document.fornitore,
+    categoria: document.categoria,
+    tipoDocumento: document.tipoDocumento,
+    numeroDocumento: document.numeroDocumento,
+    imponibile: Number(document.imponibile || 0),
+    iva: Number(document.iva || 0),
+    totale: Number(document.totale || 0),
+    pagamento: document.pagamento,
+    statoVerifica: document.statoVerifica,
+    documentoCollegato: document.fileName,
+    note: document.notes ?? document.note ?? '',
+  }
 }
 
 function AccountingFilters({ filters, onChange }) {
@@ -213,6 +238,7 @@ function AccountingTable({ rows }) {
                   <th>Documento</th>
                   <th>Stato</th>
                   <th>Note</th>
+                  <th>Azione</th>
                 </tr>
               </thead>
               <tbody>
@@ -229,6 +255,7 @@ function AccountingTable({ rows }) {
                     <td>{row.tipoDocumento} {row.numeroDocumento}</td>
                     <td><StatusBadge>{row.statoVerifica}</StatusBadge></td>
                     <td>{row.note}</td>
+                    <td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td>
                   </tr>
                 ))}
               </tbody>
@@ -272,6 +299,7 @@ function AccountingMobileCard({ row }) {
         </div>
       </dl>
       <small>{row.tipoDocumento} {row.numeroDocumento} · {row.note}</small>
+      <a className="button button-secondary" href={`#/dashboard/contabilita/${row.id}`}>Apri movimento</a>
     </article>
   )
 }

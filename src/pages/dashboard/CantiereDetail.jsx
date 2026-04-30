@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { NotesPanel } from '../../components/EntityPanels'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
 import { ActivityFeed, DashboardHeader } from '../../components/InternalComponents'
 import { MoneyValue } from '../../components/MoneyValue'
@@ -17,7 +18,7 @@ import {
 
 const tabs = ['Panoramica', 'Foto', 'Documenti', 'Spese', 'Note', 'Problemi', 'Attività recenti']
 
-export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads = [], session }) {
+export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads = [], session, activities = [], notes = [], onAddNote }) {
   const [activeTab, setActiveTab] = useState('Panoramica')
   const cantiere = getCantiereById(cantiereId)
 
@@ -103,6 +104,9 @@ export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads =
           accountingTotals,
           canViewEconomics,
           session,
+          activities,
+          notes,
+          onAddNote,
         )}
       </section>
     </>
@@ -128,6 +132,9 @@ function renderTab(
   accountingTotals,
   canViewEconomics,
   session,
+  activities,
+  notes,
+  onAddNote,
 ) {
   if (activeTab === 'Panoramica') {
     return (
@@ -208,6 +215,7 @@ function renderTab(
                 </div>
                 <p>{foto.nota}</p>
                 <small>{formatDate(foto.dataCaricamento)} · {foto.caricatoDa}</small>
+                <a className="text-link" href={`#/dashboard/foto/${foto.id}`}>Apri dettaglio foto</a>
               </div>
             </article>
           ))}
@@ -244,6 +252,7 @@ function renderTab(
                   {formatDate(documento.dataCaricamento)} · {documento.caricatoDa}
                   {session?.role !== 'employee' ? ` · ${formatCurrency(documento.importoTotale)}` : ''}
                 </small>
+                <a className="text-link" href={`#/dashboard/documenti/${documento.id}`}>Apri dettaglio documento</a>
               </div>
             </article>
           ))}
@@ -290,14 +299,17 @@ function renderTab(
 
   if (activeTab === 'Note') {
     return (
-      <div className="detail-list-grid">
-        {cantiere.note.map((nota) => (
-          <article className="info-card" key={nota}>
-            <h3>Nota operativa</h3>
-            <p>{nota}</p>
-          </article>
-        ))}
-      </div>
+      <>
+        <div className="detail-list-grid">
+          {cantiere.note.map((nota) => (
+            <article className="info-card" key={nota}>
+              <h3>Nota operativa</h3>
+              <p>{nota}</p>
+            </article>
+          ))}
+        </div>
+        {onAddNote ? <NotesPanel entityType="cantieri" entityId={cantiere.id} notes={notes} onAddNote={onAddNote} /> : null}
+      </>
     )
   }
 
@@ -342,7 +354,17 @@ function renderTab(
     ]
 
     return (
-      <ActivityFeed title="Attività recenti cantiere" items={activityItems} />
+      <ActivityFeed
+        title="Attività recenti cantiere"
+        items={[
+          ...activities.filter((item) => item.entityId === cantiere.id || item.description.includes(cantiere.nome)).map((item) => ({
+            title: item.description,
+            meta: `${item.author} · ${item.date}`,
+            status: item.type,
+          })),
+          ...activityItems,
+        ]}
+      />
     )
   }
 

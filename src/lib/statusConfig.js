@@ -23,6 +23,13 @@ const statusMap = {
   alta: 'danger',
   media: 'warning',
   bassa: 'info',
+  system: 'system',
+  note: 'note',
+  document: 'document',
+  documents: 'document',
+  photo: 'photo',
+  photos: 'photo',
+  estimates: 'info',
 }
 
 export function getStatusTone(status) {

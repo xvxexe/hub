@@ -3,19 +3,23 @@ import { AppShell } from './components/AppShell'
 import {
   employees,
   mockUsers,
-  quotes,
-  sitePhotos,
 } from './data/mockData'
-import { mockDocumentUploads, mockFotoUploads } from './data/mockUploads'
+import { useMockStore } from './hooks/useMockStore'
 import { canAccessDashboardPath, normalizePath } from './lib/navigation'
 import { roles } from './lib/roles'
 import { CaricamentiRecenti } from './pages/dashboard/CaricamentiRecenti'
+import { AccountingMovementDetail } from './pages/dashboard/AccountingMovementDetail'
 import { CantiereDetail } from './pages/dashboard/CantiereDetail'
 import { CantieriList } from './pages/dashboard/CantieriList'
 import { ContabilitaMock } from './pages/dashboard/ContabilitaMock'
 import { DashboardHome } from './pages/dashboard/DashboardHome'
 import { DashboardListPage } from './pages/dashboard/DashboardListPage'
+import { DocumentDetail } from './pages/dashboard/DocumentDetail'
 import { DocumentiMock } from './pages/dashboard/DocumentiMock'
+import { EstimateDetail } from './pages/dashboard/EstimateDetail'
+import { EstimatesMock } from './pages/dashboard/EstimatesMock'
+import { PhotoDetail } from './pages/dashboard/PhotoDetail'
+import { PhotosMock } from './pages/dashboard/PhotosMock'
 import { LoginMock } from './pages/dashboard/LoginMock'
 import { SettingsMock } from './pages/dashboard/SettingsMock'
 import { Unauthorized } from './pages/dashboard/Unauthorized'
@@ -46,7 +50,7 @@ function navigateTo(path) {
   window.location.assign(`#${path}`)
 }
 
-function renderRoute(path, session, selectedRole, handlers, uploads) {
+function renderRoute(path, session, selectedRole, handlers, mockStore) {
   if (path === '/') return <Home />
   if (path === '/servizi') return <Services />
   if (path === '/cantieri') return <Projects />
@@ -84,8 +88,11 @@ function renderRoute(path, session, selectedRole, handlers, uploads) {
     return (
       <DashboardHome
         session={session}
-        documentUploads={uploads.documentUploads}
-        fotoUploads={uploads.fotoUploads}
+        documentUploads={mockStore.documentUploads}
+        documents={mockStore.documents}
+        fotoUploads={mockStore.fotoUploads}
+        activities={mockStore.activities}
+        estimates={mockStore.estimates}
       />
     )
   }
@@ -93,9 +100,12 @@ function renderRoute(path, session, selectedRole, handlers, uploads) {
     return (
       <CantiereDetail
         cantiereId={path.split('/').at(-1)}
-        documentUploads={uploads.documentUploads}
-        fotoUploads={uploads.fotoUploads}
+        documentUploads={mockStore.documentUploads}
+        fotoUploads={mockStore.fotoUploads}
         session={session}
+        activities={mockStore.activities}
+        notes={mockStore.notes}
+        onAddNote={mockStore.addInternalNote}
       />
     )
   }
@@ -106,10 +116,10 @@ function renderRoute(path, session, selectedRole, handlers, uploads) {
     return (
       <UploadMock
         session={session}
-        fotoUploads={uploads.fotoUploads}
-        documentUploads={uploads.documentUploads}
-        onAddFoto={handlers.onAddFoto}
-        onAddDocument={handlers.onAddDocument}
+        fotoUploads={mockStore.fotoUploads}
+        documentUploads={mockStore.documentUploads}
+        onAddFoto={mockStore.addFotoUpload}
+        onAddDocument={mockStore.addDocumentUpload}
       />
     )
   }
@@ -117,48 +127,35 @@ function renderRoute(path, session, selectedRole, handlers, uploads) {
     return (
       <CaricamentiRecenti
         session={session}
-        fotoUploads={uploads.fotoUploads}
-        documentUploads={uploads.documentUploads}
+        fotoUploads={mockStore.fotoUploads}
+        documentUploads={mockStore.documentUploads}
+        store={mockStore}
       />
     )
+  }
+  if (path.startsWith('/dashboard/documenti/')) {
+    return <DocumentDetail documentId={path.split('/').at(-1)} session={session} store={mockStore} />
   }
   if (path === '/dashboard/documenti') {
-    return <DocumentiMock documentUploads={uploads.documentUploads} />
+    return <DocumentiMock session={session} store={mockStore} />
+  }
+  if (path.startsWith('/dashboard/foto/')) {
+    return <PhotoDetail photoId={path.split('/').at(-1)} session={session} store={mockStore} />
   }
   if (path === '/dashboard/foto') {
-    return (
-      <DashboardListPage
-        eyebrow="Foto cantiere"
-        title="Foto recenti mock"
-        description="Registro dimostrativo dei caricamenti foto, senza storage reale."
-        rows={sitePhotos}
-        columns={[
-          { label: 'Titolo', key: 'title' },
-          { label: 'Cantiere', key: 'project' },
-          { label: 'Data', key: 'date' },
-          { label: 'Autore', key: 'author' },
-        ]}
-      />
-    )
+    return <PhotosMock session={session} store={mockStore} />
+  }
+  if (path.startsWith('/dashboard/preventivi/')) {
+    return <EstimateDetail estimateId={path.split('/').at(-1)} session={session} store={mockStore} />
   }
   if (path === '/dashboard/preventivi') {
-    return (
-      <DashboardListPage
-        eyebrow="Preventivi"
-        title="Richieste preventivo"
-        description="Pipeline mock delle richieste ricevute dal sito pubblico."
-        rows={quotes}
-        columns={[
-          { label: 'Cliente', key: 'client' },
-          { label: 'Richiesta', key: 'request' },
-          { label: 'Stato', key: 'status', badge: true },
-          { label: 'Valore', key: 'value' },
-        ]}
-      />
-    )
+    return <EstimatesMock session={session} store={mockStore} />
+  }
+  if (path.startsWith('/dashboard/contabilita/')) {
+    return <AccountingMovementDetail movementId={path.split('/').at(-1)} session={session} store={mockStore} />
   }
   if (path === '/dashboard/contabilita') {
-    return <ContabilitaMock />
+    return <ContabilitaMock documents={mockStore.documents} />
   }
   if (path === '/dashboard/dipendenti') {
     return (
@@ -186,8 +183,7 @@ export default function App() {
   const path = useHashPath()
   const [selectedRole, setSelectedRole] = useState('admin')
   const [session, setSession] = useState(null)
-  const [fotoUploads, setFotoUploads] = useState(mockFotoUploads)
-  const [documentUploads, setDocumentUploads] = useState(mockDocumentUploads)
+  const mockStore = useMockStore(session)
 
   function loginWithSelectedRole() {
     const user = mockUsers.find((item) => item.role === selectedRole) ?? mockUsers[0]
@@ -221,12 +217,7 @@ export default function App() {
       {renderRoute(path, session, selectedRole, {
         onLogin: loginWithSelectedRole,
         onRoleSelect: setSelectedRole,
-        onAddFoto: (upload) => setFotoUploads((current) => [upload, ...current]),
-        onAddDocument: (upload) => setDocumentUploads((current) => [upload, ...current]),
-      }, {
-        fotoUploads,
-        documentUploads,
-      })}
+      }, mockStore)}
     </AppShell>
   )
 }

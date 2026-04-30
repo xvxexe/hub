@@ -11,13 +11,11 @@ import { MoneyValue } from '../../components/MoneyValue'
 import { RecentUploadList } from '../../components/RecentUploadList'
 import { Section } from '../../components/Section'
 import { StatusBadge } from '../../components/StatusBadge'
-import { quotes } from '../../data/mockData'
 import { mockCantieri } from '../../data/mockCantieri'
 import {
   getAccountingAlerts,
   getAccountingTotals,
   getCategoryTotals,
-  mockMovimentiContabili,
 } from '../../data/mockMovimentiContabili'
 import { getRole } from '../../lib/roles'
 
@@ -25,7 +23,7 @@ const documentFlow = ['Caricato', 'Da verificare', 'Confermato', 'Collegato al c
 const photoFlow = ['Caricata', 'Da revisionare', 'Approvata', 'Pubblicabile sul sito']
 const quoteFlow = ['Nuovo', 'Da valutare', 'Contattato', 'Accettato/Rifiutato']
 
-export function DashboardHome({ session, fotoUploads, documentUploads }) {
+export function DashboardHome({ session, fotoUploads, documentUploads, documents = [], activities = [], estimates = [] }) {
   const activeRole = getRole(session.role)
 
   return (
@@ -40,9 +38,9 @@ export function DashboardHome({ session, fotoUploads, documentUploads }) {
       </DashboardHeader>
 
       {session.role === 'admin' ? (
-        <AdminDashboard fotoUploads={fotoUploads} documentUploads={documentUploads} />
+        <AdminDashboard fotoUploads={fotoUploads} documentUploads={documentUploads} documents={documents} activities={activities} estimates={estimates} />
       ) : null}
-      {session.role === 'accounting' ? <AccountingDashboard documentUploads={documentUploads} /> : null}
+      {session.role === 'accounting' ? <AccountingDashboard documentUploads={documentUploads} documents={documents} /> : null}
       {session.role === 'employee' ? (
         <EmployeeDashboard session={session} fotoUploads={fotoUploads} documentUploads={documentUploads} />
       ) : null}
@@ -56,11 +54,12 @@ function getDashboardTitle(role) {
   return 'Dashboard admin / capo'
 }
 
-function AdminDashboard({ fotoUploads, documentUploads }) {
+function AdminDashboard({ fotoUploads, documentUploads, documents, activities, estimates }) {
   const activeSites = mockCantieri.filter((cantiere) => cantiere.stato === 'attivo').length
   const openProblems = mockCantieri.reduce((total, cantiere) => total + cantiere.problemi.length, 0)
-  const accountingTotals = getAccountingTotals(mockMovimentiContabili)
-  const alerts = getAccountingAlerts(mockMovimentiContabili)
+  const accountingRows = documents.map(documentToAccountingRow)
+  const accountingTotals = getAccountingTotals(accountingRows)
+  const alerts = getAccountingAlerts(accountingRows)
   const docsToCheck = documentUploads.filter((doc) => doc.stato === 'da verificare').length
   const siteAlerts = mockCantieri.flatMap((cantiere) =>
     cantiere.problemi.map((problema) => ({
@@ -85,7 +84,7 @@ function AdminDashboard({ fotoUploads, documentUploads }) {
         <StatCard label="Cantieri attivi" value={activeSites} hint="Da seguire oggi" />
         <StatCard label="Documenti da verificare" value={docsToCheck} hint="Upload e contabilità" />
         <StatCard label="Foto recenti" value={fotoUploads.length} hint="Da revisione cantiere" />
-        <StatCard label="Preventivi ricevuti" value={quotes.length} hint="Pipeline commerciale" />
+        <StatCard label="Preventivi ricevuti" value={estimates.length} hint="Pipeline commerciale" />
         <StatCard label="Spese totali mock" value={<MoneyValue value={accountingTotals.totale} />} hint="Da movimenti" />
         <StatCard label="Problemi aperti" value={openProblems} hint="Cantieri da controllare" />
       </div>
@@ -115,7 +114,8 @@ function AdminDashboard({ fotoUploads, documentUploads }) {
           items={[
             ...fotoUploads.slice(0, 2).map((item) => ({ title: `Foto: ${item.lavorazione}`, meta: `${item.cantiere} · ${item.caricatoDa}`, status: item.stato })),
             ...documentUploads.slice(0, 2).map((item) => ({ title: `Documento: ${item.tipoDocumento}`, meta: `${item.cantiere} · ${item.fornitore}`, status: item.stato })),
-            ...quotes.slice(0, 2).map((item) => ({ title: `Preventivo: ${item.client}`, meta: item.request, status: item.status })),
+            ...estimates.slice(0, 2).map((item) => ({ title: `Preventivo: ${item.client}`, meta: item.request, status: item.status })),
+            ...activities.slice(0, 3).map((item) => ({ title: item.description, meta: `${item.author} · ${item.date}`, status: item.type })),
           ]}
         />
         <AlertPanel
@@ -142,14 +142,16 @@ function AdminDashboard({ fotoUploads, documentUploads }) {
   )
 }
 
-function AccountingDashboard({ documentUploads }) {
+function AccountingDashboard({ documentUploads, documents }) {
+  const accountingRows = documents.map(documentToAccountingRow)
   const documentsToCheck = documentUploads.filter((documento) => documento.stato === 'da verificare')
-  const firIncomplete = mockMovimentiContabili.filter((row) => row.tipoDocumento === 'FIR' && row.statoVerifica === 'Incompleto')
-  const duplicates = mockMovimentiContabili.filter((row) => row.statoVerifica === 'Possibile duplicato')
-  const transfersToLink = mockMovimentiContabili.filter((row) => row.tipoDocumento === 'Bonifico' && row.note.toLowerCase().includes('collegare'))
-  const totals = getAccountingTotals(mockMovimentiContabili)
-  const categoryTotals = getCategoryTotals(mockMovimentiContabili).filter((row) => row.totale > 0).slice(0, 5)
-  const accountingAlerts = getAccountingAlerts(mockMovimentiContabili).map((alert) => ({
+  const firIncomplete = accountingRows.filter((row) => row.tipoDocumento === 'FIR' && row.statoVerifica === 'Incompleto')
+  const duplicates = accountingRows.filter((row) => row.statoVerifica === 'Possibile duplicato')
+  const transfersToLink = accountingRows.filter((row) => row.tipoDocumento === 'Bonifico' && row.note.toLowerCase().includes('collegare'))
+  const documentsWithoutSite = accountingRows.filter((row) => !row.cantiereId)
+  const totals = getAccountingTotals(accountingRows)
+  const categoryTotals = getCategoryTotals(accountingRows).filter((row) => row.totale > 0).slice(0, 5)
+  const accountingAlerts = getAccountingAlerts(accountingRows).map((alert) => ({
     id: alert.id,
     title: alert.message,
     meta: `${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`,
@@ -164,7 +166,7 @@ function AccountingDashboard({ documentUploads }) {
         <StatCard label="FIR incompleti" value={firIncomplete.length} />
         <StatCard label="Possibili duplicati" value={duplicates.length} />
         <StatCard label="IVA mock" value={<MoneyValue value={totals.iva} />} />
-        <StatCard label="Documenti senza cantiere" value="0" />
+        <StatCard label="Documenti senza cantiere" value={documentsWithoutSite.length} />
       </div>
 
       <div className="internal-two-column">
@@ -181,7 +183,7 @@ function AccountingDashboard({ documentUploads }) {
         </section>
         <ActivityFeed
           title="Ultime attività contabili"
-          items={mockMovimentiContabili.slice(0, 6).map((row) => ({
+          items={accountingRows.slice(0, 6).map((row) => ({
             title: row.descrizione,
             meta: `${row.fornitore} · ${row.numeroDocumento}`,
             status: row.statoVerifica,
@@ -194,6 +196,26 @@ function AccountingDashboard({ documentUploads }) {
       <RecentUploadList title="Documenti recenti" type="documento" uploads={documentUploads.slice(0, 4)} />
     </>
   )
+}
+
+function documentToAccountingRow(document) {
+  return {
+    id: document.id,
+    cantiereId: document.cantiereId,
+    data: document.dataDocumento,
+    descrizione: document.descrizione ?? document.tipoDocumento,
+    fornitore: document.fornitore ?? 'Non indicato',
+    categoria: document.categoria ?? 'Extra / Altro',
+    tipoDocumento: document.tipoDocumento,
+    numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id,
+    imponibile: Number(document.imponibile || 0),
+    iva: Number(document.iva || 0),
+    totale: Number(document.totale || document.importoTotale || 0),
+    pagamento: document.pagamento ?? 'Non indicato',
+    statoVerifica: document.statoVerifica,
+    documentoCollegato: document.fileName,
+    note: document.note ?? document.nota ?? '',
+  }
 }
 
 function EmployeeDashboard({ session, fotoUploads, documentUploads }) {
