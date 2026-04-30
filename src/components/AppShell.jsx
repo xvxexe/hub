@@ -89,7 +89,25 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
                 <span>EuropaService Hub</span>
                 <strong>{activeRole?.label ?? 'Login mock'}</strong>
               </div>
-              <a className="button button-secondary" href="#/">Sito pubblico</a>
+              {session ? (
+                <label className="mobile-dashboard-nav">
+                  Vai a
+                  <select
+                    value={visibleDashboardNav.find((item) => isActive(currentPath, item.path))?.path ?? '/dashboard'}
+                    onChange={(event) => {
+                      window.location.assign(`#${event.target.value}`)
+                    }}
+                  >
+                    {visibleDashboardNav.map((item) => (
+                      <option key={item.path} value={item.path}>{item.label}</option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+              <div className="internal-topbar-actions">
+                {session ? <span className="data-mode-badge">Solo frontend mock</span> : null}
+                <a className="button button-secondary" href="#/">Sito pubblico</a>
+              </div>
             </div>
             <div className="breadcrumb">
               <a href="#/dashboard">Area interna</a>

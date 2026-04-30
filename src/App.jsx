@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AppShell } from './components/AppShell'
 import {
-  documents,
   employees,
   mockUsers,
   quotes,
@@ -16,6 +15,7 @@ import { CantieriList } from './pages/dashboard/CantieriList'
 import { ContabilitaMock } from './pages/dashboard/ContabilitaMock'
 import { DashboardHome } from './pages/dashboard/DashboardHome'
 import { DashboardListPage } from './pages/dashboard/DashboardListPage'
+import { DocumentiMock } from './pages/dashboard/DocumentiMock'
 import { LoginMock } from './pages/dashboard/LoginMock'
 import { SettingsMock } from './pages/dashboard/SettingsMock'
 import { Unauthorized } from './pages/dashboard/Unauthorized'
@@ -123,20 +123,7 @@ function renderRoute(path, session, selectedRole, handlers, uploads) {
     )
   }
   if (path === '/dashboard/documenti') {
-    return (
-      <DashboardListPage
-        eyebrow="Documenti"
-        title="Archivio documenti mock"
-        description="Fatture, ricevute e FIR dimostrativi senza upload reale."
-        rows={documents}
-        columns={[
-          { label: 'Nome', key: 'name' },
-          { label: 'Cantiere', key: 'project' },
-          { label: 'Tipo', key: 'type' },
-          { label: 'Stato', key: 'status', badge: true },
-        ]}
-      />
-    )
+    return <DocumentiMock documentUploads={uploads.documentUploads} />
   }
   if (path === '/dashboard/foto') {
     return (

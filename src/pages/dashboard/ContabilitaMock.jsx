@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { EmptyState } from '../../components/EmptyState'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
@@ -195,47 +196,55 @@ function AccountingTable({ rows }) {
         <h2>Movimenti</h2>
         <p>Tabella desktop e card compatte su mobile.</p>
       </div>
-      <div className="accounting-table-wrap">
-        <table className="accounting-table">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Descrizione</th>
-              <th>Fornitore</th>
-              <th>Categoria</th>
-              <th>Imponibile</th>
-              <th>IVA</th>
-              <th>Totale</th>
-              <th>Pagamento</th>
-              <th>Documento</th>
-              <th>Stato</th>
-              <th>Note</th>
-            </tr>
-          </thead>
-          <tbody>
+      {rows.length > 0 ? (
+        <>
+          <div className="accounting-table-wrap">
+            <table className="accounting-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Descrizione</th>
+                  <th>Fornitore</th>
+                  <th>Categoria</th>
+                  <th>Imponibile</th>
+                  <th>IVA</th>
+                  <th>Totale</th>
+                  <th>Pagamento</th>
+                  <th>Documento</th>
+                  <th>Stato</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id}>
+                    <td>{formatDate(row.data)}</td>
+                    <td>{row.descrizione}</td>
+                    <td>{row.fornitore}</td>
+                    <td>{row.categoria}</td>
+                    <td><MoneyValue value={row.imponibile} /></td>
+                    <td><MoneyValue value={row.iva} /></td>
+                    <td><MoneyValue value={row.totale} /></td>
+                    <td>{row.pagamento}</td>
+                    <td>{row.tipoDocumento} {row.numeroDocumento}</td>
+                    <td><StatusBadge>{row.statoVerifica}</StatusBadge></td>
+                    <td>{row.note}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="accounting-mobile-list">
             {rows.map((row) => (
-              <tr key={row.id}>
-                <td>{formatDate(row.data)}</td>
-                <td>{row.descrizione}</td>
-                <td>{row.fornitore}</td>
-                <td>{row.categoria}</td>
-                <td><MoneyValue value={row.imponibile} /></td>
-                <td><MoneyValue value={row.iva} /></td>
-                <td><MoneyValue value={row.totale} /></td>
-                <td>{row.pagamento}</td>
-                <td>{row.tipoDocumento} {row.numeroDocumento}</td>
-                <td><StatusBadge>{row.statoVerifica}</StatusBadge></td>
-                <td>{row.note}</td>
-              </tr>
+              <AccountingMobileCard key={row.id} row={row} />
             ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="accounting-mobile-list">
-        {rows.map((row) => (
-          <AccountingMobileCard key={row.id} row={row} />
-        ))}
-      </div>
+          </div>
+        </>
+      ) : (
+        <EmptyState title="Nessun movimento trovato">
+          Modifica filtri, cantiere o ricerca per visualizzare altri movimenti contabili mock.
+        </EmptyState>
+      )}
     </section>
   )
 }

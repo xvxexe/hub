@@ -1,4 +1,12 @@
-import { ActivityFeed, DashboardHeader, DataModeBadge, StatCard, WorkflowStepper } from '../../components/InternalComponents'
+import {
+  ActivityFeed,
+  AlertPanel,
+  DashboardHeader,
+  DataModeBadge,
+  QuickActionCard,
+  StatCard,
+  WorkflowStepper,
+} from '../../components/InternalComponents'
 import { MoneyValue } from '../../components/MoneyValue'
 import { RecentUploadList } from '../../components/RecentUploadList'
 import { Section } from '../../components/Section'
@@ -54,6 +62,22 @@ function AdminDashboard({ fotoUploads, documentUploads }) {
   const accountingTotals = getAccountingTotals(mockMovimentiContabili)
   const alerts = getAccountingAlerts(mockMovimentiContabili)
   const docsToCheck = documentUploads.filter((doc) => doc.stato === 'da verificare').length
+  const siteAlerts = mockCantieri.flatMap((cantiere) =>
+    cantiere.problemi.map((problema) => ({
+      id: `${cantiere.id}-${problema.id}`,
+      title: problema.titolo,
+      meta: `${cantiere.nome} · ${cantiere.responsabile}`,
+      status: problema.priorita,
+    })),
+  )
+  const urgentDocs = documentUploads
+    .filter((doc) => ['da verificare', 'incompleto', 'possibile duplicato'].includes(doc.stato))
+    .map((doc) => ({
+      id: doc.id,
+      title: `${doc.tipoDocumento}: ${doc.fornitore || doc.descrizione}`,
+      meta: `${doc.cantiere} · ${doc.nota || doc.fileName}`,
+      status: doc.stato,
+    }))
 
   return (
     <>
@@ -78,6 +102,13 @@ function AdminDashboard({ fotoUploads, documentUploads }) {
         </div>
       </Section>
 
+      <section className="quick-actions-grid internal-padded">
+        <QuickActionCard title="Apri cantieri" text="Controlla avanzamento, problemi e responsabili." href="#/dashboard/cantieri" action="Vai" />
+        <QuickActionCard title="Verifica documenti" text="Rivedi fatture, FIR e caricamenti da controllare." href="#/dashboard/caricamenti" action="Controlla" />
+        <QuickActionCard title="Nuovi preventivi" text="Consulta le richieste arrivate dal sito pubblico mock." href="#/dashboard/preventivi" action="Apri" />
+        <QuickActionCard title="Contabilità" text="Guarda spese, IVA mock e alert amministrativi." href="#/dashboard/contabilita" action="Analizza" />
+      </section>
+
       <div className="internal-two-column">
         <ActivityFeed
           title="Ultime attività"
@@ -87,18 +118,19 @@ function AdminDashboard({ fotoUploads, documentUploads }) {
             ...quotes.slice(0, 2).map((item) => ({ title: `Preventivo: ${item.client}`, meta: item.request, status: item.status })),
           ]}
         />
-        <section className="internal-panel">
-          <div className="section-heading"><h2>Alert importanti</h2></div>
-          <div className="activity-feed">
-            {alerts.slice(0, 5).map((alert) => (
-              <article className="activity-item" key={alert.id}>
-                <span />
-                <div><strong>{alert.message}</strong><small>{alert.movimento.descrizione}</small></div>
-                <StatusBadge>{alert.movimento.statoVerifica}</StatusBadge>
-              </article>
-            ))}
-          </div>
-        </section>
+        <AlertPanel
+          title="Alert importanti"
+          alerts={[
+            ...siteAlerts,
+            ...urgentDocs,
+            ...alerts.slice(0, 4).map((alert) => ({
+              id: alert.id,
+              title: alert.message,
+              meta: `${alert.movimento.descrizione} · ${alert.movimento.fornitore}`,
+              status: alert.movimento.statoVerifica,
+            })),
+          ].slice(0, 8)}
+        />
       </div>
 
       <div className="internal-three-column">
@@ -117,6 +149,12 @@ function AccountingDashboard({ documentUploads }) {
   const transfersToLink = mockMovimentiContabili.filter((row) => row.tipoDocumento === 'Bonifico' && row.note.toLowerCase().includes('collegare'))
   const totals = getAccountingTotals(mockMovimentiContabili)
   const categoryTotals = getCategoryTotals(mockMovimentiContabili).filter((row) => row.totale > 0).slice(0, 5)
+  const accountingAlerts = getAccountingAlerts(mockMovimentiContabili).map((alert) => ({
+    id: alert.id,
+    title: alert.message,
+    meta: `${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`,
+    status: alert.movimento.statoVerifica,
+  }))
 
   return (
     <>
@@ -151,6 +189,7 @@ function AccountingDashboard({ documentUploads }) {
         />
       </div>
 
+      <AlertPanel title="Alert contabili" alerts={accountingAlerts} />
       <WorkflowStepper title="Flusso documenti amministrativi" steps={documentFlow} />
       <RecentUploadList title="Documenti recenti" type="documento" uploads={documentUploads.slice(0, 4)} />
     </>
@@ -175,6 +214,7 @@ function EmployeeDashboard({ session, fotoUploads, documentUploads }) {
         <div className="employee-actions">
           <a className="button button-primary" href="#/dashboard/upload">Carica foto</a>
           <a className="button button-secondary" href="#/dashboard/upload">Carica documento</a>
+          <a className="button button-secondary" href="#/dashboard/caricamenti">I miei caricamenti</a>
         </div>
         <label>
           Nota rapida

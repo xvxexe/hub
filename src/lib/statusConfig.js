@@ -15,6 +15,7 @@ const statusMap = {
   archiviato: 'muted',
   nuovo: 'warning',
   'da valutare': 'warning',
+  contattato: 'info',
   'in attesa cliente': 'info',
   accettato: 'success',
   rifiutato: 'danger',

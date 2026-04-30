@@ -1,4 +1,4 @@
-export const statiCantiere = ['attivo', 'completato', 'sospeso', 'da avviare']
+export const statiCantiere = ['da avviare', 'attivo', 'sospeso', 'completato', 'archiviato']
 
 export const mockCantieri = [
   {
@@ -21,9 +21,9 @@ export const mockCantieri = [
       { id: 'f-roma-3', titolo: 'Chiusura botole ispezione', data: '2026-04-26', autore: 'Marco Ferri' },
     ],
     documenti: [
-      { id: 'd-roma-1', nome: 'DDT profili zincati', tipo: 'DDT', stato: 'Archiviato' },
+      { id: 'd-roma-1', nome: 'DDT profili zincati', tipo: 'DDT', stato: 'Confermato' },
       { id: 'd-roma-2', nome: 'Fattura lastre antincendio', tipo: 'Fattura', stato: 'Da verificare' },
-      { id: 'd-roma-3', nome: 'Verbale sopralluogo', tipo: 'Verbale', stato: 'Archiviato' },
+      { id: 'd-roma-3', nome: 'Verbale sopralluogo', tipo: 'Verbale', stato: 'Confermato' },
     ],
     spese: [
       { id: 's-roma-1', voce: 'Lastre e profili', categoria: 'Materiali', importo: 18450 },
@@ -59,7 +59,7 @@ export const mockCantieri = [
     ],
     documenti: [
       { id: 'd-verdi-1', nome: 'SAL aprile', tipo: 'SAL', stato: 'Da verificare' },
-      { id: 'd-verdi-2', nome: 'Ordine materiale isolamento', tipo: 'Ordine', stato: 'Archiviato' },
+      { id: 'd-verdi-2', nome: 'Ordine materiale isolamento', tipo: 'Ordine', stato: 'Confermato' },
     ],
     spese: [
       { id: 's-verdi-1', voce: 'Isolante acustico', categoria: 'Materiali', importo: 7900 },
@@ -84,8 +84,8 @@ export const mockCantieri = [
     lavorazioni: ['Tracciamento pareti', 'Controsoffitto illuminazione', 'Nicchie tecniche', 'Tinteggiatura finale'],
     foto: [{ id: 'f-centro-1', titolo: 'Stato locali prima avvio', data: '2026-04-24', autore: 'Gianni Europa' }],
     documenti: [
-      { id: 'd-centro-1', nome: 'Preventivo firmato', tipo: 'Preventivo', stato: 'Archiviato' },
-      { id: 'd-centro-2', nome: 'Planimetria negozio', tipo: 'Tecnico', stato: 'Archiviato' },
+      { id: 'd-centro-1', nome: 'Preventivo firmato', tipo: 'Preventivo', stato: 'Confermato' },
+      { id: 'd-centro-2', nome: 'Planimetria negozio', tipo: 'Tecnico', stato: 'Confermato' },
     ],
     spese: [{ id: 's-centro-1', voce: 'Acconto materiali', categoria: 'Materiali', importo: 2500 }],
     note: ['Verificare vincoli orari per accesso in ZTL.'],
@@ -110,7 +110,7 @@ export const mockCantieri = [
       { id: 'f-milano-2', titolo: 'Parete curva lobby', data: '2026-04-10', autore: 'Luca Moretti' },
     ],
     documenti: [
-      { id: 'd-milano-1', nome: 'Comunicazione sospensione lavori', tipo: 'Comunicazione', stato: 'Archiviato' },
+      { id: 'd-milano-1', nome: 'Comunicazione sospensione lavori', tipo: 'Comunicazione', stato: 'Confermato' },
       { id: 'd-milano-2', nome: 'Fattura materiali acustici', tipo: 'Fattura', stato: 'Da verificare' },
     ],
     spese: [
@@ -139,9 +139,9 @@ export const mockCantieri = [
       { id: 'f-bianchi-2', titolo: 'Locale tecnico finito', data: '2026-04-17', autore: 'Luca Moretti' },
     ],
     documenti: [
-      { id: 'd-bianchi-1', nome: 'Verbale consegna lavori', tipo: 'Verbale', stato: 'Archiviato' },
-      { id: 'd-bianchi-2', nome: 'Fattura saldo', tipo: 'Fattura', stato: 'Archiviato' },
-      { id: 'd-bianchi-3', nome: 'Foto fine lavori', tipo: 'Report', stato: 'Archiviato' },
+      { id: 'd-bianchi-1', nome: 'Verbale consegna lavori', tipo: 'Verbale', stato: 'Confermato' },
+      { id: 'd-bianchi-2', nome: 'Fattura saldo', tipo: 'Fattura', stato: 'Confermato' },
+      { id: 'd-bianchi-3', nome: 'Foto fine lavori', tipo: 'Report', stato: 'Confermato' },
     ],
     spese: [
       { id: 's-bianchi-1', voce: 'Materiali finitura', categoria: 'Materiali', importo: 4300 },

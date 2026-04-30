@@ -22,20 +22,21 @@ export function CantieriList() {
 
     return mockCantieri
       .filter((cantiere) => {
-      const matchesSearch =
-        normalizedSearch === '' ||
-        cantiere.nome.toLowerCase().includes(normalizedSearch) ||
-        cantiere.cliente.toLowerCase().includes(normalizedSearch) ||
-        cantiere.localita.toLowerCase().includes(normalizedSearch)
-      const matchesStatus = status === 'tutti' || cantiere.stato === status
-      const matchesManager = manager === 'tutti' || cantiere.responsabile === manager
+        const matchesSearch =
+          normalizedSearch === '' ||
+          cantiere.nome.toLowerCase().includes(normalizedSearch) ||
+          cantiere.cliente.toLowerCase().includes(normalizedSearch) ||
+          cantiere.localita.toLowerCase().includes(normalizedSearch)
+        const matchesStatus = status === 'tutti' || cantiere.stato === status
+        const matchesManager = manager === 'tutti' || cantiere.responsabile === manager
 
-      return matchesSearch && matchesStatus && matchesManager
-    })
+        return matchesSearch && matchesStatus && matchesManager
+      })
       .sort((a, b) => {
         if (sort === 'avanzamento-desc') return b.avanzamento - a.avanzamento
         if (sort === 'avanzamento-asc') return a.avanzamento - b.avanzamento
-        if (sort === 'data') return new Date(a.dataInizio) - new Date(b.dataInizio)
+        if (sort === 'data-desc') return new Date(b.dataInizio) - new Date(a.dataInizio)
+        if (sort === 'data-asc') return new Date(a.dataInizio) - new Date(b.dataInizio)
         return a.nome.localeCompare(b.nome)
       })
   }, [manager, search, sort, status])
@@ -83,7 +84,8 @@ export function CantieriList() {
           <select value={sort} onChange={(event) => setSort(event.target.value)}>
             <option value="avanzamento-desc">Avanzamento alto</option>
             <option value="avanzamento-asc">Avanzamento basso</option>
-            <option value="data">Data inizio</option>
+            <option value="data-desc">Data inizio recente</option>
+            <option value="data-asc">Data inizio vecchia</option>
             <option value="nome">Nome</option>
           </select>
         </label>

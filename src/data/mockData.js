@@ -108,8 +108,8 @@ export const sitePhotos = [
 
 export const quotes = [
   { client: 'Famiglia Rossi', request: 'Ristrutturazione soggiorno', status: 'Nuovo', value: 'Da stimare' },
-  { client: 'Hotel Garda', request: 'Controsoffitti corridoi', status: 'In lavorazione', value: '24.000 EUR' },
-  { client: 'Studio Medico Nord', request: 'Pareti divisorie', status: 'Inviato', value: '9.800 EUR' },
+  { client: 'Hotel Garda', request: 'Controsoffitti corridoi', status: 'Da valutare', value: '24.000 EUR' },
+  { client: 'Studio Medico Nord', request: 'Pareti divisorie', status: 'Contattato', value: '9.800 EUR' },
 ]
 
 export const accountingRows = [

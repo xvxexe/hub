@@ -15,7 +15,7 @@ import {
   getMovimentiByCantiere,
 } from '../../data/mockMovimentiContabili'
 
-const tabs = ['Panoramica', 'Foto', 'Documenti', 'Spese', 'Note', 'Problemi']
+const tabs = ['Panoramica', 'Foto', 'Documenti', 'Spese', 'Note', 'Problemi', 'Attività recenti']
 
 export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads = [], session }) {
   const [activeTab, setActiveTab] = useState('Panoramica')
@@ -302,39 +302,47 @@ function renderTab(
   }
 
   if (activeTab === 'Problemi') {
+    return (
+      <div className="detail-list-grid">
+        {cantiere.problemi.length > 0 ? (
+          cantiere.problemi.map((problema) => (
+            <article className="info-card problem-card" key={problema.id}>
+              <StatusBadge>{problema.priorita}</StatusBadge>
+              <h3>{problema.titolo}</h3>
+              <p>{problema.stato}</p>
+            </article>
+          ))
+        ) : (
+          <article className="info-card">
+            <h3>Nessun problema aperto</h3>
+            <p>Il cantiere non ha elementi da controllare nei dati mock.</p>
+          </article>
+        )}
+      </div>
+    )
+  }
+
+  if (activeTab === 'Attività recenti') {
     const activityItems = [
-      ...linkedFotoUploads.slice(0, 2).map((item) => ({
+      ...linkedFotoUploads.map((item) => ({
         title: `Foto caricata: ${item.lavorazione}`,
-        meta: `${item.zona} · ${item.caricatoDa}`,
+        meta: `${item.zona} · ${item.caricatoDa} · ${formatDate(item.dataCaricamento)}`,
         status: item.stato,
       })),
-      ...linkedDocumentUploads.slice(0, 2).map((item) => ({
+      ...linkedDocumentUploads.map((item) => ({
         title: `Documento: ${item.tipoDocumento}`,
-        meta: `${item.fornitore} · ${item.caricatoDa}`,
+        meta: `${item.fornitore || item.descrizione} · ${item.caricatoDa} · ${formatDate(item.dataCaricamento)}`,
         status: item.stato,
+      })),
+      ...cantiere.problemi.map((item) => ({
+        title: `Problema: ${item.titolo}`,
+        meta: `${cantiere.nome} · ${item.stato}`,
+        status: item.priorita,
       })),
     ]
 
     return (
-      <>
-        <div className="detail-list-grid">
-          {cantiere.problemi.length > 0 ? (
-            cantiere.problemi.map((problema) => (
-              <article className="info-card problem-card" key={problema.id}>
-                <StatusBadge>{problema.priorita}</StatusBadge>
-                <h3>{problema.titolo}</h3>
-                <p>{problema.stato}</p>
-              </article>
-            ))
-          ) : (
-            <article className="info-card">
-              <h3>Nessun problema aperto</h3>
-              <p>Il cantiere non ha elementi da controllare nei dati mock.</p>
-            </article>
-          )}
-        </div>
-        <ActivityFeed title="Attività recenti cantiere" items={activityItems} />
-      </>
+      <ActivityFeed title="Attività recenti cantiere" items={activityItems} />
     )
   }
 

@@ -1,16 +1,39 @@
+import { useMemo, useState } from 'react'
+import { EmptyState } from '../../components/EmptyState'
+import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { StatusBadge } from '../../components/StatusBadge'
 
 export function DashboardListPage({ eyebrow, title, description, rows, columns }) {
+  const [search, setSearch] = useState('')
+  const filteredRows = useMemo(() => {
+    const normalized = search.trim().toLowerCase()
+    if (!normalized) return rows
+
+    return rows.filter((row) =>
+      columns.some((column) => String(row[column.key] ?? '').toLowerCase().includes(normalized)),
+    )
+  }, [columns, rows, search])
+
   return (
     <>
-      <section className="dashboard-header">
-        <p className="eyebrow">{eyebrow}</p>
-        <h1>{title}</h1>
-        <p>{description}</p>
+      <DashboardHeader eyebrow={eyebrow} title={title} description={description}>
+        <DataModeBadge />
+      </DashboardHeader>
+
+      <section className="cantieri-tools list-tools">
+        <label>
+          Ricerca
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Cerca nella lista..."
+          />
+        </label>
       </section>
 
       <section className="table-card">
-        {rows.map((row, index) => (
+        {filteredRows.map((row, index) => (
           <article className="data-row" key={`${title}-${index}`}>
             {columns.map((column) => {
               const value = row[column.key]
@@ -23,6 +46,11 @@ export function DashboardListPage({ eyebrow, title, description, rows, columns }
             })}
           </article>
         ))}
+        {filteredRows.length === 0 ? (
+          <EmptyState title="Nessun elemento trovato">
+            Modifica la ricerca per visualizzare altri dati mock.
+          </EmptyState>
+        ) : null}
       </section>
     </>
   )

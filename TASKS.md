@@ -2,7 +2,7 @@
 
 ## Task attuale
 
-v0.5.5c completata: sito pubblico premium con testi, immagini, CTA e SEO base.
+v0.5.6 completata: area interna UI/UX e logica operativa migliorata.
 
 ## Da fare ora
 
@@ -64,7 +64,7 @@ v0.5.5c completata: sito pubblico premium con testi, immagini, CTA e SEO base.
 
 ## Prossima fase
 
-v0.5.6 — Area interna UI/UX e logica operativa
+v0.5.7 — Interazioni mock avanzate: stati modificabili, dettaglio documento/foto/preventivo
 
 ## Completato in v0.5.5c
 
@@ -151,15 +151,19 @@ v0.5.6 — Area interna UI/UX e logica operativa
 ## Completato in v0.5.6
 
 - Migliorata struttura area interna con topbar, breadcrumb, header gestionali e indicatore dati mock
-- Aggiunti componenti interni riutilizzabili: `DashboardHeader`, `StatCard`, `ActivityFeed`, `WorkflowStepper`, `DataModeBadge`
-- Badge di stato centralizzati con colori coerenti per documenti, foto, cantieri, preventivi e priorità
+- Aggiunta navigazione mobile interna tramite selettore “Vai a” basato sul ruolo corrente
+- Aggiunti/migliorati componenti interni riutilizzabili: `DashboardHeader`, `StatCard`, `ActivityFeed`, `WorkflowStepper`, `DataModeBadge`, `QuickActionCard`, `AlertPanel`
+- Badge di stato centralizzati con colori coerenti per documenti, foto, cantieri, preventivi, priorità e stato “Contattato”
 - Dashboard admin/capo migliorata con cantieri attivi, documenti da verificare, foto recenti, preventivi, spese mock, alert, problemi e ultime attività
-- Dashboard contabilità migliorata con fatture da verificare, bonifici da collegare, FIR incompleti, duplicati, IVA mock, categorie e attività contabili
+- Dashboard admin/capo ampliata con collegamenti rapidi a cantieri, caricamenti, preventivi e contabilità
+- Dashboard contabilità migliorata con fatture da verificare, bonifici da collegare, FIR incompleti, duplicati, IVA mock, categorie, attività e alert contabili
 - Dashboard dipendente semplificata con scelta cantiere, carica foto, carica documento, nota rapida e soli caricamenti propri
 - Aggiunti flussi operativi mock per documenti, foto e preventivi
-- Lista cantieri interna migliorata con filtro responsabile, ordinamento e indicatori documenti/foto/spese/problemi
-- Dettaglio cantiere interno migliorato con header più chiaro, attività recenti e dati economici nascosti al dipendente
+- Lista cantieri interna migliorata con ricerca, filtro stato, filtro responsabile, ordinamento per avanzamento/data e indicatori documenti/foto/spese/problemi
+- Dettaglio cantiere interno migliorato con header più chiaro, sezioni ordinate, tab attività recenti e dati economici nascosti al dipendente
+- Creata pagina documenti interna dedicata con filtri per cantiere, tipo, stato, ricerca, riepiloghi, alert e lista mobile-friendly
 - Pagina caricamenti migliorata con ricerca, filtri e box per documenti da verificare e possibili duplicati
+- Pagina contabilità migliorata con empty state, filtri, riepiloghi, alert, tabella desktop e card mobile
 - Pagina accesso negato resa più chiara con pulsante “Torna alla dashboard”
 - Nessun Supabase, backend, upload reale, IA, OCR, export o login reale implementato
 - Verifiche eseguite: `npm run lint`, `npm run build`

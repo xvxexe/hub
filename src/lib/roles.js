@@ -37,6 +37,7 @@ export const roleConfig = {
       'view:accounting',
       'view:documents',
       'view:quotes',
+      'view:accounting-alerts',
       'upload:documents',
       'view:document-uploads',
     ],
@@ -81,8 +82,11 @@ export function canAccessDashboardPath(path, roleId) {
   }
 
   return getDashboardNavForRole(roleId).some((item) => {
-    const matchesPath = path === item.path || path.startsWith(`${item.path}/`)
-    return matchesPath
+    if (item.path === '/dashboard') {
+      return path === '/dashboard'
+    }
+
+    return path === item.path || path.startsWith(`${item.path}/`)
   })
 }
 
