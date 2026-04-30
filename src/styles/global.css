@@ -1023,6 +1023,166 @@ p {
   font-weight: 800;
 }
 
+.money-value {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.accounting-filters,
+.accounting-summary-grid,
+.accounting-section {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.accounting-filters {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+}
+
+.accounting-filters label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--heading);
+  font-weight: 800;
+}
+
+.accounting-filters input,
+.accounting-filters select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: var(--white);
+  padding: 0.75rem 0.85rem;
+}
+
+.accounting-summary-grid {
+  grid-template-columns: 1fr;
+}
+
+.accounting-alert-grid,
+.accounting-site-grid,
+.category-list,
+.accounting-mobile-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.accounting-alert,
+.accounting-site-card,
+.accounting-mobile-card {
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--white);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+
+.accounting-alert {
+  border-left: 4px solid var(--copper);
+}
+
+.accounting-alert small,
+.accounting-mobile-card small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.accounting-table-wrap {
+  display: none;
+}
+
+.accounting-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.accounting-table th,
+.accounting-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.accounting-table th {
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.accounting-table td {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.accounting-table td:nth-child(5),
+.accounting-table td:nth-child(6),
+.accounting-table td:nth-child(7) {
+  text-align: right;
+}
+
+.category-breakdown {
+  display: grid;
+  gap: 1rem;
+}
+
+.compact-breakdown {
+  padding: 0;
+}
+
+.category-row {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.category-row > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.category-row span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.category-row strong {
+  color: var(--heading);
+}
+
+.category-track {
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-strong);
+}
+
+.category-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--blue-soft);
+}
+
+.detail-accounting-summary {
+  padding: 0 0 1rem;
+}
+
+.accounting-detail-row {
+  align-items: start;
+}
+
 @media (min-width: 720px) {
   h1 {
     font-size: 3.25rem;
@@ -1124,6 +1284,33 @@ p {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .accounting-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 1.5rem;
+  }
+
+  .accounting-search {
+    grid-column: 1 / -1;
+  }
+
+  .accounting-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 1.5rem;
+  }
+
+  .accounting-section {
+    padding: 1.5rem;
+  }
+
+  .accounting-alert-grid,
+  .accounting-site-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .accounting-detail-row {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.8fr) minmax(0, 0.8fr) auto auto;
+  }
+
   .employee-action-panel {
     grid-template-columns: minmax(0, 1fr);
     max-width: 42rem;
@@ -1190,7 +1377,10 @@ p {
   .dashboard-main .upload-layout,
   .dashboard-main .employee-upload-layout,
   .dashboard-main .upload-recent-layout,
-  .dashboard-main .employee-action-panel {
+  .dashboard-main .employee-action-panel,
+  .dashboard-main .accounting-filters,
+  .dashboard-main .accounting-summary-grid,
+  .dashboard-main .accounting-section {
     padding-left: 2rem;
     padding-right: 2rem;
   }
@@ -1201,5 +1391,34 @@ p {
 
   .dashboard-main .detail-summary-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-main .accounting-filters {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .dashboard-main .accounting-search {
+    grid-column: auto;
+  }
+
+  .dashboard-main .accounting-summary-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .dashboard-main .accounting-alert-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .dashboard-main .accounting-site-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .accounting-table-wrap {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .accounting-mobile-list {
+    display: none;
   }
 }

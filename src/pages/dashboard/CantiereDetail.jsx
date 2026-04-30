@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
+import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
 import { StatusBadge } from '../../components/StatusBadge'
 import {
@@ -8,10 +9,14 @@ import {
   getCantiereById,
   getCantiereTotals,
 } from '../../data/mockCantieri'
+import {
+  getAccountingTotals,
+  getMovimentiByCantiere,
+} from '../../data/mockMovimentiContabili'
 
 const tabs = ['Panoramica', 'Foto', 'Documenti', 'Spese', 'Note', 'Problemi']
 
-export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads = [] }) {
+export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads = [], session }) {
   const [activeTab, setActiveTab] = useState('Panoramica')
   const cantiere = getCantiereById(cantiereId)
 
@@ -29,8 +34,13 @@ export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads =
   }
 
   const totals = getCantiereTotals(cantiere)
+  const canViewEconomics = session?.role !== 'employee'
+  const availableTabs = canViewEconomics ? tabs : tabs.filter((tab) => tab !== 'Spese')
+  const currentTab = availableTabs.includes(activeTab) ? activeTab : 'Panoramica'
   const linkedFotoUploads = fotoUploads.filter((upload) => upload.cantiereId === cantiere.id)
   const linkedDocumentUploads = documentUploads.filter((upload) => upload.cantiereId === cantiere.id)
+  const movimentiContabili = canViewEconomics ? getMovimentiByCantiere(cantiere.id) : []
+  const accountingTotals = getAccountingTotals(movimentiContabili)
 
   return (
     <>
@@ -55,13 +65,13 @@ export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads =
         <SummaryItem label="Responsabile" value={cantiere.responsabile} />
         <SummaryItem label="Data inizio" value={formatDate(cantiere.dataInizio)} />
         <SummaryItem label="Fine prevista" value={formatDate(cantiere.dataFinePrevista)} />
-        <SummaryItem label="Spese mock" value={formatCurrency(totals.spese)} />
+        {canViewEconomics ? <SummaryItem label="Spese mock" value={formatCurrency(accountingTotals.totale)} /> : null}
       </section>
 
       <section className="detail-tabs" aria-label="Sezioni dettaglio cantiere">
-        {tabs.map((tab) => (
+        {availableTabs.map((tab) => (
           <button
-            aria-pressed={activeTab === tab}
+            aria-pressed={currentTab === tab}
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
@@ -72,7 +82,16 @@ export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads =
       </section>
 
       <section className="detail-tab-panel">
-        {renderTab(activeTab, cantiere, totals, linkedFotoUploads, linkedDocumentUploads)}
+        {renderTab(
+          currentTab,
+          cantiere,
+          totals,
+          linkedFotoUploads,
+          linkedDocumentUploads,
+          movimentiContabili,
+          accountingTotals,
+          canViewEconomics,
+        )}
       </section>
     </>
   )
@@ -87,7 +106,16 @@ function SummaryItem({ label, value }) {
   )
 }
 
-function renderTab(activeTab, cantiere, totals, linkedFotoUploads, linkedDocumentUploads) {
+function renderTab(
+  activeTab,
+  cantiere,
+  totals,
+  linkedFotoUploads,
+  linkedDocumentUploads,
+  movimentiContabili,
+  accountingTotals,
+  canViewEconomics,
+) {
   if (activeTab === 'Panoramica') {
     return (
       <div className="detail-two-column">
@@ -99,27 +127,47 @@ function renderTab(activeTab, cantiere, totals, linkedFotoUploads, linkedDocumen
             ))}
           </ul>
         </article>
-        <article className="info-card">
-          <h2>Riepilogo economico mock</h2>
-          <dl className="detail-list">
-            <div>
-              <dt>Totale spese</dt>
-              <dd>{formatCurrency(totals.spese)}</dd>
-            </div>
-            <div>
-              <dt>Documenti</dt>
-              <dd>{totals.documenti}</dd>
-            </div>
-            <div>
-              <dt>Foto</dt>
-              <dd>{totals.foto}</dd>
-            </div>
-            <div>
-              <dt>Problemi aperti</dt>
-              <dd>{totals.problemi}</dd>
-            </div>
-          </dl>
-        </article>
+        {canViewEconomics ? (
+          <article className="info-card">
+            <h2>Riepilogo economico mock</h2>
+            <dl className="detail-list">
+              <div>
+                <dt>Totale imponibile</dt>
+                <dd><MoneyValue value={accountingTotals.imponibile} /></dd>
+              </div>
+              <div>
+                <dt>Totale IVA</dt>
+                <dd><MoneyValue value={accountingTotals.iva} /></dd>
+              </div>
+              <div>
+                <dt>Totale complessivo</dt>
+                <dd><MoneyValue value={accountingTotals.totale} /></dd>
+              </div>
+              <div>
+                <dt>Documenti da verificare</dt>
+                <dd>{accountingTotals.daVerificare}</dd>
+              </div>
+            </dl>
+          </article>
+        ) : (
+          <article className="info-card">
+            <h2>Riepilogo operativo</h2>
+            <dl className="detail-list">
+              <div>
+                <dt>Documenti</dt>
+                <dd>{totals.documenti}</dd>
+              </div>
+              <div>
+                <dt>Foto</dt>
+                <dd>{totals.foto}</dd>
+              </div>
+              <div>
+                <dt>Problemi aperti</dt>
+                <dd>{totals.problemi}</dd>
+              </div>
+            </dl>
+          </article>
+        )}
       </div>
     )
   }
@@ -191,15 +239,37 @@ function renderTab(activeTab, cantiere, totals, linkedFotoUploads, linkedDocumen
 
   if (activeTab === 'Spese') {
     return (
-      <div className="table-card">
-        {cantiere.spese.map((spesa) => (
-          <div className="table-row table-row-4" key={spesa.id}>
-            <strong>{spesa.voce}</strong>
-            <span>{spesa.categoria}</span>
-            <span>{formatCurrency(spesa.importo)}</span>
-          </div>
-        ))}
-      </div>
+      <>
+        <section className="accounting-summary-grid detail-accounting-summary">
+          <article className="stat-card">
+            <span>Totale imponibile</span>
+            <strong><MoneyValue value={accountingTotals.imponibile} /></strong>
+          </article>
+          <article className="stat-card">
+            <span>Totale IVA</span>
+            <strong><MoneyValue value={accountingTotals.iva} /></strong>
+          </article>
+          <article className="stat-card">
+            <span>Totale complessivo</span>
+            <strong><MoneyValue value={accountingTotals.totale} /></strong>
+          </article>
+          <article className="stat-card">
+            <span>Documenti da verificare</span>
+            <strong>{accountingTotals.daVerificare}</strong>
+          </article>
+        </section>
+        <div className="table-card">
+          {movimentiContabili.map((movimento) => (
+            <div className="table-row accounting-detail-row" key={movimento.id}>
+              <strong>{movimento.descrizione}</strong>
+              <span>{movimento.fornitore}</span>
+              <span>{movimento.categoria}</span>
+              <span><MoneyValue value={movimento.totale} /></span>
+              <StatusBadge>{movimento.statoVerifica}</StatusBadge>
+            </div>
+          ))}
+        </div>
+      </>
     )
   }
 

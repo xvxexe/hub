@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AppShell } from './components/AppShell'
 import {
-  accountingRows,
   documents,
   employees,
   mockUsers,
@@ -14,6 +13,7 @@ import { roles } from './lib/roles'
 import { CaricamentiRecenti } from './pages/dashboard/CaricamentiRecenti'
 import { CantiereDetail } from './pages/dashboard/CantiereDetail'
 import { CantieriList } from './pages/dashboard/CantieriList'
+import { ContabilitaMock } from './pages/dashboard/ContabilitaMock'
 import { DashboardHome } from './pages/dashboard/DashboardHome'
 import { DashboardListPage } from './pages/dashboard/DashboardListPage'
 import { LoginMock } from './pages/dashboard/LoginMock'
@@ -91,6 +91,7 @@ function renderRoute(path, session, selectedRole, handlers, uploads) {
         cantiereId={path.split('/').at(-1)}
         documentUploads={uploads.documentUploads}
         fotoUploads={uploads.fotoUploads}
+        session={session}
       />
     )
   }
@@ -166,20 +167,7 @@ function renderRoute(path, session, selectedRole, handlers, uploads) {
     )
   }
   if (path === '/dashboard/contabilita') {
-    return (
-      <DashboardListPage
-        eyebrow="Contabilita"
-        title="Movimenti contabili mock"
-        description="Prima vista contabile con importi e categorie dimostrative."
-        rows={accountingRows}
-        columns={[
-          { label: 'Voce', key: 'item' },
-          { label: 'Cantiere', key: 'project' },
-          { label: 'Categoria', key: 'category' },
-          { label: 'Importo', key: 'amount' },
-        ]}
-      />
-    )
+    return <ContabilitaMock />
   }
   if (path === '/dashboard/dipendenti') {
     return (

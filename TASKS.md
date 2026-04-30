@@ -2,7 +2,7 @@
 
 ## Task attuale
 
-Pulizia ruoli mock v0.2.1 completata.
+Contabilità mock per cantiere v0.5 completata.
 
 ## Da fare ora
 
@@ -64,7 +64,7 @@ Pulizia ruoli mock v0.2.1 completata.
 
 ## Prossima fase
 
-v0.5 — Contabilità mock per cantiere
+v0.6 — Preparazione Supabase setup
 
 ## Completato in v0.2.1
 
@@ -95,3 +95,21 @@ v0.5 — Contabilità mock per cantiere
 - Mantenuta logica ruoli: admin completo, contabilità orientata ai documenti, dipendente con schermata più semplice
 - Nessun backend reale, Supabase, upload reale, IA, OCR, PDF o export implementato
 - Verifiche eseguite: `npm run lint`, `npm run build`
+
+## Completato in v0.5
+
+- Creato dataset centralizzato `src/data/mockMovimentiContabili.js`
+- Inseriti movimenti contabili mock per Barcelo Roma, Residenza Verdi, Negozio Centro, Hotel Interno Milano e Condominio Bianchi
+- Aggiunte categorie standard: Materiali, Manodopera, Non materiali, Extra / Altro, Vitto, Alloggi, FIR / Rifiuti, Bonifici / Pagamenti, Noleggi / Servizi
+- Aggiunti tipi documento, stati verifica e metodi pagamento mock
+- Creata pagina `#/dashboard/contabilita` per admin/capo e contabilità
+- Aggiunti filtri per cantiere, categoria, stato verifica, tipo documento e ricerca
+- Aggiunte card riepilogo: imponibile, IVA, totale, documenti da verificare, duplicati e bonifici/pagamenti
+- Aggiunta tabella movimenti desktop e card responsive mobile
+- Aggiunto riepilogo per cantiere con breakdown categorie
+- Aggiunto riepilogo spese per categoria
+- Aggiunti controlli contabili mock derivati dai dati
+- Collegati i movimenti contabili alla sezione Spese del dettaglio cantiere
+- Dipendente non vede contabilità, importi o riepiloghi economici
+- Nessun Supabase, backend, upload reale, IA, OCR, pagamenti reali, PDF o export implementato
+- Verifiche eseguite: `npm run lint`, `npm run build`, validazione imponibile + IVA = totale
