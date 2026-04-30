@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ProjectCard } from '../../components/PublicComponents'
 import { PageHeader } from '../../components/PageHeader'
-import { projectStatuses, projectTypes, publicProjects } from '../../data/mockPublicProjects'
+import { projectStatuses, projectTypes, publicProjects } from '../../data/publicProjects'
 
 export function Projects() {
   const [type, setType] = useState('Tutti')

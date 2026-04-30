@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Placeholder documento pubblico</title>
+  <desc id="desc">Documento pubblico stilizzato con intestazione e righe informative.</desc>
+  <rect width="640" height="420" fill="#f4f6f7"/>
+  <rect x="160" y="50" width="320" height="320" rx="8" fill="#ffffff" stroke="#dce3e7" stroke-width="5"/>
+  <rect x="198" y="100" width="244" height="28" fill="#17324d"/>
+  <rect x="198" y="166" width="244" height="18" fill="#dce3e7"/>
+  <rect x="198" y="210" width="190" height="18" fill="#dce3e7"/>
+  <rect x="198" y="254" width="220" height="18" fill="#dce3e7"/>
+  <rect x="198" y="310" width="130" height="22" fill="#b8642b"/>
+</svg>

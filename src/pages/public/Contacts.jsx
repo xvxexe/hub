@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { CTASection } from '../../components/PublicComponents'
 import { PageHeader } from '../../components/PageHeader'
+import { SafeImage } from '../../components/SafeImage'
 import { company } from '../../data/mockData'
+import { placeholderImages, teamImages } from '../../data/publicImages'
 
 export function Contacts() {
   const [sent, setSent] = useState(false)
@@ -12,6 +14,13 @@ export function Contacts() {
         Telefono, WhatsApp, email e sopralluoghi mock per lavori di edilizia e cartongesso.
       </PageHeader>
       <section className="section">
+        <SafeImage
+          alt={teamImages.squadra.alt}
+          className="public-card-image"
+          fallbackSrc={placeholderImages.project.src}
+          src={teamImages.squadra.src}
+          title="Squadra EuropaService per sopralluoghi e cantieri"
+        />
         <div className="contact-grid">
           <article className="public-card"><h2>Telefono</h2><p>{company.phone}</p></article>
           <article className="public-card"><h2>Email</h2><p>{company.email}</p></article>

@@ -1,3 +1,5 @@
+import { placeholderImages, projectImages } from './publicImages'
+
 export const publicProjects = [
   {
     id: 'barcelo-roma',
@@ -7,6 +9,11 @@ export const publicProjects = [
     status: 'in corso',
     year: '2026',
     imageLabel: 'Hotel',
+    image: projectImages.barceloRoma.src,
+    fallbackImage: placeholderImages.project.src,
+    imageAlt: projectImages.barceloRoma.alt,
+    seoTitle: 'Cantiere Barcelo Roma - controsoffitti hotel',
+    seoDescription: 'Cantiere pubblico mock per hotel con controsoffitti, cartongesso e finiture interne.',
     summary: 'Controsoffitti tecnici, velette e finiture interne per camere e corridoi.',
     description:
       'Intervento organizzato per aree, con attenzione a pulizia, accessi e continuità operativa della struttura.',
@@ -22,6 +29,11 @@ export const publicProjects = [
     status: 'in corso',
     year: '2026',
     imageLabel: 'Residenza',
+    image: projectImages.residenzaVerdi.src,
+    fallbackImage: placeholderImages.project.src,
+    imageAlt: projectImages.residenzaVerdi.alt,
+    seoTitle: 'Residenza Verdi - pareti in cartongesso',
+    seoDescription: 'Intervento residenziale mock con pareti divisorie, isolamenti e rasature.',
     summary: 'Pareti divisorie, contropareti acustiche e rasature per palazzina residenziale.',
     description:
       'Lavorazioni interne coordinate con avanzamento per piani e attenzione alle finiture degli appartamenti campione.',
@@ -37,6 +49,11 @@ export const publicProjects = [
     status: 'in corso',
     year: '2026',
     imageLabel: 'Interni',
+    image: projectImages.hotelInternoMilano.src,
+    fallbackImage: placeholderImages.project.src,
+    imageAlt: projectImages.hotelInternoMilano.alt,
+    seoTitle: 'Hotel Interno Milano - finiture interne',
+    seoDescription: 'Cantiere hotel mock con pareti curve, isolamento acustico e controsoffitti.',
     summary: 'Pareti curve, isolamento acustico e controsoffitti per sale comuni.',
     description:
       'Ristrutturazione interna con soluzioni in cartongesso per migliorare estetica, comfort e funzionalità.',
@@ -52,6 +69,11 @@ export const publicProjects = [
     status: 'in corso',
     year: '2026',
     imageLabel: 'Retail',
+    image: projectImages.negozioCentro.src,
+    fallbackImage: placeholderImages.project.src,
+    imageAlt: projectImages.negozioCentro.alt,
+    seoTitle: 'Negozio Centro - lavori per locale commerciale',
+    seoDescription: 'Allestimento mock di negozio con pareti tecniche, controsoffitti e finiture.',
     summary: 'Preparazione locale commerciale con pareti tecniche e controsoffitto illuminazione.',
     description:
       'Intervento pensato per apertura rapida, gestione accessi e coordinamento con fornitori impianti.',
@@ -67,6 +89,11 @@ export const publicProjects = [
     status: 'completato',
     year: '2026',
     imageLabel: 'Condominio',
+    image: projectImages.condominioBianchi.src,
+    fallbackImage: placeholderImages.project.src,
+    imageAlt: projectImages.condominioBianchi.alt,
+    seoTitle: 'Condominio Bianchi - manutenzione parti comuni',
+    seoDescription: 'Cantiere condominiale mock con ripristini, rasature e finiture lavabili.',
     summary: 'Ripristino vani scala, locali tecnici, rasature e tinteggiatura lavabile.',
     description:
       'Lavoro completato con attenzione a ordine nelle parti comuni e riduzione dei disagi per i residenti.',

@@ -1,6 +1,9 @@
 import { CTASection } from '../../components/PublicComponents'
 import { PageHeader } from '../../components/PageHeader'
-import { whyChooseUs } from '../../data/mockSectors'
+import { SafeImage } from '../../components/SafeImage'
+import { publicDocuments } from '../../data/publicDocuments'
+import { teamImages, placeholderImages } from '../../data/publicImages'
+import { whyChooseUs } from '../../data/publicSectors'
 
 export function About() {
   return (
@@ -11,6 +14,13 @@ export function About() {
       <section className="section">
         <div className="detail-layout">
           <article className="public-card">
+            <SafeImage
+              alt={teamImages.squadra.alt}
+              className="public-card-image"
+              fallbackSrc={placeholderImages.project.src}
+              src={teamImages.squadra.src}
+              title={teamImages.squadra.title}
+            />
             <h2>Metodo di lavoro</h2>
             <p>
               Ogni intervento parte da sopralluogo, priorità del cliente e organizzazione delle fasi.
@@ -33,6 +43,23 @@ export function About() {
             <article className="public-card" key={value}>
               <h3>{value}</h3>
               <p>Affidabilità, precisione, organizzazione, pulizia e rispetto dei tempi.</p>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section className="section">
+        <div className="section-heading">
+          <h2>Documenti utili</h2>
+          <p>Solo documenti pubblici dimostrativi. I documenti interni restano esclusi dalla cartella public.</p>
+        </div>
+        <div className="public-grid">
+          {publicDocuments.slice(0, 3).map((document) => (
+            <article className="public-card document-card" key={document.title}>
+              <h3>{document.title}</h3>
+              <p>{document.description}</p>
+              <span className="status-badge status-muted">
+                {document.ready ? document.type : 'In preparazione'}
+              </span>
             </article>
           ))}
         </div>

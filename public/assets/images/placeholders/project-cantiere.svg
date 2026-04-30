@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" role="img" aria-labelledby="title desc">
+  <title id="title">Placeholder cantiere pubblico</title>
+  <desc id="desc">Interno di cantiere stilizzato con pareti, controsoffitto e dettagli tecnici.</desc>
+  <rect width="900" height="560" fill="#17324d"/>
+  <path d="M88 94h724v374H88z" fill="#ffffff"/>
+  <path d="M88 94h724v72H88z" fill="#e8edf0"/>
+  <path d="M164 230h210v180H164zM424 230h312v180H424z" fill="#f4f6f7" stroke="#dce3e7" stroke-width="5"/>
+  <path d="M88 468h724" stroke="#b8642b" stroke-width="16"/>
+</svg>

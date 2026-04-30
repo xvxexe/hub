@@ -8,9 +8,10 @@ import {
   TestimonialMock,
 } from '../../components/PublicComponents'
 import { Section } from '../../components/Section'
-import { companyStats, publicServices, workProcess } from '../../data/mockPublicServices'
-import { publicProjects } from '../../data/mockPublicProjects'
-import { mockTestimonials, sectors, whyChooseUs } from '../../data/mockSectors'
+import { heroImages } from '../../data/publicImages'
+import { companyStats, publicServices, workProcess } from '../../data/publicServices'
+import { publicProjects } from '../../data/publicProjects'
+import { mockTestimonials, sectors, whyChooseUs } from '../../data/publicSectors'
 
 export function Home() {
   return (
@@ -19,6 +20,7 @@ export function Home() {
         eyebrow="Edilizia e cartongesso"
         title="Edilizia, cartongesso e finiture interne gestite con metodo."
         text="EuropaService si occupa di edilizia, cartongesso, controsoffitti, finiture interne e gestione cantieri con metodo, precisione e affidabilità."
+        image={heroImages.main}
       >
         <div className="hero-panel" aria-label="Sintesi EuropaService">
           <span>cantieri ordinati</span>

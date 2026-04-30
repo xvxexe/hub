@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" role="img" aria-labelledby="title desc">
+  <title id="title">Placeholder settori clienti</title>
+  <desc id="desc">Griglia professionale per rappresentare privati, aziende, hotel e negozi.</desc>
+  <rect width="900" height="560" fill="#f4f6f7"/>
+  <rect x="120" y="100" width="280" height="150" rx="10" fill="#17324d"/>
+  <rect x="500" y="100" width="280" height="150" rx="10" fill="#ffffff" stroke="#dce3e7" stroke-width="6"/>
+  <rect x="120" y="310" width="280" height="150" rx="10" fill="#ffffff" stroke="#dce3e7" stroke-width="6"/>
+  <rect x="500" y="310" width="280" height="150" rx="10" fill="#b8642b"/>
+</svg>

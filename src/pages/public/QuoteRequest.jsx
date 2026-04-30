@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
 import { PageHeader } from '../../components/PageHeader'
-import { publicServices } from '../../data/mockPublicServices'
+import { SafeImage } from '../../components/SafeImage'
+import { placeholderImages, serviceImages } from '../../data/publicImages'
+import { publicServices } from '../../data/publicServices'
 
 const initialForm = {
   nome: '',
@@ -36,6 +38,13 @@ export function QuoteRequest() {
         Compila una richiesta mock con dati, misure indicative e priorità. Nessun invio reale.
       </PageHeader>
       <section className="section">
+        <SafeImage
+          alt={serviceImages.cartongesso.alt}
+          className="public-card-image"
+          fallbackSrc={placeholderImages.service.src}
+          src={serviceImages.cartongesso.src}
+          title="Richiesta preventivo cartongesso e finiture"
+        />
         <form className="mock-form estimate-form" onSubmit={submit}>
           <label>Nome<input value={form.nome} onChange={(event) => update('nome', event.target.value)} required /></label>
           <label>Telefono<input type="tel" value={form.telefono} onChange={(event) => update('telefono', event.target.value)} required /></label>

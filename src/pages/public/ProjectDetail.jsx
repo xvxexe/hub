@@ -1,7 +1,8 @@
 import { CTASection } from '../../components/PublicComponents'
 import { PageHeader } from '../../components/PageHeader'
+import { SafeImage } from '../../components/SafeImage'
 import { StatusBadge } from '../../components/StatusBadge'
-import { getPublicProjectById, publicProjects } from '../../data/mockPublicProjects'
+import { getPublicProjectById, publicProjects } from '../../data/publicProjects'
 
 export function ProjectDetail({ projectId }) {
   const project = getPublicProjectById(projectId) ?? publicProjects[0]
@@ -15,7 +16,16 @@ export function ProjectDetail({ projectId }) {
         <div className="detail-layout">
           <div className="public-gallery">
             {project.gallery.map((item) => (
-              <div className="public-image-placeholder" key={item}><span>{item}</span></div>
+              <figure className="public-gallery-item" key={item}>
+                <SafeImage
+                  alt={`${item} - ${project.imageAlt}`}
+                  className="public-project-image"
+                  fallbackSrc={project.fallbackImage}
+                  src={project.image}
+                  title={`${project.title} - ${item}`}
+                />
+                <figcaption>{item}</figcaption>
+              </figure>
             ))}
           </div>
           <article className="info-card">

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Placeholder hero edilizia e cartongesso</title>
+  <desc id="desc">Composizione professionale astratta con pannelli, linee tecniche e colori EuropaService.</desc>
+  <rect width="1200" height="760" fill="#17324d"/>
+  <rect x="78" y="94" width="1044" height="572" rx="12" fill="#f4f6f7"/>
+  <path d="M172 188h426v76H172zM172 318h316v44H172zM172 390h396v44H172z" fill="#dce3e7"/>
+  <path d="M676 170h282v390H676z" fill="#e8edf0"/>
+  <path d="M718 220h198v50H718zM718 310h198v50H718zM718 400h198v50H718z" fill="#fff"/>
+  <path d="M676 560h282v34H676z" fill="#b8642b"/>
+  <path d="M102 666h996" stroke="#b8642b" stroke-width="10"/>
+</svg>

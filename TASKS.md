@@ -2,7 +2,7 @@
 
 ## Task attuale
 
-Miglioramento area interna UI/UX e logica operativa v0.5.6 completato.
+Immagini prototipo locali scaricate e collegate al sito pubblico.
 
 ## Da fare ora
 
@@ -146,3 +146,23 @@ v0.5.7 — Flussi interni avanzati mock oppure v0.6 — Preparazione Supabase se
 - Pagina accesso negato resa più chiara con pulsante “Torna alla dashboard”
 - Nessun Supabase, backend, upload reale, IA, OCR, export o login reale implementato
 - Verifiche eseguite: `npm run lint`, `npm run build`
+
+## Completato — Asset pubblici e documenti pubblici
+
+- Creata struttura cartelle `public/assets/images` per hero, servizi, cantieri, settori, team e placeholder
+- Creata struttura cartelle `public/assets/documents` per documenti pubblici azienda, download ed esempi
+- Aggiunti README per regole immagini stock e documenti pubblici
+- Creati placeholder SVG locali professionali per hero, servizi, cantieri, settori e documenti
+- Creato script `scripts/download-prototype-images.mjs` per scaricare immagini prototipo da LoremFlickr con fallback Picsum
+- Aggiunto script npm `npm run download:prototype-images`
+- Scaricate immagini prototipo locali in `public/assets/images`
+- Creato registro immagini in `src/data/publicImages.js`
+- Creato registro documenti pubblici in `src/data/publicDocuments.js`
+- Aggiornati dati pubblici di servizi, cantieri e settori con image, imageAlt, seoTitle e seoDescription
+- Creato componente `SafeImage` con fallback locale e alt text obbligatorio
+- Collegate immagini locali alle pagine pubbliche: Home, Servizi, Cantieri, Dettaglio cantiere, Settori, Chi siamo, Preventivo e Contatti
+- Aggiunta sezione “Documenti utili” nella pagina Chi siamo
+- Sito pronto per usare immagini stock locali salvate in `public/assets/images`
+- Documenti interni esclusi dalla cartella `public`
+- Nessun Supabase, backend, upload reale, IA o gestione documenti interni reali implementata
+- Verifiche eseguite: `npm run download:prototype-images`, `npm run lint`, `npm run build`

@@ -1,6 +1,6 @@
 import { CTASection, SectorCard } from '../../components/PublicComponents'
 import { PageHeader } from '../../components/PageHeader'
-import { sectors } from '../../data/mockSectors'
+import { sectors } from '../../data/publicSectors'
 
 export function Sectors() {
   return (

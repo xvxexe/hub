@@ -1,6 +1,6 @@
 import { CTASection, ServiceCard } from '../../components/PublicComponents'
 import { PageHeader } from '../../components/PageHeader'
-import { publicServices } from '../../data/mockPublicServices'
+import { publicServices } from '../../data/publicServices'
 
 export function Services() {
   return (

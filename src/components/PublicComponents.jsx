@@ -1,6 +1,7 @@
 import { StatusBadge } from './StatusBadge'
+import { SafeImage } from './SafeImage'
 
-export function HeroSection({ eyebrow, title, text, children }) {
+export function HeroSection({ eyebrow, title, text, image, children }) {
   return (
     <section className="hero-section public-hero">
       <div className="hero-copy">
@@ -12,7 +13,19 @@ export function HeroSection({ eyebrow, title, text, children }) {
           <a className="button button-secondary" href="#/cantieri">Guarda i cantieri</a>
         </div>
       </div>
-      {children}
+      <div className="hero-media">
+        {image ? (
+          <SafeImage
+            alt={image.alt}
+            className="public-hero-image"
+            fallbackSrc="/assets/images/placeholders/hero-edilizia-cartongesso.svg"
+            loading="eager"
+            src={image.src}
+            title={image.title}
+          />
+        ) : null}
+        {children}
+      </div>
     </section>
   )
 }
@@ -20,6 +33,13 @@ export function HeroSection({ eyebrow, title, text, children }) {
 export function ServiceCard({ service }) {
   return (
     <article className="public-card service-card">
+      <SafeImage
+        alt={service.imageAlt}
+        className="public-card-image"
+        fallbackSrc={service.fallbackImage}
+        src={service.image}
+        title={service.seoTitle}
+      />
       <span className="service-icon">{service.icon}</span>
       <h2>{service.title}</h2>
       <p>{service.description}</p>
@@ -34,7 +54,13 @@ export function ServiceCard({ service }) {
 export function ProjectCard({ project }) {
   return (
     <article className="public-card project-public-card">
-      <div className="public-image-placeholder"><span>{project.imageLabel}</span></div>
+      <SafeImage
+        alt={project.imageAlt}
+        className="public-project-image"
+        fallbackSrc={project.fallbackImage}
+        src={project.image}
+        title={project.seoTitle}
+      />
       <div className="project-public-body">
         <StatusBadge>{project.status}</StatusBadge>
         <h2>{project.title}</h2>
@@ -92,6 +118,13 @@ export function ProcessSteps({ steps }) {
 export function SectorCard({ sector }) {
   return (
     <article className="public-card sector-card">
+      <SafeImage
+        alt={sector.imageAlt}
+        className="public-card-image"
+        fallbackSrc={sector.fallbackImage}
+        src={sector.image}
+        title={sector.seoTitle}
+      />
       <h2>{sector.title}</h2>
       <p>{sector.text}</p>
     </article>
