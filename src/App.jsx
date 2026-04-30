@@ -6,15 +6,20 @@ import {
   employees,
   mockUsers,
   quotes,
-  roles,
   sitePhotos,
 } from './data/mockData'
+import { mockDocumentUploads, mockFotoUploads } from './data/mockUploads'
 import { canAccessDashboardPath, normalizePath } from './lib/navigation'
+import { roles } from './lib/roles'
+import { CaricamentiRecenti } from './pages/dashboard/CaricamentiRecenti'
 import { CantiereDetail } from './pages/dashboard/CantiereDetail'
 import { CantieriList } from './pages/dashboard/CantieriList'
 import { DashboardHome } from './pages/dashboard/DashboardHome'
 import { DashboardListPage } from './pages/dashboard/DashboardListPage'
 import { LoginMock } from './pages/dashboard/LoginMock'
+import { SettingsMock } from './pages/dashboard/SettingsMock'
+import { Unauthorized } from './pages/dashboard/Unauthorized'
+import { UploadMock } from './pages/dashboard/UploadMock'
 import { Contacts } from './pages/public/Contacts'
 import { Home } from './pages/public/Home'
 import { ProjectDetail } from './pages/public/ProjectDetail'
@@ -39,7 +44,7 @@ function navigateTo(path) {
   window.location.assign(`#${path}`)
 }
 
-function renderRoute(path, session, selectedRole, handlers) {
+function renderRoute(path, session, selectedRole, handlers, uploads) {
   if (path === '/') return <Home />
   if (path === '/servizi') return <Services />
   if (path === '/cantieri') return <Projects />
@@ -68,27 +73,49 @@ function renderRoute(path, session, selectedRole, handlers) {
   }
 
   if (path.startsWith('/dashboard') && !canAccessDashboardPath(path, session.role)) {
+    return <Unauthorized path={path} role={session.role} />
+  }
+
+  if (path === '/dashboard') {
     return (
-      <DashboardListPage
-        eyebrow="Accesso limitato"
-        title="Sezione non disponibile per questo ruolo"
-        description="Il menu mostra solo le aree abilitate per il ruolo mock selezionato."
-        rows={[{ section: path.replace('/dashboard/', ''), role: session.role, status: 'Non abilitato' }]}
-        columns={[
-          { label: 'Sezione', key: 'section' },
-          { label: 'Ruolo', key: 'role' },
-          { label: 'Stato', key: 'status', badge: true },
-        ]}
+      <DashboardHome
+        session={session}
+        documentUploads={uploads.documentUploads}
+        fotoUploads={uploads.fotoUploads}
       />
     )
   }
-
-  if (path === '/dashboard') return <DashboardHome session={session} />
   if (path.startsWith('/dashboard/cantieri/')) {
-    return <CantiereDetail cantiereId={path.split('/').at(-1)} />
+    return (
+      <CantiereDetail
+        cantiereId={path.split('/').at(-1)}
+        documentUploads={uploads.documentUploads}
+        fotoUploads={uploads.fotoUploads}
+      />
+    )
   }
   if (path === '/dashboard/cantieri') {
     return <CantieriList />
+  }
+  if (path === '/dashboard/upload') {
+    return (
+      <UploadMock
+        session={session}
+        fotoUploads={uploads.fotoUploads}
+        documentUploads={uploads.documentUploads}
+        onAddFoto={handlers.onAddFoto}
+        onAddDocument={handlers.onAddDocument}
+      />
+    )
+  }
+  if (path === '/dashboard/caricamenti') {
+    return (
+      <CaricamentiRecenti
+        session={session}
+        fotoUploads={uploads.fotoUploads}
+        documentUploads={uploads.documentUploads}
+      />
+    )
   }
   if (path === '/dashboard/documenti') {
     return (
@@ -169,6 +196,9 @@ function renderRoute(path, session, selectedRole, handlers) {
       />
     )
   }
+  if (path === '/dashboard/impostazioni') {
+    return <SettingsMock />
+  }
 
   return <Home />
 }
@@ -177,6 +207,8 @@ export default function App() {
   const path = useHashPath()
   const [selectedRole, setSelectedRole] = useState('admin')
   const [session, setSession] = useState(null)
+  const [fotoUploads, setFotoUploads] = useState(mockFotoUploads)
+  const [documentUploads, setDocumentUploads] = useState(mockDocumentUploads)
 
   function loginWithSelectedRole() {
     const user = mockUsers.find((item) => item.role === selectedRole) ?? mockUsers[0]
@@ -210,6 +242,11 @@ export default function App() {
       {renderRoute(path, session, selectedRole, {
         onLogin: loginWithSelectedRole,
         onRoleSelect: setSelectedRole,
+        onAddFoto: (upload) => setFotoUploads((current) => [upload, ...current]),
+        onAddDocument: (upload) => setDocumentUploads((current) => [upload, ...current]),
+      }, {
+        fotoUploads,
+        documentUploads,
       })}
     </AppShell>
   )

@@ -61,24 +61,6 @@ export const dashboardStats = [
   { label: 'Preventivi aperti', value: '5' },
 ]
 
-export const roles = [
-  {
-    id: 'admin',
-    label: 'Admin / capo',
-    description: 'Vede tutta la dashboard mock: cantieri, documenti, foto, preventivi, contabilità e dipendenti.',
-  },
-  {
-    id: 'accounting',
-    label: 'Contabilità',
-    description: 'Vede cantieri, documenti, preventivi e contabilità per controlli amministrativi.',
-  },
-  {
-    id: 'employee',
-    label: 'Dipendente',
-    description: 'Vede solo le sezioni operative utili per foto, documenti e cantieri assegnati.',
-  },
-]
-
 export const mockUsers = [
   { id: 'u-1', name: 'Gianni Europa', role: 'admin' },
   { id: 'u-2', name: 'Sara Costa', role: 'accounting' },

@@ -1,10 +1,11 @@
 import { company } from '../data/mockData'
-import { getDashboardNavForRole, isActive, publicNav } from '../lib/navigation'
+import { isActive, publicNav } from '../lib/navigation'
+import { getDashboardNavForRole, getRole } from '../lib/roles'
 
 export function AppShell({ children, currentPath, session, onLogout, onRoleChange, roles }) {
   const isDashboard = currentPath.startsWith('/dashboard')
   const visibleDashboardNav = session ? getDashboardNavForRole(session.role) : []
-  const activeRole = roles.find((role) => role.id === session?.role)
+  const activeRole = session ? getRole(session.role) : null
 
   return (
     <div className="app-shell">
@@ -59,7 +60,7 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
                   ))}
                 </nav>
                 <div className="dev-role-panel">
-                  <label htmlFor="dev-role">Ruolo sviluppo</label>
+                  <label htmlFor="dev-role">Modalità sviluppo: scegli ruolo</label>
                   <select
                     id="dev-role"
                     value={session.role}

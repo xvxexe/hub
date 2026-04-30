@@ -1,4 +1,4 @@
-import { roles } from '../../data/mockData'
+import { roles } from '../../lib/roles'
 
 export function LoginMock({ selectedRole, onRoleSelect, onLogin }) {
   const activeRole = roles.find((role) => role.id === selectedRole)

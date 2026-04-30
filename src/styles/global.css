@@ -849,6 +849,180 @@ p {
   border-left: 4px solid var(--copper);
 }
 
+.upload-layout,
+.employee-upload-layout,
+.upload-recent-layout {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.upload-card {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--white);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+
+.upload-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.upload-form label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--heading);
+  font-weight: 800;
+}
+
+.upload-form input,
+.upload-form select,
+.upload-form textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: var(--white);
+  padding: 0.8rem 0.85rem;
+}
+
+.upload-form input[type='file'] {
+  background: var(--surface);
+}
+
+.upload-form .button {
+  width: 100%;
+}
+
+.upload-static-fields {
+  display: grid;
+  gap: 0.4rem;
+  border-left: 4px solid var(--copper);
+  background: var(--copper-soft);
+  color: var(--heading);
+  font-size: 0.88rem;
+  font-weight: 800;
+  padding: 0.85rem 1rem;
+}
+
+.file-preview-mock {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  border: 1px dashed var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  padding: 0.8rem;
+}
+
+.file-preview-mock span {
+  display: grid;
+  width: 2.7rem;
+  height: 2.7rem;
+  place-items: center;
+  border-radius: 0.4rem;
+  background: var(--blue);
+  color: var(--white);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.file-preview-mock strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--heading);
+}
+
+.recent-upload-section,
+.linked-uploads {
+  display: grid;
+  gap: 1rem;
+}
+
+.linked-uploads {
+  margin-top: 1rem;
+}
+
+.recent-upload-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.recent-upload-card {
+  display: grid;
+  gap: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--white);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+
+.recent-upload-title {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.recent-upload-card small {
+  display: block;
+  color: var(--muted);
+  font-weight: 800;
+  margin-top: 0.4rem;
+}
+
+.upload-filters {
+  grid-template-columns: 1fr;
+}
+
+.employee-action-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.employee-action-panel label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--heading);
+  font-weight: 800;
+}
+
+.employee-action-panel select,
+.employee-action-panel textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: var(--white);
+  padding: 0.8rem 0.85rem;
+}
+
+.employee-actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.unauthorized-page {
+  min-height: 24rem;
+  align-content: start;
+}
+
+.unauthorized-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.unauthorized-actions span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
 @media (min-width: 720px) {
   h1 {
     font-size: 3.25rem;
@@ -926,6 +1100,40 @@ p {
     grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.8fr);
   }
 
+  .upload-layout,
+  .upload-recent-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 1.5rem;
+  }
+
+  .employee-upload-layout {
+    grid-template-columns: minmax(0, 40rem);
+    padding: 1.5rem;
+  }
+
+  .recent-upload-card {
+    grid-template-columns: 12rem minmax(0, 1fr);
+  }
+
+  .recent-upload-title {
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .upload-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .employee-action-panel {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 42rem;
+    padding: 1.5rem;
+  }
+
+  .employee-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .detail-layout {
     grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
   }
@@ -978,7 +1186,11 @@ p {
   .dashboard-main .detail-summary-grid,
   .dashboard-main .detail-tabs,
   .dashboard-main .detail-tab-panel,
-  .dashboard-main .cantiere-detail-header {
+  .dashboard-main .cantiere-detail-header,
+  .dashboard-main .upload-layout,
+  .dashboard-main .employee-upload-layout,
+  .dashboard-main .upload-recent-layout,
+  .dashboard-main .employee-action-panel {
     padding-left: 2rem;
     padding-right: 2rem;
   }

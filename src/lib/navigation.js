@@ -1,3 +1,5 @@
+import { canAccessDashboardPath, getDashboardNavForRole } from './roles'
+
 export const publicNav = [
   { label: 'Home', path: '/' },
   { label: 'Servizi', path: '/servizi' },
@@ -6,30 +8,7 @@ export const publicNav = [
   { label: 'Contatti', path: '/contatti' },
 ]
 
-export const dashboardNav = [
-  { label: 'Dashboard', path: '/dashboard', roles: ['admin', 'accounting', 'employee'] },
-  { label: 'Cantieri', path: '/dashboard/cantieri', roles: ['admin', 'accounting', 'employee'] },
-  { label: 'Documenti', path: '/dashboard/documenti', roles: ['admin', 'accounting', 'employee'] },
-  { label: 'Foto cantiere', path: '/dashboard/foto', roles: ['admin', 'employee'] },
-  { label: 'Preventivi', path: '/dashboard/preventivi', roles: ['admin', 'accounting'] },
-  { label: 'Contabilita', path: '/dashboard/contabilita', roles: ['admin', 'accounting'] },
-  { label: 'Dipendenti', path: '/dashboard/dipendenti', roles: ['admin'] },
-]
-
-export function getDashboardNavForRole(role) {
-  return dashboardNav.filter((item) => item.roles.includes(role))
-}
-
-export function canAccessDashboardPath(path, role) {
-  if (path === '/dashboard/login') {
-    return true
-  }
-
-  return dashboardNav.some((item) => {
-    const matchesPath = path === item.path || path.startsWith(`${item.path}/`)
-    return matchesPath && item.roles.includes(role)
-  })
-}
+export { canAccessDashboardPath, getDashboardNavForRole }
 
 export function normalizePath(hash) {
   const path = hash.replace(/^#/, '') || '/'
@@ -41,5 +20,5 @@ export function isActive(currentPath, itemPath) {
     return currentPath === '/'
   }
 
-  return currentPath === itemPath
+  return currentPath === itemPath || currentPath.startsWith(`${itemPath}/`)
 }

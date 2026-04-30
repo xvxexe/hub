@@ -2,7 +2,7 @@
 
 ## Task attuale
 
-Gestione cantieri mock v0.3 completata.
+Pulizia ruoli mock v0.2.1 completata.
 
 ## Da fare ora
 
@@ -64,4 +64,34 @@ Gestione cantieri mock v0.3 completata.
 
 ## Prossima fase
 
-v0.4 — Upload mock foto e documenti
+v0.5 — Contabilità mock per cantiere
+
+## Completato in v0.2.1
+
+- Creata configurazione centralizzata ruoli in `src/lib/roles.js`
+- Definiti ruoli disponibili, label, permessi mock, pagine accessibili e menu per ruolo
+- Separato menu admin/capo, contabilità e dipendente
+- Admin/capo vede tutte le sezioni interne, inclusa Impostazioni mock
+- Contabilità vede solo dashboard, cantieri, documenti, upload documenti, caricamenti documenti, preventivi e contabilità
+- Dipendente vede solo dashboard semplice, upload e i miei caricamenti
+- Aggiunta pagina mock "Accesso non autorizzato" per route non consentite
+- Aggiornata dashboard con viste differenziate per admin, contabilità e dipendente
+- Reso più chiaro il selettore ruolo come "Modalità sviluppo: scegli ruolo"
+- Nessun Supabase, backend, login reale, sicurezza server-side o database reale implementato
+- Verifiche eseguite: `npm run lint`, `npm run build`
+
+## Completato in v0.4
+
+- Creata pagina `#/dashboard/upload`
+- Creata pagina `#/dashboard/caricamenti`
+- Aggiunti dati mock centralizzati in `src/data/mockUploads.js`
+- Aggiunto upload foto mock con cantiere, zona, lavorazione, avanzamento, file, nota, pubblicabilita, autore, data automatica e stato da revisionare
+- Aggiunto upload documenti mock con cantiere, tipo documento, fornitore, data documento, importo, file, nota, autore, data automatica e stato da verificare
+- Aggiunta lista foto caricate di recente
+- Aggiunta lista documenti caricati di recente
+- Aggiunti filtri caricamenti per cantiere, tipo e stato
+- Collegati caricamenti mock alle sezioni Foto e Documenti del dettaglio cantiere
+- Aggiornata navigazione dashboard con Upload e Caricamenti in base ai ruoli
+- Mantenuta logica ruoli: admin completo, contabilità orientata ai documenti, dipendente con schermata più semplice
+- Nessun backend reale, Supabase, upload reale, IA, OCR, PDF o export implementato
+- Verifiche eseguite: `npm run lint`, `npm run build`

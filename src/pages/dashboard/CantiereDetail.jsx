@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FilePreviewMock } from '../../components/FilePreviewMock'
 import { ProgressBar } from '../../components/ProgressBar'
 import { StatusBadge } from '../../components/StatusBadge'
 import {
@@ -10,7 +11,7 @@ import {
 
 const tabs = ['Panoramica', 'Foto', 'Documenti', 'Spese', 'Note', 'Problemi']
 
-export function CantiereDetail({ cantiereId }) {
+export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads = [] }) {
   const [activeTab, setActiveTab] = useState('Panoramica')
   const cantiere = getCantiereById(cantiereId)
 
@@ -28,6 +29,8 @@ export function CantiereDetail({ cantiereId }) {
   }
 
   const totals = getCantiereTotals(cantiere)
+  const linkedFotoUploads = fotoUploads.filter((upload) => upload.cantiereId === cantiere.id)
+  const linkedDocumentUploads = documentUploads.filter((upload) => upload.cantiereId === cantiere.id)
 
   return (
     <>
@@ -68,7 +71,9 @@ export function CantiereDetail({ cantiereId }) {
         ))}
       </section>
 
-      <section className="detail-tab-panel">{renderTab(activeTab, cantiere, totals)}</section>
+      <section className="detail-tab-panel">
+        {renderTab(activeTab, cantiere, totals, linkedFotoUploads, linkedDocumentUploads)}
+      </section>
     </>
   )
 }
@@ -82,7 +87,7 @@ function SummaryItem({ label, value }) {
   )
 }
 
-function renderTab(activeTab, cantiere, totals) {
+function renderTab(activeTab, cantiere, totals, linkedFotoUploads, linkedDocumentUploads) {
   if (activeTab === 'Panoramica') {
     return (
       <div className="detail-two-column">
@@ -121,29 +126,66 @@ function renderTab(activeTab, cantiere, totals) {
 
   if (activeTab === 'Foto') {
     return (
-      <div className="detail-list-grid">
-        {cantiere.foto.map((foto) => (
-          <article className="mock-photo-card" key={foto.id}>
-            <div className="mock-photo-thumb">Foto mock</div>
-            <h3>{foto.titolo}</h3>
-            <p>{formatDate(foto.data)} · {foto.autore}</p>
-          </article>
-        ))}
-      </div>
+      <>
+        <div className="detail-list-grid">
+          {cantiere.foto.map((foto) => (
+            <article className="mock-photo-card" key={foto.id}>
+              <div className="mock-photo-thumb">Foto mock</div>
+              <h3>{foto.titolo}</h3>
+              <p>{formatDate(foto.data)} · {foto.autore}</p>
+            </article>
+          ))}
+        </div>
+        <LinkedUploads title="Caricamenti foto collegati">
+          {linkedFotoUploads.map((foto) => (
+            <article className="recent-upload-card" key={foto.id}>
+              <FilePreviewMock fileName={foto.fileName} type="image" />
+              <div>
+                <div className="recent-upload-title">
+                  <h3>{foto.zona} · {foto.lavorazione}</h3>
+                  <StatusBadge>{foto.stato}</StatusBadge>
+                </div>
+                <p>{foto.nota}</p>
+                <small>{formatDate(foto.dataCaricamento)} · {foto.caricatoDa}</small>
+              </div>
+            </article>
+          ))}
+        </LinkedUploads>
+      </>
     )
   }
 
   if (activeTab === 'Documenti') {
     return (
-      <div className="table-card">
-        {cantiere.documenti.map((documento) => (
-          <div className="table-row table-row-4" key={documento.id}>
-            <strong>{documento.nome}</strong>
-            <span>{documento.tipo}</span>
-            <StatusBadge>{documento.stato}</StatusBadge>
-          </div>
-        ))}
-      </div>
+      <>
+        <div className="table-card">
+          {cantiere.documenti.map((documento) => (
+            <div className="table-row table-row-4" key={documento.id}>
+              <strong>{documento.nome}</strong>
+              <span>{documento.tipo}</span>
+              <StatusBadge>{documento.stato}</StatusBadge>
+            </div>
+          ))}
+        </div>
+        <LinkedUploads title="Caricamenti documenti collegati">
+          {linkedDocumentUploads.map((documento) => (
+            <article className="recent-upload-card" key={documento.id}>
+              <FilePreviewMock fileName={documento.fileName} />
+              <div>
+                <div className="recent-upload-title">
+                  <h3>{documento.tipoDocumento} · {documento.fornitore}</h3>
+                  <StatusBadge>{documento.stato}</StatusBadge>
+                </div>
+                <p>{documento.descrizione}</p>
+                <small>
+                  {formatDate(documento.dataCaricamento)} · {documento.caricatoDa} ·{' '}
+                  {formatCurrency(documento.importoTotale)}
+                </small>
+              </div>
+            </article>
+          ))}
+        </LinkedUploads>
+      </>
     )
   }
 
@@ -191,5 +233,14 @@ function renderTab(activeTab, cantiere, totals) {
         </article>
       )}
     </div>
+  )
+}
+
+function LinkedUploads({ title, children }) {
+  return (
+    <section className="linked-uploads">
+      <h2>{title}</h2>
+      <div className="recent-upload-list">{children}</div>
+    </section>
   )
 }
