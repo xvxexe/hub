@@ -1,41 +1,37 @@
-import { PageHeader } from '../../components/PageHeader'
+import {
+  CTASection,
+  HeroSection,
+  ProcessSteps,
+  ProjectCard,
+  SectorCard,
+  StatsBand,
+  TestimonialMock,
+} from '../../components/PublicComponents'
 import { Section } from '../../components/Section'
-import { company, publicProjects, services } from '../../data/mockData'
+import { companyStats, publicServices, workProcess } from '../../data/mockPublicServices'
+import { publicProjects } from '../../data/mockPublicProjects'
+import { mockTestimonials, sectors, whyChooseUs } from '../../data/mockSectors'
 
 export function Home() {
   return (
     <>
-      <section className="hero-section">
-        <div className="hero-copy">
-          <p className="eyebrow">Impresa edile e cartongesso</p>
-          <h1>Gestione cantieri ordinata, lavori puliti, comunicazione chiara.</h1>
-          <p>
-            {company.name} presenta i servizi al cliente e prepara una base interna per
-            controllare cantieri, documenti, foto e preventivi con dati mock.
-          </p>
-          <div className="hero-actions">
-            <a className="button button-primary" href="#/preventivo">
-              Richiedi preventivo
-            </a>
-            <a className="button button-secondary" href="#/cantieri">
-              Vedi cantieri
-            </a>
-          </div>
-        </div>
-        <div className="hero-panel" aria-label="Sintesi operativa">
-          <span>v0.1 mock frontend</span>
-          <strong>6 cantieri monitorati</strong>
-          <p>Base pronta per espandere ruoli, documenti, foto e contabilità nelle prossime fasi.</p>
-        </div>
-      </section>
-
-      <Section
-        title="Servizi principali"
-        intro="Una presentazione essenziale per clienti privati, studi tecnici e attività commerciali."
+      <HeroSection
+        eyebrow="Edilizia e cartongesso"
+        title="Edilizia, cartongesso e finiture interne gestite con metodo."
+        text="EuropaService si occupa di edilizia, cartongesso, controsoffitti, finiture interne e gestione cantieri con metodo, precisione e affidabilità."
       >
-        <div className="card-grid">
-          {services.map((service) => (
-            <article className="info-card" key={service.title}>
+        <div className="hero-panel" aria-label="Sintesi EuropaService">
+          <span>cantieri ordinati</span>
+          <strong>Hotel, negozi, aziende e abitazioni</strong>
+          <p>Un interlocutore operativo per lavorazioni interne, ripristini, finiture e coordinamento.</p>
+        </div>
+      </HeroSection>
+
+      <Section title="Servizi principali" intro="Soluzioni per interni tecnici, residenziali e commerciali.">
+        <div className="public-grid">
+          {publicServices.slice(0, 6).map((service) => (
+            <article className="public-card" key={service.id}>
+              <span className="service-icon">{service.icon}</span>
               <h3>{service.title}</h3>
               <p>{service.description}</p>
             </article>
@@ -44,20 +40,43 @@ export function Home() {
       </Section>
 
       <Section title="Cantieri in evidenza" tone="muted">
-        <div className="project-list">
-          {publicProjects.slice(0, 2).map((project) => (
-            <a className="project-row" href={`#/cantieri/${project.id}`} key={project.id}>
-              <span>{project.type}</span>
-              <strong>{project.title}</strong>
-              <small>{project.location} · {project.year}</small>
-            </a>
+        <div className="public-project-grid">
+          {publicProjects.slice(0, 3).map((project) => <ProjectCard key={project.id} project={project} />)}
+        </div>
+      </Section>
+
+      <Section title="Perché scegliere EuropaService">
+        <div className="public-grid">
+          {whyChooseUs.map((item) => (
+            <article className="public-card" key={item}>
+              <h3>{item}</h3>
+              <p>Metodo operativo, comunicazione chiara e attenzione alla qualità del risultato finale.</p>
+            </article>
           ))}
         </div>
       </Section>
 
-      <PageHeader eyebrow="Area interna" title="Dashboard mock pronta per la fase v0.1">
-        Navigazione interna disponibile da Area interna, con dati dimostrativi e senza servizi reali.
-      </PageHeader>
+      <StatsBand stats={companyStats} />
+
+      <Section title="Processo di lavoro in 4 step">
+        <ProcessSteps steps={workProcess} />
+      </Section>
+
+      <Section title="Clienti e settori serviti" tone="muted">
+        <div className="public-grid">
+          {sectors.slice(0, 4).map((sector) => <SectorCard key={sector.id} sector={sector} />)}
+        </div>
+      </Section>
+
+      <Section title="Feedback mock">
+        <div className="public-grid two-cols">
+          {mockTestimonials.map((testimonial) => (
+            <TestimonialMock key={testimonial.author} testimonial={testimonial} />
+          ))}
+        </div>
+      </Section>
+
+      <CTASection text="Descrivi il lavoro, indica città e urgenza: la richiesta resta mock, ma il flusso è pronto per una demo professionale." />
     </>
   )
 }

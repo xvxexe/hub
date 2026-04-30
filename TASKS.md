@@ -2,7 +2,7 @@
 
 ## Task attuale
 
-Contabilità mock per cantiere v0.5 completata.
+Sito pubblico completo mock v0.5.5 completato.
 
 ## Da fare ora
 
@@ -113,3 +113,20 @@ v0.6 — Preparazione Supabase setup
 - Dipendente non vede contabilità, importi o riepiloghi economici
 - Nessun Supabase, backend, upload reale, IA, OCR, pagamenti reali, PDF o export implementato
 - Verifiche eseguite: `npm run lint`, `npm run build`, validazione imponibile + IVA = totale
+
+## Completato in v0.5.5
+
+- Home pubblica ampliata con hero, CTA, servizi, cantieri, motivi di scelta, numeri mock, processo, settori e testimonianze mock
+- Pagina Servizi completata con card dettagliate e CTA preventivo
+- Pagina Cantieri pubblica migliorata con filtri, card portfolio e dati pubblicabili
+- Dettaglio cantiere pubblico aggiornato senza spese, documenti interni, note interne o problemi
+- Pagina Preventivo ampliata con form mock completo e riepilogo conferma
+- Pagina Contatti ampliata con recapiti, WhatsApp, zone, orari, sopralluogo e form mock
+- Creata pagina Chi siamo
+- Creata pagina Settori
+- Navigazione pubblica aggiornata con Home, Servizi, Cantieri, Settori, Chi siamo, Preventivo, Contatti e Area riservata
+- Aggiunti dati pubblici centralizzati in `src/data/mockPublicServices.js`, `src/data/mockPublicProjects.js`, `src/data/mockSectors.js`
+- Aggiunti componenti pubblici riutilizzabili in `src/components/PublicComponents.jsx`
+- Nessun backend reale, Supabase, IA o upload reale implementato
+- Area interna, ruoli, cantieri, upload e contabilità mantenuti funzionanti
+- Verifiche eseguite: `npm run lint`, `npm run build`

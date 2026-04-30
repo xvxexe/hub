@@ -1,0 +1,84 @@
+export const publicProjects = [
+  {
+    id: 'barcelo-roma',
+    title: 'Barcelo Roma',
+    location: 'Roma, zona Eur',
+    type: 'Hotel',
+    status: 'in corso',
+    year: '2026',
+    imageLabel: 'Hotel',
+    summary: 'Controsoffitti tecnici, velette e finiture interne per camere e corridoi.',
+    description:
+      'Intervento organizzato per aree, con attenzione a pulizia, accessi e continuità operativa della struttura.',
+    services: ['Controsoffitti', 'Cartongesso', 'Finiture interne'],
+    result: 'Ambienti più ordinati, impianti integrati e finiture coerenti con lo standard hotel.',
+    gallery: ['Corridoio piano camere', 'Veletta reception', 'Botole ispezionabili'],
+  },
+  {
+    id: 'residenza-verdi',
+    title: 'Residenza Verdi',
+    location: 'Verona, Borgo Venezia',
+    type: 'Residenziale',
+    status: 'in corso',
+    year: '2026',
+    imageLabel: 'Residenza',
+    summary: 'Pareti divisorie, contropareti acustiche e rasature per palazzina residenziale.',
+    description:
+      'Lavorazioni interne coordinate con avanzamento per piani e attenzione alle finiture degli appartamenti campione.',
+    services: ['Pareti divisorie', 'Isolamenti', 'Rasature'],
+    result: 'Spazi distribuiti meglio, superfici pronte e maggiore comfort acustico.',
+    gallery: ['Pareti appartamento', 'Vano scala', 'Controparete acustica'],
+  },
+  {
+    id: 'hotel-interno-milano',
+    title: 'Hotel Interno Milano',
+    location: 'Milano, Porta Nuova',
+    type: 'Hotel',
+    status: 'in corso',
+    year: '2026',
+    imageLabel: 'Interni',
+    summary: 'Pareti curve, isolamento acustico e controsoffitti per sale comuni.',
+    description:
+      'Ristrutturazione interna con soluzioni in cartongesso per migliorare estetica, comfort e funzionalità.',
+    services: ['Cartongesso', 'Isolamenti', 'Controsoffitti'],
+    result: 'Sale comuni più curate, miglior comfort acustico e impianti integrati.',
+    gallery: ['Sala meeting', 'Parete curva', 'Rasatura corridoio'],
+  },
+  {
+    id: 'negozio-centro',
+    title: 'Negozio Centro',
+    location: 'Verona, centro storico',
+    type: 'Commerciale',
+    status: 'in corso',
+    year: '2026',
+    imageLabel: 'Retail',
+    summary: 'Preparazione locale commerciale con pareti tecniche e controsoffitto illuminazione.',
+    description:
+      'Intervento pensato per apertura rapida, gestione accessi e coordinamento con fornitori impianti.',
+    services: ['Pareti divisorie', 'Controsoffitti', 'Finiture interne'],
+    result: 'Locale pronto per allestimento, con spazi più funzionali e immagine ordinata.',
+    gallery: ['Locale prima lavori', 'Pareti tecniche', 'Area cassa'],
+  },
+  {
+    id: 'condominio-bianchi',
+    title: 'Condominio Bianchi',
+    location: 'Padova, Arcella',
+    type: 'Condominio',
+    status: 'completato',
+    year: '2026',
+    imageLabel: 'Condominio',
+    summary: 'Ripristino vani scala, locali tecnici, rasature e tinteggiatura lavabile.',
+    description:
+      'Lavoro completato con attenzione a ordine nelle parti comuni e riduzione dei disagi per i residenti.',
+    services: ['Manutenzioni', 'Rasature', 'Finiture interne'],
+    result: 'Parti comuni più pulite, resistenti e facili da mantenere.',
+    gallery: ['Vano scala completato', 'Locale tecnico', 'Finitura lavabile'],
+  },
+]
+
+export const projectTypes = ['Tutti', 'Hotel', 'Residenziale', 'Commerciale', 'Condominio']
+export const projectStatuses = ['Tutti', 'in corso', 'completato']
+
+export function getPublicProjectById(id) {
+  return publicProjects.find((project) => project.id === id)
+}

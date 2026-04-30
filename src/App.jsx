@@ -20,11 +20,13 @@ import { LoginMock } from './pages/dashboard/LoginMock'
 import { SettingsMock } from './pages/dashboard/SettingsMock'
 import { Unauthorized } from './pages/dashboard/Unauthorized'
 import { UploadMock } from './pages/dashboard/UploadMock'
+import { About } from './pages/public/About'
 import { Contacts } from './pages/public/Contacts'
 import { Home } from './pages/public/Home'
 import { ProjectDetail } from './pages/public/ProjectDetail'
 import { Projects } from './pages/public/Projects'
 import { QuoteRequest } from './pages/public/QuoteRequest'
+import { Sectors } from './pages/public/Sectors'
 import { Services } from './pages/public/Services'
 import './styles/global.css'
 
@@ -49,6 +51,8 @@ function renderRoute(path, session, selectedRole, handlers, uploads) {
   if (path === '/servizi') return <Services />
   if (path === '/cantieri') return <Projects />
   if (path.startsWith('/cantieri/')) return <ProjectDetail projectId={path.split('/').at(-1)} />
+  if (path === '/settori') return <Sectors />
+  if (path === '/chi-siamo') return <About />
   if (path === '/preventivo') return <QuoteRequest />
   if (path === '/contatti') return <Contacts />
 

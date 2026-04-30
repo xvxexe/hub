@@ -33,7 +33,7 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
             aria-current={currentPath.startsWith('/dashboard') ? 'page' : undefined}
             href="#/dashboard/login"
           >
-            Area interna
+            Area riservata
           </a>
         </nav>
       </header>

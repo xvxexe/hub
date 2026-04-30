@@ -4,6 +4,8 @@ export const publicNav = [
   { label: 'Home', path: '/' },
   { label: 'Servizi', path: '/servizi' },
   { label: 'Cantieri', path: '/cantieri' },
+  { label: 'Settori', path: '/settori' },
+  { label: 'Chi siamo', path: '/chi-siamo' },
   { label: 'Preventivo', path: '/preventivo' },
   { label: 'Contatti', path: '/contatti' },
 ]

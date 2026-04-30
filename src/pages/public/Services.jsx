@@ -1,22 +1,20 @@
+import { CTASection, ServiceCard } from '../../components/PublicComponents'
 import { PageHeader } from '../../components/PageHeader'
-import { services } from '../../data/mockData'
+import { publicServices } from '../../data/mockPublicServices'
 
 export function Services() {
   return (
     <>
-      <PageHeader eyebrow="Servizi" title="Cartongesso e finiture per cantieri ordinati">
-        Soluzioni mock descritte in modo chiaro per la prima base pubblica del sito.
+      <PageHeader eyebrow="Servizi" title="Edilizia e cartongesso per interni curati">
+        Cartongesso, controsoffitti, pareti divisorie, rasature, finiture interne, isolamenti e lavori
+        per hotel, negozi e locali commerciali.
       </PageHeader>
       <section className="section">
-        <div className="card-grid">
-          {services.map((service) => (
-            <article className="info-card" key={service.title}>
-              <h2>{service.title}</h2>
-              <p>{service.description}</p>
-            </article>
-          ))}
+        <div className="public-grid service-grid">
+          {publicServices.map((service) => <ServiceCard key={service.id} service={service} />)}
         </div>
       </section>
+      <CTASection title="Hai bisogno di un intervento preciso?" text="Invia una richiesta mock con dati, misure e priorità: la struttura è pronta per essere collegata al futuro backend." />
     </>
   )
 }

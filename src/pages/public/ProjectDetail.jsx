@@ -1,42 +1,40 @@
+import { CTASection } from '../../components/PublicComponents'
 import { PageHeader } from '../../components/PageHeader'
 import { StatusBadge } from '../../components/StatusBadge'
-import { publicProjects } from '../../data/mockData'
+import { getPublicProjectById, publicProjects } from '../../data/mockPublicProjects'
 
 export function ProjectDetail({ projectId }) {
-  const project = publicProjects.find((item) => item.id === projectId) ?? publicProjects[0]
+  const project = getPublicProjectById(projectId) ?? publicProjects[0]
 
   return (
     <>
-      <PageHeader eyebrow="Dettaglio cantiere" title={project.title}>
-        {project.summary}
+      <PageHeader eyebrow="Dettaglio cantiere pubblico" title={project.title}>
+        {project.description}
       </PageHeader>
       <section className="section">
         <div className="detail-layout">
-          <div className="mock-photo-block">
-            <span>Foto mock</span>
+          <div className="public-gallery">
+            {project.gallery.map((item) => (
+              <div className="public-image-placeholder" key={item}><span>{item}</span></div>
+            ))}
           </div>
-          <div className="info-card">
+          <article className="info-card">
             <StatusBadge>{project.status}</StatusBadge>
             <dl className="detail-list">
-              <div>
-                <dt>Tipologia</dt>
-                <dd>{project.type}</dd>
-              </div>
-              <div>
-                <dt>Zona</dt>
-                <dd>{project.location}</dd>
-              </div>
-              <div>
-                <dt>Anno</dt>
-                <dd>{project.year}</dd>
-              </div>
+              <div><dt>Località</dt><dd>{project.location}</dd></div>
+              <div><dt>Tipo intervento</dt><dd>{project.type}</dd></div>
+              <div><dt>Anno</dt><dd>{project.year}</dd></div>
             </dl>
-            <a className="button button-secondary" href="#/cantieri">
-              Torna ai cantieri
-            </a>
-          </div>
+            <h2>Lavorazioni eseguite</h2>
+            <ul className="clean-list">
+              {project.services.map((service) => <li key={service}>{service}</li>)}
+            </ul>
+            <h2>Risultato ottenuto</h2>
+            <p>{project.result}</p>
+          </article>
         </div>
       </section>
+      <CTASection title="Richiedi un lavoro simile" text="Raccontaci tipo di immobile, città e priorità: nessun invio reale, solo demo mock." />
     </>
   )
 }
