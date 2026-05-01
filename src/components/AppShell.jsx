@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { GlobalFloatingActions } from './GlobalFloatingActions'
 import { InternalIcon } from './InternalIcons'
 import { company } from '../data/mockData'
 import { isActive, publicNav } from '../lib/navigation'
@@ -235,6 +236,7 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
             </div>
             {children}
             {session ? <BottomDashboardNav items={visibleDashboardNav} currentPath={currentPath} /> : null}
+            {session && currentPath !== '/dashboard' ? <GlobalFloatingActions role={session.role} /> : null}
           </main>
         </div>
       ) : (
