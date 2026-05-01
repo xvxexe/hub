@@ -18,7 +18,8 @@ export function PremiumHero({
       <SafeImage
         alt={imageAlt || title}
         className="premium-hero-bg"
-        fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
+        fallbackSrc={image}
+        finalFallbackSrc={image}
         loading="eager"
         src={image}
         title={title}
@@ -70,13 +71,15 @@ export function PremiumStats({ stats }) {
 }
 
 export function PremiumServiceCard({ service, detailed = false }) {
+  const fallback = service.fallbackImage || service.image
   return (
     <article className={detailed ? 'premium-card premium-service-card premium-service-card-detailed' : 'premium-card premium-service-card'}>
       {service.image ? (
         <SafeImage
           alt={service.alt}
           className="premium-service-image"
-          fallbackSrc="/assets/images/placeholders/placeholder-servizio.jpg"
+          fallbackSrc={fallback}
+          finalFallbackSrc={fallback}
           src={service.image}
           title={service.title}
         />
@@ -102,12 +105,14 @@ export function PremiumServiceCard({ service, detailed = false }) {
 }
 
 export function PremiumProjectCard({ project, featured = false }) {
+  const fallback = project.fallbackImage || project.image
   return (
     <article className={featured ? 'premium-project-card premium-project-featured' : 'premium-project-card'}>
       <SafeImage
         alt={project.alt}
         className="premium-project-image"
-        fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
+        fallbackSrc={fallback}
+        finalFallbackSrc={fallback}
         src={project.image}
         title={project.title}
       />
@@ -192,13 +197,15 @@ export function PremiumTextCard({ title, text, eyebrow, items = [] }) {
   )
 }
 
-export function PremiumImageSplit({ eyebrow, title, text, image, imageAlt, reverse = false, children }) {
+export function PremiumImageSplit({ eyebrow, title, text, image, imageAlt, reverse = false, children, fallbackImage }) {
+  const fallback = fallbackImage || image
   return (
     <section className={reverse ? 'premium-image-split premium-image-split-reverse' : 'premium-image-split'}>
       <SafeImage
         alt={imageAlt || title}
         className="premium-split-image"
-        fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
+        fallbackSrc={fallback}
+        finalFallbackSrc={fallback}
         src={image}
         title={title}
       />
