@@ -63,7 +63,7 @@ export const dashboardStats = [
 
 export const mockUsers = [
   { id: 'u-1', name: 'Gianni Europa', role: 'admin' },
-  { id: 'u-2', name: 'Sara Costa', role: 'accounting' },
+  { id: 'u-2', name: 'Capo EuropaService', role: 'admin' },
   { id: 'u-3', name: 'Marco Ferri', role: 'employee' },
 ]
 
