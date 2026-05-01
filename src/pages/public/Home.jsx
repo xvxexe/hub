@@ -10,6 +10,7 @@ import {
   PremiumTextCard,
   TestimonialMock,
 } from '../../components/PublicComponents'
+import { PremiumChipMarquee } from '../../components/PremiumChipMarquee'
 import { SEO } from '../../components/SEO'
 import {
   operationalMethod,
@@ -74,9 +75,7 @@ export function Home() {
       </PremiumSection>
 
       <PremiumSection eyebrow="Dove interveniamo" title="Settori con esigenze diverse, stesso livello di controllo" text="Retail, hospitality, uffici e residenziale richiedono tempi, finiture e comunicazione differenti. Il metodo resta costante: analisi, piano, esecuzione, verifica.">
-        <div className="premium-sector-row">
-          {sectorsServed.map((sector) => <span key={sector}>{sector}</span>)}
-        </div>
+        <PremiumChipMarquee items={sectorsServed} className="premium-sector-row" ariaLabel="Settori serviti" />
       </PremiumSection>
 
       <PremiumSection
@@ -121,9 +120,7 @@ export function Home() {
       </PremiumSection>
 
       <PremiumSection eyebrow="Partner e filiera" title="Collaboriamo con una rete tecnica affidabile">
-        <div className="premium-logo-row">
-          {partners.map((partner) => <span key={partner}>{partner}</span>)}
-        </div>
+        <PremiumChipMarquee items={partners} className="premium-logo-row" ariaLabel="Partner e filiera" speed="slow" />
       </PremiumSection>
 
       <PremiumImageSplit
