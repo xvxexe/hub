@@ -2,36 +2,23 @@ import {
   PremiumCTA,
   PremiumFAQ,
   PremiumHero,
+  PremiumImageSplit,
   PremiumProcess,
   PremiumSection,
   PremiumServiceCard,
+  PremiumTextCard,
+  PremiumTimeline,
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import {
   mainHeroImage,
+  operationalMethod,
   premiumServices,
   sectorsServed,
+  serviceFaq,
   workMethod,
 } from '../../data/publicPremiumData'
-
-const serviceFaq = [
-  {
-    question: 'Gestite solo cartongesso o anche lavorazioni edili?',
-    answer: 'Gestiamo cartongesso, controsoffitti, finiture, manutenzioni e assistenze edili coordinate, sempre con dati mock in questa versione.',
-  },
-  {
-    question: 'Lavorate con aziende e strutture aperte al pubblico?',
-    answer: 'Sì. Retail, hospitality e uffici richiedono fasi ordinate, protezioni, orari pianificati e comunicazione precisa.',
-  },
-  {
-    question: 'È necessario un sopralluogo?',
-    answer: 'Per interventi tecnici o con vincoli di accesso il sopralluogo è il modo più serio per valutare tempi, materiali e priorità.',
-  },
-  {
-    question: 'Potete coordinare più lavorazioni?',
-    answer: 'La gestione cantiere serve proprio a ridurre passaggi dispersi e mantenere una regia operativa chiara.',
-  },
-]
+import { heroImages, serviceImages } from '../../data/publicImages'
 
 export function Services() {
   return (
@@ -43,15 +30,15 @@ export function Services() {
 
       <PremiumHero
         eyebrow="Servizi"
-        title="I nostri servizi"
-        text="Soluzioni su misura per costruire spazi di qualità, duraturi nel tempo."
+        title="Servizi coordinati per cantieri interni di qualità"
+        text="Non trattiamo le lavorazioni come elementi separati. Cartongesso, finiture, manutenzioni e gestione operativa vengono organizzati dentro un unico metodo, così il cantiere resta leggibile e il risultato finale è coerente."
         image={mainHeroImage}
         imageAlt="Lavorazioni interne in cantiere premium"
         primaryLabel="Richiedi preventivo"
         secondaryLabel="Guarda i cantieri"
         secondaryHref="#/cantieri"
         variant="page"
-        meta={['Retail', 'Hospitality', 'Uffici', 'Residenziale']}
+        meta={['Cartongesso', 'Controsoffitti', 'Ristrutturazioni', 'Manutenzioni', 'Finiture']}
       />
 
       <PremiumSection
@@ -60,43 +47,68 @@ export function Services() {
         text="Ogni servizio è progettato per dialogare con gli altri: meno dispersione, più controllo e una consegna più pulita."
       >
         <div className="premium-service-grid">
-          {premiumServices.map((service) => <PremiumServiceCard key={service.id} service={service} />)}
+          {premiumServices.map((service) => <PremiumServiceCard detailed key={service.id} service={service} />)}
         </div>
       </PremiumSection>
 
-      <PremiumSection eyebrow="Perché Europaservice" title="Un approccio più vicino a un partner tecnico che a un semplice esecutore" tone="soft">
+      <PremiumImageSplit
+        eyebrow="Cartongesso e sistemi a secco"
+        title="Precisione millimetrica per pareti, velette e controsoffitti."
+        text="Le lavorazioni in cartongesso sono spesso la struttura invisibile della qualità finale: quote, impianti, luce, acustica e finiture dipendono da una posa precisa. Per questo curiamo tracciamenti, profili, chiusure e dettagli prima ancora della rasatura."
+        image={serviceImages.cartongesso.src}
+        imageAlt={serviceImages.cartongesso.alt}
+      >
         <div className="premium-feature-grid">
-          {[
-            ['Regia operativa', 'Un referente che segue priorità, tempi, accessi e avanzamento.'],
-            ['Qualità visiva', 'Dettagli, giunzioni, quote e finiture curate per un risultato premium.'],
-            ['Documentazione', 'Foto, fasi e informazioni ordinate per ridurre ambiguità.'],
-            ['Sicurezza e ordine', 'Aree protette, pulizia e attenzione alla convivenza con altri fornitori.'],
-          ].map(([title, text]) => (
-            <article className="premium-card" key={title}>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </article>
-          ))}
+          <PremiumTextCard title="Pareti e contropareti" text="Soluzioni tecniche per distribuzione interna, isolamento e integrazione impiantistica." />
+          <PremiumTextCard title="Velette e nicchie" text="Elementi architettonici per luce, estetica e funzionalità degli ambienti." />
+        </div>
+      </PremiumImageSplit>
+
+      <PremiumImageSplit
+        eyebrow="Ristrutturazioni tecniche"
+        title="Quando il cantiere è complesso serve una regia chiara."
+        text="Hotel, negozi e uffici hanno vincoli reali: orari, accessi, fornitori, clienti, pulizia, rumore e tempi di consegna. La nostra gestione serve a trasformare queste variabili in un piano operativo leggibile."
+        image={serviceImages.ediliGenerali.src}
+        imageAlt={serviceImages.ediliGenerali.alt}
+        reverse
+      >
+        <div className="premium-tags">
+          <small>Fasi programmate</small>
+          <small>Assistenze edili</small>
+          <small>Ripristini</small>
+          <small>Coordinamento DL</small>
+        </div>
+      </PremiumImageSplit>
+
+      <PremiumSection eyebrow="Perché EuropaService" title="Un approccio più vicino a un partner tecnico che a un semplice esecutore" tone="soft">
+        <div className="premium-feature-grid">
+          <PremiumTextCard title="Regia operativa" text="Un referente che segue priorità, tempi, accessi, avanzamento e criticità quotidiane." items={['Meno dispersione', 'Decisioni più rapide', 'Responsabilità chiara']} />
+          <PremiumTextCard title="Qualità visiva" text="Dettagli, giunzioni, quote e finiture curate per un risultato professionale e credibile." items={['Controllo dettagli', 'Pulizia finale', 'Finiture uniformi']} />
+          <PremiumTextCard title="Documentazione" text="Foto, fasi e informazioni ordinate per ridurre ambiguità, contestazioni e passaggi rifatti." items={['Foto avanzamento', 'Note operative', 'Storico lavorazioni']} />
         </div>
       </PremiumSection>
 
-      <PremiumSection eyebrow="Processo" title="Come lavoriamo" text="Le fasi sono poche, chiare e controllabili.">
+      <PremiumSection eyebrow="Processo" title="Come lavoriamo" text="Le fasi sono poche, chiare e controllabili. Ogni fase ha uno scopo preciso.">
         <PremiumProcess steps={workMethod} />
       </PremiumSection>
 
-      <PremiumSection eyebrow="Settori serviti" title="Contesti diversi, stesso livello di controllo" tone="soft">
+      <PremiumSection eyebrow="Metodo operativo" title="Cosa controlliamo durante il lavoro" tone="soft">
+        <PremiumTimeline items={operationalMethod} />
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Settori serviti" title="Contesti diversi, stesso livello di controllo">
         <div className="premium-sector-row">
           {sectorsServed.map((sector) => <span key={sector}>{sector}</span>)}
         </div>
       </PremiumSection>
 
-      <PremiumSection eyebrow="FAQ" title="Domande frequenti">
+      <PremiumSection eyebrow="FAQ" title="Domande frequenti" tone="soft">
         <PremiumFAQ items={serviceFaq} />
       </PremiumSection>
 
       <PremiumCTA
         title="Serve un servizio tecnico per il tuo spazio?"
-        text="Descrivi obiettivo, stato attuale e tempi. Ti aiutiamo a capire quale lavorazione impostare."
+        text="Descrivi obiettivo, stato attuale e tempi. Ti aiutiamo a capire quale lavorazione impostare e come organizzarla senza caos."
       />
     </>
   )
