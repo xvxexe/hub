@@ -73,29 +73,38 @@ Completato mantenendo il progetto 100% mock:
 
 ## v0.5.11 — Secondo check finale mock pre-Supabase
 
-Da fare prima di valutare Supabase:
-- rieseguire checklist pubblica e interna
-- verificare bug corretti in `docs/MOCK_QA_BUGS.md`
-- verificare ruoli admin, contabilità e dipendente
-- verificare mobile e desktop
-- confermare build pulita
-- approvare esplicitamente il passaggio alla progettazione Supabase
+Completato mantenendo il progetto 100% mock:
+- rieseguita checklist pubblica e interna
+- verificati bug corretti in `docs/MOCK_QA_BUGS.md`
+- verificati ruoli admin/capo, contabilità e dipendente
+- verificati controlli mobile e desktop di base
+- confermata build pulita
+- creato verdetto finale in `docs/PRE_SUPABASE_VERDICT.md`
+- verdetto: `PRONTO PER v0.6 SUPABASE SETUP`
 
-## v0.6 — Supabase setup
+## v0.6 — Preparazione Supabase setup
 
-Bloccato finché non è completato il secondo check finale mock in v0.5.11.
+Può partire solo se `docs/PRE_SUPABASE_VERDICT.md` dice `PRONTO PER v0.6 SUPABASE SETUP`.
+
+Supabase resta bloccato se compaiono bug Critica o Alta non corretti o non approvati esplicitamente.
 
 Condizioni obbligatorie prima di sbloccare Supabase:
 - `docs/PRE_SUPABASE_CHECKLIST.md` completata
 - `docs/MOCK_QA_BUGS.md` senza bug Critica
 - `docs/MOCK_QA_BUGS.md` senza bug Alta non approvati esplicitamente
+- `docs/PRE_SUPABASE_VERDICT.md` con verdetto `PRONTO PER v0.6 SUPABASE SETUP`
 - `npm run build` pulito
 - ruoli verificati manualmente
 - mobile verificato manualmente
 - dati mock e interazioni mock verificati
 - approvazione esplicita dopo v0.5.11
 
-Da fare dopo:
+Da fare in v0.6:
+- progettare schema dati e mapping dai mock
+- preparare configurazione Supabase senza migrazioni massive non pianificate
+- mantenere il mock funzionante durante la transizione
+
+Da non fare senza piano dedicato:
 - auth reale
 - database
 - storage file

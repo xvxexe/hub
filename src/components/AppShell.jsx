@@ -1,6 +1,11 @@
+import { useEffect, useState } from 'react'
 import { company } from '../data/mockData'
 import { isActive, publicNav } from '../lib/navigation'
 import { getDashboardNavForRole, getRole } from '../lib/roles'
+
+const primaryPublicNav = publicNav.filter((item) => ['/', '/servizi', '/cantieri'].includes(item.path))
+const secondaryPublicNav = publicNav.filter((item) => ['/preventivo', '/contatti'].includes(item.path))
+const companyNav = publicNav.filter((item) => ['/settori', '/chi-siamo'].includes(item.path))
 
 export function AppShell({ children, currentPath, session, onLogout, onRoleChange, roles }) {
   const isDashboard = currentPath.startsWith('/dashboard')
@@ -9,34 +14,7 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
 
   return (
     <div className="app-shell">
-      <header className="site-header">
-        <a className="brand" href="#/">
-          <span className="brand-mark">ES</span>
-          <span>
-            <strong>{company.name}</strong>
-            <small>{company.payoff}</small>
-          </span>
-        </a>
-
-        <nav className="top-nav" aria-label="Navigazione principale">
-          {publicNav.map((item) => (
-            <a
-              aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
-              href={`#${item.path}`}
-              key={item.path}
-            >
-              {item.label}
-            </a>
-          ))}
-          <a
-            className="nav-cta"
-            aria-current={currentPath.startsWith('/dashboard') ? 'page' : undefined}
-            href="#/dashboard/login"
-          >
-            Area riservata
-          </a>
-        </nav>
-      </header>
+      <PublicHeader currentPath={currentPath} />
 
       {isDashboard ? (
         <div className="dashboard-shell">
@@ -158,5 +136,130 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
         </>
       )}
     </div>
+  )
+}
+
+function PublicHeader({ currentPath }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const isCompanyActive = companyNav.some((item) => isActive(currentPath, item.path))
+
+  useEffect(() => {
+    if (!isMenuOpen) return undefined
+
+    function onKeyDown(event) {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isMenuOpen])
+
+  return (
+    <header className="site-header">
+      <a className="brand" href="#/" onClick={() => setIsMenuOpen(false)}>
+        <span className="brand-mark">ES</span>
+        <span>
+          <strong>{company.name}</strong>
+          <small>{company.payoff}</small>
+        </span>
+      </a>
+
+      <button
+        aria-controls="public-mobile-menu"
+        aria-expanded={isMenuOpen}
+        aria-label={isMenuOpen ? 'Chiudi menu principale' : 'Apri menu principale'}
+        className="mobile-menu-button"
+        type="button"
+        onClick={() => setIsMenuOpen((current) => !current)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
+      <nav className="top-nav desktop-public-nav" aria-label="Navigazione principale">
+        {primaryPublicNav.map((item) => (
+          <a
+            aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
+            href={`#${item.path}`}
+            key={item.path}
+          >
+            {item.label}
+          </a>
+        ))}
+        <div className="nav-dropdown">
+          <button
+            className={isCompanyActive ? 'nav-dropdown-trigger active' : 'nav-dropdown-trigger'}
+            type="button"
+          >
+            Azienda
+          </button>
+          <div className="nav-dropdown-menu">
+            {companyNav.map((item) => (
+              <a
+                aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
+                href={`#${item.path}`}
+                key={item.path}
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </div>
+        {secondaryPublicNav.map((item) => (
+          <a
+            aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
+            href={`#${item.path}`}
+            key={item.path}
+          >
+            {item.label}
+          </a>
+        ))}
+        <a
+          className="nav-cta"
+          aria-current={currentPath.startsWith('/dashboard') ? 'page' : undefined}
+          href="#/dashboard/login"
+        >
+          Area riservata
+        </a>
+      </nav>
+
+      <div
+        className={isMenuOpen ? 'mobile-menu-backdrop open' : 'mobile-menu-backdrop'}
+        onClick={() => setIsMenuOpen(false)}
+      />
+      <nav
+        aria-label="Menu principale mobile"
+        className={isMenuOpen ? 'mobile-public-menu open' : 'mobile-public-menu'}
+        id="public-mobile-menu"
+      >
+        <div className="mobile-menu-header">
+          <strong>Menu</strong>
+          <button type="button" className="mobile-menu-close" onClick={() => setIsMenuOpen(false)}>
+            Chiudi
+          </button>
+        </div>
+        {publicNav.map((item) => (
+          <a
+            aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
+            href={`#${item.path}`}
+            key={item.path}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            {item.label}
+          </a>
+        ))}
+        <a
+          className="nav-cta"
+          aria-current={currentPath.startsWith('/dashboard') ? 'page' : undefined}
+          href="#/dashboard/login"
+          onClick={() => setIsMenuOpen(false)}
+        >
+          Area riservata
+        </a>
+      </nav>
+    </header>
   )
 }

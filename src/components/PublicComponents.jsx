@@ -45,13 +45,15 @@ export function ServiceCard({ service }) {
         src={service.image}
         title={service.seoTitle}
       />
-      <span className="service-icon">{service.icon}</span>
-      <h2>{service.title}</h2>
-      <p>{service.description}</p>
-      <ul className="clean-list">
-        {service.strengths.map((item) => <li key={item}>{item}</li>)}
-      </ul>
-      <a className="text-link" href="#/preventivo">Richiedi preventivo</a>
+      <div className="public-card-body">
+        <span className="service-icon">{service.icon}</span>
+        <h2>{service.title}</h2>
+        <p>{service.description}</p>
+        <ul className="clean-list">
+          {service.strengths.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+        <a className="text-link" href="#/preventivo">Richiedi preventivo</a>
+      </div>
     </article>
   )
 }
@@ -131,13 +133,15 @@ export function SectorCard({ sector }) {
         src={sector.image}
         title={sector.seoTitle}
       />
-      <h2>{sector.title}</h2>
-      <p>{sector.text}</p>
-      {sector.needs ? (
-        <ul className="clean-list">
-          {sector.needs.map((item) => <li key={item}>{item}</li>)}
-        </ul>
-      ) : null}
+      <div className="public-card-body">
+        <h2>{sector.title}</h2>
+        <p>{sector.text}</p>
+        {sector.needs ? (
+          <ul className="clean-list">
+            {sector.needs.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        ) : null}
+      </div>
     </article>
   )
 }

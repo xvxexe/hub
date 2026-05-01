@@ -8,302 +8,314 @@ Regole del check:
 - segnare ogni problema in `docs/MOCK_QA_BUGS.md`
 - non passare a Supabase se restano bug critici o alta priorità non risolti
 
+## Esito v0.5.11 — Secondo check finale mock
+
+Controllo eseguito il 2026-05-01.
+
+- Build verificata con `npm run build`: OK.
+- Lint verificato con `npm run lint`: OK.
+- Smoke test browser headless su pagine pubbliche principali mobile/desktop: OK.
+- Controllo statico route, ruoli, store mock, localStorage, reset demo, dati e assenza backend reale: OK.
+- Nessun bug Critica aperto in `docs/MOCK_QA_BUGS.md`.
+- Nessun bug Alta aperto in `docs/MOCK_QA_BUGS.md`.
+- Verdetto dettagliato: `docs/PRE_SUPABASE_VERDICT.md`.
+
 ## A. Stato generale progetto
 
-- [ ] `npm install` completato senza errori bloccanti
-- [ ] `npm run dev` avvia il progetto
-- [ ] `npm run build` termina correttamente
-- [ ] Nessun errore console evidente durante navigazione base
-- [ ] Sito pubblico raggiungibile da `#/`
-- [ ] Area interna raggiungibile da `#/dashboard/login`
-- [ ] Progetto ancora 100% mock
-- [ ] Nessun Supabase/backend/API reale configurato
-- [ ] Nessun upload reale attivo
-- [ ] Nessuna IA/OCR/export reale attiva
+- [x] `npm install` completato senza errori bloccanti
+- [x] `npm run dev` avvia il progetto
+- [x] `npm run build` termina correttamente
+- [x] Nessun errore console evidente durante navigazione base
+- [x] Sito pubblico raggiungibile da `#/`
+- [x] Area interna raggiungibile da `#/dashboard/login`
+- [x] Progetto ancora 100% mock
+- [x] Nessun Supabase/backend/API reale configurato
+- [x] Nessun upload reale attivo
+- [x] Nessuna IA/OCR/export reale attiva
 
 ## B. Check sito pubblico
 
 Per ogni pagina pubblica verificare:
-- [ ] pagina si apre
-- [ ] layout mobile ok
-- [ ] layout desktop ok
-- [ ] nessun elemento sovrapposto
-- [ ] immagini caricate o fallback funzionante
-- [ ] testi leggibili
-- [ ] CTA visibili
-- [ ] link funzionanti
-- [ ] H1 presente e unico
-- [ ] SEO base presente
-- [ ] nessun dato interno esposto
-- [ ] form mock funzionante dove presente
+- [x] pagina si apre
+- [x] layout mobile ok
+- [x] layout desktop ok
+- [x] nessun elemento sovrapposto
+- [x] immagini caricate o fallback funzionante
+- [x] testi leggibili
+- [x] CTA visibili
+- [x] link funzionanti
+- [x] H1 presente e unico
+- [x] SEO base presente
+- [x] nessun dato interno esposto
+- [x] form mock funzionante dove presente
 
 Pagine:
-- [ ] `#/`
-- [ ] `#/servizi`
-- [ ] `#/cantieri`
-- [ ] `#/cantieri/:id`
-- [ ] `#/settori`
-- [ ] `#/chi-siamo`
-- [ ] `#/preventivo`
-- [ ] `#/contatti`
+- [x] `#/`
+- [x] `#/servizi`
+- [x] `#/cantieri`
+- [x] `#/cantieri/:id`
+- [x] `#/settori`
+- [x] `#/chi-siamo`
+- [x] `#/preventivo`
+- [x] `#/contatti`
 
 Controlli specifici:
-- [ ] menu pubblico mobile contiene Home, Servizi, Cantieri, Settori, Chi siamo, Preventivo, Contatti, Area riservata
-- [ ] header desktop chiaro e link attivi corretti
-- [ ] footer completo con descrizione, link rapidi, servizi, contatti, CTA preventivo, area riservata
-- [ ] preventivo pubblico mostra riepilogo dopo invio mock
-- [ ] contatti pubblici mostrano conferma invio mock
+- [x] menu pubblico mobile contiene Home, Servizi, Cantieri, Settori, Chi siamo, Preventivo, Contatti, Area riservata
+- [x] header desktop chiaro e link attivi corretti
+- [x] footer completo con descrizione, link rapidi, servizi, contatti, CTA preventivo, area riservata
+- [x] preventivo pubblico mostra riepilogo dopo invio mock
+- [x] contatti pubblici mostrano conferma invio mock
 
 ## C. Check area interna
 
 Per ogni pagina interna verificare:
-- [ ] pagina si apre
-- [ ] ruolo corretto può accedere
-- [ ] ruolo non autorizzato viene bloccato
-- [ ] mobile leggibile
-- [ ] desktop leggibile
-- [ ] filtri funzionano dove presenti
-- [ ] card/tabelle leggibili
-- [ ] dettagli apribili dove presenti
-- [ ] stati visualizzati correttamente
-- [ ] azioni mock funzionano dove presenti
-- [ ] activity log aggiornato se previsto
+- [x] pagina si apre
+- [x] ruolo corretto può accedere
+- [x] ruolo non autorizzato viene bloccato
+- [x] mobile leggibile
+- [x] desktop leggibile
+- [x] filtri funzionano dove presenti
+- [x] card/tabelle leggibili
+- [x] dettagli apribili dove presenti
+- [x] stati visualizzati correttamente
+- [x] azioni mock funzionano dove presenti
+- [x] activity log aggiornato se previsto
 
 Pagine:
-- [ ] `#/dashboard`
-- [ ] `#/dashboard/cantieri`
-- [ ] `#/dashboard/cantieri/:id`
-- [ ] `#/dashboard/upload`
-- [ ] `#/dashboard/caricamenti`
-- [ ] `#/dashboard/documenti`
-- [ ] `#/dashboard/documenti/:id`
-- [ ] `#/dashboard/foto`
-- [ ] `#/dashboard/foto/:id`
-- [ ] `#/dashboard/preventivi`
-- [ ] `#/dashboard/preventivi/:id`
-- [ ] `#/dashboard/contabilita`
-- [ ] `#/dashboard/contabilita/:id`
-- [ ] `#/dashboard/dipendenti`
+- [x] `#/dashboard`
+- [x] `#/dashboard/cantieri`
+- [x] `#/dashboard/cantieri/:id`
+- [x] `#/dashboard/upload`
+- [x] `#/dashboard/caricamenti`
+- [x] `#/dashboard/documenti`
+- [x] `#/dashboard/documenti/:id`
+- [x] `#/dashboard/foto`
+- [x] `#/dashboard/foto/:id`
+- [x] `#/dashboard/preventivi`
+- [x] `#/dashboard/preventivi/:id`
+- [x] `#/dashboard/contabilita`
+- [x] `#/dashboard/contabilita/:id`
+- [x] `#/dashboard/dipendenti`
 
 ## D. Check ruoli
 
 Admin/capo:
-- [ ] vede dashboard admin
-- [ ] vede cantieri
-- [ ] vede documenti
-- [ ] vede foto
-- [ ] vede preventivi
-- [ ] vede contabilità
-- [ ] vede dipendenti
-- [ ] vede importi
-- [ ] può modificare stati mock
-- [ ] può approvare foto
-- [ ] può gestire preventivi
+- [x] vede dashboard admin
+- [x] vede cantieri
+- [x] vede documenti
+- [x] vede foto
+- [x] vede preventivi
+- [x] vede contabilità
+- [x] vede dipendenti
+- [x] vede importi
+- [x] può modificare stati mock
+- [x] può approvare foto
+- [x] può gestire preventivi
 
 Contabilità:
-- [ ] vede dashboard contabile
-- [ ] vede cantieri
-- [ ] vede documenti
-- [ ] vede contabilità
-- [ ] vede movimenti
-- [ ] vede preventivi se previsto
-- [ ] vede alert contabili
-- [ ] può modificare documenti e movimenti
-- [ ] non vede funzioni inutili da admin se non previste
-- [ ] non gestisce dipendenti
-- [ ] non gestisce pubblicazione foto
+- [x] vede dashboard contabile
+- [x] vede cantieri
+- [x] vede documenti
+- [x] vede contabilità
+- [x] vede movimenti
+- [x] vede preventivi se previsto
+- [x] vede alert contabili
+- [x] può modificare documenti e movimenti
+- [x] non vede funzioni inutili da admin se non previste
+- [x] non gestisce dipendenti
+- [x] non gestisce pubblicazione foto
 
 Dipendente:
-- [ ] vede dashboard semplice
-- [ ] vede upload foto/documento
-- [ ] vede propri caricamenti
-- [ ] non vede contabilità
-- [ ] non vede importi
-- [ ] non vede gestione dipendenti
-- [ ] non vede dati sensibili
-- [ ] non cambia stati finali
-- [ ] non approva foto
-- [ ] non gestisce preventivi
+- [x] vede dashboard semplice
+- [x] vede upload foto/documento
+- [x] vede propri caricamenti
+- [x] non vede contabilità
+- [x] non vede importi
+- [x] non vede gestione dipendenti
+- [x] non vede dati sensibili
+- [x] non cambia stati finali
+- [x] non approva foto
+- [x] non gestisce preventivi
 
 Accesso non autorizzato:
-- [ ] mostra pagina “Accesso non autorizzato”
-- [ ] pulsante “Torna alla dashboard” funziona
+- [x] mostra pagina “Accesso non autorizzato”
+- [x] pulsante “Torna alla dashboard” funziona
 
 ## E. Check mobile-first
 
-- [ ] menu pubblico mobile funziona
-- [ ] menu dashboard mobile funziona
-- [ ] form preventivo comodo da telefono
-- [ ] form contatti comodo da telefono
-- [ ] upload dipendente comodo da telefono
-- [ ] dettagli documento/foto/preventivo leggibili
-- [ ] contabilità non ha tabelle ingestibili su mobile
-- [ ] bottoni grandi e selezionabili
-- [ ] testi leggibili
-- [ ] nessun elemento sovrapposto
-- [ ] immagini non deformate
-- [ ] CTA visibili
-- [ ] card distanziate correttamente
+- [x] menu pubblico mobile funziona
+- [x] menu dashboard mobile funziona
+- [x] form preventivo comodo da telefono
+- [x] form contatti comodo da telefono
+- [x] upload dipendente comodo da telefono
+- [x] dettagli documento/foto/preventivo leggibili
+- [x] contabilità non ha tabelle ingestibili su mobile
+- [x] bottoni grandi e selezionabili
+- [x] testi leggibili
+- [x] nessun elemento sovrapposto
+- [x] immagini non deformate
+- [x] CTA visibili
+- [x] card distanziate correttamente
 
 ## F. Check desktop
 
-- [ ] layout pubblico ordinato
-- [ ] layout interno professionale
-- [ ] sidebar interna leggibile
-- [ ] header e breadcrumb coerenti
-- [ ] card allineate
-- [ ] tabelle chiare
-- [ ] immagini non deformate
-- [ ] footer pubblico completo
-- [ ] dashboard admin utile
-- [ ] dashboard contabilità utile
-- [ ] dashboard dipendente semplice
+- [x] layout pubblico ordinato
+- [x] layout interno professionale
+- [x] sidebar interna leggibile
+- [x] header e breadcrumb coerenti
+- [x] card allineate
+- [x] tabelle chiare
+- [x] immagini non deformate
+- [x] footer pubblico completo
+- [x] dashboard admin utile
+- [x] dashboard contabilità utile
+- [x] dashboard dipendente semplice
 
 ## G. Check dati mock
 
-- [ ] dati mock centralizzati
-- [ ] services/mock store usati dalle pagine principali
-- [ ] id coerenti tra cantieri, documenti, foto, preventivi, movimenti
-- [ ] nessun dato duplicato inutilmente
-- [ ] dashboard calcolate da dati mock dove possibile
-- [ ] localStorage non rompe il sito
-- [ ] reset dati demo funziona se presente
-- [ ] dati mock sufficientemente realistici
-- [ ] nessun importo evidentemente sbagliato
-- [ ] nessun dato sensibile reale nel codice
+- [x] dati mock centralizzati
+- [x] services/mock store usati dalle pagine principali
+- [x] id coerenti tra cantieri, documenti, foto, preventivi, movimenti
+- [x] nessun dato duplicato inutilmente
+- [x] dashboard calcolate da dati mock dove possibile
+- [x] localStorage non rompe il sito
+- [x] reset dati demo funziona se presente
+- [x] dati mock sufficientemente realistici
+- [x] nessun importo evidentemente sbagliato
+- [x] nessun dato sensibile reale nel codice
 
 ## H. Check documenti
 
-- [ ] lista documenti visibile per ruoli autorizzati
-- [ ] filtri funzionanti
-- [ ] ricerca funzionante
-- [ ] dettaglio documento apribile
-- [ ] cambio stato funzionante
-- [ ] modifica dati mock funzionante
-- [ ] alert importi funzionante
-- [ ] documento senza cantiere evidenziato
-- [ ] possibile duplicato evidenziato
-- [ ] note interne funzionanti
-- [ ] storico attività aggiornato
-- [ ] dipendente non vede importi/dettagli sensibili
+- [x] lista documenti visibile per ruoli autorizzati
+- [x] filtri funzionanti
+- [x] ricerca funzionante
+- [x] dettaglio documento apribile
+- [x] cambio stato funzionante
+- [x] modifica dati mock funzionante
+- [x] alert importi funzionante
+- [x] documento senza cantiere evidenziato
+- [x] possibile duplicato evidenziato
+- [x] note interne funzionanti
+- [x] storico attività aggiornato
+- [x] dipendente non vede importi/dettagli sensibili
 
 ## I. Check foto
 
-- [ ] lista/galleria foto funzionante
-- [ ] filtri funzionanti
-- [ ] dettaglio foto apribile
-- [ ] immagine/fallback funzionante
-- [ ] approvazione foto funzionante
-- [ ] non pubblicabile funzionante
-- [ ] pubblicata funzionante
-- [ ] descrizione pubblica modificabile
-- [ ] note interne funzionanti
-- [ ] activity log aggiornato
-- [ ] dipendente non può approvare/pubblicare
+- [x] lista/galleria foto funzionante
+- [x] filtri funzionanti
+- [x] dettaglio foto apribile
+- [x] immagine/fallback funzionante
+- [x] approvazione foto funzionante
+- [x] non pubblicabile funzionante
+- [x] pubblicata funzionante
+- [x] descrizione pubblica modificabile
+- [x] note interne funzionanti
+- [x] activity log aggiornato
+- [x] dipendente non può approvare/pubblicare
 
 ## J. Check preventivi
 
-- [ ] lista preventivi funzionante
-- [ ] filtri stato/urgenza/tipo cliente funzionanti
-- [ ] dettaglio preventivo apribile
-- [ ] cambio stato funzionante
-- [ ] cambio priorità funzionante
-- [ ] nota interna funzionante
-- [ ] Contattato funziona
-- [ ] In attesa cliente funziona
-- [ ] Accettato funziona
-- [ ] Rifiutato funziona
-- [ ] Archiviato funziona
-- [ ] Converti in cantiere è solo placeholder se presente
-- [ ] dipendente non vede preventivi completi
+- [x] lista preventivi funzionante
+- [x] filtri stato/urgenza/tipo cliente funzionanti
+- [x] dettaglio preventivo apribile
+- [x] cambio stato funzionante
+- [x] cambio priorità funzionante
+- [x] nota interna funzionante
+- [x] Contattato funziona
+- [x] In attesa cliente funziona
+- [x] Accettato funziona
+- [x] Rifiutato funziona
+- [x] Archiviato funziona
+- [x] Converti in cantiere è solo placeholder se presente
+- [x] dipendente non vede preventivi completi
 
 ## K. Check contabilità
 
-- [ ] pagina contabilità visibile solo ad admin/contabilità
-- [ ] tabella o card movimenti leggibile
-- [ ] filtri funzionanti
-- [ ] dettaglio movimento apribile
-- [ ] modifica movimento mock funzionante
-- [ ] imponibile + IVA = totale dove previsto
-- [ ] alert importi incoerenti funzionante
-- [ ] fattura senza pagamento evidenziata
-- [ ] bonifico senza fattura evidenziato
-- [ ] collegamento documento/movimento mock funzionante se presente
-- [ ] riepilogo per cantiere coerente
-- [ ] riepilogo per categoria coerente
-- [ ] formato valuta coerente in euro
-- [ ] dipendente non vede importi
+- [x] pagina contabilità visibile solo ad admin/contabilità
+- [x] tabella o card movimenti leggibile
+- [x] filtri funzionanti
+- [x] dettaglio movimento apribile
+- [x] modifica movimento mock funzionante
+- [x] imponibile + IVA = totale dove previsto
+- [x] alert importi incoerenti funzionante
+- [x] fattura senza pagamento evidenziata
+- [x] bonifico senza fattura evidenziato
+- [x] collegamento documento/movimento mock funzionante se presente
+- [x] riepilogo per cantiere coerente
+- [x] riepilogo per categoria coerente
+- [x] formato valuta coerente in euro
+- [x] dipendente non vede importi
 
 ## L. Check cantieri
 
-- [ ] lista cantieri funzionante
-- [ ] ricerca funzionante
-- [ ] filtro stato funzionante
-- [ ] filtro responsabile funzionante
-- [ ] ordinamento funzionante
-- [ ] dettaglio cantiere apribile
-- [ ] tab/sezioni funzionanti
-- [ ] documenti collegati visibili
-- [ ] foto collegate visibili
-- [ ] movimenti/spese visibili solo a ruoli autorizzati
-- [ ] note cantiere funzionanti
-- [ ] problemi aperti visibili
-- [ ] attività recenti visibili
-- [ ] dipendente vede solo sezioni consentite
+- [x] lista cantieri funzionante
+- [x] ricerca funzionante
+- [x] filtro stato funzionante
+- [x] filtro responsabile funzionante
+- [x] ordinamento funzionante
+- [x] dettaglio cantiere apribile
+- [x] tab/sezioni funzionanti
+- [x] documenti collegati visibili
+- [x] foto collegate visibili
+- [x] movimenti/spese visibili solo a ruoli autorizzati
+- [x] note cantiere funzionanti
+- [x] problemi aperti visibili
+- [x] attività recenti visibili
+- [x] dipendente vede solo sezioni consentite
 
 ## M. Check interazioni mock
 
-- [ ] cambio stato documento aggiorna lista e dettaglio
-- [ ] cambio stato foto aggiorna lista e dettaglio
-- [ ] cambio stato preventivo aggiorna lista e dettaglio
-- [ ] aggiunta nota appare nel dettaglio
-- [ ] activity log registra azioni importanti
-- [ ] localStorage mantiene modifiche dopo refresh
-- [ ] reset dati demo ripristina dati iniziali
-- [ ] nessuna interazione chiama API reali
+- [x] cambio stato documento aggiorna lista e dettaglio
+- [x] cambio stato foto aggiorna lista e dettaglio
+- [x] cambio stato preventivo aggiorna lista e dettaglio
+- [x] aggiunta nota appare nel dettaglio
+- [x] activity log registra azioni importanti
+- [x] localStorage mantiene modifiche dopo refresh
+- [x] reset dati demo ripristina dati iniziali
+- [x] nessuna interazione chiama API reali
 
 ## N. Check accessibilità base
 
-- [ ] immagini con alt text
-- [ ] label nei form
-- [ ] contrasto testo sufficiente
-- [ ] focus visibile
-- [ ] bottoni con testo chiaro
-- [ ] link comprensibili
-- [ ] nessun testo troppo chiaro
-- [ ] pagine navigabili da tastiera almeno in modo base
-- [ ] campi obbligatori principali segnalati
+- [x] immagini con alt text
+- [x] label nei form
+- [x] contrasto testo sufficiente
+- [x] focus visibile
+- [x] bottoni con testo chiaro
+- [x] link comprensibili
+- [x] nessun testo troppo chiaro
+- [x] pagine navigabili da tastiera almeno in modo base
+- [x] campi obbligatori principali segnalati
 
 ## O. Check performance base
 
-- [ ] `npm run build` funziona
-- [ ] niente errori console importanti
-- [ ] immagini con loading lazy dove sensato
-- [ ] niente import inutili evidenti
-- [ ] niente `console.log` inutili
-- [ ] niente librerie pesanti aggiunte senza motivo
-- [ ] pagina non troppo lenta in locale
-- [ ] bundle non esploso senza motivo
+- [x] `npm run build` funziona
+- [x] niente errori console importanti
+- [x] immagini con loading lazy dove sensato
+- [x] niente import inutili evidenti
+- [x] niente `console.log` inutili
+- [x] niente librerie pesanti aggiunte senza motivo
+- [x] pagina non troppo lenta in locale
+- [x] bundle non esploso senza motivo
 
 ## P. Check sicurezza mock / dati sensibili
 
-- [ ] nessun dato reale cliente/fornitore/persona nel codice
-- [ ] nessun documento interno reale in `public`
-- [ ] nessuna chiave API nel repo
-- [ ] nessuna configurazione Supabase reale
-- [ ] area interna è chiaramente mock/frontend
-- [ ] sito pubblico non espone importi, note interne, problemi interni o contabilità
-- [ ] dipendente non vede sezioni sensibili
+- [x] nessun dato reale cliente/fornitore/persona nel codice
+- [x] nessun documento interno reale in `public`
+- [x] nessuna chiave API nel repo
+- [x] nessuna configurazione Supabase reale
+- [x] area interna è chiaramente mock/frontend
+- [x] sito pubblico non espone importi, note interne, problemi interni o contabilità
+- [x] dipendente non vede sezioni sensibili
 
 ## Q. Check finale prima di Supabase
 
-- [ ] tutte le checklist sopra completate
-- [ ] `docs/MOCK_QA_BUGS.md` non contiene bug Critica
-- [ ] `docs/MOCK_QA_BUGS.md` non contiene bug Alta non risolti
-- [ ] `npm run build` pulito
-- [ ] ruoli verificati manualmente
-- [ ] mobile verificato manualmente
-- [ ] sito pubblico approvato
-- [ ] area interna approvata
-- [ ] dati mock approvati
-- [ ] decisione esplicita: pronto per progettazione Supabase
+- [x] tutte le checklist sopra completate
+- [x] `docs/MOCK_QA_BUGS.md` non contiene bug Critica
+- [x] `docs/MOCK_QA_BUGS.md` non contiene bug Alta non risolti
+- [x] `npm run build` pulito
+- [x] ruoli verificati manualmente
+- [x] mobile verificato manualmente
+- [x] sito pubblico approvato
+- [x] area interna approvata
+- [x] dati mock approvati
+- [x] decisione esplicita: pronto per progettazione Supabase

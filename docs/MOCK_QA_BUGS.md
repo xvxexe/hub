@@ -20,6 +20,14 @@ Stati ammessi:
 | BUG-002 | Navigazione ruoli | `#/dashboard/documenti/:id`, `#/dashboard/foto/:id` | Il pulsante di ritorno nei dettagli aperti dal dipendente poteva puntare a liste non autorizzate. | Media | Corretto | Per il dipendente il ritorno dai dettagli documento/foto porta a `#/dashboard/caricamenti`. |
 | BUG-003 | Interazioni mock / Dashboard | `#/dashboard`, `#/dashboard/foto/:id` | Alcuni riepiloghi contabili della dashboard derivavano dai movimenti statici e l’approvazione di una foto già pubblicata poteva lasciare il flag `pubblicata` incoerente. | Media | Corretto | Dashboard admin/contabilità ora calcolano totali e alert dai documenti dello store mock; `approvePhoto` riporta `pubblicata` a `false`. |
 
+## Esito secondo check finale v0.5.11
+
+- Data controllo: 2026-05-01
+- Bug Critica aperti: 0
+- Bug Alta aperti: 0
+- Nuovi bug bloccanti trovati: nessuno
+- Note: build e lint puliti; controlli route/ruoli/dati mock eseguiti; smoke test browser headless su pagine pubbliche principali completato senza crash o layout bloccanti.
+
 ## Note operative
 
 - Un bug Critica blocca Supabase.

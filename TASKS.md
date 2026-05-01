@@ -2,7 +2,7 @@
 
 ## Task attuale
 
-v0.5.10 completata: correzione bug emersi dal primo check manuale mock.
+v0.5.11 completata: secondo check finale mock pre-Supabase.
 
 ## Da fare ora
 
@@ -64,7 +64,7 @@ v0.5.10 completata: correzione bug emersi dal primo check manuale mock.
 
 ## Prossima fase
 
-v0.5.11 — Secondo check finale mock pre-Supabase
+v0.6 — Preparazione Supabase setup
 
 ## Completato in v0.5.5c
 
@@ -220,6 +220,42 @@ v0.5.11 — Secondo check finale mock pre-Supabase
 - Nessun Supabase, backend reale, login reale, upload reale, IA, OCR, export o notifiche reali implementati
 - Verifiche eseguite: `npm run lint`, controllo permessi mock, `npm run build`
 
+## Completato in v0.5.11
+
+- Eseguito secondo check finale mock pre-Supabase
+- Verificata build produzione con `npm run build`
+- Verificato lint con `npm run lint`
+- Verificato che non risultano Supabase, backend reale, login reale, upload reale, IA, OCR o export reale implementati
+- Verificate route pubbliche e interne principali
+- Verificata matrice ruoli mock per admin/capo, contabilità e dipendente
+- Verificati store mock, localStorage, reset dati demo, note interne e activity log
+- Verificata coerenza ID tra cantieri, documenti, foto e movimenti
+- Verificate immagini pubbliche e fallback locali
+- Eseguiti smoke test browser headless mobile/desktop sulle pagine pubbliche principali
+- Aggiornata `docs/PRE_SUPABASE_CHECKLIST.md`
+- Aggiornato `docs/MOCK_QA_BUGS.md`
+- Creato `docs/PRE_SUPABASE_VERDICT.md`
+- Verdetto: `PRONTO PER v0.6 SUPABASE SETUP`
+
+## Completato — Fix sito pubblico navbar e immagini
+
+- Fix navbar pubblica responsive e immagini card/fallback completato
+- Aggiunto menu hamburger mobile per la navigazione pubblica
+- Riorganizzata la navbar desktop con voce Azienda e sottomenu per Settori e Chi siamo
+- Rimossa la navigazione pubblica con scrollbar orizzontale
+- Migliorate card servizi/settori con immagine pulita in alto e corpo contenuto separato
+- Migliorato `SafeImage` con fallback neutro e gestione errori senza sfondi rossi
+- Sostituiti i riferimenti agli asset prototipo che mostravano sfondi rossi nelle card pubbliche
+- Rimossa la barra orizzontale dalla navigazione mobile/tablet dell'area riservata
+- Rifinito il layout servizi su viewport intermedie per evitare colonne strette e composizioni sbilanciate
+- Rese interattive le righe mock che sembrano cliccabili in dashboard, alert, attività, caricamenti e riepiloghi contabili
+- Sistemato il layout “Foto recenti / Documenti recenti” evitando colonne vuote e aggiungendo empty state coerenti
+- Aggiunto focus/hover chiaro alle card operative cliccabili senza duplicare azioni o introdurre backend reale
+- Rifinita la lista cantieri interna con card più leggibili, metriche compatte e griglia meno caotica
+- Allineate in alto le liste e le griglie operative con colonne di altezza diversa, inclusi caricamenti foto/documenti
+- Limitate le liste recenti a 3 elementi iniziali con pulsante mock “Mostra altri” per caricare il resto
+- Nessun Supabase, backend reale, login reale o nuova funzionalità grande implementati
+
 ## Pre-Supabase checklist
 
 - [x] Sito pubblico mock ok
@@ -230,7 +266,7 @@ v0.5.11 — Secondo check finale mock pre-Supabase
 - [x] Dati mock centralizzati e modificabili ok
 - [x] Nessun dato sensibile interno esposto nel sito pubblico
 - [x] Interazioni mock documenti/foto/preventivi ok
-- [ ] Secondo check finale mock v0.5.11 da eseguire prima di Supabase
+- [x] Secondo check finale mock v0.5.11 completato prima di Supabase
 
 ## Completato — Asset pubblici e documenti pubblici
 

@@ -34,14 +34,7 @@ export function ActivityFeed({ title, items }) {
       </div>
       <div className="activity-feed">
         {items.length > 0 ? items.map((item) => (
-          <article className="activity-item" key={`${item.title}-${item.meta}`}>
-            <span />
-            <div>
-              <strong>{item.title}</strong>
-              <small>{item.meta}</small>
-            </div>
-            {item.status ? <StatusBadge>{item.status}</StatusBadge> : null}
-          </article>
+          <InteractiveActivityItem item={item} key={`${item.title}-${item.meta}`} />
         )) : <p>Nessuna attività nei dati mock correnti.</p>}
       </div>
     </section>
@@ -90,16 +83,33 @@ export function AlertPanel({ title = 'Alert operativi', alerts }) {
       </div>
       <div className="activity-feed">
         {alerts.length > 0 ? alerts.map((alert) => (
-          <article className="activity-item alert-item" key={alert.id ?? `${alert.title}-${alert.meta}`}>
-            <span />
-            <div>
-              <strong>{alert.title}</strong>
-              <small>{alert.meta}</small>
-            </div>
-            {alert.status ? <StatusBadge>{alert.status}</StatusBadge> : null}
-          </article>
+          <InteractiveActivityItem alert item={alert} key={alert.id ?? `${alert.title}-${alert.meta}`} />
         )) : <p>Nessun alert aperto nei dati mock correnti.</p>}
       </div>
     </section>
   )
+}
+
+function InteractiveActivityItem({ item, alert = false }) {
+  const className = alert ? 'activity-item alert-item interactive-row' : 'activity-item interactive-row'
+  const content = (
+    <>
+      <span />
+      <div>
+        <strong>{item.title}</strong>
+        <small>{item.meta}</small>
+      </div>
+      {item.status ? <StatusBadge>{item.status}</StatusBadge> : null}
+    </>
+  )
+
+  if (item.href) {
+    return (
+      <a className={className} href={item.href}>
+        {content}
+      </a>
+    )
+  }
+
+  return <article className={className}>{content}</article>
 }

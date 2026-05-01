@@ -67,6 +67,7 @@ function AdminDashboard({ fotoUploads, documentUploads, documents, activities, e
       title: problema.titolo,
       meta: `${cantiere.nome} · ${cantiere.responsabile}`,
       status: problema.priorita,
+      href: `#/dashboard/cantieri/${cantiere.id}`,
     })),
   )
   const urgentDocs = documentUploads
@@ -76,6 +77,7 @@ function AdminDashboard({ fotoUploads, documentUploads, documents, activities, e
       title: `${doc.tipoDocumento}: ${doc.fornitore || doc.descrizione}`,
       meta: `${doc.cantiere} · ${doc.nota || doc.fileName}`,
       status: doc.stato,
+      href: `#/dashboard/documenti/${doc.id}`,
     }))
 
   return (
@@ -112,10 +114,10 @@ function AdminDashboard({ fotoUploads, documentUploads, documents, activities, e
         <ActivityFeed
           title="Ultime attività"
           items={[
-            ...fotoUploads.slice(0, 2).map((item) => ({ title: `Foto: ${item.lavorazione}`, meta: `${item.cantiere} · ${item.caricatoDa}`, status: item.stato })),
-            ...documentUploads.slice(0, 2).map((item) => ({ title: `Documento: ${item.tipoDocumento}`, meta: `${item.cantiere} · ${item.fornitore}`, status: item.stato })),
-            ...estimates.slice(0, 2).map((item) => ({ title: `Preventivo: ${item.client}`, meta: item.request, status: item.status })),
-            ...activities.slice(0, 3).map((item) => ({ title: item.description, meta: `${item.author} · ${item.date}`, status: item.type })),
+            ...fotoUploads.slice(0, 2).map((item) => ({ title: `Foto: ${item.lavorazione}`, meta: `${item.cantiere} · ${item.caricatoDa}`, status: item.stato, href: `#/dashboard/foto/${item.id}` })),
+            ...documentUploads.slice(0, 2).map((item) => ({ title: `Documento: ${item.tipoDocumento}`, meta: `${item.cantiere} · ${item.fornitore}`, status: item.stato, href: `#/dashboard/documenti/${item.id}` })),
+            ...estimates.slice(0, 2).map((item) => ({ title: `Preventivo: ${item.client}`, meta: item.request, status: item.status, href: `#/dashboard/preventivi/${item.id}` })),
+            ...activities.slice(0, 3).map((item) => ({ title: item.description, meta: `${item.author} · ${item.date}`, status: item.type, href: activityHref(item) })),
           ]}
         />
         <AlertPanel
@@ -128,6 +130,7 @@ function AdminDashboard({ fotoUploads, documentUploads, documents, activities, e
               title: alert.message,
               meta: `${alert.movimento.descrizione} · ${alert.movimento.fornitore}`,
               status: alert.movimento.statoVerifica,
+              href: `#/dashboard/contabilita/${alert.movimento.id}`,
             })),
           ].slice(0, 8)}
         />
@@ -156,6 +159,7 @@ function AccountingDashboard({ documentUploads, documents }) {
     title: alert.message,
     meta: `${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`,
     status: alert.movimento.statoVerifica,
+    href: `#/dashboard/contabilita/${alert.movimento.id}`,
   }))
 
   return (
@@ -174,10 +178,10 @@ function AccountingDashboard({ documentUploads, documents }) {
           <div className="section-heading"><h2>Spese per categoria</h2></div>
           <div className="activity-feed">
             {categoryTotals.map((item) => (
-              <article className="activity-item" key={item.categoria}>
+              <a className="activity-item interactive-row" href="#/dashboard/contabilita" key={item.categoria}>
                 <span />
                 <div><strong>{item.categoria}</strong><small><MoneyValue value={item.totale} /></small></div>
-              </article>
+              </a>
             ))}
           </div>
         </section>
@@ -187,15 +191,24 @@ function AccountingDashboard({ documentUploads, documents }) {
             title: row.descrizione,
             meta: `${row.fornitore} · ${row.numeroDocumento}`,
             status: row.statoVerifica,
+            href: `#/dashboard/contabilita/${row.id}`,
           }))}
         />
       </div>
 
       <AlertPanel title="Alert contabili" alerts={accountingAlerts} />
       <WorkflowStepper title="Flusso documenti amministrativi" steps={documentFlow} />
-      <RecentUploadList title="Documenti recenti" type="documento" uploads={documentUploads.slice(0, 4)} />
+      <RecentUploadList title="Documenti recenti" type="documento" uploads={documentUploads} />
     </>
   )
+}
+
+function activityHref(activity) {
+  if (activity.entityType === 'photos') return `#/dashboard/foto/${activity.entityId}`
+  if (activity.entityType === 'documents') return `#/dashboard/documenti/${activity.entityId}`
+  if (activity.entityType === 'estimates') return `#/dashboard/preventivi/${activity.entityId}`
+  if (activity.entityType === 'cantieri') return `#/dashboard/cantieri/${activity.entityId}`
+  return undefined
 }
 
 function documentToAccountingRow(document) {
@@ -245,8 +258,8 @@ function EmployeeDashboard({ session, fotoUploads, documentUploads }) {
       </section>
 
       <div className="internal-two-column">
-        <RecentUploadList title="Le mie foto recenti" type="foto" uploads={myPhotos.slice(0, 3)} />
-        <RecentUploadList title="I miei documenti recenti" type="documento" uploads={myDocuments.slice(0, 3)} showAmount={false} />
+        <RecentUploadList title="Le mie foto recenti" type="foto" uploads={myPhotos} />
+        <RecentUploadList title="I miei documenti recenti" type="documento" uploads={myDocuments} showAmount={false} />
       </div>
       <WorkflowStepper title="Flusso foto" steps={photoFlow} />
     </>

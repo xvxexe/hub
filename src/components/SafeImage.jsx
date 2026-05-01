@@ -7,25 +7,26 @@ export function SafeImage({
   title,
   className,
   fallbackSrc = placeholderImages.project.src,
-  finalFallbackSrc = placeholderImages.projectSvg.src,
-  loading = 'lazy',
+  finalFallbackSrc = placeholderImages.project.src,
+  loading = 'eager',
 }) {
-  const [currentSrc, setCurrentSrc] = useState(src || fallbackSrc)
+  const [failedSources, setFailedSources] = useState([])
+  const candidates = [src, fallbackSrc, finalFallbackSrc].filter(Boolean)
+  const uniqueCandidates = [...new Set(candidates)]
+  const currentSrc = uniqueCandidates.find((candidate) => !failedSources.includes(candidate)) ?? uniqueCandidates.at(-1)
 
   return (
     <img
       alt={alt || title || 'Immagine EuropaService'}
-      className={className}
+      className={className ? `safe-image ${className}` : 'safe-image'}
+      decoding="async"
       loading={loading}
       onError={() => {
-        if (currentSrc !== fallbackSrc && fallbackSrc) {
-          setCurrentSrc(fallbackSrc)
-        } else if (currentSrc !== finalFallbackSrc) {
-          setCurrentSrc(finalFallbackSrc)
-        }
+        setFailedSources((current) => (
+          currentSrc && !current.includes(currentSrc) ? [...current, currentSrc] : current
+        ))
       }}
       src={currentSrc}
-      title={title}
     />
   )
 }

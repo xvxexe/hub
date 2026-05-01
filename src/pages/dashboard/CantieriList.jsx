@@ -96,7 +96,7 @@ export function CantieriList() {
           const totals = getCantiereTotals(cantiere)
 
           return (
-            <article className="cantiere-card" key={cantiere.id}>
+            <article className="cantiere-card cantiere-card-compact" key={cantiere.id}>
               <div className="cantiere-card-header">
                 <div>
                   <h2>{cantiere.nome}</h2>
@@ -105,7 +105,7 @@ export function CantieriList() {
                 <StatusBadge>{cantiere.stato}</StatusBadge>
               </div>
 
-              <dl className="compact-meta">
+              <dl className="compact-meta cantiere-summary">
                 <div>
                   <dt>Localita</dt>
                   <dd>{cantiere.localita}</dd>
@@ -123,10 +123,10 @@ export function CantieriList() {
               <ProgressBar value={cantiere.avanzamento} />
 
               <div className="cantiere-totals">
-                <span>{totals.documenti} documenti</span>
-                <span>{totals.foto} foto</span>
-                <span>{formatCurrency(totals.spese)}</span>
-                <span>{totals.problemi} problemi</span>
+                <span><strong>{totals.documenti}</strong> doc</span>
+                <span><strong>{totals.foto}</strong> foto</span>
+                <span><strong>{formatCurrency(totals.spese)}</strong></span>
+                <span><strong>{totals.problemi}</strong> problemi</span>
               </div>
 
               <a className="button button-secondary" href={`#/dashboard/cantieri/${cantiere.id}`}>

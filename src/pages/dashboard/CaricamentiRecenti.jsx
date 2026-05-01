@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { EmptyState } from '../../components/EmptyState'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { RecentUploadList } from '../../components/RecentUploadList'
 import { StatusBadge } from '../../components/StatusBadge'
@@ -128,27 +127,14 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
         </section>
       ) : null}
 
-      <section className="upload-recent-layout">
-        {canSeePhotos ? (
-          filteredPhotos.length > 0 ? (
-            <RecentUploadList title="Foto recenti" type="foto" uploads={filteredPhotos} />
-          ) : (
-            <EmptyState title="Nessuna foto trovata">Modifica i filtri per vedere altre foto mock.</EmptyState>
-          )
-        ) : null}
-
-        {filteredDocuments.length > 0 ? (
-          <RecentUploadList
-            title="Documenti recenti"
-            type="documento"
-            uploads={filteredDocuments}
-            showAmount={session.role !== 'employee'}
-          />
-        ) : (
-          <EmptyState title="Nessun documento trovato">
-            Modifica i filtri per vedere altri documenti mock.
-          </EmptyState>
-        )}
+      <section className={canSeePhotos ? 'upload-recent-layout' : 'upload-recent-layout upload-recent-layout-single'}>
+        {canSeePhotos ? <RecentUploadList title="Foto recenti" type="foto" uploads={filteredPhotos} /> : null}
+        <RecentUploadList
+          title="Documenti recenti"
+          type="documento"
+          uploads={filteredDocuments}
+          showAmount={session.role !== 'employee'}
+        />
       </section>
     </>
   )
@@ -160,11 +146,11 @@ function HighlightBox({ title, rows }) {
       <div className="section-heading"><h2>{title}</h2></div>
       <div className="activity-feed">
         {rows.length > 0 ? rows.slice(0, 4).map((row) => (
-          <article className="activity-item" key={row.id}>
+          <a className="activity-item interactive-row" href={`#/dashboard/documenti/${row.id}`} key={row.id}>
             <span />
             <div><strong>{row.fornitore}</strong><small>{row.cantiere} · {row.descrizione}</small></div>
             <StatusBadge>{row.stato}</StatusBadge>
-          </article>
+          </a>
         )) : <p>Nessun elemento nei filtri attuali.</p>}
       </div>
     </section>

@@ -102,19 +102,19 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
 
       <section className="upload-recent-layout">
         {!isAccounting ? (
-          <RecentUploadList title="Foto caricate di recente" type="foto" uploads={visibleFotoUploads.slice(0, 4)} />
+          <RecentUploadList title="Foto caricate di recente" type="foto" uploads={visibleFotoUploads} />
         ) : null}
         {!isEmployee ? (
           <RecentUploadList
             title="Documenti caricati di recente"
             type="documento"
-            uploads={visibleDocumentUploads.slice(0, 4)}
+            uploads={visibleDocumentUploads}
           />
         ) : (
           <RecentUploadList
             title="Documenti caricati di recente"
             type="documento"
-            uploads={visibleDocumentUploads.slice(0, 2)}
+            uploads={visibleDocumentUploads}
             showAmount={false}
           />
         )}
