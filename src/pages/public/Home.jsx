@@ -1,126 +1,109 @@
 import {
-  CTASection,
-  HeroSection,
-  ProcessSteps,
-  ProjectCard,
-  SectorCard,
-  StatsBand,
+  PremiumCTA,
+  PremiumHero,
+  PremiumProcess,
+  PremiumProjectCard,
+  PremiumSection,
+  PremiumServiceCard,
+  PremiumStats,
+  TestimonialMock,
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
-import { Section } from '../../components/Section'
 import { SafeImage } from '../../components/SafeImage'
-import { heroImages, placeholderImages } from '../../data/publicImages'
 import {
-  companyStats,
-  homeTrustItems,
-  publicServices,
-  whyChooseUs,
-  workProcess,
-} from '../../data/publicServices'
-import { publicProjects } from '../../data/publicProjects'
-import { sectors } from '../../data/publicSectors'
+  partners,
+  premiumProjects,
+  premiumServices,
+  premiumStats,
+  testimonials,
+  teamImage,
+  workMethod,
+} from '../../data/publicPremiumData'
 
 export function Home() {
   return (
     <>
       <SEO
-        title="Edilizia, cartongesso e finiture interne"
-        description="EuropaService realizza edilizia, cartongesso, controsoffitti, pareti divisorie, rasature e finiture interne per privati, aziende, hotel, negozi e cantieri organizzati."
+        title="Costruiamo spazi di valore"
+        description="EuropaService realizza edilizia, cartongesso, ristrutturazioni tecniche, finiture interne e gestione cantieri per spazi di valore."
       />
-      <HeroSection
-        eyebrow="Edilizia, cartongesso e finiture interne"
-        title="Edilizia, cartongesso e finiture interne per cantieri organizzati e risultati professionali"
-        text="EuropaService realizza interventi di cartongesso, controsoffitti, pareti divisorie, rasature, finiture interne e lavori edili per privati, aziende, hotel, negozi e cantieri professionali."
-        image={heroImages.main}
-        trustItems={homeTrustItems}
-      >
-        <div className="hero-panel" aria-label="Metodo EuropaService">
-          <span>Metodo di lavoro</span>
-          <strong>Sopralluogo, organizzazione, esecuzione e controllo</strong>
-          <p>Gestiamo lavorazioni interne con attenzione a tempi, ordine di cantiere e qualità delle finiture.</p>
-        </div>
-      </HeroSection>
 
-      <Section
-        title="Cosa facciamo"
-        intro="Dalle pareti in cartongesso ai controsoffitti, fino alle finiture interne, lavoriamo per ottenere ambienti puliti, funzionali e pronti all’uso."
+      <PremiumHero
+        eyebrow="EuropaService"
+        title="Costruiamo spazi di valore"
+        text="Edilizia, cartongesso, ristrutturazioni tecniche e finiture interne di alta qualità per clienti che cercano ordine, affidabilità e un risultato finale impeccabile."
+        image={premiumProjects[0].image}
+        imageAlt="Cantiere interno premium con lavorazioni di cartongesso e finiture"
+        variant="overlay"
+        meta={['Edilizia tecnica', 'Cartongesso', 'Finiture interne', 'Gestione cantieri']}
+      />
+
+      <PremiumSection title="Numeri che raccontano metodo" text="Esperienza, cantieri e continuità operativa al servizio di progetti residenziali e professionali.">
+        <PremiumStats stats={premiumStats} />
+      </PremiumSection>
+
+      <PremiumSection
+        eyebrow="Servizi"
+        title="Una struttura operativa per interni complessi"
+        text="Dalle pareti tecniche al controllo finale, ogni servizio è pensato per integrarsi con tempi, fornitori e obiettivi del cantiere."
+        action={<a className="premium-button premium-button-secondary" href="#/servizi">Scopri i servizi</a>}
       >
-        <div className="public-grid">
-          {publicServices.slice(0, 6).map((service) => (
-            <article className="public-card service-summary-card" key={service.id}>
-              <SafeImage
-                alt={service.imageAlt}
-                className="public-card-image"
-                fallbackSrc={service.fallbackImage}
-                src={service.image}
-                title={service.seoTitle}
-              />
-              <span className="service-icon">{service.icon}</span>
-              <h3>{service.title}</h3>
-              <p>{service.description}</p>
-            </article>
+        <div className="premium-service-grid">
+          {premiumServices.slice(0, 6).map((service) => <PremiumServiceCard key={service.id} service={service} />)}
+        </div>
+      </PremiumSection>
+
+      <PremiumSection
+        eyebrow="Portfolio"
+        title="Cantieri in evidenza"
+        text="Progetti selezionati per mostrare lavorazioni tecniche, organizzazione e qualità visiva degli ambienti consegnati."
+        tone="soft"
+        action={<a className="premium-button premium-button-secondary" href="#/cantieri">Guarda il portfolio</a>}
+      >
+        <div className="premium-project-grid">
+          {premiumProjects.slice(0, 3).map((project, index) => (
+            <PremiumProjectCard featured={index === 0} key={project.id} project={project} />
           ))}
         </div>
-        <a className="button button-secondary section-action" href="#/servizi">Scopri i servizi</a>
-      </Section>
+      </PremiumSection>
 
-      <Section title="Perché scegliere EuropaService" tone="muted">
-        <div className="public-grid">
-          {whyChooseUs.map((item) => (
-            <article className="public-card" key={item.title}>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
-          ))}
-        </div>
-      </Section>
+      <PremiumSection eyebrow="Metodo" title="Dal sopralluogo alla consegna" text="Un processo chiaro riduce attriti, tempi morti e decisioni improvvisate.">
+        <PremiumProcess steps={workMethod} />
+      </PremiumSection>
 
-      <StatsBand stats={companyStats} />
-
-      <Section title="Metodo di lavoro" intro="Ogni intervento viene seguito con metodo: sopralluogo, valutazione, lavorazione, controllo e consegna.">
-        <ProcessSteps steps={workProcess} />
-      </Section>
-
-      <Section
-        title="Cantieri e lavori reali"
-        intro="Il portfolio mostra esempi di lavorazioni e tipologie di intervento: cartongesso, controsoffitti, finiture interne e lavori edili documentati."
-        tone="muted"
-      >
-        <div className="public-project-grid">
-          {publicProjects.slice(0, 3).map((project) => <ProjectCard key={project.id} project={project} />)}
-        </div>
-        <a className="button button-secondary section-action" href="#/cantieri">Guarda i cantieri</a>
-      </Section>
-
-      <Section title="Settori serviti" intro="Adattiamo lavorazioni, tempi e comunicazione al tipo di cliente e al contesto operativo.">
-        <div className="public-grid">
-          {sectors.slice(0, 6).map((sector) => <SectorCard key={sector.id} sector={sector} />)}
-        </div>
-      </Section>
-
-      <section className="section section-muted image-text-section">
+      <section className="premium-split-section">
         <SafeImage
-          alt={heroImages.ceiling.alt}
-          className="public-card-image image-text-media"
-          fallbackSrc={placeholderImages.hero.src}
-          src={heroImages.ceiling.src}
-          title={heroImages.ceiling.title}
+          alt="Squadra EuropaService in cantiere interno"
+          className="premium-split-image"
+          fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
+          src={teamImage}
+          title="Squadra EuropaService"
         />
-        <div className="image-text-copy">
-          <p className="eyebrow">Cantieri organizzati</p>
-          <h2>Più ordine significa decisioni più semplici e risultato finale più controllato</h2>
+        <div>
+          <p className="premium-eyebrow">Chi siamo</p>
+          <h2>Una società organizzata per gestire lavorazioni interne con standard elevati.</h2>
           <p>
-            Un cantiere ben seguito riduce incomprensioni, tempi morti e dettagli lasciati a metà.
-            Per questo puntiamo su informazioni chiare, fasi leggibili e controllo delle finiture.
+            EuropaService lavora con un approccio tecnico e ordinato: referenti chiari,
+            squadre coordinate, materiali selezionati, documentazione delle fasi e attenzione
+            ai dettagli che definiscono la qualità finale.
           </p>
-          <a className="button button-secondary" href="#/chi-siamo">Chi siamo</a>
+          <a className="premium-button premium-button-secondary" href="#/chi-siamo">Conosci Europaservice</a>
         </div>
       </section>
 
-      <CTASection
-        title="Hai un lavoro da valutare?"
-        text="Raccontaci il tipo di intervento, allega eventuali foto e riceverai un primo contatto per capire tempi, necessità e prossimi passaggi."
-      />
+      <PremiumSection eyebrow="Partner e certificazioni" title="Collaboriamo con filiere tecniche affidabili" text="Un cantiere premium dipende da competenze, fornitori e responsabilità ben distribuite.">
+        <div className="premium-logo-row">
+          {partners.map((partner) => <span key={partner}>{partner}</span>)}
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Clienti" title="Fiducia costruita sul campo" tone="soft">
+        <div className="premium-testimonial-grid">
+          {testimonials.map((testimonial) => <TestimonialMock key={testimonial.author} testimonial={testimonial} />)}
+        </div>
+      </PremiumSection>
+
+      <PremiumCTA />
     </>
   )
 }

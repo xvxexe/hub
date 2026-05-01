@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NotesPanel } from '../../components/EntityPanels'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
-import { ActivityFeed, DashboardHeader } from '../../components/InternalComponents'
+import { ActivityFeed, DashboardHeader, MockActionModal } from '../../components/InternalComponents'
 import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
 import { StatusBadge } from '../../components/StatusBadge'
@@ -15,11 +15,18 @@ import {
   getAccountingTotals,
   getMovimentiByCantiere,
 } from '../../data/mockMovimentiContabili'
+import {
+  accountingWarnings,
+  pendingChecks,
+  recentPayments,
+  siteWorkPackages,
+} from '../../data/mockHubData'
 
-const tabs = ['Panoramica', 'Foto', 'Documenti', 'Spese', 'Note', 'Problemi', 'Attività recenti']
+const tabs = ['Panoramica', 'Lavorazioni', 'Documenti', 'Contabilità', 'Report']
 
 export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads = [], session, activities = [], notes = [], onAddNote }) {
   const [activeTab, setActiveTab] = useState('Panoramica')
+  const [modalAction, setModalAction] = useState(null)
   const cantiere = getCantiereById(cantiereId)
 
   if (!cantiere) {
@@ -51,11 +58,36 @@ export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads =
   return (
     <>
       <DashboardHeader
-        eyebrow="Dettaglio cantiere interno"
-        title={cantiere.nome}
+        eyebrow="Dettaglio cantiere"
+        title={`Cantiere - ${cantiere.nome}`}
         description={cantiere.descrizione}
       >
         <StatusBadge>{cantiere.stato}</StatusBadge>
+        <a className="button button-secondary" href="#/dashboard/upload">Carica documento</a>
+        <button
+          className="button button-secondary"
+          type="button"
+          onClick={() => setModalAction({
+            icon: 'wallet',
+            title: 'Nuova spesa mock',
+            text: `Registra una nuova spesa per ${cantiere.nome}. Per ora il dato resta dimostrativo e pronto per il futuro backend.`,
+            confirmLabel: 'Salva spesa mock',
+            fields: [
+              { label: 'Fornitore', placeholder: 'Es. Eurofer' },
+              { label: 'Importo', type: 'number', placeholder: '1250' },
+              { label: 'Categoria', type: 'select', options: ['Materiali', 'Manodopera', 'Noleggi', 'FIR rifiuti'] },
+            ],
+          })}
+        >
+          Nuova spesa
+        </button>
+        <button
+          className="button button-primary"
+          type="button"
+          onClick={() => setModalAction(reportAction(cantiere))}
+        >
+          Report PDF
+        </button>
       </DashboardHeader>
       <section className="cantiere-detail-header compact-detail-header">
         <div className="detail-title">
@@ -107,8 +139,10 @@ export function CantiereDetail({ cantiereId, fotoUploads = [], documentUploads =
           activities,
           notes,
           onAddNote,
+          setModalAction,
         )}
       </section>
+      <MockActionModal action={modalAction} onClose={() => setModalAction(null)} />
     </>
   )
 }
@@ -135,40 +169,13 @@ function renderTab(
   activities,
   notes,
   onAddNote,
+  onMockAction,
 ) {
   if (activeTab === 'Panoramica') {
     return (
-      <div className="detail-two-column">
-        <article className="info-card">
-          <h2>Lavorazioni</h2>
-          <ul className="clean-list">
-            {cantiere.lavorazioni.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </article>
+      <div className="cantiere-overview-grid">
         {canViewEconomics ? (
-          <article className="info-card">
-            <h2>Riepilogo economico mock</h2>
-            <dl className="detail-list">
-              <div>
-                <dt>Totale imponibile</dt>
-                <dd><MoneyValue value={accountingTotals.imponibile} /></dd>
-              </div>
-              <div>
-                <dt>Totale IVA</dt>
-                <dd><MoneyValue value={accountingTotals.iva} /></dd>
-              </div>
-              <div>
-                <dt>Totale complessivo</dt>
-                <dd><MoneyValue value={accountingTotals.totale} /></dd>
-              </div>
-              <div>
-                <dt>Documenti da verificare</dt>
-                <dd>{accountingTotals.daVerificare}</dd>
-              </div>
-            </dl>
-          </article>
+          <CostSplitPanel accountingTotals={accountingTotals} onMockAction={onMockAction} />
         ) : (
           <article className="info-card">
             <h2>Riepilogo operativo</h2>
@@ -188,8 +195,18 @@ function renderTab(
             </dl>
           </article>
         )}
+        <MaterialsPanel accountingTotals={accountingTotals} />
+        <SideOperationalPanels />
+        <WorkPackages onMockAction={onMockAction} />
+        <RecentDocuments linkedDocumentUploads={linkedDocumentUploads} cantiere={cantiere} session={session} />
+        <RecentPayments onMockAction={onMockAction} />
+        <TimelinePanel cantiere={cantiere} linkedFotoUploads={linkedFotoUploads} linkedDocumentUploads={linkedDocumentUploads} />
       </div>
     )
+  }
+
+  if (activeTab === 'Lavorazioni') {
+    return <WorkPackages onMockAction={onMockAction} />
   }
 
   if (activeTab === 'Foto') {
@@ -261,7 +278,7 @@ function renderTab(
     )
   }
 
-  if (activeTab === 'Spese') {
+  if (activeTab === 'Contabilità') {
     return (
       <>
         <section className="accounting-summary-grid detail-accounting-summary">
@@ -294,6 +311,40 @@ function renderTab(
           ))}
         </div>
       </>
+    )
+  }
+
+  if (activeTab === 'Report') {
+    return (
+      <div className="detail-two-column">
+        <article className="info-card">
+          <h2>Report cantiere mock</h2>
+          <p>Anteprima per PDF con stato avanzamento, documenti critici, riepilogo materiali e note operative.</p>
+          <div className="row-actions">
+            <button className="button button-primary" type="button" onClick={() => onMockAction(reportAction(cantiere))}>Report PDF</button>
+            <button
+              className="button button-secondary"
+              type="button"
+              onClick={() => onMockAction({
+                icon: 'link',
+                title: 'Condivisione mock',
+                text: 'Link dimostrativo pronto per invio a cliente o team interno.',
+                confirmLabel: 'Copia link mock',
+              })}
+            >
+              Condividi mock
+            </button>
+          </div>
+        </article>
+        <ActivityFeed
+          title="Verifiche e scadenze"
+          items={pendingChecks.map((item) => ({
+            title: item.title,
+            meta: item.date,
+            status: item.status,
+          }))}
+        />
+      </div>
     )
   }
 
@@ -394,5 +445,192 @@ function LinkedUploads({ title, children }) {
       <h2>{title}</h2>
       <div className="recent-upload-list">{children}</div>
     </section>
+  )
+}
+
+function CostSplitPanel({ accountingTotals, onMockAction }) {
+  return (
+    <article className="info-card cost-card">
+      <div className="section-heading panel-title-row">
+        <h2>Riepilogo costi per categoria</h2>
+        <button
+          className="button button-secondary button-small"
+          type="button"
+          onClick={() => onMockAction({
+            icon: 'calendar',
+            title: 'Periodo costi',
+            text: 'Filtro periodo mock per riepilogo costi. I dati reali potranno arrivare da contabilità e movimenti collegati.',
+            confirmLabel: 'Applica periodo',
+            fields: [{ label: 'Periodo', type: 'select', options: ['Questo mese', 'Ultimi 30 giorni', 'Trimestre', 'Anno'] }],
+          })}
+        >
+          Questo mese
+        </button>
+      </div>
+      <div className="cost-summary">
+        <div>
+          <span>Totale spese</span>
+          <strong><MoneyValue value={accountingTotals.totale} /></strong>
+          <small className="positive-trend">-8,4% rispetto al mese scorso</small>
+        </div>
+        <div className="donut-chart"><span>Totale<br /><MoneyValue value={accountingTotals.totale} /></span></div>
+        <dl className="detail-list">
+          <div><dt>Materiali</dt><dd><MoneyValue value={accountingTotals.totale * 0.488} /></dd></div>
+          <div><dt>Manodopera</dt><dd><MoneyValue value={accountingTotals.totale * 0.279} /></dd></div>
+          <div><dt>Noleggi / Servizi</dt><dd><MoneyValue value={accountingTotals.totale * 0.14} /></dd></div>
+          <div><dt>FIR / Rifiuti</dt><dd><MoneyValue value={accountingTotals.totale * 0.055} /></dd></div>
+        </dl>
+      </div>
+    </article>
+  )
+}
+
+function MaterialsPanel({ accountingTotals }) {
+  const materials = accountingTotals.totale * 0.488
+  const nonMaterials = accountingTotals.totale - materials
+  return (
+    <article className="info-card">
+      <h2>Sintesi materiali vs non materiali</h2>
+      <div className="split-bar"><span style={{ width: '48.8%' }} /></div>
+      <div className="material-cards">
+        <div><span>Materiali</span><strong><MoneyValue value={materials} /></strong><small>48,8% del totale</small></div>
+        <div><span>Non materiali</span><strong><MoneyValue value={nonMaterials} /></strong><small>51,2% del totale</small></div>
+      </div>
+    </article>
+  )
+}
+
+function SideOperationalPanels() {
+  return (
+    <div className="side-operational-panels">
+      <article className="info-card note-highlight">
+        <h2>Note operative</h2>
+        <p>Prossima consegna materiali prevista per il 26/05. Coordinare accessi gru con impresa impianti.</p>
+      </article>
+      <article className="info-card">
+        <h2>Alert contabili</h2>
+        <div className="activity-feed">
+          {accountingWarnings.map((item) => (
+            <article className="activity-item" key={item.id}>
+              <span />
+              <div><strong>{item.title}</strong><small>{item.detail}</small></div>
+              <StatusBadge>{item.status}</StatusBadge>
+            </article>
+          ))}
+        </div>
+      </article>
+      <ActivityFeed title="Verifiche in attesa" items={pendingChecks.map((item) => ({ title: item.title, meta: item.date, status: item.status }))} />
+    </div>
+  )
+}
+
+function WorkPackages({ onMockAction }) {
+  return (
+    <article className="info-card work-packages">
+      <div className="section-heading panel-title-row">
+        <h2>Lavorazioni principali</h2>
+        <button
+          className="button button-secondary button-small"
+          type="button"
+          onClick={() => onMockAction({
+            icon: 'building',
+            title: 'Lavorazioni complete',
+            text: 'Elenco completo mock di lavorazioni, avanzamenti, budget e spese collegate.',
+            confirmLabel: 'Ok',
+          })}
+        >
+          Vedi tutte
+        </button>
+      </div>
+      <div className="hub-table work-package-table">
+        <div className="hub-table-head work-package-row"><span>Lavorazione</span><span>Stato</span><span>Avanzamento</span><span>Budget</span><span>Speso</span></div>
+        {siteWorkPackages.map((item) => (
+          <article className="hub-table-row work-package-row" key={item.name}>
+            <strong>{item.name}</strong>
+            <StatusBadge>{item.status}</StatusBadge>
+            <ProgressBar value={item.progress} />
+            <span><MoneyValue value={item.budget} /></span>
+            <span><MoneyValue value={item.spent} /></span>
+          </article>
+        ))}
+      </div>
+    </article>
+  )
+}
+
+function RecentDocuments({ linkedDocumentUploads, cantiere, session }) {
+  const fallbackDocs = cantiere.documenti.map((doc) => ({
+    id: doc.id,
+    tipoDocumento: doc.tipo,
+    fornitore: doc.nome,
+    dataCaricamento: cantiere.dataInizio,
+    stato: doc.stato,
+  }))
+  const docs = linkedDocumentUploads.length > 0 ? linkedDocumentUploads : fallbackDocs
+  return (
+    <article className="info-card">
+      <div className="section-heading panel-title-row"><h2>Ultimi documenti</h2><a className="button button-secondary button-small" href="#/dashboard/documenti">Vedi tutti</a></div>
+      <div className="activity-feed">
+        {docs.slice(0, 5).map((doc) => (
+          <a className="activity-item interactive-row" href={doc.fileName ? `#/dashboard/documenti/${doc.id}` : '#/dashboard/documenti'} key={doc.id}>
+            <span />
+            <div><strong>{doc.tipoDocumento}</strong><small>{doc.fornitore}{session?.role !== 'employee' && doc.importoTotale ? ` · ${formatCurrency(doc.importoTotale)}` : ''}</small></div>
+            <StatusBadge>{doc.stato}</StatusBadge>
+          </a>
+        ))}
+      </div>
+    </article>
+  )
+}
+
+function RecentPayments({ onMockAction }) {
+  return (
+    <article className="info-card">
+      <div className="section-heading panel-title-row">
+        <h2>Pagamenti recenti / Bonifici</h2>
+        <button
+          className="button button-secondary button-small"
+          type="button"
+          onClick={() => onMockAction({
+            icon: 'wallet',
+            title: 'Pagamenti completi mock',
+            text: 'Vista pagamenti completa pronta per filtrare bonifici, fatture collegate e stati di verifica.',
+            confirmLabel: 'Ok',
+          })}
+        >
+          Vedi tutti
+        </button>
+      </div>
+      <div className="hub-table">
+        {recentPayments.map((payment) => (
+          <article className="hub-table-row payment-row" key={payment.id}>
+            <span>{payment.date}</span><strong>{payment.supplier}</strong><span>{payment.document}</span><span><MoneyValue value={payment.amount} /></span><StatusBadge>{payment.status}</StatusBadge>
+          </article>
+        ))}
+      </div>
+    </article>
+  )
+}
+
+function reportAction(cantiere) {
+  return {
+    icon: 'report',
+    title: `Report PDF - ${cantiere.nome}`,
+    text: 'Preparazione export PDF mock con avanzamento, documenti critici, costi e timeline. Nessun file reale viene generato in questa fase.',
+    confirmLabel: 'Genera mock',
+    fields: [{ label: 'Formato', type: 'select', options: ['PDF riepilogo', 'PDF completo', 'CSV contabile'] }],
+  }
+}
+
+function TimelinePanel({ cantiere, linkedFotoUploads, linkedDocumentUploads }) {
+  return (
+    <ActivityFeed
+      title="Timeline attività"
+      items={[
+        ...linkedDocumentUploads.slice(0, 2).map((item) => ({ title: `Caricato ${item.tipoDocumento}`, meta: `${item.fornitore} · ${formatDate(item.dataCaricamento)}`, status: item.stato })),
+        ...linkedFotoUploads.slice(0, 2).map((item) => ({ title: `Foto caricata: ${item.lavorazione}`, meta: `${item.zona} · ${formatDate(item.dataCaricamento)}`, status: item.stato })),
+        ...cantiere.problemi.map((item) => ({ title: item.titolo, meta: item.stato, status: item.priorita })),
+      ]}
+    />
   )
 }

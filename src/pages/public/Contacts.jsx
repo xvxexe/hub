@@ -1,115 +1,147 @@
 import { useState } from 'react'
-import { CTASection } from '../../components/PublicComponents'
-import { PageHeader } from '../../components/PageHeader'
+import {
+  PremiumCTA,
+  PremiumFAQ,
+  PremiumHero,
+  PremiumSection,
+} from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
-import { SafeImage } from '../../components/SafeImage'
-import { company } from '../../data/mockData'
-import { placeholderImages, teamImages } from '../../data/publicImages'
+import { contactCards, mainHeroImage } from '../../data/publicPremiumData'
 
-const contactMethods = [
+const initialForm = {
+  name: '',
+  company: '',
+  email: '',
+  phone: '',
+  city: '',
+  intervention: 'Cartongesso',
+  message: '',
+  budget: 'Da definire',
+  fileName: '',
+}
+
+const contactFaq = [
   {
-    title: 'Chiamaci',
-    text: 'Per informazioni rapide, sopralluoghi e prime valutazioni operative.',
-    value: company.phone,
+    question: 'Quanto tempo serve per ricevere una risposta?',
+    answer: 'In questa demo non parte nessun invio reale. Nel flusso previsto la richiesta viene presa in carico e qualificata in base a urgenza e complessità.',
   },
   {
-    title: 'Scrivici su WhatsApp',
-    text: 'Utile per inviare foto, indirizzo e dettagli preliminari del lavoro.',
-    value: '+39 045 000 0000',
+    question: 'Posso allegare planimetrie o foto?',
+    answer: 'Sì, il campo allegati è predisposto in modalità mock. In futuro potrà collegarsi allo storage reale.',
   },
   {
-    title: 'Invia una richiesta',
-    text: 'Descrivi lavorazioni, zona e urgenza per ricevere un primo contatto ordinato.',
-    value: company.email,
-  },
-  {
-    title: 'Richiedi sopralluogo',
-    text: 'Valutiamo spazi, misure indicative, accessi e priorità prima di organizzare il lavoro.',
-    value: 'Su appuntamento',
+    question: 'Fate sopralluoghi fuori Verona?',
+    answer: 'Sì, valutiamo cantieri in Veneto, Lombardia, Roma e Nord Italia in base al tipo di intervento.',
   },
 ]
 
 export function Contacts() {
+  const [form, setForm] = useState(initialForm)
   const [sent, setSent] = useState(false)
+
+  function update(field, value) {
+    setForm((current) => ({ ...current, [field]: value }))
+  }
+
+  function submit(event) {
+    event.preventDefault()
+    setSent(true)
+  }
 
   return (
     <>
       <SEO
-        title="Contatti"
-        description="Contatta EuropaService per informazioni, sopralluoghi e preventivi su cartongesso, controsoffitti, pareti divisorie, rasature, finiture interne e lavori edili."
+        title="Contatti e richiesta preventivo"
+        description="Parla con EuropaService per edilizia, cartongesso, ristrutturazioni tecniche, finiture interne e gestione cantieri."
       />
-      <PageHeader eyebrow="Contatti" title="Contatta EuropaService per informazioni, sopralluoghi e preventivi">
-        Per informazioni, sopralluoghi o richieste di preventivo, puoi contattare EuropaService indicando
-        il tipo di intervento, la zona e allegando eventuali foto. Più informazioni riceviamo, più sarà
-        semplice valutare correttamente il lavoro.
-      </PageHeader>
 
-      <section className="section image-text-section">
-        <SafeImage
-          alt={teamImages.squadra.alt}
-          className="public-card-image image-text-media"
-          fallbackSrc={placeholderImages.project.src}
-          src={teamImages.squadra.src}
-          title="Squadra EuropaService per sopralluoghi e cantieri"
-        />
-        <div className="image-text-copy">
-          <p className="eyebrow">Primo contatto</p>
-          <h2>Raccontaci il lavoro con dati concreti</h2>
-          <p>
-            Indica zona, tipo di immobile, lavorazione richiesta, urgenza e stato attuale degli ambienti.
-            Per una valutazione più ordinata puoi usare direttamente il modulo preventivo.
-          </p>
-          <a className="button button-primary" href="#/preventivo">Richiedi preventivo</a>
-        </div>
-      </section>
+      <PremiumHero
+        eyebrow="Contatti"
+        title="Parliamo del tuo progetto"
+        text="Raccontaci spazi, tempi, obiettivi e vincoli. Ti aiutiamo a trasformare la richiesta in un piano operativo chiaro."
+        image={mainHeroImage}
+        imageAlt="Cantiere interno per richiesta preventivo"
+        primaryLabel="Compila il modulo"
+        primaryHref="#contatti-form"
+        secondaryLabel="Scopri i servizi"
+        variant="contact"
+      />
 
-      <section className="section section-muted">
-        <div className="contact-grid">
-          {contactMethods.map((method) => (
-            <article className="public-card contact-method-card" key={method.title}>
-              <h2>{method.title}</h2>
-              <p>{method.text}</p>
-              <strong>{method.value}</strong>
+      <PremiumSection eyebrow="Contatti diretti" title="Scegli il canale più comodo">
+        <div className="premium-contact-grid">
+          {contactCards.map((card) => (
+            <article className="premium-card" key={card.title}>
+              <h3>{card.title}</h3>
+              <strong>{card.value}</strong>
+              <p>{card.text}</p>
             </article>
           ))}
         </div>
-      </section>
+      </PremiumSection>
 
-      <section className="section">
-        <div className="detail-layout contact-layout">
-          <form className="mock-form contact-form" onSubmit={(event) => { event.preventDefault(); setSent(true) }}>
-            <label>Nome e cognome<input required /></label>
-            <label>Telefono<input type="tel" required /></label>
-            <label>Email<input type="email" /></label>
-            <label>Città / zona intervento<input /></label>
-            <label className="form-wide">Messaggio<textarea rows="5" placeholder="Descrivi il lavoro, la zona, l’urgenza e il tipo di immobile" /></label>
-            <button className="button button-primary" type="submit">Invia contatto mock</button>
-          </form>
-
-          <aside className="info-card">
-            <h2>Informazioni utili</h2>
-            <dl className="detail-list">
-              <div><dt>Zone servite</dt><dd>{company.area}</dd></div>
-              <div><dt>Cantieri strutturati</dt><dd>Roma, Milano e Nord Italia mock</dd></div>
-              <div><dt>Orari</dt><dd>Lun-Ven 8:00-18:00</dd></div>
-              <div><dt>Sabato</dt><dd>Su appuntamento</dd></div>
-            </dl>
-            <h3>Box sopralluogo</h3>
-            <p>Il sopralluogo serve a verificare misure, accessi, materiali, vincoli e tempi prima della proposta.</p>
-          </aside>
+      <section className="premium-contact-layout" id="contatti-form">
+        <div>
+          <p className="premium-eyebrow">Richiedi preventivo</p>
+          <h2>Inserisci le informazioni essenziali</h2>
+          <p>Il modulo è mock: serve a progettare il flusso futuro verso area interna e backend.</p>
+          <div className="premium-map-card">
+            <strong>EuropaService</strong>
+            <span>Verona · Veneto · Nord Italia</span>
+          </div>
         </div>
-        {sent ? (
-          <article className="public-card confirmation-card">
-            <h2>Messaggio mock registrato</h2>
-            <p>Nessun invio reale: la conferma serve solo per la demo del sito pubblico.</p>
-          </article>
-        ) : null}
+
+        <form className="premium-form" onSubmit={submit}>
+          <label>Nome e cognome<input value={form.name} onChange={(event) => update('name', event.target.value)} required /></label>
+          <label>Azienda<input value={form.company} onChange={(event) => update('company', event.target.value)} /></label>
+          <label>Email<input type="email" value={form.email} onChange={(event) => update('email', event.target.value)} required /></label>
+          <label>Telefono<input type="tel" value={form.phone} onChange={(event) => update('phone', event.target.value)} required /></label>
+          <label>Città<input value={form.city} onChange={(event) => update('city', event.target.value)} /></label>
+          <label>
+            Tipologia intervento
+            <select value={form.intervention} onChange={(event) => update('intervention', event.target.value)}>
+              <option>Cartongesso</option>
+              <option>Ristrutturazioni tecniche</option>
+              <option>Finiture interne</option>
+              <option>Gestione cantiere</option>
+              <option>Manutenzioni</option>
+              <option>Supporto operativo</option>
+            </select>
+          </label>
+          <label>
+            Budget indicativo
+            <select value={form.budget} onChange={(event) => update('budget', event.target.value)}>
+              <option>Da definire</option>
+              <option>Fino a 10.000 EUR</option>
+              <option>10.000 - 50.000 EUR</option>
+              <option>Oltre 50.000 EUR</option>
+            </select>
+          </label>
+          <label>Upload allegati<input type="file" onChange={(event) => update('fileName', event.target.files?.[0]?.name ?? '')} /></label>
+          <label className="premium-form-wide">Messaggio<textarea rows="6" value={form.message} onChange={(event) => update('message', event.target.value)} placeholder="Descrivi progetto, tempi, stato attuale e priorità" /></label>
+          <button className="premium-button premium-button-primary" type="submit">Invia richiesta mock</button>
+          {form.fileName ? <p className="premium-form-note">Allegato selezionato: {form.fileName}</p> : null}
+          {sent ? <p className="premium-form-success">Richiesta mock registrata. Nessun invio reale eseguito.</p> : null}
+        </form>
       </section>
 
-      <CTASection
-        title="Vuoi una richiesta più completa?"
-        text="Usa il modulo preventivo per aggiungere tipo cliente, lavorazione, misure indicative, urgenza, budget e allegati foto mock."
-      />
+      <PremiumSection eyebrow="Dopo l’invio" title="Cosa succede dopo">
+        <div className="premium-process">
+          {[
+            ['01', 'Analisi richiesta', 'Valutiamo tipo intervento, zona, urgenza e allegati.'],
+            ['02', 'Primo contatto', 'Chiariamo obiettivo, vincoli e disponibilità per sopralluogo.'],
+            ['03', 'Sopralluogo', 'Verifichiamo misure, accessi, materiali e complessità.'],
+            ['04', 'Proposta', 'Impostiamo tempi, lavorazioni e priorità operative.'],
+          ].map(([step, title, text]) => (
+            <article key={step}><span>{step}</span><h3>{title}</h3><p>{text}</p></article>
+          ))}
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="FAQ" title="Domande prima del contatto" tone="soft">
+        <PremiumFAQ items={contactFaq} />
+      </PremiumSection>
+
+      <PremiumCTA title="Preferisci parlare subito con noi?" text="Usa telefono o email per fissare un primo confronto operativo sul progetto." />
     </>
   )
 }

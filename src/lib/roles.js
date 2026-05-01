@@ -23,6 +23,7 @@ export const roleConfig = {
       { label: 'Foto', path: '/dashboard/foto' },
       { label: 'Preventivi', path: '/dashboard/preventivi' },
       { label: 'Contabilita', path: '/dashboard/contabilita' },
+      { label: 'Report', path: '/dashboard/report' },
       { label: 'Dipendenti', path: '/dashboard/dipendenti' },
       { label: 'Impostazioni', path: '/dashboard/impostazioni' },
     ],
@@ -49,6 +50,7 @@ export const roleConfig = {
       { label: 'Caricamenti documenti', path: '/dashboard/caricamenti' },
       { label: 'Preventivi', path: '/dashboard/preventivi' },
       { label: 'Contabilita', path: '/dashboard/contabilita' },
+      { label: 'Report', path: '/dashboard/report' },
     ],
   },
   employee: {

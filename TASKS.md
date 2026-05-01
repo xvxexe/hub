@@ -256,6 +256,59 @@ v0.6 — Preparazione Supabase setup
 - Limitate le liste recenti a 3 elementi iniziali con pulsante mock “Mostra altri” per caricare il resto
 - Nessun Supabase, backend reale, login reale o nuova funzionalità grande implementati
 
+## Completato — Redesign UI/UX area privata da reference
+
+- Rifatta la shell dell’area privata con sidebar desktop, menu attivo, topbar con ricerca globale mock, notifiche, help e profilo utente
+- Aggiunta bottom navigation mobile e layout responsive desktop/tablet/mobile per l’hub interno
+- Aggiornata Dashboard con KPI cards, andamento cantieri, tabella documenti recenti, grafico riepilogo costi, caricamenti WhatsApp, attività/promemoria e azioni rapide
+- Rifatta pagina Documenti con filtri, KPI, tabella documenti, pagination mock, anteprima laterale, dati estratti e azioni documento
+- Rifatta pagina Cantieri con filtri, KPI, tabella operativa, budget/spese/responsabile/avanzamento, cantiere in evidenza, scadenze e azioni rapide
+- Aggiornato dettaglio cantiere con tab Panoramica, Lavorazioni, Documenti, Contabilità e Report, riepilogo materiali vs non materiali, lavorazioni principali, alert, verifiche e pagamenti recenti
+- Aggiunta pagina Report mock e voce menu Report per admin/capo e contabilità
+- Estesi badge stato per Da controllare, Verificato, In attesa, Duplicato, DA VERIFICARE, In corso, Critico e Chiuso
+- Mantenuto tutto mock: nessun Supabase, backend reale, IA reale, upload reale o PDF reale implementato
+- Verifiche eseguite: `npm run lint`, `npm run build`, smoke headless su Vite locale
+
+## Completato — Redesign premium sito pubblico
+
+- Rifatto il sito pubblico con stile premium Apple-like adattato a edilizia tecnica, cartongesso, ristrutturazioni e finiture interne
+- Creati componenti pubblici riutilizzabili: hero premium, sezioni, card servizi, card portfolio, stats, processo, FAQ, CTA e testimonianze
+- Aggiunti dati mock pubblici premium centralizzati in `src/data/publicPremiumData.js`
+- Rifatte le pagine Home, Servizi, Cantieri/Portfolio, Dettaglio cantiere/Case study, Chi siamo e Contatti/Richiedi preventivo
+- Mantenuta route Settori con nuova UI coerente, per non rompere la navigazione esistente
+- Migliorati navbar e footer pubblici con tono più istituzionale e CTA chiare
+- Usate immagini locali esistenti in `public/assets/images`, senza dipendenze esterne
+- Nessun Supabase, backend reale, upload reale, invio email reale o PDF reale implementato
+- Verifiche eseguite: `npm run lint`, `npm run build`, smoke screenshot headless su Home, Servizi, Cantieri e Contatti
+
+## Completato — Rifinitura interazioni area interna da reference
+
+- Aggiunto set di icone SVG interne coerente con sidebar, topbar, KPI, azioni rapide e bottom navigation
+- Rifinita la shell dell’area privata verso il layout reference: sidebar chiara fissa, menu attivo, topbar con ricerca, notifiche, help e profilo
+- Reso funzionante il pulsante menu della sidebar con modalità compatta desktop
+- Resa funzionante la ricerca globale con risultati navigabili e invio da tastiera
+- Rese funzionanti notifiche e help con popover e link interni
+- Rimossa la dipendenza dal selettore azienda nell’area privata
+- Resa reale la pagination dei cantieri e mantenuta funzionante quella dei documenti
+- Rese cliccabili le righe “Documenti da controllare” e le righe tabella con anteprima laterale aggiornata
+- Aggiunte modali mock per azioni rapide: nuovo cantiere, nuova spesa, preventivo, report, scadenze, lavorazioni, pagamenti e assegnazione tab documento
+- Rifiniti KPI, quick action cards, tabella documenti e modali con stile più fedele alle reference
+- Mantenuto tutto mock: nessun backend, Supabase, IA, upload reale o PDF reale implementato
+- Verifiche eseguite: `npm run lint`, `npm run build`
+
+## Completato — Sito pubblico allineato alla nuova reference
+
+- Aggiornato il sito pubblico seguendo la reference `ChatGPT Image May 1, 2026, 06_18_00 PM.png`
+- Rifinita la navbar pubblica in stile minimale: logo compatto, link sottili, CTA pill scura e menu mobile scuro
+- Rifatta la Home con hero fotografico full-width, overlay scuro, headline bianca e CTA sovrapposte all’immagine
+- Aggiornate le pagine Servizi, Cantieri, Dettaglio cantiere, Chi siamo e Contatti con hero split/compatti coerenti alla reference
+- Trasformate le card servizi in card bianche con icone lineari e freccia, senza immagini dentro la card
+- Compattata la griglia progetti con immagini quadrate, testi brevi e filtri pill
+- Aggiornato il form contatti/preventivo con pannello scuro laterale e campi bianchi puliti
+- Aggiornato il footer pubblico con CTA fotografica scura e struttura a colonne
+- Mantenuto tutto mock: nessun backend, invio email, upload reale, Supabase o PDF reale implementato
+- Verifiche eseguite: `npm run lint`, `npm run build`
+
 ## Pre-Supabase checklist
 
 - [x] Sito pubblico mock ok

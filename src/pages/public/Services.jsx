@@ -1,64 +1,102 @@
-import { CTASection } from '../../components/PublicComponents'
-import { PageHeader } from '../../components/PageHeader'
+import {
+  PremiumCTA,
+  PremiumFAQ,
+  PremiumHero,
+  PremiumProcess,
+  PremiumSection,
+  PremiumServiceCard,
+} from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
-import { SafeImage } from '../../components/SafeImage'
-import { publicServices } from '../../data/publicServices'
+import {
+  mainHeroImage,
+  premiumServices,
+  sectorsServed,
+  workMethod,
+} from '../../data/publicPremiumData'
+
+const serviceFaq = [
+  {
+    question: 'Gestite solo cartongesso o anche lavorazioni edili?',
+    answer: 'Gestiamo cartongesso, controsoffitti, finiture, manutenzioni e assistenze edili coordinate, sempre con dati mock in questa versione.',
+  },
+  {
+    question: 'Lavorate con aziende e strutture aperte al pubblico?',
+    answer: 'Sì. Retail, hospitality e uffici richiedono fasi ordinate, protezioni, orari pianificati e comunicazione precisa.',
+  },
+  {
+    question: 'È necessario un sopralluogo?',
+    answer: 'Per interventi tecnici o con vincoli di accesso il sopralluogo è il modo più serio per valutare tempi, materiali e priorità.',
+  },
+  {
+    question: 'Potete coordinare più lavorazioni?',
+    answer: 'La gestione cantiere serve proprio a ridurre passaggi dispersi e mantenere una regia operativa chiara.',
+  },
+]
 
 export function Services() {
   return (
     <>
       <SEO
-        title="Servizi di cartongesso, controsoffitti e lavori edili"
-        description="Servizi EuropaService: cartongesso, controsoffitti, pareti divisorie, rasature, finiture interne, isolamenti, manutenzioni, lavori per hotel e negozi."
+        title="Servizi premium per edilizia, cartongesso e finiture"
+        description="Servizi EuropaService: cartongesso, ristrutturazioni tecniche, finiture interne, gestione cantiere, manutenzioni e supporto operativo."
       />
-      <PageHeader eyebrow="Servizi" title="Lavorazioni interne complete per edilizia, cartongesso e finiture">
-        Ogni servizio viene gestito con attenzione a contesto, tempi, ordine di cantiere e qualità della consegna.
-        Lavoriamo per privati, aziende, hotel, negozi, studi tecnici e general contractor.
-      </PageHeader>
-      <section className="section">
-        <div className="services-detail-list">
-          {publicServices.map((service) => (
-            <article className="service-detail-card" id={service.id} key={service.id}>
-              <SafeImage
-                alt={service.imageAlt}
-                className="service-detail-image"
-                fallbackSrc={service.fallbackImage}
-                src={service.image}
-                title={service.seoTitle}
-              />
-              <div className="service-detail-copy">
-                <span className="service-icon">{service.icon}</span>
-                <h2>{service.title}</h2>
-                <p className="lead-text">{service.description}</p>
-                <p>{service.extended}</p>
 
-                <div className="service-detail-panels">
-                  <div>
-                    <h3>Quando serve</h3>
-                    <p>{service.when}</p>
-                  </div>
-                  <div>
-                    <h3>Vantaggi</h3>
-                    <ul className="clean-list">
-                      {service.benefits.map((item) => <li key={item}>{item}</li>)}
-                    </ul>
-                  </div>
-                  <div>
-                    <h3>Esempi di applicazione</h3>
-                    <ul className="clean-list">
-                      {service.examples.map((item) => <li key={item}>{item}</li>)}
-                    </ul>
-                  </div>
-                </div>
-                <a className="button button-primary" href="#/preventivo">Richiedi preventivo</a>
-              </div>
+      <PremiumHero
+        eyebrow="Servizi"
+        title="I nostri servizi"
+        text="Soluzioni su misura per costruire spazi di qualità, duraturi nel tempo."
+        image={mainHeroImage}
+        imageAlt="Lavorazioni interne in cantiere premium"
+        primaryLabel="Richiedi preventivo"
+        secondaryLabel="Guarda i cantieri"
+        secondaryHref="#/cantieri"
+        variant="page"
+        meta={['Retail', 'Hospitality', 'Uffici', 'Residenziale']}
+      />
+
+      <PremiumSection
+        eyebrow="Cosa facciamo"
+        title="Sei aree operative, un unico standard"
+        text="Ogni servizio è progettato per dialogare con gli altri: meno dispersione, più controllo e una consegna più pulita."
+      >
+        <div className="premium-service-grid">
+          {premiumServices.map((service) => <PremiumServiceCard key={service.id} service={service} />)}
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Perché Europaservice" title="Un approccio più vicino a un partner tecnico che a un semplice esecutore" tone="soft">
+        <div className="premium-feature-grid">
+          {[
+            ['Regia operativa', 'Un referente che segue priorità, tempi, accessi e avanzamento.'],
+            ['Qualità visiva', 'Dettagli, giunzioni, quote e finiture curate per un risultato premium.'],
+            ['Documentazione', 'Foto, fasi e informazioni ordinate per ridurre ambiguità.'],
+            ['Sicurezza e ordine', 'Aree protette, pulizia e attenzione alla convivenza con altri fornitori.'],
+          ].map(([title, text]) => (
+            <article className="premium-card" key={title}>
+              <h3>{title}</h3>
+              <p>{text}</p>
             </article>
           ))}
         </div>
-      </section>
-      <CTASection
-        title="Hai bisogno di capire quale lavorazione serve?"
-        text="Descrivi ambiente, misure indicative e obiettivo finale: ti aiuteremo a impostare una richiesta chiara per cartongesso, controsoffitti, rasature, finiture interne o lavori edili."
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Processo" title="Come lavoriamo" text="Le fasi sono poche, chiare e controllabili.">
+        <PremiumProcess steps={workMethod} />
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Settori serviti" title="Contesti diversi, stesso livello di controllo" tone="soft">
+        <div className="premium-sector-row">
+          {sectorsServed.map((sector) => <span key={sector}>{sector}</span>)}
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="FAQ" title="Domande frequenti">
+        <PremiumFAQ items={serviceFaq} />
+      </PremiumSection>
+
+      <PremiumCTA
+        title="Serve un servizio tecnico per il tuo spazio?"
+        text="Descrivi obiettivo, stato attuale e tempi. Ti aiutiamo a capire quale lavorazione impostare."
       />
     </>
   )

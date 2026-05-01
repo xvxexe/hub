@@ -1,130 +1,118 @@
-import { CTASection, ProcessSteps } from '../../components/PublicComponents'
+import {
+  PremiumCTA,
+  PremiumHero,
+  PremiumProcess,
+  PremiumProjectCard,
+  PremiumSection,
+  TestimonialMock,
+} from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import { SafeImage } from '../../components/SafeImage'
-import { StatusBadge } from '../../components/StatusBadge'
-import { getPublicProjectById, publicProjects } from '../../data/publicProjects'
+import { premiumProjects, testimonials, workMethod } from '../../data/publicPremiumData'
 
 export function ProjectDetail({ projectId }) {
-  const project = getPublicProjectById(projectId) ?? publicProjects[0]
-
-  const defaultWork = [
-    'Preparazione area',
-    'Strutture in cartongesso',
-    'Controsoffitti',
-    'Rasature',
-    'Finiture interne',
-    'Controllo finale',
-  ]
+  const project = premiumProjects.find((item) => item.id === projectId) ?? premiumProjects[0]
+  const related = premiumProjects.filter((item) => item.id !== project.id).slice(0, 3)
 
   return (
     <>
-      <SEO title={`${project.title} - scheda cantiere`} description={project.seoDescription} />
-      <section className="project-detail-hero">
-        <div className="project-detail-copy">
-          <p className="eyebrow">Scheda portfolio</p>
-          <h1>{project.title}</h1>
-          <p>{project.description}</p>
-          <div className="hero-actions">
-            <a className="button button-primary" href="#/preventivo">Richiedi un lavoro simile</a>
-            <a className="button button-secondary" href="#/cantieri">Guarda altri cantieri</a>
-          </div>
-        </div>
-        <SafeImage
-          alt={project.imageAlt}
-          className="project-detail-image"
-          fallbackSrc={project.fallbackImage}
-          src={project.image}
-          title={project.seoTitle}
-        />
-      </section>
+      <SEO
+        title={`${project.title} - case study`}
+        description={`${project.title}: case study EuropaService per ${project.category}, ${project.city}, con servizi di cartongesso, finiture e gestione cantiere.`}
+      />
 
-      <section className="section">
-        <div className="detail-layout project-detail-layout">
-          <article className="info-card">
-            <StatusBadge>{project.status}</StatusBadge>
-            <h2>Informazioni principali</h2>
-            <dl className="detail-list">
-              <div><dt>Località</dt><dd>{project.location}</dd></div>
-              <div><dt>Categoria</dt><dd>{project.type}</dd></div>
-              <div><dt>Tipo cliente</dt><dd>{project.clientType}</dd></div>
-              <div><dt>Anno</dt><dd>{project.year}</dd></div>
-            </dl>
-          </article>
-          <article className="info-card">
-            <h2>Obiettivo dell’intervento</h2>
-            <p>
-              {project.objective ??
-                'L’intervento ha riguardato la realizzazione e sistemazione di lavorazioni interne con attenzione alla funzionalità degli spazi, alla pulizia delle finiture e all’integrazione con le esigenze del cantiere.'}
-            </p>
-          </article>
-        </div>
-      </section>
+      <PremiumHero
+        eyebrow="Case study"
+        title={project.title}
+        text={project.summary}
+        image={project.image}
+        imageAlt={project.alt}
+        primaryLabel="Richiedi un lavoro simile"
+        secondaryLabel="Torna al portfolio"
+        secondaryHref="#/cantieri"
+        variant="detail"
+        meta={[project.city, project.category, project.status, project.year]}
+      />
 
-      <section className="section section-muted">
-        <div className="section-heading">
-          <h2>Lavorazioni eseguite</h2>
-          <p>Le informazioni sono pubbliche e non includono spese, documenti, contabilità o note interne.</p>
+      <PremiumSection eyebrow="Dati chiave" title="Il progetto in sintesi">
+        <div className="premium-key-facts">
+          <article><span>Superficie</span><strong>{project.metrics[0]}</strong></article>
+          <article><span>Durata</span><strong>{project.metrics[1]}</strong></article>
+          <article><span>Servizi</span><strong>{project.services.join(', ')}</strong></article>
+          <article><span>Team</span><strong>{project.metrics[2]}</strong></article>
+          <article><span>Anno</span><strong>{project.year}</strong></article>
         </div>
-        <div className="public-grid">
-          {(project.services.length ? project.services : defaultWork).map((service) => (
-            <article className="public-card" key={service}>
-              <h3>{service}</h3>
-              <p>Lavorazione gestita con attenzione a ordine, coordinamento e qualità della finitura.</p>
-            </article>
-          ))}
-        </div>
-      </section>
+      </PremiumSection>
 
-      <section className="section">
-        <div className="section-heading">
-          <h2>Fasi del lavoro</h2>
-          <p>Il progetto viene raccontato per fasi operative, così il cliente capisce metodo e risultato.</p>
-        </div>
-        <ProcessSteps
-          steps={(project.phases ?? defaultWork.slice(0, 4)).map((phase, index) => ({
-            step: String(index + 1).padStart(2, '0'),
-            title: phase,
-            text: 'Fase organizzata con controllo dell’avanzamento e attenzione alle lavorazioni successive.',
-          }))}
-        />
-      </section>
-
-      <section className="section section-muted">
-        <div className="section-heading">
-          <h2>Galleria immagini</h2>
-          <p>Esempi visivi della tipologia di lavorazione e delle fasi pubblicabili del cantiere.</p>
-        </div>
-        <div className="public-gallery">
-          {project.gallery.map((item) => (
-            <figure className="public-gallery-item" key={item}>
-              <SafeImage
-                alt={`${item} - ${project.imageAlt}`}
-                className="public-project-image"
-                fallbackSrc={project.fallbackImage}
-                src={project.image}
-                title={`${project.title} - ${item}`}
-              />
-              <figcaption>{item}</figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
-
-      <section className="section">
-        <article className="public-card result-card">
-          <p className="eyebrow">Risultato finale</p>
-          <h2>Ambiente più ordinato, funzionale e pronto all’uso</h2>
+      <section className="premium-case-split">
+        <article>
+          <p className="premium-eyebrow">Sfida</p>
+          <h2>Coordinare lavorazioni tecniche senza perdere qualità visiva.</h2>
           <p>
-            {project.result} Il risultato finale è un ambiente più ordinato, funzionale e pronto
-            per le successive fasi di utilizzo o consegna.
+            Il progetto richiedeva gestione di tempi, accessi, interferenze impiantistiche e finiture
+            con standard elevato. La priorità era mantenere avanzamento e controllo dei dettagli.
+          </p>
+        </article>
+        <article>
+          <p className="premium-eyebrow">Soluzione</p>
+          <h2>Una sequenza ordinata di fasi, verifiche e consegne intermedie.</h2>
+          <p>
+            EuropaService ha impostato squadre, materiali e lavorazioni per zone, documentando le fasi
+            e mantenendo un referente operativo per decisioni rapide e tracciabili.
           </p>
         </article>
       </section>
 
-      <CTASection
-        title="Richiedi un lavoro simile"
-        text="Raccontaci tipo di immobile, località, urgenza e allega eventuali foto: la richiesta verrà raccolta in modalità dimostrativa."
-      />
+      <PremiumSection eyebrow="Galleria" title="Immagini del cantiere" tone="soft">
+        <div className="premium-gallery">
+          {[project.image, '/assets/images/hero/controsoffitto-cantiere-interno.jpg', '/assets/images/projects/cantiere-controsoffitto.jpg'].map((src, index) => (
+            <SafeImage
+              alt={`${project.title} immagine ${index + 1}`}
+              className="premium-gallery-image"
+              fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
+              key={src}
+              src={src}
+              title={`${project.title} galleria`}
+            />
+          ))}
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Servizi realizzati" title="Lavorazioni coinvolte">
+        <div className="premium-feature-grid">
+          {project.services.map((service) => (
+            <article className="premium-card" key={service}>
+              <h3>{service}</h3>
+              <p>Lavorazione integrata nel piano operativo con controlli intermedi e attenzione alla consegna finale.</p>
+            </article>
+          ))}
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Risultati" title="Cosa è stato ottenuto" tone="soft">
+        <div className="premium-result-band">
+          {project.metrics.map((metric) => <strong key={metric}>{metric}</strong>)}
+          <p>{project.summary}</p>
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Timeline" title="Processo di lavoro">
+        <PremiumProcess steps={workMethod} />
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Cliente" title="Testimonianza" tone="soft">
+        <div className="premium-testimonial-grid">
+          <TestimonialMock testimonial={testimonials[0]} />
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Altri progetti" title="Case study correlati">
+        <div className="premium-project-grid">
+          {related.map((item) => <PremiumProjectCard key={item.id} project={item} />)}
+        </div>
+      </PremiumSection>
+
+      <PremiumCTA title="Vuoi un risultato simile?" text="Raccontaci il progetto, gli spazi e le priorità. Ti aiutiamo a impostare un cantiere ordinato." />
     </>
   )
 }

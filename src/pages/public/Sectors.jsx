@@ -1,25 +1,32 @@
-import { CTASection, SectorCard } from '../../components/PublicComponents'
-import { PageHeader } from '../../components/PageHeader'
+import { PremiumCTA, PremiumHero, PremiumSection } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
-import { sectors } from '../../data/publicSectors'
+import { mainHeroImage, sectorsServed } from '../../data/publicPremiumData'
 
 export function Sectors() {
   return (
     <>
       <SEO
         title="Settori serviti"
-        description="EuropaService lavora per privati, aziende, hotel, negozi, studi tecnici, general contractor e amministratori immobiliari con cartongesso e finiture interne."
+        description="EuropaService lavora per retail, hospitality, uffici, residenziale e spazi commerciali."
       />
-      <PageHeader eyebrow="Settori" title="Soluzioni per privati, aziende, hotel, negozi e cantieri professionali">
-        Ogni cliente ha vincoli diversi: tempi, accessi, finiture, coordinamento e livello di documentazione.
-        EuropaService organizza le lavorazioni interne in base al contesto reale del cantiere.
-      </PageHeader>
-      <section className="section">
-        <div className="public-grid">
-          {sectors.map((sector) => <SectorCard key={sector.id} sector={sector} />)}
+      <PremiumHero
+        eyebrow="Settori"
+        title="Interventi tecnici per contesti diversi"
+        text="Retail, hospitality, uffici, residenziale e spazi commerciali richiedono tempi, finiture e organizzazione diversi. Il metodo resta lo stesso: ordine e qualità."
+        image={mainHeroImage}
+        imageAlt="Cantiere interno per settori serviti"
+      />
+      <PremiumSection title="Settori serviti">
+        <div className="premium-feature-grid">
+          {sectorsServed.map((sector) => (
+            <article className="premium-card" key={sector}>
+              <h3>{sector}</h3>
+              <p>Soluzioni di cartongesso, finiture e gestione cantiere adattate a vincoli e standard del settore.</p>
+            </article>
+          ))}
         </div>
-      </section>
-      <CTASection title="Hai un settore con esigenze specifiche?" text="Descrivi spazi, vincoli e tempi: il modulo preventivo mock raccoglie le informazioni principali." />
+      </PremiumSection>
+      <PremiumCTA />
     </>
   )
 }

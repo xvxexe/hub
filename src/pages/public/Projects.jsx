@@ -1,54 +1,103 @@
 import { useMemo, useState } from 'react'
-import { ProjectCard } from '../../components/PublicComponents'
-import { PageHeader } from '../../components/PageHeader'
+import {
+  PremiumCTA,
+  PremiumHero,
+  PremiumProjectCard,
+  PremiumSection,
+  PremiumStats,
+  TestimonialMock,
+} from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
-import { projectStatuses, projectTypes, publicProjects } from '../../data/publicProjects'
+import {
+  partners,
+  premiumProjects,
+  premiumStats,
+  testimonials,
+} from '../../data/publicPremiumData'
+
+const categories = ['Tutti', 'Retail', 'Hospitality', 'Uffici', 'Residenziale']
 
 export function Projects() {
-  const [type, setType] = useState('Tutti')
-  const [status, setStatus] = useState('Tutti')
-
+  const [category, setCategory] = useState('Tutti')
   const filteredProjects = useMemo(
-    () =>
-      publicProjects.filter((project) => {
-        const matchesType = type === 'Tutti' || project.type === type
-        const matchesStatus = status === 'Tutti' || project.status === status
-        return matchesType && matchesStatus
-      }),
-    [status, type],
+    () => premiumProjects.filter((project) => category === 'Tutti' || project.category === category),
+    [category],
   )
+  const featured = premiumProjects[0]
 
   return (
     <>
       <SEO
-        title="Cantieri e portfolio lavori"
-        description="Portfolio EuropaService con esempi di cantieri organizzati, cartongesso, controsoffitti, finiture interne e lavori edili per hotel, privati, negozi e aziende."
+        title="Cantieri e portfolio"
+        description="Portfolio EuropaService: cantieri premium per retail, hospitality, uffici e residenziale con cartongesso, finiture interne e gestione cantiere."
       />
-      <PageHeader eyebrow="Cantieri EuropaService" title="Cantieri organizzati, lavorazioni interne e portfolio lavori">
-        Ogni cantiere racconta un metodo di lavoro: organizzazione, attenzione ai dettagli,
-        documentazione delle fasi e cura del risultato finale. In questa sezione raccogliamo
-        esempi di lavorazioni interne, cartongesso, controsoffitti, finiture e interventi edili.
-      </PageHeader>
-      <section className="public-filter-bar">
-        <label>
-          Tipo lavoro
-          <select value={type} onChange={(event) => setType(event.target.value)}>
-            {projectTypes.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>
-        <label>
-          Stato
-          <select value={status} onChange={(event) => setStatus(event.target.value)}>
-            {projectStatuses.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>
-      </section>
-      <section className="section">
-        <div className="public-project-grid">
-          {filteredProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
+
+      <PremiumHero
+        eyebrow="Cantieri"
+        title="I nostri progetti"
+        text="Ogni cantiere è una storia di impegno, competenza e collaborazione."
+        image={featured.image}
+        imageAlt={featured.alt}
+        primaryLabel="Richiedi un lavoro simile"
+        secondaryLabel="Vedi case study"
+        secondaryHref={`#/cantieri/${featured.id}`}
+        variant="compact"
+        meta={['Portfolio', 'Case study', 'Cantieri documentati']}
+      />
+
+      <PremiumSection title="Filtra i progetti" text="Esplora i cantieri per settore e tipologia di intervento.">
+        <div className="premium-filter-pills" role="list" aria-label="Categorie portfolio">
+          {categories.map((item) => (
+            <button
+              aria-pressed={category === item}
+              key={item}
+              type="button"
+              onClick={() => setCategory(item)}
+            >
+              {item}
+            </button>
+          ))}
         </div>
-        <a className="button button-primary section-action" href="#/preventivo">Richiedi un lavoro simile</a>
-      </section>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Progetto in evidenza" title={featured.title} tone="soft">
+        <div className="premium-featured-project">
+          <PremiumProjectCard featured project={featured} />
+          <div className="premium-metric-panel">
+            {featured.metrics.map((metric) => <strong key={metric}>{metric}</strong>)}
+            <p>{featured.summary}</p>
+            <a className="premium-button premium-button-primary" href={`#/cantieri/${featured.id}`}>Apri case study</a>
+          </div>
+        </div>
+      </PremiumSection>
+
+      <PremiumSection
+        eyebrow="Griglia progetti"
+        title="Cantieri selezionati"
+        text="Ogni scheda mostra immagini, città, categoria e una sintesi dell’intervento."
+      >
+        <div className="premium-project-grid">
+          {filteredProjects.map((project) => <PremiumProjectCard key={project.id} project={project} />)}
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Numeri" title="Esperienza trasversale" tone="soft">
+        <PremiumStats stats={premiumStats} />
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Partner" title="Una rete operativa affidabile">
+        <div className="premium-logo-row">
+          {partners.map((partner) => <span key={partner}>{partner}</span>)}
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Testimonianza" title="Cosa apprezzano i clienti" tone="soft">
+        <div className="premium-testimonial-grid">
+          <TestimonialMock testimonial={testimonials[0]} />
+        </div>
+      </PremiumSection>
+
+      <PremiumCTA title="Hai un cantiere da organizzare?" text="Partiamo da obiettivi, tempi e vincoli. Il resto lo trasformiamo in un piano operativo chiaro." />
     </>
   )
 }

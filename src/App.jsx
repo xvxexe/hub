@@ -21,6 +21,7 @@ import { EstimatesMock } from './pages/dashboard/EstimatesMock'
 import { PhotoDetail } from './pages/dashboard/PhotoDetail'
 import { PhotosMock } from './pages/dashboard/PhotosMock'
 import { LoginMock } from './pages/dashboard/LoginMock'
+import { ReportMock } from './pages/dashboard/ReportMock'
 import { SettingsMock } from './pages/dashboard/SettingsMock'
 import { Unauthorized } from './pages/dashboard/Unauthorized'
 import { UploadMock } from './pages/dashboard/UploadMock'
@@ -156,6 +157,9 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
   }
   if (path === '/dashboard/contabilita') {
     return <ContabilitaMock documents={mockStore.documents} />
+  }
+  if (path === '/dashboard/report') {
+    return <ReportMock />
   }
   if (path === '/dashboard/dipendenti') {
     return (
