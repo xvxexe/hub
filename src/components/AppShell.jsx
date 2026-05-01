@@ -6,6 +6,13 @@ import { getDashboardNavForRole, getRole } from '../lib/roles'
 
 const primaryPublicNav = publicNav.filter((item) => ['/', '/servizi', '/cantieri'].includes(item.path))
 const secondaryPublicNav = publicNav.filter((item) => item.path === '/contatti')
+const publicMobileNav = [
+  { path: '/', label: 'Home', description: 'Panoramica servizi e metodo EuropaService' },
+  { path: '/servizi', label: 'Servizi', description: 'Cartongesso, finiture, ristrutturazioni e gestione cantiere' },
+  { path: '/cantieri', label: 'Progetti', description: 'Portfolio, cantieri e case study' },
+  { path: '/chi-siamo', label: 'Azienda', description: 'Metodo, valori e organizzazione operativa' },
+  { path: '/contatti', label: 'Contatti', description: 'Telefono, email, modulo e sopralluogo' },
+]
 
 export function AppShell({ children, currentPath, session, onLogout, onRoleChange, roles }) {
   const isDashboard = currentPath.startsWith('/dashboard')
@@ -362,6 +369,9 @@ function PublicHeader({ currentPath }) {
   useEffect(() => {
     if (!isMenuOpen) return undefined
 
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
     function onKeyDown(event) {
       if (event.key === 'Escape') {
         setIsMenuOpen(false)
@@ -369,8 +379,15 @@ function PublicHeader({ currentPath }) {
     }
 
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onKeyDown)
+    }
   }, [isMenuOpen])
+
+  useEffect(() => {
+    setIsMenuOpen(false)
+  }, [currentPath])
 
   return (
     <header className="site-header">
@@ -386,7 +403,7 @@ function PublicHeader({ currentPath }) {
         aria-controls="public-mobile-menu"
         aria-expanded={isMenuOpen}
         aria-label={isMenuOpen ? 'Chiudi menu principale' : 'Apri menu principale'}
-        className="mobile-menu-button"
+        className={isMenuOpen ? 'mobile-menu-button open' : 'mobile-menu-button'}
         type="button"
         onClick={() => setIsMenuOpen((current) => !current)}
       >
@@ -436,29 +453,41 @@ function PublicHeader({ currentPath }) {
         id="public-mobile-menu"
       >
         <div className="mobile-menu-header">
-          <strong>Menu</strong>
-          <button type="button" className="mobile-menu-close" onClick={() => setIsMenuOpen(false)}>
-            Chiudi
+          <div>
+            <strong>EuropaService</strong>
+            <small>Menu principale</small>
+          </div>
+          <button type="button" className="mobile-menu-close" aria-label="Chiudi menu" onClick={() => setIsMenuOpen(false)}>
+            ×
           </button>
         </div>
-        {publicNav.filter((item) => !['/settori', '/preventivo'].includes(item.path)).map((item) => (
+
+        <div className="mobile-menu-links">
+          {publicMobileNav.map((item) => (
+            <a
+              aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
+              href={`#${item.path}`}
+              key={item.path}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span>{item.label}</span>
+              <small>{item.description}</small>
+            </a>
+          ))}
+        </div>
+
+        <div className="mobile-menu-cta-panel">
+          <small>Hai un lavoro da valutare?</small>
+          <strong>Richiedi un preventivo o un sopralluogo.</strong>
           <a
-            aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
-            href={`#${item.path}`}
-            key={item.path}
+            className="nav-cta"
+            aria-current={isActive(currentPath, '/preventivo') ? 'page' : undefined}
+            href="#/preventivo"
             onClick={() => setIsMenuOpen(false)}
           >
-            {getPublicLabel(item)}
+            Richiedi preventivo
           </a>
-        ))}
-        <a
-          className="nav-cta"
-          aria-current={isActive(currentPath, '/preventivo') ? 'page' : undefined}
-          href="#/preventivo"
-          onClick={() => setIsMenuOpen(false)}
-        >
-          Richiedi preventivo
-        </a>
+        </div>
       </nav>
     </header>
   )
