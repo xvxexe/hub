@@ -9,6 +9,7 @@ import {
   PremiumTextCard,
   PremiumTimeline,
 } from '../../components/PublicComponents'
+import { PremiumChipMarquee } from '../../components/PremiumChipMarquee'
 import { SEO } from '../../components/SEO'
 import {
   mainHeroImage,
@@ -18,7 +19,7 @@ import {
   serviceFaq,
   workMethod,
 } from '../../data/publicPremiumData'
-import { heroImages, serviceImages } from '../../data/publicImages'
+import { serviceImages } from '../../data/publicImages'
 
 export function Services() {
   return (
@@ -97,9 +98,7 @@ export function Services() {
       </PremiumSection>
 
       <PremiumSection eyebrow="Settori serviti" title="Contesti diversi, stesso livello di controllo">
-        <div className="premium-sector-row">
-          {sectorsServed.map((sector) => <span key={sector}>{sector}</span>)}
-        </div>
+        <PremiumChipMarquee items={sectorsServed} className="premium-sector-row" ariaLabel="Settori serviti" />
       </PremiumSection>
 
       <PremiumSection eyebrow="FAQ" title="Domande frequenti" tone="soft">
