@@ -103,7 +103,7 @@ export function Contacts() {
       </PremiumImageSplit>
 
       <section className="premium-contact-layout" id="contatti-form">
-        <div>
+        <div className="premium-contact-intro-card">
           <p className="premium-eyebrow">Richiedi preventivo</p>
           <h2>Inserisci le informazioni essenziali</h2>
           <p>Il modulo è mock: serve a progettare il flusso futuro verso area interna e backend. I campi sono pensati per raccogliere subito ciò che serve a valutare un cantiere.</p>
@@ -155,7 +155,7 @@ export function Contacts() {
             ['03', 'Sopralluogo', 'Verifichiamo accessi, materiali, superfici, impianti e complessità.'],
             ['04', 'Proposta', 'Impostiamo lavorazioni, tempi, priorità operative e prossimi step.'],
           ].map(([step, title, text]) => (
-            <article key={step}><span>{step}</span><h3>{title}</h3><p>{text}</p></article>
+            <article key={step} className="premium-scroll-reveal"><span>{step}</span><h3>{title}</h3><p>{text}</p></article>
           ))}
         </div>
       </PremiumSection>
