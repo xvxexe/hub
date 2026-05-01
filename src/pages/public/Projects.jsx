@@ -9,6 +9,7 @@ import {
   PremiumTextCard,
   TestimonialMock,
 } from '../../components/PublicComponents'
+import { PremiumChipMarquee } from '../../components/PremiumChipMarquee'
 import { SEO } from '../../components/SEO'
 import {
   partners,
@@ -113,9 +114,7 @@ export function Projects() {
       </PremiumSection>
 
       <PremiumSection eyebrow="Partner" title="Una rete operativa affidabile" tone="soft">
-        <div className="premium-logo-row">
-          {partners.map((partner) => <span key={partner}>{partner}</span>)}
-        </div>
+        <PremiumChipMarquee items={partners} className="premium-logo-row" ariaLabel="Partner e filiera" speed="slow" />
       </PremiumSection>
 
       <PremiumSection eyebrow="Testimonianze" title="Cosa apprezzano i clienti">
