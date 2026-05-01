@@ -36,6 +36,7 @@ import { Services } from './pages/public/Services'
 import './styles/global.css'
 import './styles/public-redesign.css'
 import './styles/public-animation-fixes.css'
+import './styles/public-interactions.css'
 import './styles/dashboard-polish.css'
 import './styles/dashboard-mobile-compact.css'
 
