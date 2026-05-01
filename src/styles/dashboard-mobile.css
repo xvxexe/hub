@@ -49,6 +49,110 @@
 
 .mobile-status-dot { display: none; }
 
+.floating-actions {
+  position: fixed;
+  right: 1.35rem;
+  bottom: 1.35rem;
+  z-index: 120;
+}
+
+.floating-actions-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  border: 0;
+  background: transparent;
+}
+
+.floating-actions-trigger {
+  display: grid;
+  width: 3.65rem;
+  height: 3.65rem;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: #17324d;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 18px 42px rgba(23, 50, 77, .30);
+  transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.floating-actions-trigger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 52px rgba(23, 50, 77, .36);
+}
+
+.floating-actions.open .floating-actions-trigger {
+  background: #b8642b;
+}
+
+.floating-actions-menu {
+  position: absolute;
+  right: 0;
+  bottom: 4.35rem;
+  display: grid;
+  gap: .65rem;
+  width: 19rem;
+  padding: .9rem;
+  border: 1px solid #dce3e7;
+  border-radius: 1.2rem;
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .22);
+  transform: translateY(.5rem) scale(.96);
+  transform-origin: bottom right;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.floating-actions.open .floating-actions-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.floating-actions-menu > strong {
+  color: #151b20;
+  font-size: .85rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.floating-actions-menu > div {
+  display: grid;
+  gap: .45rem;
+}
+
+.floating-actions-menu a,
+.floating-actions-menu button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .7rem;
+  align-items: center;
+  width: 100%;
+  min-height: 3.1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: .95rem;
+  background: #f8fafc;
+  color: #151b20;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  padding: .65rem .75rem;
+}
+
+.floating-actions-menu a:hover,
+.floating-actions-menu button:hover {
+  background: #fff7ed;
+  border-color: rgba(184, 100, 43, .28);
+}
+
+.floating-actions-menu svg { color: #17324d; }
+.floating-actions-menu span { display: grid; min-width: 0; }
+.floating-actions-menu b { color: #151b20; font-size: .88rem; line-height: 1.15; }
+.floating-actions-menu small { color: #64748b; font-size: .74rem; line-height: 1.2; }
+
 @media (max-width: 767px) {
   html,
   body,
@@ -526,110 +630,28 @@
   }
 
   .floating-actions {
-    position: fixed !important;
     right: .8rem !important;
     bottom: calc(var(--mobile-bottom-nav-height) + 1.05rem + env(safe-area-inset-bottom)) !important;
-    z-index: 120 !important;
-  }
-
-  .floating-actions-backdrop {
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: -1 !important;
-    border: 0 !important;
-    background: transparent !important;
   }
 
   .floating-actions-trigger {
-    display: grid !important;
     width: 3.45rem !important;
     height: 3.45rem !important;
-    place-items: center !important;
-    border: 0 !important;
-    border-radius: 999px !important;
-    background: #17324d !important;
-    color: #fff !important;
-    box-shadow: 0 18px 42px rgba(23, 50, 77, .34) !important;
-  }
-
-  .floating-actions.open .floating-actions-trigger {
-    background: #b8642b !important;
   }
 
   .floating-actions-menu {
-    position: absolute !important;
-    right: 0 !important;
     bottom: 4.05rem !important;
-    display: grid !important;
-    gap: .55rem !important;
     width: min(17rem, calc(100vw - 1.6rem)) !important;
     padding: .85rem !important;
-    border: 1px solid #dce3e7 !important;
-    border-radius: 1.15rem !important;
-    background: rgba(255,255,255,.98) !important;
-    box-shadow: 0 24px 70px rgba(15, 23, 42, .22) !important;
-    transform: translateY(.5rem) scale(.96) !important;
-    transform-origin: bottom right !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transition: opacity .18s ease, transform .18s ease !important;
-  }
-
-  .floating-actions.open .floating-actions-menu {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    transform: translateY(0) scale(1) !important;
-  }
-
-  .floating-actions-menu > strong {
-    color: #151b20 !important;
-    font-size: .85rem !important;
-    letter-spacing: .08em !important;
-    text-transform: uppercase !important;
-  }
-
-  .floating-actions-menu > div {
-    display: grid !important;
-    gap: .42rem !important;
   }
 
   .floating-actions-menu a,
   .floating-actions-menu button {
-    display: grid !important;
-    grid-template-columns: auto minmax(0, 1fr) !important;
-    gap: .65rem !important;
-    align-items: center !important;
-    width: 100% !important;
     min-height: 3rem !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: .9rem !important;
-    background: #f8fafc !important;
-    color: #151b20 !important;
-    text-align: left !important;
-    text-decoration: none !important;
     padding: .62rem .7rem !important;
   }
 
-  .floating-actions-menu svg {
-    color: #17324d !important;
-  }
-
-  .floating-actions-menu span {
-    display: grid !important;
-    min-width: 0 !important;
-  }
-
-  .floating-actions-menu b {
-    color: #151b20 !important;
-    font-size: .86rem !important;
-    line-height: 1.15 !important;
-  }
-
-  .floating-actions-menu small {
-    color: #64748b !important;
-    font-size: .74rem !important;
-    line-height: 1.2 !important;
-  }
+  .floating-actions-menu b { font-size: .86rem !important; }
 
   .dashboard-bottom-nav {
     position: fixed !important;
@@ -689,27 +711,13 @@
   .role-description { border-radius: 1rem !important; }
 }
 
-@media (min-width: 768px) {
-  .dashboard-bottom-nav,
-  .floating-actions { display: none !important; }
-}
-
 @media (max-width: 380px) {
   .internal-topbar { grid-template-columns: minmax(0, 1fr) !important; }
   .internal-topbar-actions { display: none !important; }
 
-  .floating-actions {
-    right: .6rem !important;
-  }
-
-  .floating-actions-trigger {
-    width: 3.15rem !important;
-    height: 3.15rem !important;
-  }
-
-  .floating-actions-menu {
-    bottom: 3.75rem !important;
-  }
+  .floating-actions { right: .6rem !important; }
+  .floating-actions-trigger { width: 3.15rem !important; height: 3.15rem !important; }
+  .floating-actions-menu { bottom: 3.75rem !important; }
 
   .dashboard-bottom-nav {
     left: .45rem !important;
