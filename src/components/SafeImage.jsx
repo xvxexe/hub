@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { placeholderImages } from '../data/publicImages'
+import { asset, placeholderImages } from '../data/publicImages'
 
 export function SafeImage({
   src,
@@ -8,10 +8,10 @@ export function SafeImage({
   className,
   fallbackSrc = placeholderImages.project.src,
   finalFallbackSrc = placeholderImages.project.src,
-  loading = 'eager',
+  loading = 'lazy',
 }) {
   const [failedSources, setFailedSources] = useState([])
-  const candidates = [src, fallbackSrc, finalFallbackSrc].filter(Boolean)
+  const candidates = [src, fallbackSrc, finalFallbackSrc].filter(Boolean).map(asset)
   const uniqueCandidates = [...new Set(candidates)]
   const currentSrc = uniqueCandidates.find((candidate) => !failedSources.includes(candidate)) ?? uniqueCandidates.at(-1)
 
