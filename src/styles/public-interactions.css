@@ -3,9 +3,10 @@
 :root {
   --pub-ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --pub-ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
-  --pub-hover-slow: 1.35s;
-  --pub-hover-medium: 1.05s;
-  --pub-image-slow: 2.1s;
+  --pub-ease-hover-slow: cubic-bezier(0.33, 0, 0.2, 1);
+  --pub-hover-slow: 2.2s;
+  --pub-hover-medium: 1.55s;
+  --pub-image-slow: 2.8s;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -72,11 +73,11 @@
   .premium-timeline article,
   .premium-form {
     transition:
-      transform var(--pub-hover-slow) var(--pub-ease-smooth),
-      box-shadow var(--pub-hover-slow) var(--pub-ease-smooth),
-      border-color var(--pub-hover-slow) var(--pub-ease-smooth),
-      background var(--pub-hover-slow) var(--pub-ease-smooth),
-      opacity var(--pub-hover-slow) var(--pub-ease-smooth) !important;
+      transform var(--pub-hover-slow) var(--pub-ease-hover-slow),
+      box-shadow var(--pub-hover-slow) var(--pub-ease-hover-slow),
+      border-color var(--pub-hover-slow) var(--pub-ease-hover-slow),
+      background var(--pub-hover-slow) var(--pub-ease-hover-slow),
+      opacity var(--pub-hover-slow) var(--pub-ease-hover-slow) !important;
   }
 
   .premium-service-card:hover,
@@ -113,7 +114,7 @@
     z-index: -1;
     background: radial-gradient(circle at var(--x, 50%) var(--y, 20%), rgba(184, 100, 43, 0.12), transparent 16rem);
     opacity: 0;
-    transition: opacity var(--pub-hover-slow) var(--pub-ease-soft);
+    transition: opacity var(--pub-hover-slow) var(--pub-ease-hover-slow);
   }
 
   .premium-service-card:hover::before,
@@ -134,12 +135,12 @@
   .site-header .nav-cta,
   .mobile-menu-button {
     transition:
-      transform var(--pub-hover-medium) var(--pub-ease-smooth),
-      box-shadow var(--pub-hover-medium) var(--pub-ease-smooth),
-      background var(--pub-hover-medium) var(--pub-ease-smooth),
-      color var(--pub-hover-medium) var(--pub-ease-smooth),
-      border-color var(--pub-hover-medium) var(--pub-ease-smooth),
-      opacity var(--pub-hover-medium) var(--pub-ease-smooth) !important;
+      transform var(--pub-hover-medium) var(--pub-ease-hover-slow),
+      box-shadow var(--pub-hover-medium) var(--pub-ease-hover-slow),
+      background var(--pub-hover-medium) var(--pub-ease-hover-slow),
+      color var(--pub-hover-medium) var(--pub-ease-hover-slow),
+      border-color var(--pub-hover-medium) var(--pub-ease-hover-slow),
+      opacity var(--pub-hover-medium) var(--pub-ease-hover-slow) !important;
   }
 
   .premium-button:hover,
@@ -165,7 +166,7 @@
   .premium-gallery-image,
   .premium-split-image {
     transform-origin: center;
-    transition: transform var(--pub-image-slow) var(--pub-ease-smooth), filter var(--pub-image-slow) var(--pub-ease-smooth) !important;
+    transition: transform var(--pub-image-slow) var(--pub-ease-hover-slow), filter var(--pub-image-slow) var(--pub-ease-hover-slow) !important;
   }
 
   .premium-service-card:hover .premium-service-image,
@@ -179,7 +180,7 @@
   .premium-icon,
   .service-icon,
   .step-number {
-    transition: transform 1.15s var(--pub-ease-smooth), background 1.15s var(--pub-ease-smooth) !important;
+    transition: transform 1.75s var(--pub-ease-hover-slow), background 1.75s var(--pub-ease-hover-slow) !important;
   }
 
   .premium-card:hover .premium-icon,
@@ -280,6 +281,45 @@
   .mobile-public-menu a:hover,
   .mobile-menu-cta-panel:hover {
     transform: translateX(-3px) !important;
+  }
+
+  /* Override finale: le vecchie regole del redesign usavano transition molto brevi con !important. */
+  body .premium-stats article,
+  body .premium-service-card,
+  body .premium-project-card,
+  body .premium-card,
+  body .premium-process article,
+  body .premium-key-facts article,
+  body .premium-metric-panel,
+  body .premium-faq details,
+  body .premium-timeline article {
+    transition-duration: 2.2s !important;
+    transition-timing-function: var(--pub-ease-hover-slow) !important;
+  }
+
+  body .premium-stats article *,
+  body .premium-service-card *,
+  body .premium-project-card *,
+  body .premium-card *,
+  body .premium-process article *,
+  body .premium-key-facts article *,
+  body .premium-metric-panel *,
+  body .premium-faq details *,
+  body .premium-timeline article * {
+    transition-duration: 1.8s !important;
+    transition-timing-function: var(--pub-ease-hover-slow) !important;
+  }
+
+  body .premium-button,
+  body .premium-card-arrow,
+  body .premium-filter-pills button,
+  body .premium-tags small,
+  body .premium-sector-row span,
+  body .premium-logo-row span,
+  body .site-header .top-nav a,
+  body .site-header .nav-cta {
+    transition-duration: 1.55s !important;
+    transition-timing-function: var(--pub-ease-hover-slow) !important;
   }
 }
 
