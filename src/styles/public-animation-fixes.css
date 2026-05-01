@@ -44,34 +44,44 @@
   color: rgba(255, 255, 255, 0.76) !important;
 }
 
-/* All small chip rows now behave like subtle marquees */
+/* Real marquee rows: animate the track, never individual chips */
+.premium-chip-marquee,
 .premium-sector-row,
 .premium-logo-row {
-  flex-wrap: nowrap !important;
+  display: block !important;
   overflow: hidden !important;
+  width: min(100%, var(--pub-max, 1180px)) !important;
   max-width: min(100%, var(--pub-max, 1180px)) !important;
   padding-block: 0.35rem !important;
   mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent) !important;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent) !important;
 }
 
-.premium-sector-row span,
-.premium-logo-row span {
-  flex: 0 0 auto !important;
-  animation: premiumChipCarousel 18s linear infinite !important;
+.premium-chip-marquee-track {
+  display: flex !important;
+  width: max-content !important;
+  gap: 0.5rem !important;
   will-change: transform !important;
+  animation: premiumMarquee 24s linear infinite !important;
 }
 
-.premium-logo-row span {
-  animation-duration: 24s !important;
+.premium-chip-marquee-slow .premium-chip-marquee-track {
+  animation-duration: 32s !important;
 }
 
-.premium-sector-row:hover span,
-.premium-logo-row:hover span {
+.premium-chip-marquee:hover .premium-chip-marquee-track {
   animation-play-state: paused !important;
 }
 
-/* Tags inside cards: lighter living animation, not a full marquee because they are inside cards */
+.premium-chip-marquee span,
+.premium-sector-row span,
+.premium-logo-row span {
+  flex: 0 0 auto !important;
+  animation: none !important;
+  white-space: nowrap !important;
+}
+
+/* Tags inside cards: subtle living animation only */
 .premium-tags small {
   animation: premiumChipFloat 4.2s ease-in-out infinite !important;
 }
@@ -80,7 +90,7 @@
 .premium-tags small:nth-child(3) { animation-delay: .8s !important; }
 .premium-tags small:nth-child(4) { animation-delay: 1.2s !important; }
 
-/* Filter pills: subtle pulse on active/current choices */
+/* Filter pills: subtle movement only, not carousel */
 .premium-filter-pills button {
   animation: premiumChipFloat 5s ease-in-out infinite !important;
 }
@@ -120,20 +130,18 @@
   }
 }
 
-@keyframes premiumChipCarousel {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(calc(-100% - 0.5rem)); }
-}
-
 @keyframes premiumChipFloat {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }
 }
 
 @media (max-width: 640px) {
-  .premium-sector-row span,
-  .premium-logo-row span {
-    animation-duration: 14s !important;
+  .premium-chip-marquee-track {
+    animation-duration: 18s !important;
+  }
+
+  .premium-chip-marquee-slow .premium-chip-marquee-track {
+    animation-duration: 24s !important;
   }
 
   .premium-contact-intro-card {
@@ -142,8 +150,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .premium-sector-row span,
-  .premium-logo-row span,
+  .premium-chip-marquee-track,
   .premium-tags small,
   .premium-filter-pills button {
     animation: none !important;
