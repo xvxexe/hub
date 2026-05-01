@@ -1,14 +1,17 @@
 import {
   PremiumCTA,
   PremiumHero,
+  PremiumImageSplit,
   PremiumProcess,
   PremiumProjectCard,
   PremiumSection,
+  PremiumTextCard,
   TestimonialMock,
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import { SafeImage } from '../../components/SafeImage'
 import { premiumProjects, testimonials, workMethod } from '../../data/publicPremiumData'
+import { serviceImages } from '../../data/publicImages'
 
 export function ProjectDetail({ projectId }) {
   const project = premiumProjects.find((item) => item.id === projectId) ?? premiumProjects[0]
@@ -18,13 +21,13 @@ export function ProjectDetail({ projectId }) {
     <>
       <SEO
         title={`${project.title} - case study`}
-        description={`${project.title}: case study EuropaService per ${project.category}, ${project.city}, con servizi di cartongesso, finiture e gestione cantiere.`}
+        description={`${project.title}: case study EuropaService per ${project.category}, ${project.city}, con cartongesso, finiture e gestione cantiere.`}
       />
 
       <PremiumHero
         eyebrow="Case study"
         title={project.title}
-        text={project.summary}
+        text={project.longText ?? project.summary}
         image={project.image}
         imageAlt={project.alt}
         primaryLabel="Richiedi un lavoro simile"
@@ -34,12 +37,11 @@ export function ProjectDetail({ projectId }) {
         meta={[project.city, project.category, project.status, project.year]}
       />
 
-      <PremiumSection eyebrow="Dati chiave" title="Il progetto in sintesi">
+      <PremiumSection eyebrow="Dati chiave" title="Il progetto in sintesi" text="Prima di parlare di estetica, un case study deve chiarire dimensione, durata, servizi coinvolti e risultato operativo.">
         <div className="premium-key-facts">
           <article><span>Superficie</span><strong>{project.metrics[0]}</strong></article>
           <article><span>Durata</span><strong>{project.metrics[1]}</strong></article>
-          <article><span>Servizi</span><strong>{project.services.join(', ')}</strong></article>
-          <article><span>Team</span><strong>{project.metrics[2]}</strong></article>
+          <article><span>Team / risultato</span><strong>{project.metrics[2]}</strong></article>
           <article><span>Anno</span><strong>{project.year}</strong></article>
         </div>
       </PremiumSection>
@@ -47,30 +49,24 @@ export function ProjectDetail({ projectId }) {
       <section className="premium-case-split">
         <article>
           <p className="premium-eyebrow">Sfida</p>
-          <h2>Coordinare lavorazioni tecniche senza perdere qualità visiva.</h2>
-          <p>
-            Il progetto richiedeva gestione di tempi, accessi, interferenze impiantistiche e finiture
-            con standard elevato. La priorità era mantenere avanzamento e controllo dei dettagli.
-          </p>
+          <h2>{project.challenge}</h2>
+          <p>Ogni cantiere ha un punto critico: tempi stretti, spazi da proteggere, interferenze tecniche, attività aperte o esigenze estetiche elevate.</p>
         </article>
         <article>
           <p className="premium-eyebrow">Soluzione</p>
-          <h2>Una sequenza ordinata di fasi, verifiche e consegne intermedie.</h2>
-          <p>
-            EuropaService ha impostato squadre, materiali e lavorazioni per zone, documentando le fasi
-            e mantenendo un referente operativo per decisioni rapide e tracciabili.
-          </p>
+          <h2>{project.solution}</h2>
+          <p>La risposta è stata organizzare le fasi, ridurre passaggi inutili, documentare avanzamento e controllare i dettagli prima della consegna.</p>
         </article>
       </section>
 
-      <PremiumSection eyebrow="Galleria" title="Immagini del cantiere" tone="soft">
+      <PremiumSection eyebrow="Galleria" title="Immagini e materiali del progetto" tone="soft">
         <div className="premium-gallery">
-          {[project.image, '/assets/images/hero/controsoffitto-cantiere-interno.jpg', '/assets/images/projects/cantiere-controsoffitto.jpg'].map((src, index) => (
+          {[project.image, serviceImages.cartongesso.src, serviceImages.finitureInterne.src].map((src, index) => (
             <SafeImage
               alt={`${project.title} immagine ${index + 1}`}
               className="premium-gallery-image"
               fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
-              key={src}
+              key={`${src}-${index}`}
               src={src}
               title={`${project.title} galleria`}
             />
@@ -78,21 +74,33 @@ export function ProjectDetail({ projectId }) {
         </div>
       </PremiumSection>
 
+      <PremiumImageSplit
+        eyebrow="Metodo applicato"
+        title="Il risultato finale dipende dalla qualità delle fasi intermedie."
+        text="Abbiamo impostato il progetto per zone, lavorazioni e priorità. Questo ha permesso di ridurre interferenze, controllare i dettagli e mantenere una comunicazione chiara con tutti i soggetti coinvolti."
+        image={serviceImages.supportoCantieri.src}
+        imageAlt={serviceImages.supportoCantieri.alt}
+      >
+        <div className="premium-tags">
+          {project.services.map((service) => <small key={service}>{service}</small>)}
+        </div>
+      </PremiumImageSplit>
+
       <PremiumSection eyebrow="Servizi realizzati" title="Lavorazioni coinvolte">
         <div className="premium-feature-grid">
           {project.services.map((service) => (
-            <article className="premium-card" key={service}>
-              <h3>{service}</h3>
-              <p>Lavorazione integrata nel piano operativo con controlli intermedi e attenzione alla consegna finale.</p>
-            </article>
+            <PremiumTextCard
+              key={service}
+              title={service}
+              text="Lavorazione integrata nel piano operativo con controlli intermedi, coordinamento e attenzione alla consegna finale."
+            />
           ))}
         </div>
       </PremiumSection>
 
       <PremiumSection eyebrow="Risultati" title="Cosa è stato ottenuto" tone="soft">
-        <div className="premium-result-band">
-          {project.metrics.map((metric) => <strong key={metric}>{metric}</strong>)}
-          <p>{project.summary}</p>
+        <div className="premium-feature-grid">
+          {project.results.map((result) => <PremiumTextCard key={result} title={result} text="Risultato concreto ottenuto grazie a pianificazione, presenza in cantiere e controllo delle fasi." />)}
         </div>
       </PremiumSection>
 
@@ -103,6 +111,8 @@ export function ProjectDetail({ projectId }) {
       <PremiumSection eyebrow="Cliente" title="Testimonianza" tone="soft">
         <div className="premium-testimonial-grid">
           <TestimonialMock testimonial={testimonials[0]} />
+          <TestimonialMock testimonial={testimonials[1]} />
+          <TestimonialMock testimonial={testimonials[2]} />
         </div>
       </PremiumSection>
 
