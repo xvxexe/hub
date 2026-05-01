@@ -12,6 +12,7 @@ const publicMobileNav = [
   { path: '/cantieri', label: 'Progetti', description: 'Portfolio, cantieri e case study' },
   { path: '/chi-siamo', label: 'Azienda', description: 'Metodo, valori e organizzazione operativa' },
   { path: '/contatti', label: 'Contatti', description: 'Telefono, email, modulo e sopralluogo' },
+  { path: '/dashboard/login', label: 'Area privata', description: 'Accesso mock per admin, capo e dipendenti' },
 ]
 
 export function AppShell({ children, currentPath, session, onLogout, onRoleChange, roles }) {
@@ -435,6 +436,13 @@ function PublicHeader({ currentPath }) {
           </a>
         ))}
         <a
+          className="nav-private"
+          aria-current={isActive(currentPath, '/dashboard/login') ? 'page' : undefined}
+          href="#/dashboard/login"
+        >
+          Area privata
+        </a>
+        <a
           className="nav-cta"
           aria-current={isActive(currentPath, '/preventivo') ? 'page' : undefined}
           href="#/preventivo"
@@ -465,6 +473,7 @@ function PublicHeader({ currentPath }) {
         <div className="mobile-menu-links">
           {publicMobileNav.map((item) => (
             <a
+              className={item.path.startsWith('/dashboard') ? 'mobile-private-link' : undefined}
               aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
               href={`#${item.path}`}
               key={item.path}
