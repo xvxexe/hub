@@ -34,6 +34,7 @@ import { QuoteRequest } from './pages/public/QuoteRequest'
 import { Sectors } from './pages/public/Sectors'
 import { Services } from './pages/public/Services'
 import './styles/global.css'
+import './styles/public-redesign.css'
 
 function useHashPath() {
   const [path, setPath] = useState(() => normalizePath(window.location.hash))
