@@ -35,6 +35,7 @@ import { Sectors } from './pages/public/Sectors'
 import { Services } from './pages/public/Services'
 import './styles/global.css'
 import './styles/public-redesign.css'
+import './styles/public-animation-fixes.css'
 
 function useHashPath() {
   const [path, setPath] = useState(() => normalizePath(window.location.hash))
