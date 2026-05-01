@@ -9,6 +9,7 @@ import {
   StatCard,
   WorkflowStepper,
 } from '../../components/InternalComponents'
+import { InternalIcon } from '../../components/InternalIcons'
 import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
 import { RecentUploadList } from '../../components/RecentUploadList'
@@ -165,7 +166,7 @@ function AdminDashboard({ documentUploads, documents }) {
           </div>
         </section>
 
-        <section className="internal-panel">
+        <section className="internal-panel dashboard-quick-actions-panel">
           <PanelTitle title="Azioni rapide" />
           <div className="quick-actions-grid quick-actions-compact">
             <QuickActionCard icon="upload" title="Carica documento" text="Upload mock" href="#/dashboard/upload" action="Apri" />
@@ -176,6 +177,8 @@ function AdminDashboard({ documentUploads, documents }) {
           </div>
         </section>
       </div>
+
+      <FloatingQuickActions onModalAction={setModalAction} />
 
       <div className="internal-three-column workflow-desktop-only">
         <WorkflowStepper title="Flusso documenti" steps={documentFlow} />
@@ -231,6 +234,54 @@ function PanelTitle({ title, actionHref }) {
     <div className="section-heading panel-title-row">
       <h2>{title}</h2>
       {actionHref ? <a className="button button-secondary button-small" href={actionHref}>Vedi tutti</a> : null}
+    </div>
+  )
+}
+
+function FloatingQuickActions({ onModalAction }) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const actions = [
+    { icon: 'upload', label: 'Carica documento', hint: 'Apri upload', href: '#/dashboard/upload' },
+    { icon: 'building', label: 'Nuovo cantiere', hint: 'Scheda mock', action: () => onModalAction(mockActions.newSite) },
+    { icon: 'wallet', label: 'Nuova spesa', hint: 'Movimento mock', action: () => onModalAction(mockActions.newExpense) },
+    { icon: 'estimate', label: 'Preventivo', hint: 'Pipeline mock', action: () => onModalAction(mockActions.newEstimate) },
+    { icon: 'report', label: 'Report PDF', hint: 'Anteprima', action: () => onModalAction(mockActions.report) },
+  ]
+
+  function runAction(action) {
+    setIsOpen(false)
+    action?.()
+  }
+
+  return (
+    <div className={isOpen ? 'floating-actions open' : 'floating-actions'}>
+      {isOpen ? <button aria-label="Chiudi azioni rapide" className="floating-actions-backdrop" type="button" onClick={() => setIsOpen(false)} /> : null}
+      <div className="floating-actions-menu" aria-hidden={!isOpen}>
+        <strong>Azioni rapide</strong>
+        <div>
+          {actions.map((item) => item.href ? (
+            <a href={item.href} key={item.label} onClick={() => setIsOpen(false)}>
+              <InternalIcon name={item.icon} size={18} />
+              <span><b>{item.label}</b><small>{item.hint}</small></span>
+            </a>
+          ) : (
+            <button key={item.label} type="button" onClick={() => runAction(item.action)}>
+              <InternalIcon name={item.icon} size={18} />
+              <span><b>{item.label}</b><small>{item.hint}</small></span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <button
+        aria-expanded={isOpen}
+        aria-label={isOpen ? 'Chiudi azioni rapide' : 'Apri azioni rapide'}
+        className="floating-actions-trigger"
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        <InternalIcon name={isOpen ? 'check' : 'plus'} size={22} />
+      </button>
     </div>
   )
 }
