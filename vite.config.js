@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import process from 'node:process'
 
-// https://vite.dev/config/
+// GitHub Pages serves this project at /hub/ because the repository is named "hub".
+// Keep local development on / so `npm run dev` works normally.
+const isGitHubPages = process.env.GITHUB_PAGES === 'true'
+
 export default defineConfig({
-  base: process.env.GITHUB_PAGES === 'true' ? '/europaservice-hub/' : '/',
+  base: isGitHubPages ? '/hub/' : '/',
   plugins: [react()],
 })
