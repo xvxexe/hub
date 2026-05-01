@@ -37,6 +37,7 @@ import './styles/global.css'
 import './styles/public-redesign.css'
 import './styles/public-animation-fixes.css'
 import './styles/dashboard-polish.css'
+import './styles/dashboard-mobile-compact.css'
 
 function useHashPath() {
   const [path, setPath] = useState(() => normalizePath(window.location.hash))
