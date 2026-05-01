@@ -13,6 +13,8 @@ export function PremiumHero({
   meta = [],
   variant = 'default',
 }) {
+  const marqueeItems = [...meta, ...meta]
+
   return (
     <section className={`premium-hero premium-hero-${variant}`}>
       <SafeImage
@@ -26,19 +28,22 @@ export function PremiumHero({
       />
       <div className="premium-hero-overlay-layer" />
       <div className="premium-hero-copy">
-        {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
-        <h1>{title}</h1>
-        {text ? <p>{text}</p> : null}
-        <div className="premium-actions">
+        {eyebrow ? <p className="premium-eyebrow premium-animate-item">{eyebrow}</p> : null}
+        <h1 className="premium-animate-item">{title}</h1>
+        {text ? <p className="premium-animate-item">{text}</p> : null}
+        <div className="premium-actions premium-animate-item">
           <a className="premium-button premium-button-primary" href={primaryHref}>{primaryLabel}</a>
           <a className="premium-button premium-button-secondary" href={secondaryHref}>{secondaryLabel}</a>
         </div>
         {meta.length > 0 ? (
-          <div className="premium-hero-meta">
-            {meta.map((item) => <span key={item}>{item}</span>)}
+          <div className="premium-hero-meta premium-animate-item" aria-label="Settori e servizi principali">
+            <div className="premium-hero-meta-track">
+              {marqueeItems.map((item, index) => <span key={`${item}-${index}`}>{item}</span>)}
+            </div>
           </div>
         ) : null}
       </div>
+      <div className="premium-scroll-hint" aria-hidden="true"><span /></div>
     </section>
   )
 }
@@ -46,7 +51,7 @@ export function PremiumHero({
 export function PremiumSection({ eyebrow, title, text, children, tone = 'default', action }) {
   return (
     <section className={`premium-section premium-section-${tone}`}>
-      <div className="premium-section-heading">
+      <div className="premium-section-heading premium-scroll-reveal">
         {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
         <h2>{title}</h2>
         {text ? <p>{text}</p> : null}
@@ -59,9 +64,9 @@ export function PremiumSection({ eyebrow, title, text, children, tone = 'default
 
 export function PremiumStats({ stats }) {
   return (
-    <div className="premium-stats">
+    <div className="premium-stats premium-stagger-group">
       {stats.map((stat) => (
-        <article key={stat.label}>
+        <article key={stat.label} className="premium-scroll-reveal">
           <strong>{stat.value}</strong>
           <span>{stat.label}</span>
         </article>
@@ -73,7 +78,7 @@ export function PremiumStats({ stats }) {
 export function PremiumServiceCard({ service, detailed = false }) {
   const fallback = service.fallbackImage || service.image
   return (
-    <article className={detailed ? 'premium-card premium-service-card premium-service-card-detailed' : 'premium-card premium-service-card'}>
+    <article className={detailed ? 'premium-card premium-service-card premium-service-card-detailed premium-scroll-reveal' : 'premium-card premium-service-card premium-scroll-reveal'}>
       {service.image ? (
         <SafeImage
           alt={service.alt}
@@ -107,7 +112,7 @@ export function PremiumServiceCard({ service, detailed = false }) {
 export function PremiumProjectCard({ project, featured = false }) {
   const fallback = project.fallbackImage || project.image
   return (
-    <article className={featured ? 'premium-project-card premium-project-featured' : 'premium-project-card'}>
+    <article className={featured ? 'premium-project-card premium-project-featured premium-scroll-reveal' : 'premium-project-card premium-scroll-reveal'}>
       <SafeImage
         alt={project.alt}
         className="premium-project-image"
@@ -131,9 +136,9 @@ export function PremiumProjectCard({ project, featured = false }) {
 
 export function PremiumProcess({ steps }) {
   return (
-    <div className="premium-process">
+    <div className="premium-process premium-stagger-group">
       {steps.map((step) => (
-        <article key={step.step}>
+        <article key={step.step} className="premium-scroll-reveal">
           <span>{step.step}</span>
           <h3>{step.title}</h3>
           <p>{step.text}</p>
@@ -145,7 +150,7 @@ export function PremiumProcess({ steps }) {
 
 export function PremiumCTA({ title = 'Parliamo del tuo progetto', text = 'Raccontaci spazi, tempi e priorità. Ti aiutiamo a trasformare l’idea in un cantiere organizzato.' }) {
   return (
-    <section className="premium-final-cta">
+    <section className="premium-final-cta premium-scroll-reveal">
       <div>
         <p className="premium-eyebrow">Prossimo passo</p>
         <h2>{title}</h2>
@@ -163,7 +168,7 @@ export function PremiumFAQ({ items }) {
   return (
     <div className="premium-faq">
       {items.map((item) => (
-        <details key={item.question}>
+        <details key={item.question} className="premium-scroll-reveal">
           <summary>{item.question}</summary>
           <p>{item.answer}</p>
         </details>
@@ -174,7 +179,7 @@ export function PremiumFAQ({ items }) {
 
 export function TestimonialMock({ testimonial }) {
   return (
-    <article className="premium-card premium-testimonial">
+    <article className="premium-card premium-testimonial premium-scroll-reveal">
       <p>“{testimonial.quote}”</p>
       <strong>{testimonial.author}</strong>
       {testimonial.role ? <span>{testimonial.role}</span> : null}
@@ -184,7 +189,7 @@ export function TestimonialMock({ testimonial }) {
 
 export function PremiumTextCard({ title, text, eyebrow, items = [] }) {
   return (
-    <article className="premium-card premium-text-card">
+    <article className="premium-card premium-text-card premium-scroll-reveal">
       {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
       <h3>{title}</h3>
       <p>{text}</p>
@@ -203,13 +208,13 @@ export function PremiumImageSplit({ eyebrow, title, text, image, imageAlt, rever
     <section className={reverse ? 'premium-image-split premium-image-split-reverse' : 'premium-image-split'}>
       <SafeImage
         alt={imageAlt || title}
-        className="premium-split-image"
+        className="premium-split-image premium-scroll-reveal"
         fallbackSrc={fallback}
         finalFallbackSrc={fallback}
         src={image}
         title={title}
       />
-      <div className="premium-split-copy">
+      <div className="premium-split-copy premium-scroll-reveal">
         {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
         <h2>{title}</h2>
         <p>{text}</p>
@@ -221,9 +226,9 @@ export function PremiumImageSplit({ eyebrow, title, text, image, imageAlt, rever
 
 export function PremiumTimeline({ items }) {
   return (
-    <div className="premium-timeline">
+    <div className="premium-timeline premium-stagger-group">
       {items.map((item) => (
-        <article key={item.title}>
+        <article key={item.title} className="premium-scroll-reveal">
           <span>{item.step}</span>
           <div>
             <h3>{item.title}</h3>
