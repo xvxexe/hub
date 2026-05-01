@@ -28,31 +28,6 @@ export const roleConfig = {
       { label: 'Impostazioni', path: '/dashboard/impostazioni' },
     ],
   },
-  accounting: {
-    id: 'accounting',
-    label: 'Contabilità',
-    shortLabel: 'Contabilità',
-    description:
-      'Vede solo le aree amministrative mock: cantieri, documenti, upload documenti, caricamenti documenti, preventivi e contabilità.',
-    permissions: [
-      'view:accounting',
-      'view:documents',
-      'view:quotes',
-      'view:accounting-alerts',
-      'upload:documents',
-      'view:document-uploads',
-    ],
-    menu: [
-      { label: 'Dashboard', path: '/dashboard' },
-      { label: 'Cantieri', path: '/dashboard/cantieri' },
-      { label: 'Documenti', path: '/dashboard/documenti' },
-      { label: 'Upload documenti', path: '/dashboard/upload' },
-      { label: 'Caricamenti documenti', path: '/dashboard/caricamenti' },
-      { label: 'Preventivi', path: '/dashboard/preventivi' },
-      { label: 'Contabilita', path: '/dashboard/contabilita' },
-      { label: 'Report', path: '/dashboard/report' },
-    ],
-  },
   employee: {
     id: 'employee',
     label: 'Dipendente',
@@ -71,7 +46,7 @@ export const roleConfig = {
 export const roles = Object.values(roleConfig)
 
 export function getRole(roleId) {
-  return roleConfig[roleId] ?? roleConfig.employee
+  return roleConfig[roleId] ?? roleConfig.admin
 }
 
 export function getDashboardNavForRole(roleId) {
