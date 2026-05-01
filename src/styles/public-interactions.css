@@ -3,6 +3,9 @@
 :root {
   --pub-ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --pub-ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --pub-hover-slow: 1.35s;
+  --pub-hover-medium: 1.05s;
+  --pub-image-slow: 2.1s;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -69,11 +72,11 @@
   .premium-timeline article,
   .premium-form {
     transition:
-      transform 0.75s var(--pub-ease-smooth),
-      box-shadow 0.75s var(--pub-ease-smooth),
-      border-color 0.75s var(--pub-ease-smooth),
-      background 0.75s var(--pub-ease-smooth),
-      opacity 0.75s var(--pub-ease-smooth) !important;
+      transform var(--pub-hover-slow) var(--pub-ease-smooth),
+      box-shadow var(--pub-hover-slow) var(--pub-ease-smooth),
+      border-color var(--pub-hover-slow) var(--pub-ease-smooth),
+      background var(--pub-hover-slow) var(--pub-ease-smooth),
+      opacity var(--pub-hover-slow) var(--pub-ease-smooth) !important;
   }
 
   .premium-service-card:hover,
@@ -110,7 +113,7 @@
     z-index: -1;
     background: radial-gradient(circle at var(--x, 50%) var(--y, 20%), rgba(184, 100, 43, 0.12), transparent 16rem);
     opacity: 0;
-    transition: opacity 0.75s var(--pub-ease-soft);
+    transition: opacity var(--pub-hover-slow) var(--pub-ease-soft);
   }
 
   .premium-service-card:hover::before,
@@ -131,12 +134,12 @@
   .site-header .nav-cta,
   .mobile-menu-button {
     transition:
-      transform 0.55s var(--pub-ease-smooth),
-      box-shadow 0.55s var(--pub-ease-smooth),
-      background 0.55s var(--pub-ease-smooth),
-      color 0.55s var(--pub-ease-smooth),
-      border-color 0.55s var(--pub-ease-smooth),
-      opacity 0.55s var(--pub-ease-smooth) !important;
+      transform var(--pub-hover-medium) var(--pub-ease-smooth),
+      box-shadow var(--pub-hover-medium) var(--pub-ease-smooth),
+      background var(--pub-hover-medium) var(--pub-ease-smooth),
+      color var(--pub-hover-medium) var(--pub-ease-smooth),
+      border-color var(--pub-hover-medium) var(--pub-ease-smooth),
+      opacity var(--pub-hover-medium) var(--pub-ease-smooth) !important;
   }
 
   .premium-button:hover,
@@ -150,6 +153,7 @@
   .premium-filter-pills button:active,
   .mobile-menu-button:active {
     transform: scale(0.98) !important;
+    transition-duration: 0.18s !important;
   }
 
   .premium-card-arrow:hover {
@@ -161,7 +165,7 @@
   .premium-gallery-image,
   .premium-split-image {
     transform-origin: center;
-    transition: transform 1.25s var(--pub-ease-smooth), filter 1.25s var(--pub-ease-smooth) !important;
+    transition: transform var(--pub-image-slow) var(--pub-ease-smooth), filter var(--pub-image-slow) var(--pub-ease-smooth) !important;
   }
 
   .premium-service-card:hover .premium-service-image,
@@ -175,7 +179,7 @@
   .premium-icon,
   .service-icon,
   .step-number {
-    transition: transform 0.7s var(--pub-ease-smooth), background 0.7s var(--pub-ease-smooth) !important;
+    transition: transform 1.15s var(--pub-ease-smooth), background 1.15s var(--pub-ease-smooth) !important;
   }
 
   .premium-card:hover .premium-icon,
@@ -248,7 +252,7 @@
   }
 
   .premium-faq details[open] p {
-    animation: premiumAnswerReveal 0.65s var(--pub-ease-smooth) both;
+    animation: premiumAnswerReveal 0.95s var(--pub-ease-smooth) both;
   }
 
   .premium-form input:focus,
@@ -257,20 +261,20 @@
     border-color: rgba(184, 100, 43, 0.55) !important;
     box-shadow: 0 0 0 4px rgba(184, 100, 43, 0.11) !important;
     transform: translateY(-1px);
-    transition: border-color 0.45s var(--pub-ease-smooth), box-shadow 0.45s var(--pub-ease-smooth), transform 0.45s var(--pub-ease-smooth);
+    transition: border-color 0.95s var(--pub-ease-smooth), box-shadow 0.95s var(--pub-ease-smooth), transform 0.95s var(--pub-ease-smooth);
   }
 
   .mobile-public-menu {
-    transition: transform 0.72s var(--pub-ease-smooth), visibility 0.72s var(--pub-ease-smooth) !important;
+    transition: transform 0.95s var(--pub-ease-smooth), visibility 0.95s var(--pub-ease-smooth) !important;
   }
 
   .mobile-menu-backdrop {
-    transition: opacity 0.55s var(--pub-ease-smooth) !important;
+    transition: opacity 0.85s var(--pub-ease-smooth) !important;
   }
 
   .mobile-public-menu a,
   .mobile-menu-cta-panel {
-    transition: transform 0.45s var(--pub-ease-smooth), background 0.45s var(--pub-ease-smooth), color 0.45s var(--pub-ease-smooth) !important;
+    transition: transform 0.85s var(--pub-ease-smooth), background 0.85s var(--pub-ease-smooth), color 0.85s var(--pub-ease-smooth) !important;
   }
 
   .mobile-public-menu a:hover,
