@@ -472,25 +472,6 @@
     grid-template-columns: 5.5rem minmax(0, 1fr);
   }
 
-  .dashboard-shell-compact .dashboard-brand span:last-child,
-  .dashboard-shell-compact .side-nav a:not([aria-current='page']),
-  .dashboard-shell-compact .dev-role-panel label,
-  .dashboard-shell-compact .dev-role-panel select,
-  .dashboard-shell-compact .sidebar-button {
-    overflow: hidden;
-  }
-
-  .dashboard-shell-compact .dashboard-brand span:last-child,
-  .dashboard-shell-compact .side-nav a,
-  .dashboard-shell-compact .dev-role-panel {
-    white-space: nowrap;
-  }
-
-  .dashboard-shell-compact .dashboard-brand span:last-child,
-  .dashboard-shell-compact .side-nav a {
-    text-overflow: ellipsis;
-  }
-
   .dashboard-sidebar {
     position: sticky;
     top: 0;
@@ -502,6 +483,89 @@
 
   .dashboard-sidebar .side-nav {
     display: grid;
+  }
+
+  .dashboard-shell-compact .dashboard-sidebar {
+    padding-inline: 0.85rem;
+  }
+
+  .dashboard-shell-compact .sidebar-brand-block {
+    justify-items: center;
+  }
+
+  .dashboard-shell-compact .dashboard-brand {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .dashboard-shell-compact .dashboard-brand > span:last-child,
+  .dashboard-shell-compact .nav-icon-link,
+  .dashboard-shell-compact .dev-role-panel label,
+  .dashboard-shell-compact .dev-role-panel select,
+  .dashboard-shell-compact .sidebar-button {
+    font-size: 0;
+    line-height: 0;
+  }
+
+  .dashboard-shell-compact .dashboard-brand > span:last-child {
+    display: none;
+  }
+
+  .dashboard-shell-compact .side-nav {
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .dashboard-shell-compact .side-nav a,
+  .dashboard-shell-compact .nav-icon-link {
+    display: grid;
+    width: 3rem;
+    min-height: 3rem;
+    place-items: center;
+    padding: 0;
+    color: transparent;
+  }
+
+  .dashboard-shell-compact .nav-icon,
+  .dashboard-shell-compact .nav-icon svg,
+  .dashboard-shell-compact .side-nav a svg {
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .dashboard-shell-compact .side-nav a[aria-current='page'] .nav-icon,
+  .dashboard-shell-compact .side-nav a[aria-current='page'] svg,
+  .dashboard-shell-compact .side-nav a:hover .nav-icon,
+  .dashboard-shell-compact .side-nav a:hover svg {
+    color: var(--white);
+  }
+
+  .dashboard-shell-compact .dev-role-panel {
+    align-items: center;
+    justify-items: center;
+    gap: 0.65rem;
+  }
+
+  .dashboard-shell-compact .dev-role-panel label,
+  .dashboard-shell-compact .dev-role-panel select {
+    display: none;
+  }
+
+  .dashboard-shell-compact .sidebar-button {
+    width: 3rem;
+    min-height: 3rem;
+    padding: 0;
+    color: transparent;
+  }
+
+  .dashboard-shell-compact .sidebar-button::before {
+    content: '↩';
+    color: var(--white);
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .dashboard-shell-compact .sidebar-menu-button {
+    margin-inline: auto;
   }
 
   .dashboard-card-grid,
