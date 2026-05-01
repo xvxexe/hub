@@ -13,6 +13,7 @@ import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
 import { RecentUploadList } from '../../components/RecentUploadList'
 import { StatusBadge } from '../../components/StatusBadge'
+import { StatusDot } from '../../components/StatusDot'
 import { mockCantieri } from '../../data/mockCantieri'
 import {
   costBreakdown,
@@ -95,32 +96,45 @@ function AdminDashboard({ documentUploads, documents }) {
             <div className="hub-table-head hub-doc-row">
               <span>Documento</span><span>Cantiere</span><span>Caricato da</span><span>Data</span><span>Stato</span>
             </div>
-            {documentUploads.slice(0, 5).map((doc) => (
-              <a className="hub-table-row hub-doc-row" href={`#/dashboard/documenti/${doc.id}`} key={doc.id}>
-                <strong>{doc.fileName}</strong>
-                <span>{doc.cantiere}</span>
-                <span>{doc.caricatoDa}</span>
-                <span>{doc.dataCaricamento}</span>
-                <StatusBadge>{normalizeDocumentStatus(doc.stato)}</StatusBadge>
-              </a>
-            ))}
+            {documentUploads.slice(0, 5).map((doc) => {
+              const documentStatus = normalizeDocumentStatus(doc.stato)
+              return (
+                <a className="hub-table-row hub-doc-row" href={`#/dashboard/documenti/${doc.id}`} key={doc.id}>
+                  <strong>{doc.fileName}</strong>
+                  <span>{doc.cantiere}</span>
+                  <span>{doc.caricatoDa}</span>
+                  <span>{doc.dataCaricamento}</span>
+                  <span className="desktop-status-cell"><StatusBadge>{documentStatus}</StatusBadge></span>
+                  <StatusDot status={documentStatus} className="mobile-status-dot" />
+                </a>
+              )
+            })}
           </div>
           <a className="text-link" href="#/dashboard/documenti">Vedi tutti i documenti</a>
         </section>
 
-        <section className="internal-panel">
+        <section className="internal-panel site-progress-panel">
           <PanelTitle title="Andamento cantieri" actionHref="#/dashboard/cantieri" />
           <div className="site-progress-list">
-            {mockCantieri.slice(0, 5).map((cantiere) => (
-              <a className="site-progress-row" href={`#/dashboard/cantieri/${cantiere.id}`} key={cantiere.id}>
-                <div>
-                  <strong>{cantiere.nome}</strong>
-                  <small>{cantiere.localita}</small>
-                </div>
-                <ProgressBar value={cantiere.avanzamento} />
-                <StatusBadge>{cantiere.stato === 'attivo' ? 'In corso' : cantiere.stato}</StatusBadge>
-              </a>
-            ))}
+            {mockCantieri.slice(0, 5).map((cantiere) => {
+              const siteStatus = cantiere.stato === 'attivo' ? 'In corso' : cantiere.stato
+              return (
+                <a className="site-progress-row" href={`#/dashboard/cantieri/${cantiere.id}`} key={cantiere.id}>
+                  <div className="site-progress-main">
+                    <strong>{cantiere.nome}</strong>
+                    <small>{cantiere.localita}</small>
+                  </div>
+                  <div className="site-progress-meter">
+                    <span>Avanzamento</span>
+                    <ProgressBar value={cantiere.avanzamento} />
+                  </div>
+                  <div className="site-progress-meta">
+                    <strong>{cantiere.avanzamento}%</strong>
+                    <StatusDot status={siteStatus} />
+                  </div>
+                </a>
+              )
+            })}
           </div>
         </section>
       </div>
