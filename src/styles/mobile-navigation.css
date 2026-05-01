@@ -251,10 +251,13 @@
   }
 
   .site-header {
-    position: sticky !important;
+    position: fixed !important;
     top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     z-index: 9000 !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
+    width: 100% !important;
     min-height: 64px !important;
     padding: .7rem 1rem !important;
     background: rgba(255, 255, 255, 0.96) !important;
@@ -262,6 +265,10 @@
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
+  }
+
+  .site-header + main {
+    padding-top: 64px !important;
   }
 
   .site-header .brand-mark {
