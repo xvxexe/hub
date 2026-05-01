@@ -1,0 +1,380 @@
+/* Area privata mobile: layout più compatto e leggibile */
+
+@media (max-width: 767px) {
+  .dashboard-main {
+    padding-bottom: calc(4.9rem + env(safe-area-inset-bottom));
+  }
+
+  .internal-topbar {
+    gap: 0.5rem;
+    padding: 0.55rem 0.6rem;
+  }
+
+  .icon-button,
+  .mobile-sidebar-trigger {
+    width: 2.35rem;
+    min-width: 2.35rem;
+    height: 2.35rem;
+    min-height: 2.35rem;
+  }
+
+  .global-search {
+    min-height: 2.35rem;
+  }
+
+  .global-search input {
+    min-height: 2.35rem;
+    font-size: 0.86rem;
+    padding-block: 0.45rem;
+  }
+
+  .internal-topbar-actions {
+    display: none;
+  }
+
+  .mobile-dashboard-nav {
+    display: none;
+  }
+
+  .breadcrumb {
+    gap: 0.25rem;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.72rem;
+  }
+
+  .dashboard-header {
+    gap: 0.45rem;
+    padding: 1rem 0.8rem 0.65rem;
+  }
+
+  .dashboard-header .eyebrow,
+  .dashboard-main .eyebrow {
+    font-size: 0.66rem;
+  }
+
+  .dashboard-header h1 {
+    font-size: clamp(1.35rem, 6vw, 1.7rem);
+    line-height: 1.08;
+  }
+
+  .dashboard-header p {
+    display: -webkit-box;
+    max-width: 100%;
+    overflow: hidden;
+    color: #7b8790;
+    font-size: 0.86rem;
+    line-height: 1.38;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .dashboard-header .role-pill,
+  .dashboard-header .data-mode-badge,
+  .role-pill,
+  .data-mode-badge {
+    font-size: 0.64rem;
+    padding: 0.22rem 0.48rem;
+  }
+
+  .section,
+  .stats-grid,
+  .hub-toolbar,
+  .internal-two-column,
+  .internal-three-column,
+  .hub-dashboard-grid,
+  .hub-lower-grid,
+  .cantieri-tools,
+  .document-filters {
+    gap: 0.7rem;
+    padding: 0.65rem 0.7rem;
+  }
+
+  .stats-grid,
+  .hub-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat-card,
+  .info-card,
+  .internal-panel,
+  .table-card,
+  .dashboard-cantiere-link,
+  .public-card,
+  .project-row,
+  .employee-action-panel {
+    border-radius: 0.8rem;
+    padding: 0.78rem;
+  }
+
+  .stat-card {
+    gap: 0.32rem;
+    min-height: auto;
+  }
+
+  .stat-card .stat-icon,
+  .stat-card > svg,
+  .stat-card .icon-chip,
+  .file-chip {
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+  }
+
+  .stat-card span,
+  .stat-card > span,
+  .stat-card small,
+  .stat-card p {
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
+
+  .stat-card strong {
+    font-size: clamp(1.22rem, 6vw, 1.55rem);
+    line-height: 1.02;
+  }
+
+  .section-heading,
+  .panel-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.55rem;
+  }
+
+  .section-heading h2,
+  .internal-panel > h2,
+  .panel-title-row h2 {
+    font-size: clamp(1.05rem, 5vw, 1.25rem);
+    line-height: 1.1;
+  }
+
+  .section-heading p,
+  .internal-panel > p {
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+
+  .button,
+  .button-small,
+  .sidebar-button {
+    min-height: 2.25rem;
+    border-radius: 0.55rem;
+    font-size: 0.78rem;
+    padding: 0.48rem 0.7rem;
+  }
+
+  .hub-toolbar {
+    justify-content: stretch;
+  }
+
+  .date-filter,
+  .cantieri-tools label,
+  .document-filters label,
+  .mock-form label,
+  .employee-action-panel label {
+    gap: 0.28rem;
+    font-size: 0.72rem;
+  }
+
+  .date-filter select,
+  .cantieri-tools select,
+  .document-filters select,
+  .document-filters input,
+  .mock-form input,
+  .mock-form select,
+  .mock-form textarea,
+  .employee-action-panel select,
+  .employee-action-panel textarea {
+    min-height: 2.35rem;
+    border-radius: 0.6rem;
+    font-size: 0.86rem;
+    padding: 0.48rem 0.62rem;
+  }
+
+  .hub-table,
+  .activity-feed,
+  .site-progress-list,
+  .compact-upload-list,
+  .project-list,
+  .quick-actions-grid,
+  .document-grid,
+  .photo-grid,
+  .estimate-grid,
+  .cantieri-grid {
+    gap: 0.55rem;
+  }
+
+  .hub-table-row,
+  .table-row,
+  .data-row,
+  .activity-item,
+  .compact-upload-row,
+  .site-progress-row,
+  .document-card,
+  .photo-card,
+  .estimate-card,
+  .cantiere-card,
+  .project-row {
+    gap: 0.35rem;
+    min-height: auto;
+    padding: 0.62rem 0.68rem;
+  }
+
+  .hub-table-row strong,
+  .table-row strong,
+  .data-row strong,
+  .activity-item strong,
+  .compact-upload-row strong,
+  .site-progress-main strong,
+  .dashboard-cantiere-link strong,
+  .document-card strong,
+  .photo-card strong,
+  .estimate-card strong,
+  .cantiere-card strong,
+  .project-row strong {
+    font-size: 0.9rem;
+    line-height: 1.16;
+  }
+
+  .hub-table-row span,
+  .table-row span,
+  .data-row span,
+  .activity-item small,
+  .compact-upload-row span,
+  .compact-upload-row small,
+  .site-progress-main small,
+  .dashboard-cantiere-link small,
+  .document-card small,
+  .photo-card small,
+  .estimate-card small,
+  .cantiere-card small,
+  .project-row small {
+    font-size: 0.76rem;
+    line-height: 1.25;
+  }
+
+  .status-badge,
+  .file-chip {
+    font-size: 0.62rem;
+    padding: 0.18rem 0.42rem;
+  }
+
+  .site-progress-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .site-progress-meter {
+    gap: 0.2rem;
+  }
+
+  .site-progress-meter span,
+  .site-progress-meta strong {
+    font-size: 0.72rem;
+  }
+
+  .progress-bar,
+  .site-progress-meter [role='progressbar'] {
+    height: 0.42rem;
+  }
+
+  .detail-layout,
+  .internal-two-column,
+  .internal-three-column,
+  .hub-dashboard-grid,
+  .hub-lower-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .detail-list {
+    gap: 0.45rem;
+  }
+
+  .detail-list div {
+    gap: 0.45rem;
+    padding-bottom: 0.45rem;
+  }
+
+  .detail-list dt,
+  .detail-list dd {
+    font-size: 0.82rem;
+  }
+
+  .cost-summary {
+    gap: 0.7rem;
+  }
+
+  .cost-summary > div:first-child strong {
+    font-size: 1.5rem;
+  }
+
+  .donut-chart {
+    width: 8.5rem;
+    height: 8.5rem;
+    justify-self: center;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quick-action-card,
+  .quick-actions-grid a,
+  .quick-actions-grid button {
+    min-height: auto;
+    padding: 0.65rem;
+  }
+
+  .floating-actions-trigger {
+    right: 1rem;
+    bottom: calc(5.1rem + env(safe-area-inset-bottom));
+    width: 3.15rem;
+    height: 3.15rem;
+  }
+
+  .floating-actions-menu {
+    right: 0.75rem;
+    bottom: calc(8.5rem + env(safe-area-inset-bottom));
+    width: min(17rem, calc(100vw - 1.5rem));
+    padding: 0.75rem;
+  }
+
+  .dashboard-bottom-nav {
+    left: 0.65rem;
+    right: 0.65rem;
+    bottom: 0.45rem;
+    gap: 0.12rem;
+    min-height: 3.9rem;
+    border-radius: 1rem;
+    padding: 0.35rem 0.4rem max(0.35rem, env(safe-area-inset-bottom));
+  }
+
+  .dashboard-bottom-nav a {
+    gap: 0.2rem;
+    min-height: 3.05rem;
+    border-radius: 0.8rem;
+    font-size: 0.66rem;
+    line-height: 1;
+    padding: 0.25rem;
+  }
+
+  .dashboard-bottom-nav svg {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+@media (max-width: 374px) {
+  .stats-grid,
+  .hub-kpi-grid,
+  .quick-actions-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.32rem;
+  }
+
+  .dashboard-bottom-nav a {
+    font-size: 0.6rem;
+  }
+}
