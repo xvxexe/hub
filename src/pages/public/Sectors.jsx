@@ -6,6 +6,7 @@ import {
   PremiumSection,
   PremiumTextCard,
 } from '../../components/PublicComponents'
+import { PremiumChipMarquee } from '../../components/PremiumChipMarquee'
 import { SEO } from '../../components/SEO'
 import { mainHeroImage, sectorsServed, workMethod } from '../../data/publicPremiumData'
 import { sectorImages, serviceImages } from '../../data/publicImages'
@@ -81,9 +82,7 @@ export function Sectors() {
       </PremiumSection>
 
       <PremiumSection eyebrow="Tutti i contesti" title="Una rete di utilizzi concreta">
-        <div className="premium-sector-row">
-          {sectorsServed.map((sector) => <span key={sector}>{sector}</span>)}
-        </div>
+        <PremiumChipMarquee items={sectorsServed} className="premium-sector-row" ariaLabel="Tutti i settori serviti" />
       </PremiumSection>
 
       <PremiumCTA title="Il tuo settore ha vincoli particolari?" text="Raccontaci spazi, tempi, accessi e priorità. Ti aiutiamo a tradurli in un piano di lavoro chiaro." />
