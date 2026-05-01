@@ -220,6 +220,44 @@
     padding: 0.62rem 0.68rem;
   }
 
+  .activity-feed .activity-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 0.55rem;
+    row-gap: 0.18rem;
+    padding: 0.56rem 0.62rem;
+  }
+
+  .activity-feed .activity-item > span:first-child {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    width: 0.42rem;
+    height: 0.42rem;
+    margin: 0;
+  }
+
+  .activity-feed .activity-item > div {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    min-width: 0;
+  }
+
+  .activity-feed .activity-item > .status-badge {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    align-self: start;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    max-height: 5.6rem;
+    padding: 0.36rem 0.2rem;
+    font-size: 0.56rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
   .hub-table-row strong,
   .table-row strong,
   .data-row strong,
