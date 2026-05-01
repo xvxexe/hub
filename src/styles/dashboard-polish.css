@@ -1,0 +1,268 @@
+/*
+  Rifiniture responsive area privata EuropaService Hub.
+  File separato per non toccare il CSS principale già stabilizzato.
+*/
+
+.dashboard-shell,
+.dashboard-main,
+.dashboard-header,
+.section,
+.stats-grid,
+.dashboard-card-grid,
+.table-card,
+.info-card,
+.stat-card,
+.data-row,
+.table-row,
+.internal-topbar,
+.global-search,
+.user-menu,
+.topbar-popover,
+.mobile-dashboard-nav,
+.dashboard-bottom-nav {
+  min-width: 0;
+}
+
+.dashboard-main {
+  overflow-x: clip;
+}
+
+.dashboard-header h1,
+.dashboard-header h2,
+.dashboard-header h3,
+.dashboard-header p,
+.section h1,
+.section h2,
+.section h3,
+.section p,
+.info-card h1,
+.info-card h2,
+.info-card h3,
+.info-card p,
+.stat-card strong,
+.table-row,
+.data-row,
+.user-menu strong,
+.user-menu small,
+.breadcrumb span {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.internal-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 9;
+}
+
+.global-search {
+  flex: 1 1 22rem;
+  max-width: 42rem;
+}
+
+.internal-topbar-actions {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.topbar-popover {
+  max-width: min(24rem, calc(100vw - 2rem));
+}
+
+.table-card {
+  max-width: 100%;
+}
+
+.table-card > *,
+.data-row > *,
+.table-row > * {
+  min-width: 0;
+}
+
+.data-row a,
+.table-row a,
+.data-row button,
+.table-row button,
+.dashboard-card-grid a,
+.dashboard-cantiere-link {
+  max-width: 100%;
+}
+
+.stat-card strong {
+  line-height: 1.05;
+}
+
+@media (max-width: 767px) {
+  .dashboard-main {
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  }
+
+  .dashboard-sidebar {
+    display: none;
+  }
+
+  .internal-topbar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .mobile-sidebar-trigger {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .global-search {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .global-search span,
+  .global-search kbd {
+    display: none;
+  }
+
+  .global-search input {
+    min-width: 0;
+  }
+
+  .internal-topbar-actions {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .internal-topbar-actions > .button {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .user-menu {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .user-menu > span:last-child {
+    min-width: 0;
+  }
+
+  .mobile-dashboard-nav {
+    padding: 0.75rem;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .breadcrumb {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .dashboard-header,
+  .section {
+    padding-inline: 0.75rem;
+  }
+
+  .stats-grid {
+    padding: 0.75rem;
+  }
+
+  .stat-card strong {
+    font-size: clamp(1.45rem, 7vw, 2rem);
+  }
+
+  .dashboard-card-grid,
+  .card-grid,
+  .contact-grid,
+  .public-grid,
+  .public-project-grid,
+  .process-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .data-row,
+  .table-row {
+    padding: 0.85rem;
+  }
+
+  .dashboard-bottom-nav {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  .dashboard-bottom-nav a {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-dashboard-nav,
+  .dashboard-bottom-nav,
+  .mobile-sidebar-trigger {
+    display: none;
+  }
+
+  .dashboard-shell {
+    grid-template-columns: 18rem minmax(0, 1fr);
+  }
+
+  .dashboard-shell.dashboard-shell-compact {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+  }
+
+  .dashboard-shell-compact .dashboard-brand span:last-child,
+  .dashboard-shell-compact .side-nav a:not([aria-current='page']),
+  .dashboard-shell-compact .dev-role-panel label,
+  .dashboard-shell-compact .dev-role-panel select,
+  .dashboard-shell-compact .sidebar-button {
+    overflow: hidden;
+  }
+
+  .dashboard-shell-compact .dashboard-brand span:last-child,
+  .dashboard-shell-compact .side-nav a,
+  .dashboard-shell-compact .dev-role-panel {
+    white-space: nowrap;
+  }
+
+  .dashboard-shell-compact .dashboard-brand span:last-child,
+  .dashboard-shell-compact .side-nav a {
+    text-overflow: ellipsis;
+  }
+
+  .dashboard-sidebar {
+    position: sticky;
+    top: 0;
+    min-height: 100vh;
+    align-content: start;
+    border-bottom: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .dashboard-sidebar .side-nav {
+    display: grid;
+  }
+
+  .dashboard-card-grid,
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .data-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: center;
+  }
+}
+
+@media (min-width: 1120px) {
+  .dashboard-card-grid,
+  .stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .detail-layout {
+    grid-template-columns: minmax(0, 1.3fr) minmax(20rem, 0.7fr);
+  }
+}
