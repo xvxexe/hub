@@ -239,9 +239,20 @@
 }
 
 .dashboard-sidebar .dashboard-brand strong,
+.dashboard-sidebar .dashboard-brand small,
 .dashboard-sidebar .side-nav a,
-.dashboard-sidebar .sidebar-button {
-  color: var(--white);
+.dashboard-sidebar .sidebar-button,
+.dashboard-sidebar .dev-role-panel label {
+  color: var(--dash-title);
+}
+
+.dashboard-sidebar .side-nav a:not([aria-current='page']) {
+  color: var(--dash-muted);
+}
+
+.dashboard-sidebar .side-nav a[aria-current='page'],
+.dashboard-sidebar .side-nav a:hover {
+  color: #2563eb;
 }
 
 .internal-topbar small,
