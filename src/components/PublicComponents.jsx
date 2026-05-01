@@ -50,7 +50,7 @@ export function PremiumSection({ eyebrow, title, text, children, tone = 'default
         {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
         <h2>{title}</h2>
         {text ? <p>{text}</p> : null}
-        {action}
+        {action ? <div className="premium-section-action">{action}</div> : null}
       </div>
       {children}
     </section>
@@ -70,13 +70,32 @@ export function PremiumStats({ stats }) {
   )
 }
 
-export function PremiumServiceCard({ service }) {
+export function PremiumServiceCard({ service, detailed = false }) {
   return (
-    <article className="premium-card premium-service-card">
-      <div>
+    <article className={detailed ? 'premium-card premium-service-card premium-service-card-detailed' : 'premium-card premium-service-card'}>
+      {service.image ? (
+        <SafeImage
+          alt={service.alt}
+          className="premium-service-image"
+          fallbackSrc="/assets/images/placeholders/placeholder-servizio.jpg"
+          src={service.image}
+          title={service.title}
+        />
+      ) : null}
+      <div className="premium-service-copy">
         <PublicIcon name={service.icon ?? service.id} />
         <h3>{service.title}</h3>
         <p>{service.summary}</p>
+        {service.benefits?.length ? (
+          <ul className="premium-check-list">
+            {service.benefits.map((benefit) => <li key={benefit}>{benefit}</li>)}
+          </ul>
+        ) : null}
+        {service.deliverables?.length ? (
+          <div className="premium-tags">
+            {service.deliverables.map((item) => <small key={item}>{item}</small>)}
+          </div>
+        ) : null}
         <a className="premium-card-arrow" aria-label={`Richiedi informazioni su ${service.title}`} href="#/preventivo">→</a>
       </div>
     </article>
@@ -154,7 +173,59 @@ export function TestimonialMock({ testimonial }) {
     <article className="premium-card premium-testimonial">
       <p>“{testimonial.quote}”</p>
       <strong>{testimonial.author}</strong>
+      {testimonial.role ? <span>{testimonial.role}</span> : null}
     </article>
+  )
+}
+
+export function PremiumTextCard({ title, text, eyebrow, items = [] }) {
+  return (
+    <article className="premium-card premium-text-card">
+      {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
+      <h3>{title}</h3>
+      <p>{text}</p>
+      {items.length ? (
+        <ul className="premium-check-list">
+          {items.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+      ) : null}
+    </article>
+  )
+}
+
+export function PremiumImageSplit({ eyebrow, title, text, image, imageAlt, reverse = false, children }) {
+  return (
+    <section className={reverse ? 'premium-image-split premium-image-split-reverse' : 'premium-image-split'}>
+      <SafeImage
+        alt={imageAlt || title}
+        className="premium-split-image"
+        fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
+        src={image}
+        title={title}
+      />
+      <div className="premium-split-copy">
+        {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
+        <h2>{title}</h2>
+        <p>{text}</p>
+        {children}
+      </div>
+    </section>
+  )
+}
+
+export function PremiumTimeline({ items }) {
+  return (
+    <div className="premium-timeline">
+      {items.map((item) => (
+        <article key={item.title}>
+          <span>{item.step}</span>
+          <div>
+            <h3>{item.title}</h3>
+            <p>{item.text}</p>
+          </div>
+        </article>
+      ))}
+    </div>
   )
 }
 
