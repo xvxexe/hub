@@ -251,8 +251,17 @@
   }
 
   .site-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9000 !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
-    padding: .8rem 1rem !important;
+    min-height: 64px !important;
+    padding: .7rem 1rem !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
   }
 
   .site-header .brand-mark {
