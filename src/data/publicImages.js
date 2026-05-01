@@ -1,3 +1,14 @@
+export function asset(src) {
+  if (!src || typeof src !== 'string') return src
+  if (/^(https?:)?\/\//.test(src) || src.startsWith('data:') || src.startsWith('blob:')) return src
+
+  const baseUrl = import.meta.env.BASE_URL || '/'
+  if (!src.startsWith('/')) return src
+  if (baseUrl === '/') return src
+
+  return `${baseUrl.replace(/\/$/, '')}${src}`
+}
+
 export const placeholderImages = {
   hero: image('/assets/images/placeholders/placeholder-cantiere.jpg', 'Placeholder professionale per cantiere interno', 'Placeholder cantiere'),
   service: image('/assets/images/placeholders/placeholder-servizio.jpg', 'Placeholder professionale per lavori edili e strumenti', 'Placeholder servizio'),
@@ -36,6 +47,7 @@ export const projectImages = {
   hotelInternoMilano: image('/assets/images/hero/edilizia-cartongesso-cantiere-hero.jpg', 'Cantiere interno con controsoffitto in lavorazione', 'Cantiere controsoffitto'),
   negozioCentro: image('/assets/images/services/cartongesso-pareti-divisorie.jpg', 'Negozio con finiture interne in ristrutturazione', 'Negozio finiture interne'),
   condominioBianchi: image('/assets/images/sectors/lavori-per-hotel.jpg', 'Locale interno in ristrutturazione', 'Locale commerciale ristrutturazione'),
+  ufficiDirezionali: image('/assets/images/projects/cantiere-controsoffitto.jpg', 'Uffici ristrutturati con pareti tecniche e finiture interne', 'Uffici ristrutturati'),
 }
 
 export const sectorImages = {
@@ -53,5 +65,5 @@ export const teamImages = {
 }
 
 function image(src, alt, title) {
-  return { src, alt, title }
+  return { src: asset(src), alt, title }
 }
