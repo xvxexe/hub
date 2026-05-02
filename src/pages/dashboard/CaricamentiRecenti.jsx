@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { RecentUploadList } from '../../components/RecentUploadList'
 import { StatusBadge } from '../../components/StatusBadge'
-import { mockCantieri } from '../../data/mockCantieri'
-import { statiDocumenti, statiFoto, tipiDocumento } from '../../data/mockUploads'
+
+const tipiDocumentoFallback = ['Fattura', 'Bonifico', 'Ricevuta', 'FIR', 'Preventivo', 'Scontrino', 'Riepilogo tab', 'Altro']
+const statiFoto = ['Da revisionare', 'Approvata', 'Pubblicata', 'Non pubblicabile']
+const statiDocumenti = ['da verificare', 'confermato', 'incompleto', 'possibile duplicato', 'scartato']
 
 export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
   const [cantiereId, setCantiereId] = useState('tutti')
@@ -18,6 +20,11 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
     session.role === 'employee'
       ? documentUploads.filter((upload) => upload.caricatoDa === session.name)
       : documentUploads
+  const cantieri = useMemo(() => getCantieriFromUploads([...fotoUploads, ...documentUploads]), [fotoUploads, documentUploads])
+  const tipiDocumento = useMemo(() => {
+    const realTypes = [...new Set(documentUploads.map((upload) => upload.tipoDocumento).filter(Boolean))]
+    return realTypes.length ? realTypes : tipiDocumentoFallback
+  }, [documentUploads])
 
   const filteredPhotos = useMemo(() => {
     if (!canSeePhotos) return []
@@ -27,11 +34,11 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
       const matchCantiere = cantiereId === 'tutti' || upload.cantiereId === cantiereId
       const matchTipo = tipo === 'tutti' || tipo === 'foto'
       const matchStato = stato === 'tutti' || upload.stato === stato
-      const matchSearch =
-        normalizedSearch === '' ||
-        upload.lavorazione.toLowerCase().includes(normalizedSearch) ||
-        upload.zona.toLowerCase().includes(normalizedSearch) ||
-        upload.fileName.toLowerCase().includes(normalizedSearch)
+      const haystack = [upload.lavorazione, upload.zona, upload.fileName, upload.cantiere, upload.nota]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      const matchSearch = normalizedSearch === '' || haystack.includes(normalizedSearch)
       return matchCantiere && matchTipo && matchStato && matchSearch
     })
   }, [canSeePhotos, cantiereId, scopedFotoUploads, search, stato, tipo])
@@ -44,11 +51,11 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
       const matchCantiere = cantiereId === 'tutti' || upload.cantiereId === cantiereId
       const matchTipo = tipo === 'tutti' || tipo === 'documento' || upload.tipoDocumento === tipo
       const matchStato = stato === 'tutti' || upload.stato === stato
-      const matchSearch =
-        normalizedSearch === '' ||
-        upload.fornitore.toLowerCase().includes(normalizedSearch) ||
-        upload.descrizione.toLowerCase().includes(normalizedSearch) ||
-        upload.fileName.toLowerCase().includes(normalizedSearch)
+      const haystack = [upload.fornitore, upload.descrizione, upload.fileName, upload.cantiere, upload.nota]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      const matchSearch = normalizedSearch === '' || haystack.includes(normalizedSearch)
       return matchCantiere && matchTipo && matchStato && matchSearch
     })
   }, [canSeeDocuments, cantiereId, scopedDocumentUploads, search, stato, tipo])
@@ -59,11 +66,11 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
   return (
     <>
       <DashboardHeader
-        eyebrow="Caricamenti recenti"
+        eyebrow="Caricamenti reali"
         title={session.role === 'employee' ? 'I miei caricamenti' : 'Foto e documenti caricati'}
-        description="Registro mock dei caricamenti locali con filtri operativi. Nessun file viene salvato su servizi esterni."
+        description="Registro collegato allo store Supabase. I dati mock WhatsApp sono stati rimossi."
       >
-        <DataModeBadge />
+        <DataModeBadge>Dati reali Supabase</DataModeBadge>
       </DashboardHeader>
 
       <section className="cantieri-tools upload-filters" aria-label="Filtri caricamenti">
@@ -71,7 +78,7 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
           Cantiere
           <select value={cantiereId} onChange={(event) => setCantiereId(event.target.value)}>
             <option value="tutti">Tutti</option>
-            {mockCantieri.map((cantiere) => (
+            {cantieri.map((cantiere) => (
               <option key={cantiere.id} value={cantiere.id}>
                 {cantiere.nome}
               </option>
@@ -155,4 +162,13 @@ function HighlightBox({ title, rows }) {
       </div>
     </section>
   )
+}
+
+function getCantieriFromUploads(uploads) {
+  const map = new Map()
+  uploads.forEach((upload) => {
+    if (!upload.cantiereId) return
+    map.set(upload.cantiereId, { id: upload.cantiereId, nome: upload.cantiere ?? upload.cantiereId })
+  })
+  return [...map.values()]
 }
