@@ -172,7 +172,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
       <DashboardListPage
         eyebrow="Dipendenti"
         title="Squadra e assegnazioni"
-        description="Anagrafica mock per preparare ruoli e permessi nelle fasi successive."
+        description="Anagrafica provvisoria per preparare ruoli e permessi nelle fasi successive."
         rows={employees}
         columns={[
           { label: 'Nome', key: 'name' },
@@ -223,6 +223,7 @@ export default function App() {
       onLogout={logout}
       onRoleChange={changeRole}
       roles={roles}
+      dataStore={mockStore}
     >
       {renderRoute(path, session, selectedRole, {
         onLogin: loginWithSelectedRole,
