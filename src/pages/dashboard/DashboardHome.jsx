@@ -126,12 +126,10 @@ function AdminDashboard({ documentUploads, documents }) {
                     <small>{cantiere.localita}</small>
                   </div>
                   <div className="site-progress-meter">
-                    <span>Avanzamento</span>
                     <ProgressBar value={cantiere.avanzamento} />
                   </div>
                   <div className="site-progress-meta">
-                    <strong>{cantiere.avanzamento}%</strong>
-                    <StatusDot status={siteStatus} />
+                    <StatusDot status={siteStatus} label={siteStatus} />
                   </div>
                 </a>
               )
