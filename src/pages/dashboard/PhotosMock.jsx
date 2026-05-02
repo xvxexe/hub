@@ -3,7 +3,6 @@ import { EmptyState } from '../../components/EmptyState'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
 import { DashboardHeader, DataModeBadge, StatCard } from '../../components/InternalComponents'
 import { StatusBadge } from '../../components/StatusBadge'
-import { formatDate, mockCantieri } from '../../data/mockCantieri'
 
 export function PhotosMock({ session, store }) {
   const [filters, setFilters] = useState({ cantiereId: 'tutti', stato: 'tutti', pubblicabile: 'tutti' })
@@ -11,6 +10,7 @@ export function PhotosMock({ session, store }) {
   const scopedRows = session.role === 'employee'
     ? store.photos.filter((photo) => photo.caricatoDa === session.name)
     : store.photos
+  const cantieri = useMemo(() => getCantieriFromPhotos(store.photos), [store.photos])
 
   const rows = useMemo(() => scopedRows.filter((photo) => {
     const matchesSite = filters.cantiereId === 'tutti' || photo.cantiereId === filters.cantiereId
@@ -27,10 +27,10 @@ export function PhotosMock({ session, store }) {
     <>
       <DashboardHeader
         eyebrow="Foto cantiere"
-        title={session.role === 'employee' ? 'Le mie foto' : 'Foto cantiere e pubblicazione mock'}
-        description="Registro foto con dettaglio, stati di revisione e preparazione alla pubblicazione portfolio."
+        title={session.role === 'employee' ? 'Le mie foto' : 'Foto cantiere'}
+        description="Registro foto collegato allo store Supabase. Se non ci sono foto reali importate, la lista resta vuota."
       >
-        <DataModeBadge />
+        <DataModeBadge>Dati reali Supabase</DataModeBadge>
       </DashboardHeader>
 
       <section className="stats-grid">
@@ -43,7 +43,7 @@ export function PhotosMock({ session, store }) {
       <section className="cantieri-tools document-filters">
         <label>Cantiere<select value={filters.cantiereId} onChange={(event) => update('cantiereId', event.target.value)}>
           <option value="tutti">Tutti</option>
-          {mockCantieri.map((cantiere) => <option key={cantiere.id} value={cantiere.id}>{cantiere.nome}</option>)}
+          {cantieri.map((cantiere) => <option key={cantiere.id} value={cantiere.id}>{cantiere.nome}</option>)}
         </select></label>
         <label>Stato<select value={filters.stato} onChange={(event) => update('stato', event.target.value)}>
           <option value="tutti">Tutti</option>
@@ -83,9 +83,23 @@ export function PhotosMock({ session, store }) {
             ))}
           </div>
         ) : (
-          <EmptyState title="Nessuna foto trovata">Modifica i filtri per vedere altre foto mock.</EmptyState>
+          <EmptyState title="Nessuna foto reale trovata">Carica nuove foto o importa foto reali nello store Supabase.</EmptyState>
         )}
       </section>
     </>
   )
+}
+
+function getCantieriFromPhotos(photos) {
+  const map = new Map()
+  photos.forEach((photo) => {
+    if (!photo.cantiereId) return
+    map.set(photo.cantiereId, { id: photo.cantiereId, nome: photo.cantiere ?? photo.cantiereId })
+  })
+  return [...map.values()]
+}
+
+function formatDate(date) {
+  if (!date) return '-'
+  return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(date))
 }
