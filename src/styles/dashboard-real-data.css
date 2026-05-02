@@ -3,6 +3,31 @@
   Obiettivo: layout elastico per nomi tab lunghi, importi reali, tabelle larghe e mobile senza sovrapposizioni.
 */
 
+/* Login reale Supabase: il ruolo arriva da public.profiles, non si cambia manualmente dalla UI. */
+.login-fallback-panel,
+.dev-role-panel label,
+.dev-role-panel select {
+  display: none !important;
+}
+
+.dev-role-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dev-role-panel::before {
+  content: 'Ruolo gestito da Supabase';
+  display: block;
+  padding: 0.72rem 0.78rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--dash-muted, #667380);
+  font-size: 0.78rem;
+  font-weight: 720;
+  line-height: 1.2;
+}
+
 .dashboard-main {
   --real-gap: clamp(0.85rem, 1.6vw, 1.25rem);
   --real-panel-pad: clamp(0.95rem, 1.8vw, 1.35rem);
@@ -850,6 +875,44 @@
   background: #fff;
 }
 
+.admin-invite-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-invite-form label,
+.admin-invite-form .full-row {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.admin-invite-form .full-row {
+  grid-column: 1 / -1;
+}
+
+.admin-invite-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-invite-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.78rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: var(--white);
+}
+
+.admin-invite-row strong,
+.admin-invite-row small {
+  overflow-wrap: anywhere;
+}
+
 /* Desktop medio */
 @media (max-width: 1180px) {
   .hub-dashboard-grid,
@@ -928,7 +991,8 @@
   .accounting-summary-grid,
   .real-summary-grid,
   .material-cards,
-  .quick-actions-grid {
+  .quick-actions-grid,
+  .admin-invite-form {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -958,7 +1022,8 @@
   .work-package-row,
   .payment-row,
   .accounting-detail-row,
-  .hub-doc-row {
+  .hub-doc-row,
+  .admin-invite-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 0.42rem;
