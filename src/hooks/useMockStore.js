@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { importGoogleSheetsToSupabase, exportSupabaseToGoogleSheets, isGoogleSheetsSyncConfigured } from '../lib/googleSheetsSync'
+import { exportSupabaseToGoogleSheets, isGoogleSheetsSyncConfigured } from '../lib/googleSheetsSync'
 import { isSupabaseConfigured } from '../lib/supabaseClient'
 import { fetchRemoteStore, saveRemoteStore } from '../lib/supabaseStore'
 
@@ -37,40 +37,17 @@ export function useMockStore(session) {
 
         if (remote.error) {
           setSyncState({ status: 'error', error: remote.error.message })
-        } else if (isValidStore(remote.data)) {
-          setStore(remote.data)
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remote.data))
-          setSyncState({ status: 'supabase', error: null })
-        } else {
-          setSyncState({ status: 'empty', error: null })
-        }
-
-        if (!isGoogleSheetsSyncConfigured) return
-
-        setSyncState({ status: 'syncing-sheets', error: null })
-        const sheetsImport = await importGoogleSheetsToSupabase()
-        if (cancelled) return
-
-        if (sheetsImport.ok && isValidStore(sheetsImport.store)) {
-          setStore(sheetsImport.store)
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sheetsImport.store))
-          setSyncState({ status: 'supabase', error: null })
           return
         }
 
         if (isValidStore(remote.data)) {
           setStore(remote.data)
           window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remote.data))
-          setSyncState({
-            status: 'supabase',
-            error: sheetsImport.error ? `Sync Google Sheets saltato: ${sheetsImport.error}` : 'Sync Google Sheets saltato: import vuoto.',
-          })
+          setSyncState({ status: 'supabase', error: null })
           return
         }
 
-        setStore(EMPTY_STORE)
-        window.localStorage.removeItem(STORAGE_KEY)
-        setSyncState({ status: 'empty', error: sheetsImport.error ?? 'Nessun dato disponibile.' })
+        setSyncState({ status: 'empty', error: null })
       } catch (error) {
         if (!cancelled) setSyncState({ status: 'error', error: error.message })
       }
