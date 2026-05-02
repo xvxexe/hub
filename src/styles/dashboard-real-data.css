@@ -1,0 +1,779 @@
+/*
+  Fix UI/UX area privata con dati reali.
+  Obiettivo: layout elastico per nomi tab lunghi, importi reali, tabelle larghe e mobile senza sovrapposizioni.
+*/
+
+.dashboard-main {
+  --real-gap: clamp(0.85rem, 1.6vw, 1.25rem);
+  --real-panel-pad: clamp(0.95rem, 1.8vw, 1.35rem);
+  --real-radius: 1rem;
+}
+
+.dashboard-main *,
+.dashboard-main *::before,
+.dashboard-main *::after {
+  box-sizing: border-box;
+}
+
+.dashboard-header,
+.internal-panel,
+.info-card,
+.table-card,
+.stat-card,
+.activity-item,
+.compact-upload-row,
+.site-progress-row,
+.hub-table-row,
+.table-row,
+.document-row,
+.photo-card,
+.estimate-card,
+.cantiere-card,
+.summary-item {
+  min-width: 0;
+}
+
+.dashboard-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 1rem;
+  row-gap: 0.7rem;
+}
+
+.dashboard-header > :not(.eyebrow):not(h1):not(p) {
+  align-self: start;
+  justify-self: end;
+}
+
+.dashboard-header p {
+  grid-column: 1 / -1;
+}
+
+.dashboard-header .button,
+.dashboard-header .data-mode-badge,
+.dashboard-header .role-pill,
+.dashboard-header .status-badge {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.section,
+.stats-grid,
+.hub-toolbar,
+.internal-two-column,
+.internal-three-column,
+.hub-dashboard-grid,
+.hub-lower-grid,
+.cantieri-tools,
+.document-filters,
+.upload-recent-layout,
+.document-center-layout,
+.cantieri-page-layout,
+.detail-tab-panel,
+.accounting-section,
+.internal-padded {
+  width: 100%;
+  max-width: 100%;
+}
+
+.internal-two-column,
+.hub-dashboard-grid,
+.hub-lower-grid,
+.document-center-layout,
+.cantieri-page-layout,
+.detail-two-column {
+  display: grid;
+  gap: var(--real-gap);
+  align-items: start;
+}
+
+.internal-two-column,
+.hub-lower-grid,
+.detail-two-column {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.hub-dashboard-grid,
+.document-center-layout,
+.cantieri-page-layout {
+  grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 0.8fr);
+}
+
+.internal-three-column {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--real-gap);
+}
+
+.internal-panel,
+.info-card,
+.table-card,
+.stat-card,
+.employee-action-panel,
+.document-preview-panel {
+  overflow: hidden;
+  border-radius: var(--real-radius);
+}
+
+.internal-panel,
+.info-card,
+.table-card,
+.document-preview-panel {
+  padding: var(--real-panel-pad);
+}
+
+.section-heading,
+.panel-title-row,
+.recent-upload-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.section-heading > *,
+.panel-title-row > *,
+.recent-upload-title > * {
+  min-width: 0;
+}
+
+.section-heading h2,
+.panel-title-row h2,
+.recent-upload-title h3,
+.document-preview-sheet strong,
+.detail-title h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.button,
+.status-badge,
+.data-mode-badge,
+.file-chip,
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.12;
+}
+
+.status-badge,
+.data-mode-badge,
+.file-chip {
+  min-height: 1.85rem;
+}
+
+.status-dot,
+.status-dot small {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.status-dot small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tabelle reali: niente colonne schiacciate, riga leggibile e scroll solo interno quando serve */
+.hub-table,
+.table-card,
+.document-data-table,
+.cantieri-data-table,
+.work-package-table {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hub-table-head,
+.hub-table-row,
+.table-row,
+.data-row {
+  width: 100%;
+  min-width: 0;
+}
+
+.hub-table-head > *,
+.hub-table-row > *,
+.table-row > *,
+.data-row > *,
+.document-row-select > *,
+.cantieri-data-row > *,
+.document-data-row > *,
+.work-package-row > *,
+.payment-row > *,
+.accounting-detail-row > * {
+  min-width: 0;
+}
+
+.hub-table-row strong,
+.hub-table-row span,
+.table-row strong,
+.table-row span,
+.data-row strong,
+.data-row span,
+.activity-item strong,
+.activity-item small,
+.compact-upload-row strong,
+.compact-upload-row small,
+.compact-upload-row span,
+.document-row strong,
+.document-row span,
+.document-row p,
+.document-row small,
+.photo-card h3,
+.photo-card p,
+.photo-card small,
+.estimate-card h3,
+.estimate-card p,
+.estimate-card small,
+.detail-list dt,
+.detail-list dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.hub-table-row span,
+.table-row span,
+.data-row span,
+.compact-upload-row span,
+.payment-row span,
+.accounting-detail-row span {
+  line-height: 1.35;
+}
+
+.document-data-row {
+  display: grid;
+  grid-template-columns:
+    minmax(12rem, 1.5fr)
+    minmax(6rem, 0.7fr)
+    minmax(9rem, 1fr)
+    minmax(8rem, 0.9fr)
+    minmax(6.5rem, 0.65fr)
+    minmax(7rem, 0.75fr)
+    minmax(7.5rem, 0.75fr)
+    minmax(3rem, auto);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.document-data-row .document-row-select {
+  display: contents;
+}
+
+.document-row-select {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.row-menu {
+  display: grid;
+  width: 2.3rem;
+  height: 2.3rem;
+  min-width: 2.3rem;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--white);
+}
+
+.cantieri-data-row {
+  display: grid;
+  grid-template-columns:
+    minmax(10rem, 1.2fr)
+    minmax(7rem, 0.8fr)
+    minmax(6rem, 0.65fr)
+    minmax(6.5rem, 0.7fr)
+    minmax(9rem, 1fr)
+    minmax(4.5rem, 0.45fr)
+    minmax(7rem, 0.75fr)
+    minmax(7rem, 0.7fr)
+    minmax(6.5rem, 0.65fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.work-package-row {
+  display: grid;
+  grid-template-columns: minmax(13rem, 1.4fr) minmax(6.5rem, 0.7fr) minmax(9rem, 1fr) minmax(5rem, 0.5fr) minmax(7rem, 0.7fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.payment-row,
+.accounting-detail-row {
+  display: grid;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.payment-row {
+  grid-template-columns: minmax(6.5rem, 0.65fr) minmax(9rem, 1fr) minmax(10rem, 1fr) minmax(7rem, 0.7fr) minmax(7rem, 0.7fr);
+}
+
+.accounting-detail-row {
+  grid-template-columns: minmax(12rem, 1.4fr) minmax(9rem, 1fr) minmax(8rem, 0.8fr) minmax(7rem, 0.7fr) minmax(7rem, 0.7fr);
+}
+
+.hub-doc-row {
+  grid-template-columns: minmax(12rem, 1.4fr) minmax(8rem, 0.85fr) minmax(8rem, 0.85fr) minmax(6.5rem, 0.55fr) minmax(7.5rem, 0.65fr);
+}
+
+/* Cantiere reale: tab lunghi e importi devono stare allineati */
+.cantiere-detail-header,
+.detail-summary-grid,
+.cantiere-overview-grid,
+.accounting-summary-grid,
+.detail-list-grid,
+.material-cards,
+.row-actions {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.cantiere-detail-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.45fr);
+  gap: var(--real-gap);
+  align-items: stretch;
+}
+
+.detail-title,
+.detail-status-card {
+  min-width: 0;
+}
+
+.detail-title p {
+  overflow-wrap: anywhere;
+}
+
+.detail-summary-grid,
+.accounting-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--real-gap);
+}
+
+.summary-item {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+}
+
+.summary-item strong {
+  overflow-wrap: anywhere;
+  line-height: 1.15;
+}
+
+.detail-tabs {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.detail-tabs button {
+  flex: 0 0 auto;
+  min-width: fit-content;
+  white-space: nowrap;
+}
+
+.cantiere-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: var(--real-gap);
+  align-items: start;
+}
+
+.work-packages,
+.side-operational-panels,
+.cost-card {
+  min-width: 0;
+}
+
+.side-operational-panels {
+  display: grid;
+  gap: var(--real-gap);
+}
+
+.cost-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(8rem, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--real-gap);
+}
+
+.cost-legend > div,
+.detail-list div,
+.material-cards > div {
+  min-width: 0;
+}
+
+.detail-list div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.detail-list dd {
+  text-align: right;
+}
+
+.material-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+/* Liste compatte con dati reali */
+.activity-feed,
+.compact-upload-list,
+.site-progress-list,
+.recent-upload-list,
+.document-list,
+.photo-grid {
+  min-width: 0;
+}
+
+.activity-item,
+.compact-upload-row,
+.site-progress-row,
+.recent-upload-card {
+  align-items: start;
+}
+
+.activity-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.65rem;
+}
+
+.activity-item .status-badge {
+  align-self: start;
+}
+
+.compact-upload-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.7rem;
+}
+
+.site-progress-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(9rem, 0.8fr) auto;
+  gap: 0.8rem;
+}
+
+.site-progress-main,
+.site-progress-meter,
+.site-progress-meta {
+  min-width: 0;
+}
+
+.progress-block,
+.progress-label,
+.progress-track {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.progress-label {
+  gap: 0.45rem;
+}
+
+.progress-label strong {
+  white-space: nowrap;
+}
+
+/* Filtri: non devono creare buchi o campi giganti */
+.cantieri-tools,
+.document-filters,
+.upload-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.8rem;
+  align-items: end;
+}
+
+.cantieri-tools label,
+.document-filters label,
+.upload-filters label,
+.date-filter {
+  display: grid;
+  min-width: 0;
+  gap: 0.3rem;
+}
+
+.cantieri-tools input,
+.cantieri-tools select,
+.document-filters input,
+.document-filters select,
+.upload-filters input,
+.upload-filters select,
+.date-filter select {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Pannelli detail/preview: contenuti lunghi ma ordinati */
+.document-preview-panel,
+.cantieri-side-stack {
+  display: grid;
+  gap: var(--real-gap);
+  align-content: start;
+}
+
+.document-preview-sheet,
+.extracted-data,
+.document-actions-panel {
+  min-width: 0;
+}
+
+.document-actions-panel {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.document-actions-panel .button {
+  width: 100%;
+}
+
+.pagination-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.pagination-bar > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* Desktop medio: evitare colonne laterali troppo strette */
+@media (max-width: 1180px) {
+  .hub-dashboard-grid,
+  .document-center-layout,
+  .cantieri-page-layout,
+  .cantiere-detail-header,
+  .cantiere-overview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .internal-two-column,
+  .hub-lower-grid,
+  .detail-two-column,
+  .internal-three-column {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .detail-summary-grid,
+  .accounting-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cost-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .donut-chart {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard-header {
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline: 0.8rem;
+  }
+
+  .dashboard-header > :not(.eyebrow):not(h1):not(p) {
+    justify-self: start;
+  }
+
+  .dashboard-header p {
+    display: block;
+    -webkit-line-clamp: unset;
+  }
+
+  .section,
+  .stats-grid,
+  .hub-toolbar,
+  .internal-two-column,
+  .internal-three-column,
+  .hub-dashboard-grid,
+  .hub-lower-grid,
+  .cantieri-tools,
+  .document-filters,
+  .upload-recent-layout,
+  .document-center-layout,
+  .cantieri-page-layout,
+  .detail-tab-panel,
+  .accounting-section,
+  .internal-padded,
+  .cantiere-detail-header,
+  .detail-summary-grid {
+    padding-inline: 0.72rem;
+  }
+
+  .stats-grid,
+  .hub-kpi-grid,
+  .detail-summary-grid,
+  .accounting-summary-grid,
+  .material-cards,
+  .quick-actions-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .internal-panel,
+  .info-card,
+  .table-card,
+  .stat-card,
+  .document-preview-panel {
+    padding: 0.82rem;
+  }
+
+  .hub-table,
+  .table-card,
+  .document-data-table,
+  .cantieri-data-table,
+  .work-package-table {
+    overflow-x: visible;
+  }
+
+  .hub-table-head {
+    display: none !important;
+  }
+
+  .document-data-row,
+  .cantieri-data-row,
+  .work-package-row,
+  .payment-row,
+  .accounting-detail-row,
+  .hub-doc-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.42rem;
+  }
+
+  .hub-table-row,
+  .table-row,
+  .data-row,
+  .document-row,
+  .photo-card,
+  .estimate-card,
+  .cantiere-card,
+  .recent-upload-card {
+    border-radius: 0.85rem;
+  }
+
+  .document-data-row .document-row-select {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+  }
+
+  .document-data-row > .row-menu {
+    justify-self: start;
+  }
+
+  .status-badge,
+  .data-mode-badge,
+  .file-chip {
+    min-height: 1.55rem;
+    padding: 0.22rem 0.45rem;
+    font-size: 0.61rem;
+  }
+
+  .activity-item,
+  .compact-upload-row,
+  .site-progress-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .activity-item > span:first-child {
+    display: none;
+  }
+
+  .activity-item .status-badge,
+  .compact-upload-row .status-badge,
+  .site-progress-meta,
+  .site-progress-meta .status-dot {
+    justify-self: start;
+    justify-content: flex-start;
+  }
+
+  .compact-upload-row .file-chip {
+    justify-self: start;
+  }
+
+  .detail-tabs {
+    margin-inline: 0.72rem;
+    width: calc(100% - 1.44rem);
+  }
+
+  .detail-list div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .detail-list dd {
+    text-align: left;
+  }
+
+  .row-actions .button,
+  .row-actions a,
+  .row-actions button {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .pagination-bar {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-header h1 {
+    font-size: 1.28rem;
+  }
+
+  .stat-card strong,
+  .cost-summary > div:first-child strong {
+    font-size: 1.24rem;
+  }
+
+  .button {
+    width: 100%;
+  }
+}
