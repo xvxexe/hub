@@ -3,19 +3,12 @@ import { EmptyState } from '../../components/EmptyState'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
-import { formatDate, mockCantieri } from '../../data/mockCantieri'
-import {
-  categorieContabili,
-  getAccountingAlerts,
-  getAccountingTotals,
-  getCategoryTotals,
-  getSiteAccountingSummaries,
-  mockMovimentiContabili,
-  statiVerificaContabili,
-  tipiDocumentoContabili,
-} from '../../data/mockMovimentiContabili'
 
-export function ContabilitaMock({ documents }) {
+const defaultCategories = ['Materiali', 'Manodopera', 'Non materiali', 'Extra / Altro', 'Vitto', 'Alloggi', 'FIR / Rifiuti', 'Bonifici / Pagamenti', 'Noleggi / Servizi']
+const defaultStatuses = ['Da verificare', 'Confermato', 'Incompleto', 'Possibile duplicato', 'Scartato']
+const defaultDocTypes = ['Riepilogo tab', 'Fattura', 'Bonifico', 'Ricevuta', 'FIR', 'Preventivo', 'Altro']
+
+export function ContabilitaMock({ documents = [] }) {
   const [filters, setFilters] = useState({
     cantiereId: 'tutti',
     categoria: 'tutte',
@@ -24,10 +17,11 @@ export function ContabilitaMock({ documents }) {
     search: '',
   })
 
-  const sourceRows = useMemo(
-    () => documents?.map(documentToAccountingRow) ?? mockMovimentiContabili,
-    [documents],
-  )
+  const sourceRows = useMemo(() => documents.map(documentToAccountingRow), [documents])
+  const sites = useMemo(() => buildSiteOptions(sourceRows), [sourceRows])
+  const categories = useMemo(() => buildUniqueOptions(sourceRows, 'categoria', defaultCategories), [sourceRows])
+  const statuses = useMemo(() => buildUniqueOptions(sourceRows, 'statoVerifica', defaultStatuses), [sourceRows])
+  const docTypes = useMemo(() => buildUniqueOptions(sourceRows, 'tipoDocumento', defaultDocTypes), [sourceRows])
 
   const filteredRows = useMemo(() => {
     const search = filters.search.trim().toLowerCase()
@@ -37,19 +31,18 @@ export function ContabilitaMock({ documents }) {
       const matchesCategoria = filters.categoria === 'tutte' || row.categoria === filters.categoria
       const matchesStato = filters.statoVerifica === 'tutti' || row.statoVerifica === filters.statoVerifica
       const matchesTipo = filters.tipoDocumento === 'tutti' || row.tipoDocumento === filters.tipoDocumento
-      const matchesSearch =
-        search === '' ||
-        row.descrizione.toLowerCase().includes(search) ||
-        row.fornitore.toLowerCase().includes(search) ||
-        row.numeroDocumento.toLowerCase().includes(search) ||
-        row.note.toLowerCase().includes(search)
+      const matchesSearch = search === '' || [row.descrizione, row.fornitore, row.numeroDocumento, row.note, row.cantiere]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(search)
 
       return matchesCantiere && matchesCategoria && matchesStato && matchesTipo && matchesSearch
     })
   }, [filters, sourceRows])
 
   const totals = getAccountingTotals(filteredRows)
-  const siteSummaries = getSiteAccountingSummaries(mockCantieri, filteredRows)
+  const siteSummaries = getSiteAccountingSummaries(filteredRows)
   const categoryTotals = getCategoryTotals(filteredRows)
   const alerts = getAccountingAlerts(filteredRows)
 
@@ -60,19 +53,19 @@ export function ContabilitaMock({ documents }) {
   return (
     <>
       <DashboardHeader
-        eyebrow="Contabilità mock"
+        eyebrow="Contabilità reale"
         title="Contabilità"
-        description="Movimenti, documenti, alert e riepiloghi per cantiere."
+        description="Movimenti, riepiloghi e controlli calcolati dai dati reali Supabase / BARCELO_ROMA_master."
       >
-        <DataModeBadge />
+        <DataModeBadge>Dati reali Supabase</DataModeBadge>
       </DashboardHeader>
 
-      <AccountingFilters filters={filters} onChange={updateFilter} />
+      <AccountingFilters filters={filters} onChange={updateFilter} sites={sites} categories={categories} statuses={statuses} docTypes={docTypes} />
       <AccountingSummaryCards totals={totals} />
       <AccountingAlerts alerts={alerts} />
       <AccountingTable rows={filteredRows} />
       <CantiereAccountingSummary summaries={siteSummaries} />
-      <CategoryBreakdown rows={categoryTotals} />
+      <CategoryBreakdown rows={categoryTotals} total={totals.totale} />
     </>
   )
 }
@@ -80,84 +73,58 @@ export function ContabilitaMock({ documents }) {
 function documentToAccountingRow(document) {
   return {
     id: document.id,
-    cantiereId: document.cantiereId,
+    cantiereId: document.cantiereId ?? 'barcelo-roma',
+    cantiere: document.cantiere ?? 'Barcelò Roma',
     data: document.dataDocumento,
-    descrizione: document.descrizione,
-    fornitore: document.fornitore,
-    categoria: document.categoria,
-    tipoDocumento: document.tipoDocumento,
-    numeroDocumento: document.numeroDocumento,
+    descrizione: document.descrizione ?? document.tipoDocumento ?? 'Documento',
+    fornitore: document.fornitore ?? 'Non indicato',
+    categoria: document.categoria ?? 'Extra / Altro',
+    tipoDocumento: document.tipoDocumento ?? 'Altro',
+    numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id,
     imponibile: Number(document.imponibile || 0),
     iva: Number(document.iva || 0),
-    totale: Number(document.totale || 0),
-    pagamento: document.pagamento,
-    statoVerifica: document.statoVerifica,
+    totale: Number(document.totale || document.importoTotale || 0),
+    pagamento: document.pagamento ?? 'Non indicato',
+    statoVerifica: document.statoVerifica ?? 'Da verificare',
     documentoCollegato: document.fileName,
     note: document.notes ?? document.note ?? '',
   }
 }
 
-function AccountingFilters({ filters, onChange }) {
+function AccountingFilters({ filters, onChange, sites, categories, statuses, docTypes }) {
   return (
-    <section className="accounting-filters" aria-label="Filtri contabilità">
+    <section className="accounting-filters real-accounting-filters" aria-label="Filtri contabilità">
       <label>
         Cantiere
         <select value={filters.cantiereId} onChange={(event) => onChange('cantiereId', event.target.value)}>
           <option value="tutti">Tutti</option>
-          {mockCantieri.map((cantiere) => (
-            <option key={cantiere.id} value={cantiere.id}>
-              {cantiere.nome}
-            </option>
-          ))}
+          {sites.map((cantiere) => <option key={cantiere.id} value={cantiere.id}>{cantiere.nome}</option>)}
         </select>
       </label>
       <label>
         Categoria
         <select value={filters.categoria} onChange={(event) => onChange('categoria', event.target.value)}>
           <option value="tutte">Tutte</option>
-          {categorieContabili.map((categoria) => (
-            <option key={categoria} value={categoria}>
-              {categoria}
-            </option>
-          ))}
+          {categories.map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}
         </select>
       </label>
       <label>
         Stato verifica
-        <select
-          value={filters.statoVerifica}
-          onChange={(event) => onChange('statoVerifica', event.target.value)}
-        >
+        <select value={filters.statoVerifica} onChange={(event) => onChange('statoVerifica', event.target.value)}>
           <option value="tutti">Tutti</option>
-          {statiVerificaContabili.map((stato) => (
-            <option key={stato} value={stato}>
-              {stato}
-            </option>
-          ))}
+          {statuses.map((stato) => <option key={stato} value={stato}>{stato}</option>)}
         </select>
       </label>
       <label>
         Tipo documento
-        <select
-          value={filters.tipoDocumento}
-          onChange={(event) => onChange('tipoDocumento', event.target.value)}
-        >
+        <select value={filters.tipoDocumento} onChange={(event) => onChange('tipoDocumento', event.target.value)}>
           <option value="tutti">Tutti</option>
-          {tipiDocumentoContabili.map((tipo) => (
-            <option key={tipo} value={tipo}>
-              {tipo}
-            </option>
-          ))}
+          {docTypes.map((tipo) => <option key={tipo} value={tipo}>{tipo}</option>)}
         </select>
       </label>
       <label className="accounting-search">
         Ricerca
-        <input
-          type="search"
-          value={filters.search}
-          onChange={(event) => onChange('search', event.target.value)}
-          placeholder="Descrizione, fornitore, documento..."
-        />
+        <input type="search" value={filters.search} onChange={(event) => onChange('search', event.target.value)} placeholder="Descrizione, fornitore, documento..." />
       </label>
     </section>
   )
@@ -165,7 +132,7 @@ function AccountingFilters({ filters, onChange }) {
 
 function AccountingSummaryCards({ totals }) {
   return (
-    <section className="accounting-summary-grid">
+    <section className="accounting-summary-grid real-summary-grid">
       <SummaryCard label="Totale imponibile" value={<MoneyValue value={totals.imponibile} />} />
       <SummaryCard label="Totale IVA" value={<MoneyValue value={totals.iva} />} />
       <SummaryCard label="Totale complessivo" value={<MoneyValue value={totals.totale} />} />
@@ -177,37 +144,22 @@ function AccountingSummaryCards({ totals }) {
 }
 
 function SummaryCard({ label, value }) {
-  return (
-    <article className="stat-card">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </article>
-  )
+  return <article className="stat-card"><span>{label}</span><strong>{value}</strong></article>
 }
 
 function AccountingAlerts({ alerts }) {
   return (
-    <section className="accounting-section">
-      <div className="section-heading">
-        <h2>Controlli contabili</h2>
-        <p>Alert mock derivati dai movimenti filtrati.</p>
-      </div>
+    <section className="accounting-section real-accounting-section">
+      <div className="section-heading"><h2>Controlli contabili</h2><p>Alert calcolati sui dati reali filtrati.</p></div>
       <div className="accounting-alert-grid">
-        {alerts.length > 0 ? (
-          alerts.map((alert) => (
-            <article className="accounting-alert" key={alert.id}>
-              <StatusBadge>{alert.message}</StatusBadge>
-              <strong>{alert.movimento.descrizione}</strong>
-              <small>
-                {alert.movimento.fornitore} · {alert.movimento.numeroDocumento}
-              </small>
-            </article>
-          ))
-        ) : (
-          <article className="accounting-alert">
-            <strong>Nessun alert sui filtri attuali</strong>
-            <small>I movimenti selezionati non hanno controlli aperti nei dati mock.</small>
+        {alerts.length > 0 ? alerts.map((alert) => (
+          <article className="accounting-alert" key={alert.id}>
+            <StatusBadge>{alert.message}</StatusBadge>
+            <strong>{alert.movimento.descrizione}</strong>
+            <small>{alert.movimento.fornitore} · {alert.movimento.numeroDocumento}</small>
           </article>
+        )) : (
+          <article className="accounting-alert"><strong>Nessun alert sui filtri attuali</strong><small>I movimenti selezionati non hanno controlli aperti.</small></article>
         )}
       </div>
     </section>
@@ -216,62 +168,25 @@ function AccountingAlerts({ alerts }) {
 
 function AccountingTable({ rows }) {
   return (
-    <section className="accounting-section">
-      <div className="section-heading">
-        <h2>Movimenti</h2>
-        <p>Tabella desktop e card compatte su mobile.</p>
-      </div>
+    <section className="accounting-section real-accounting-section">
+      <div className="section-heading"><h2>Movimenti</h2><p>Tabella reale con importi, IVA e stato documento.</p></div>
       {rows.length > 0 ? (
         <>
           <div className="accounting-table-wrap">
-            <table className="accounting-table">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Descrizione</th>
-                  <th>Fornitore</th>
-                  <th>Categoria</th>
-                  <th>Imponibile</th>
-                  <th>IVA</th>
-                  <th>Totale</th>
-                  <th>Pagamento</th>
-                  <th>Documento</th>
-                  <th>Stato</th>
-                  <th>Note</th>
-                  <th>Azione</th>
-                </tr>
-              </thead>
+            <table className="accounting-table real-accounting-table">
+              <thead><tr><th>Data</th><th>Descrizione</th><th>Fornitore</th><th>Categoria</th><th>Imponibile</th><th>IVA</th><th>Totale</th><th>Pagamento</th><th>Documento</th><th>Stato</th><th>Note</th><th>Azione</th></tr></thead>
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id}>
-                    <td>{formatDate(row.data)}</td>
-                    <td>{row.descrizione}</td>
-                    <td>{row.fornitore}</td>
-                    <td>{row.categoria}</td>
-                    <td><MoneyValue value={row.imponibile} /></td>
-                    <td><MoneyValue value={row.iva} /></td>
-                    <td><MoneyValue value={row.totale} /></td>
-                    <td>{row.pagamento}</td>
-                    <td>{row.tipoDocumento} {row.numeroDocumento}</td>
-                    <td><StatusBadge>{row.statoVerifica}</StatusBadge></td>
-                    <td>{row.note}</td>
-                    <td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td>
+                    <td>{formatDate(row.data)}</td><td>{row.descrizione}</td><td>{row.fornitore}</td><td>{row.categoria}</td><td><MoneyValue value={row.imponibile} /></td><td><MoneyValue value={row.iva} /></td><td><MoneyValue value={row.totale} /></td><td>{row.pagamento}</td><td>{row.tipoDocumento} {row.numeroDocumento}</td><td><StatusBadge>{row.statoVerifica}</StatusBadge></td><td>{row.note}</td><td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="accounting-mobile-list">
-            {rows.map((row) => (
-              <AccountingMobileCard key={row.id} row={row} />
-            ))}
-          </div>
+          <div className="accounting-mobile-list">{rows.map((row) => <AccountingMobileCard key={row.id} row={row} />)}</div>
         </>
-      ) : (
-        <EmptyState title="Nessun movimento trovato">
-          Modifica filtri, cantiere o ricerca per visualizzare altri movimenti contabili mock.
-        </EmptyState>
-      )}
+      ) : <EmptyState title="Nessun movimento trovato">Modifica filtri, cantiere o ricerca per visualizzare altri movimenti contabili.</EmptyState>}
     </section>
   )
 }
@@ -279,25 +194,9 @@ function AccountingTable({ rows }) {
 function AccountingMobileCard({ row }) {
   return (
     <article className="accounting-mobile-card">
-      <div className="recent-upload-title">
-        <h3>{row.descrizione}</h3>
-        <StatusBadge>{row.statoVerifica}</StatusBadge>
-      </div>
+      <div className="recent-upload-title"><h3>{row.descrizione}</h3><StatusBadge>{row.statoVerifica}</StatusBadge></div>
       <p>{row.fornitore} · {row.categoria}</p>
-      <dl className="compact-meta">
-        <div>
-          <dt>Data</dt>
-          <dd>{formatDate(row.data)}</dd>
-        </div>
-        <div>
-          <dt>Totale</dt>
-          <dd><MoneyValue value={row.totale} /></dd>
-        </div>
-        <div>
-          <dt>Pagamento</dt>
-          <dd>{row.pagamento}</dd>
-        </div>
-      </dl>
+      <dl className="compact-meta"><div><dt>Data</dt><dd>{formatDate(row.data)}</dd></div><div><dt>Totale</dt><dd><MoneyValue value={row.totale} /></dd></div><div><dt>Pagamento</dt><dd>{row.pagamento}</dd></div></dl>
       <small>{row.tipoDocumento} {row.numeroDocumento} · {row.note}</small>
       <a className="button button-secondary" href={`#/dashboard/contabilita/${row.id}`}>Apri movimento</a>
     </article>
@@ -306,37 +205,20 @@ function AccountingMobileCard({ row }) {
 
 function CantiereAccountingSummary({ summaries }) {
   return (
-    <section className="accounting-section">
-      <div className="section-heading">
-        <h2>Riepilogo per cantiere</h2>
-      </div>
-      <div className="accounting-site-grid">
+    <section className="accounting-section real-accounting-section">
+      <div className="section-heading"><h2>Riepilogo per cantiere</h2></div>
+      <div className="accounting-site-grid real-site-grid">
         {summaries.map((summary) => (
           <article className="accounting-site-card" key={summary.cantiere.id}>
             <h3>{summary.cantiere.nome}</h3>
             <dl className="detail-list">
-              <div>
-                <dt>Imponibile</dt>
-                <dd><MoneyValue value={summary.totals.imponibile} /></dd>
-              </div>
-              <div>
-                <dt>IVA</dt>
-                <dd><MoneyValue value={summary.totals.iva} /></dd>
-              </div>
-              <div>
-                <dt>Totale spese</dt>
-                <dd><MoneyValue value={summary.totals.totale} /></dd>
-              </div>
-              <div>
-                <dt>Documenti</dt>
-                <dd>{summary.movimenti.length}</dd>
-              </div>
-              <div>
-                <dt>Da verificare</dt>
-                <dd>{summary.totals.daVerificare}</dd>
-              </div>
+              <div><dt>Imponibile</dt><dd><MoneyValue value={summary.totals.imponibile} /></dd></div>
+              <div><dt>IVA</dt><dd><MoneyValue value={summary.totals.iva} /></dd></div>
+              <div><dt>Totale spese</dt><dd><MoneyValue value={summary.totals.totale} /></dd></div>
+              <div><dt>Documenti</dt><dd>{summary.movimenti.length}</dd></div>
+              <div><dt>Da verificare</dt><dd>{summary.totals.daVerificare}</dd></div>
             </dl>
-            <CategoryBreakdown rows={summary.categories} compact />
+            <CategoryBreakdown rows={summary.categories} total={summary.totals.totale} compact />
           </article>
         ))}
       </div>
@@ -344,29 +226,78 @@ function CantiereAccountingSummary({ summaries }) {
   )
 }
 
-function CategoryBreakdown({ rows, compact = false }) {
-  const max = Math.max(...rows.map((row) => row.totale), 1)
+function CategoryBreakdown({ rows, total, compact = false }) {
+  const visibleRows = rows.filter((row) => Number(row.totale || 0) > 0)
+  const max = Math.max(...visibleRows.map((row) => row.totale), 1)
 
   return (
-    <section className={compact ? 'category-breakdown compact-breakdown' : 'accounting-section'}>
-      {!compact ? (
-        <div className="section-heading">
-          <h2>Spese per categoria</h2>
-        </div>
-      ) : null}
-      <div className="category-list">
-        {rows.map((row) => (
-          <div className="category-row" key={row.categoria}>
-            <div>
-              <span>{row.categoria}</span>
-              <strong><MoneyValue value={row.totale} /></strong>
-            </div>
-            <div className="category-track">
-              <span style={{ width: `${Math.round((row.totale / max) * 100)}%` }} />
-            </div>
-          </div>
-        ))}
+    <section className={compact ? 'category-breakdown compact-breakdown compact-category-card' : 'accounting-section real-accounting-section compact-category-card'}>
+      {!compact ? <div className="section-heading"><h2>Spese per categoria</h2></div> : null}
+      <div className="compact-category-grid">
+        {visibleRows.map((row) => {
+          const percent = total > 0 ? Math.round((row.totale / total) * 100) : 0
+          const width = Math.max(6, Math.round((row.totale / max) * 100))
+          return (
+            <article className="compact-category-item" key={row.categoria}>
+              <div className="compact-category-top"><strong>{row.categoria}</strong><span><MoneyValue value={row.totale} /></span></div>
+              <div className="compact-category-bar"><span style={{ width: `${width}%` }} /></div>
+              <small>{percent}% del totale</small>
+            </article>
+          )
+        })}
       </div>
     </section>
   )
+}
+
+function getAccountingTotals(rows) {
+  return rows.reduce((acc, row) => ({
+    imponibile: acc.imponibile + row.imponibile,
+    iva: acc.iva + row.iva,
+    totale: acc.totale + row.totale,
+    daVerificare: acc.daVerificare + (row.statoVerifica === 'Da verificare' ? 1 : 0),
+    duplicati: acc.duplicati + (row.statoVerifica === 'Possibile duplicato' ? 1 : 0),
+    pagamenti: acc.pagamenti + (row.categoria === 'Bonifici / Pagamenti' || String(row.pagamento).toLowerCase().includes('bonifico') ? row.totale : 0),
+  }), { imponibile: 0, iva: 0, totale: 0, daVerificare: 0, duplicati: 0, pagamenti: 0 })
+}
+
+function getSiteAccountingSummaries(rows) {
+  return buildSiteOptions(rows).map((cantiere) => {
+    const movimenti = rows.filter((row) => row.cantiereId === cantiere.id)
+    const totals = getAccountingTotals(movimenti)
+    const categories = getCategoryTotals(movimenti)
+    return { cantiere, movimenti, totals, categories }
+  })
+}
+
+function getCategoryTotals(rows) {
+  const grouped = rows.reduce((acc, row) => ({ ...acc, [row.categoria]: (acc[row.categoria] ?? 0) + row.totale }), {})
+  return Object.entries(grouped).map(([categoria, totale]) => ({ categoria, totale })).sort((a, b) => b.totale - a.totale)
+}
+
+function getAccountingAlerts(rows) {
+  return rows.flatMap((row) => {
+    const alerts = []
+    if (row.statoVerifica === 'Da verificare') alerts.push({ id: `${row.id}-check`, message: 'Da controllare', movimento: row })
+    if (row.statoVerifica === 'Possibile duplicato') alerts.push({ id: `${row.id}-duplicate`, message: 'Duplicato', movimento: row })
+    if (row.statoVerifica === 'Incompleto') alerts.push({ id: `${row.id}-incomplete`, message: 'Incompleto', movimento: row })
+    if (Math.abs((row.imponibile + row.iva) - row.totale) > 0.01 && (row.imponibile || row.iva)) alerts.push({ id: `${row.id}-math`, message: 'Totale da verificare', movimento: row })
+    return alerts
+  })
+}
+
+function buildSiteOptions(rows) {
+  const map = new Map()
+  rows.forEach((row) => map.set(row.cantiereId, { id: row.cantiereId, nome: row.cantiere }))
+  return [...map.values()]
+}
+
+function buildUniqueOptions(rows, field, fallback) {
+  const values = [...new Set(rows.map((row) => row[field]).filter(Boolean))]
+  return values.length ? values : fallback
+}
+
+function formatDate(date) {
+  if (!date) return '-'
+  return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(date))
 }
