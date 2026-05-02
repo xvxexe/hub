@@ -62,9 +62,9 @@ export const dashboardStats = [
 ]
 
 export const mockUsers = [
-  { id: 'u-1', name: 'Gianni Europa', role: 'admin' },
-  { id: 'u-2', name: 'Capo EuropaService', role: 'admin' },
-  { id: 'u-3', name: 'Marco Ferri', role: 'employee' },
+  { id: 'u-1', name: 'Dragos Gabriel Stroe', role: 'admin', email: 'gabrielstroe09@gmail.com' },
+  { id: 'u-2', name: 'Contabile Test', role: 'accounting', email: 'contabile@europaservice.test' },
+  { id: 'u-3', name: 'Dipendente Test', role: 'employee', email: 'dipendente@europaservice.test' },
 ]
 
 export const internalProjects = [
@@ -119,7 +119,7 @@ export const accountingRows = [
 ]
 
 export const employees = [
-  { name: 'Marco Ferri', role: 'Caposquadra', currentProject: 'C-104' },
-  { name: 'Luca Moretti', role: 'Cartongessista', currentProject: 'C-104' },
-  { name: 'Sara Costa', role: 'Amministrazione', currentProject: 'Contabilita' },
+  { name: 'Dragos Gabriel Stroe', role: 'Admin / Capo', currentProject: 'Tutti i cantieri' },
+  { name: 'Contabile Test', role: 'Contabile', currentProject: 'Contabilità e documenti' },
+  { name: 'Dipendente Test', role: 'Dipendente', currentProject: 'Barcelò Roma' },
 ]
