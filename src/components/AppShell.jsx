@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { GlobalFloatingActions } from './GlobalFloatingActions'
 import { InternalIcon } from './InternalIcons'
 import { company } from '../data/mockData'
@@ -13,17 +13,18 @@ const publicMobileNav = [
   { path: '/cantieri', label: 'Progetti', description: 'Portfolio, cantieri e case study' },
   { path: '/chi-siamo', label: 'Azienda', description: 'Metodo, valori e organizzazione operativa' },
   { path: '/contatti', label: 'Contatti', description: 'Telefono, email, modulo e sopralluogo' },
-  { path: '/dashboard/login', label: 'Area privata', description: 'Accesso mock per admin, capo e dipendenti' },
+  { path: '/dashboard/login', label: 'Area privata', description: 'Accesso area privata admin, capo e dipendenti' },
 ]
 
-export function AppShell({ children, currentPath, session, onLogout, onRoleChange, roles }) {
+export function AppShell({ children, currentPath, session, onLogout, onRoleChange, roles, dataStore }) {
   const isDashboard = currentPath.startsWith('/dashboard')
   const visibleDashboardNav = session ? getDashboardNavForRole(session.role) : []
   const activeRole = session ? getRole(session.role) : null
   const [activeTopbarPanel, setActiveTopbarPanel] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSidebarCompact, setIsSidebarCompact] = useState(false)
-  const searchResults = getInternalSearchResults(searchQuery, visibleDashboardNav)
+  const searchResults = getInternalSearchResults(searchQuery, visibleDashboardNav, dataStore)
+  const notifications = useMemo(() => buildNotifications(dataStore), [dataStore])
 
   function toggleTopbarPanel(panel) {
     setActiveTopbarPanel((current) => (current === panel ? null : panel))
@@ -70,7 +71,7 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
                   ))}
                 </nav>
                 <div className="dev-role-panel">
-                  <label htmlFor="dev-role">Ruolo mock</label>
+                  <label htmlFor="dev-role">Ruolo</label>
                   <select
                     id="dev-role"
                     value={session.role}
@@ -83,13 +84,13 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
                     ))}
                   </select>
                   <button className="sidebar-button" type="button" onClick={onLogout}>
-                    Esci mock
+                    Esci
                   </button>
                 </div>
               </>
             ) : (
               <a className="sidebar-button" href="#/dashboard/login">
-                Login mock
+                Login
               </a>
             )}
           </aside>
@@ -126,7 +127,7 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
                     {searchResults.length > 0 ? searchResults.map((item) => (
                       <a
                         href={`#${item.path}`}
-                        key={item.path}
+                        key={`${item.path}-${item.label}`}
                         onClick={() => {
                           setSearchQuery('')
                           setActiveTopbarPanel(null)
@@ -148,7 +149,7 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
                 {session ? (
                   <div className="topbar-popover-wrap">
                     <button
-                      className="icon-button with-dot"
+                      className={notifications.count > 0 ? 'icon-button with-dot' : 'icon-button'}
                       type="button"
                       aria-expanded={activeTopbarPanel === 'notifications'}
                       aria-label="Notifiche"
@@ -158,18 +159,17 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
                     </button>
                     {activeTopbarPanel === 'notifications' ? (
                       <TopbarPanel title="Notifiche">
-                        <a href="#/dashboard/documenti" onClick={() => setActiveTopbarPanel(null)}>
-                          <strong>7 documenti da controllare</strong>
-                          <small>Fatture, ricevute e DDT in attesa di verifica.</small>
-                        </a>
-                        <a href="#/dashboard/cantieri" onClick={() => setActiveTopbarPanel(null)}>
-                          <strong>2 cantieri con criticità</strong>
-                          <small>Controlla avanzamento e scadenze operative.</small>
-                        </a>
-                        <a href="#/dashboard/contabilita" onClick={() => setActiveTopbarPanel(null)}>
-                          <strong>5 pagamenti in attesa</strong>
-                          <small>Bonifici e collegamenti spesa da rivedere.</small>
-                        </a>
+                        {notifications.items.length > 0 ? notifications.items.map((item) => (
+                          <a href={`#${item.path}`} key={item.title} onClick={() => setActiveTopbarPanel(null)}>
+                            <strong>{item.title}</strong>
+                            <small>{item.description}</small>
+                          </a>
+                        )) : (
+                          <article className="topbar-empty-state">
+                            <strong>Nessuna criticità aperta</strong>
+                            <small>I dati reali Supabase non hanno notifiche da mostrare.</small>
+                          </article>
+                        )}
                       </TopbarPanel>
                     ) : null}
                   </div>
@@ -189,7 +189,7 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
                       <TopbarPanel title="Help rapido">
                         <a href="#/dashboard/upload" onClick={() => setActiveTopbarPanel(null)}>
                           <strong>Caricare documenti o foto</strong>
-                          <small>Usa Upload per simulare un caricamento da cantiere.</small>
+                          <small>Usa Upload per aggiungere dati reali nello store Supabase.</small>
                         </a>
                         <a href="#/dashboard/documenti" onClick={() => setActiveTopbarPanel(null)}>
                           <strong>Verificare un documento</strong>
@@ -197,7 +197,7 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
                         </a>
                         <a href="#/dashboard/report" onClick={() => setActiveTopbarPanel(null)}>
                           <strong>Preparare un report</strong>
-                          <small>La pagina Report mostra la vista mock pronta per PDF.</small>
+                          <small>La pagina Report usa i dati reali presenti in Supabase.</small>
                         </a>
                       </TopbarPanel>
                     ) : null}
@@ -290,6 +290,56 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
   )
 }
 
+function buildNotifications(dataStore) {
+  const documents = dataStore?.documents ?? []
+  const estimates = dataStore?.estimates ?? []
+  const photos = dataStore?.photos ?? []
+  const toCheck = documents.filter((doc) => ['Da verificare', 'Incompleto', 'Possibile duplicato'].includes(doc.statoVerifica))
+  const toClassify = documents.filter((doc) => String(doc.categoria ?? '').toLowerCase().includes('classificare'))
+  const pendingPayments = documents.filter((doc) => String(doc.categoria ?? '').toLowerCase().includes('bonifici') || String(doc.pagamento ?? '').toLowerCase().includes('da'))
+  const photoReviews = photos.filter((photo) => ['Da revisionare', 'Non pubblicabile'].includes(photo.stato))
+  const estimateReviews = estimates.filter((estimate) => ['Nuovo', 'Da valutare', 'Contattato'].includes(estimate.status))
+
+  const items = []
+  if (toCheck.length) {
+    items.push({
+      path: '/dashboard/documenti',
+      title: `${toCheck.length} documenti da controllare`,
+      description: 'Documenti reali con stato da verificare, incompleto o duplicato.',
+    })
+  }
+  if (toClassify.length) {
+    items.push({
+      path: '/dashboard/contabilita',
+      title: `${toClassify.length} righe da classificare`,
+      description: 'Categorie o tab contabili da verificare nel master.',
+    })
+  }
+  if (pendingPayments.length) {
+    items.push({
+      path: '/dashboard/contabilita',
+      title: `${pendingPayments.length} pagamenti / bonifici da rivedere`,
+      description: 'Righe reali con pagamento o categoria da collegare.',
+    })
+  }
+  if (photoReviews.length) {
+    items.push({
+      path: '/dashboard/foto',
+      title: `${photoReviews.length} foto da revisionare`,
+      description: 'Foto reali in attesa di approvazione o pubblicazione.',
+    })
+  }
+  if (estimateReviews.length) {
+    items.push({
+      path: '/dashboard/preventivi',
+      title: `${estimateReviews.length} preventivi da seguire`,
+      description: 'Richieste preventivo reali ancora aperte.',
+    })
+  }
+
+  return { count: items.length, items }
+}
+
 function TopbarPanel({ title, children }) {
   return (
     <section className="topbar-popover">
@@ -317,20 +367,26 @@ function getNavIcon(label) {
   return <InternalIcon name={icons[label] ?? 'file'} size={17} />
 }
 
-function getInternalSearchResults(query, navItems) {
+function getInternalSearchResults(query, navItems, dataStore) {
   const normalized = query.trim().toLowerCase()
   if (!normalized) return []
 
-  const extraItems = [
-    { label: 'Barcelo Roma', path: '/dashboard/cantieri/barcelo-roma', description: 'Cantiere · Hospitality · In corso' },
-    { label: 'Residenza Verdi', path: '/dashboard/cantieri/residenza-verdi', description: 'Cantiere · Residenziale · Verifiche aperte' },
-    { label: 'Fattura eurofer 0428', path: '/dashboard/documenti/doc-eurofer-0428', description: 'Documento · Da controllare' },
-    { label: 'Report PDF', path: '/dashboard/report', description: 'Report cantieri e contabilità mock' },
-  ]
+  const documents = (dataStore?.documents ?? []).slice(0, 8).map((doc) => ({
+    label: doc.numeroDocumento ?? doc.descrizione ?? 'Documento',
+    path: `/dashboard/documenti/${doc.id}`,
+    description: `${doc.cantiere ?? 'Cantiere'} · ${doc.fornitore ?? 'Fornitore'} · ${doc.statoVerifica ?? 'Stato'}`,
+  }))
+
+  const sites = [...new Map((dataStore?.documents ?? []).map((doc) => [doc.cantiereId ?? 'barcelo-roma', {
+    label: doc.cantiere ?? 'Barcelò Roma',
+    path: `/dashboard/cantieri/${doc.cantiereId ?? 'barcelo-roma'}`,
+    description: 'Cantiere reale da Supabase',
+  }])).values()]
 
   return [
     ...navItems.map((item) => ({ ...item, description: `Vai a ${item.label}` })),
-    ...extraItems,
+    ...sites,
+    ...documents,
   ].filter((item) =>
     item.label.toLowerCase().includes(normalized) ||
     item.description.toLowerCase().includes(normalized),
