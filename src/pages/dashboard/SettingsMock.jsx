@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { StatusBadge } from '../../components/StatusBadge'
 import {
@@ -6,10 +6,88 @@ import {
   importGoogleSheetsToSupabase,
   isGoogleSheetsSyncConfigured,
 } from '../../lib/googleSheetsSync'
+import { supabaseRequest } from '../../lib/supabaseClient'
 
-export function SettingsMock() {
+const roleOptions = [
+  { value: 'employee', label: 'Dipendente' },
+  { value: 'accounting', label: 'Contabile' },
+  { value: 'admin', label: 'Admin' },
+]
+
+export function SettingsMock({ session }) {
   const [syncStatus, setSyncStatus] = useState(null)
   const [isRunning, setIsRunning] = useState(false)
+  const [inviteStatus, setInviteStatus] = useState(null)
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [invitations, setInvitations] = useState([])
+  const [inviteForm, setInviteForm] = useState({
+    email: '',
+    fullName: '',
+    role: 'employee',
+  })
+  const isAdmin = session?.role === 'admin'
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadInvitations()
+    }
+  }, [isAdmin])
+
+  async function loadInvitations() {
+    const result = await supabaseRequest('invitations?select=id,email,full_name,role,status,created_at&order=created_at.desc', {
+      method: 'GET',
+    })
+
+    if (result.error) {
+      setInviteStatus({ type: 'error', message: result.error.message })
+      return
+    }
+
+    setInvitations(Array.isArray(result.data) ? result.data : [])
+  }
+
+  async function createInvite(event) {
+    event.preventDefault()
+    setInviteStatus(null)
+
+    if (!isAdmin) {
+      setInviteStatus({ type: 'error', message: 'Solo un admin può preparare inviti.' })
+      return
+    }
+
+    const email = inviteForm.email.trim().toLowerCase()
+    const fullName = inviteForm.fullName.trim()
+
+    if (!email || !fullName) {
+      setInviteStatus({ type: 'error', message: 'Email e nome completo sono obbligatori.' })
+      return
+    }
+
+    setInviteLoading(true)
+    const result = await supabaseRequest('invitations', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        full_name: fullName,
+        role: inviteForm.role,
+        invited_by: session.id,
+        status: 'pending',
+      }),
+    })
+    setInviteLoading(false)
+
+    if (result.error) {
+      setInviteStatus({ type: 'error', message: result.error.message })
+      return
+    }
+
+    setInviteForm({ email: '', fullName: '', role: 'employee' })
+    setInviteStatus({
+      type: 'success',
+      message: 'Invito preparato. Ora crea lo stesso utente in Supabase Auth e poi collegalo al profilo/ruolo indicato.',
+    })
+    await loadInvitations()
+  }
 
   async function runImport() {
     setIsRunning(true)
@@ -39,11 +117,87 @@ export function SettingsMock() {
     <>
       <DashboardHeader
         eyebrow="Impostazioni"
-        title="Sincronizzazione dati"
-        description="Gestisci il collegamento operativo tra sito, Supabase e BARCELO_ROMA_master Google Sheets."
+        title="Impostazioni e accessi"
+        description="Gestisci sincronizzazione dati, accessi reali Supabase e inviti per nuovi utenti dell’area privata."
       >
         <DataModeBadge>{isGoogleSheetsSyncConfigured ? 'Sync configurabile' : 'Sync da configurare'}</DataModeBadge>
       </DashboardHeader>
+
+      {isAdmin ? (
+        <section className="internal-panel internal-padded">
+          <div className="section-heading panel-title-row">
+            <div>
+              <h2>Invita persone</h2>
+              <p>Prepara un nuovo accesso con ruolo corretto. Il ruolo non si cambia più manualmente dalla UI: viene letto da Supabase.</p>
+            </div>
+            <StatusBadge>Solo admin</StatusBadge>
+          </div>
+
+          <form className="admin-invite-form" onSubmit={createInvite}>
+            <label>
+              Nome completo
+              <input
+                type="text"
+                placeholder="Es. Mario Rossi"
+                value={inviteForm.fullName}
+                onChange={(event) => setInviteForm((current) => ({ ...current, fullName: event.target.value }))}
+              />
+            </label>
+            <label>
+              Email
+              <input
+                type="email"
+                placeholder="nome@azienda.it"
+                value={inviteForm.email}
+                onChange={(event) => setInviteForm((current) => ({ ...current, email: event.target.value }))}
+              />
+            </label>
+            <label>
+              Ruolo
+              <select
+                value={inviteForm.role}
+                onChange={(event) => setInviteForm((current) => ({ ...current, role: event.target.value }))}
+              >
+                {roleOptions.map((role) => (
+                  <option key={role.value} value={role.value}>{role.label}</option>
+                ))}
+              </select>
+            </label>
+            <div className="full-row">
+              <button className="button button-primary" type="submit" disabled={inviteLoading}>
+                {inviteLoading ? 'Creo invito...' : 'Prepara invito'}
+              </button>
+            </div>
+          </form>
+
+          {inviteStatus ? (
+            <p className="role-description login-error">{inviteStatus.message}</p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {isAdmin ? (
+        <section className="internal-panel internal-padded">
+          <div className="section-heading panel-title-row">
+            <h2>Inviti preparati</h2>
+            <StatusBadge>{invitations.length} totali</StatusBadge>
+          </div>
+          <div className="admin-invite-list">
+            {invitations.length > 0 ? invitations.map((invite) => (
+              <article className="admin-invite-row" key={invite.id}>
+                <div>
+                  <strong>{invite.full_name}</strong>
+                  <small>{invite.email}</small>
+                </div>
+                <StatusBadge>{roleOptions.find((role) => role.value === invite.role)?.label ?? invite.role}</StatusBadge>
+                <StatusBadge>{invite.status}</StatusBadge>
+              </article>
+            )) : (
+              <p>Nessun invito preparato.</p>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <section className="internal-two-column internal-padded">
         <article className="internal-panel">
