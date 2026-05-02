@@ -39,7 +39,7 @@ export async function importGoogleSheetsToSupabase() {
   }
 }
 
-export async function exportSupabaseToGoogleSheets() {
+export async function exportSupabaseToGoogleSheets(storeOverride = null) {
   if (!isGoogleSheetsSyncConfigured) {
     return {
       ok: false,
@@ -47,14 +47,13 @@ export async function exportSupabaseToGoogleSheets() {
     }
   }
 
-  const remote = await fetchRemoteStore()
-  if (remote.error) return { ok: false, error: remote.error.message }
-  if (!remote.data) return { ok: false, error: 'Nessun dato Supabase da esportare.' }
+  const store = storeOverride ?? await loadRemoteStore()
+  if (!store) return { ok: false, error: 'Nessun dato Supabase da esportare.' }
 
   const response = await fetch(syncUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'export', store: remote.data }),
+    body: JSON.stringify({ action: 'export', store }),
   })
 
   const payload = await parseJsonResponse(response)
@@ -65,11 +64,17 @@ export async function exportSupabaseToGoogleSheets() {
   return {
     ok: true,
     summary: payload.summary ?? {
-      documents: remote.data.documents?.length ?? 0,
-      photos: remote.data.photos?.length ?? 0,
-      estimates: remote.data.estimates?.length ?? 0,
+      documents: store.documents?.length ?? 0,
+      photos: store.photos?.length ?? 0,
+      estimates: store.estimates?.length ?? 0,
     },
   }
+}
+
+async function loadRemoteStore() {
+  const remote = await fetchRemoteStore()
+  if (remote.error) throw remote.error
+  return remote.data
 }
 
 async function parseJsonResponse(response) {
