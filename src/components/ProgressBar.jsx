@@ -1,10 +1,12 @@
-export function ProgressBar({ value }) {
+export function ProgressBar({ value, showLabel = true }) {
   return (
     <div className="progress-block" aria-label={`Avanzamento ${value}%`}>
-      <div className="progress-label">
-        <span>Avanzamento</span>
-        <strong>{value}%</strong>
-      </div>
+      {showLabel ? (
+        <div className="progress-label">
+          <span>Avanzamento</span>
+          <strong>{value}%</strong>
+        </div>
+      ) : null}
       <div className="progress-track">
         <span style={{ width: `${value}%` }} />
       </div>
