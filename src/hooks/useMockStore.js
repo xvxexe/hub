@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { importGoogleSheetsToSupabase, exportSupabaseToGoogleSheets, isGoogleSheetsSyncConfigured } from '../lib/googleSheetsSync'
 import { isSupabaseConfigured } from '../lib/supabaseClient'
 import { fetchRemoteStore, saveRemoteStore } from '../lib/supabaseStore'
 
@@ -31,6 +32,17 @@ export function useMockStore(session) {
       if (!isSupabaseConfigured) return
 
       try {
+        if (isGoogleSheetsSyncConfigured) {
+          setSyncState({ status: 'syncing-sheets', error: null })
+          const sheetsImport = await importGoogleSheetsToSupabase()
+          if (!cancelled && sheetsImport.ok && sheetsImport.store) {
+            setStore(sheetsImport.store)
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sheetsImport.store))
+            setSyncState({ status: 'supabase', error: null })
+            return
+          }
+        }
+
         const remote = await fetchRemoteStore()
         if (cancelled) return
 
@@ -69,6 +81,14 @@ export function useMockStore(session) {
     if (saved.error) {
       setSyncState({ status: 'error', error: saved.error.message })
       return
+    }
+
+    if (saved.source === 'supabase' && isGoogleSheetsSyncConfigured) {
+      const exported = await exportSupabaseToGoogleSheets(nextStore)
+      if (!exported.ok) {
+        setSyncState({ status: 'error', error: exported.error })
+        return
+      }
     }
 
     setSyncState({ status: saved.source === 'supabase' ? 'supabase' : 'local', error: null })
