@@ -172,6 +172,34 @@ function buildAppSession(user, profile, authSession) {
   }
 }
 
+export async function inviteUserFromAdmin({ email, fullName, role }) {
+  const session = getStoredAuthSession()
+  if (!session?.access_token) {
+    return { data: null, error: new Error('Sessione admin non valida'), source: 'local' }
+  }
+
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/invite-user`, {
+      method: 'POST',
+      headers: {
+        ...authHeaders(session.access_token),
+      },
+      body: JSON.stringify({ email, full_name: fullName, role }),
+    })
+
+    const text = await response.text()
+    const data = text ? JSON.parse(text) : null
+
+    if (!response.ok) {
+      return { data: null, error: new Error(data?.error || `Invite error ${response.status}`), source: 'supabase' }
+    }
+
+    return { data, error: null, source: 'supabase' }
+  } catch (error) {
+    return { data: null, error, source: 'supabase' }
+  }
+}
+
 export async function supabaseRequest(path, options = {}) {
   if (!isSupabaseConfigured) {
     return { data: null, error: null, source: 'local' }
