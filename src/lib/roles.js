@@ -4,7 +4,7 @@ export const roleConfig = {
     label: 'Admin / Capo',
     shortLabel: 'Admin',
     description:
-      'Vede tutta l’area interna mock: cantieri, documenti, foto, upload, caricamenti, preventivi, contabilità, dipendenti e impostazioni.',
+      'Accesso completo: cantieri, documenti, foto, upload, caricamenti, preventivi, contabilità, dipendenti e impostazioni.',
     permissions: [
       'view:all',
       'view:site-publication',
@@ -13,6 +13,7 @@ export const roleConfig = {
       'view:settings',
       'upload:photos',
       'upload:documents',
+      'manage:users',
     ],
     menu: [
       { label: 'Dashboard', path: '/dashboard' },
@@ -28,12 +29,33 @@ export const roleConfig = {
       { label: 'Impostazioni', path: '/dashboard/impostazioni' },
     ],
   },
+  accounting: {
+    id: 'accounting',
+    label: 'Contabile',
+    shortLabel: 'Contabile',
+    description:
+      'Gestisce documenti, contabilità, report e verifiche amministrative senza modificare utenti o impostazioni critiche.',
+    permissions: [
+      'view:accounting',
+      'view:documents',
+      'view:reports',
+      'upload:documents',
+    ],
+    menu: [
+      { label: 'Dashboard', path: '/dashboard' },
+      { label: 'Upload', path: '/dashboard/upload' },
+      { label: 'Caricamenti', path: '/dashboard/caricamenti' },
+      { label: 'Documenti', path: '/dashboard/documenti' },
+      { label: 'Contabilita', path: '/dashboard/contabilita' },
+      { label: 'Report', path: '/dashboard/report' },
+    ],
+  },
   employee: {
     id: 'employee',
     label: 'Dipendente',
     shortLabel: 'Dipendente',
     description:
-      'Vede una dashboard semplice e può caricare solo foto, documenti e note operative mock.',
+      'Accesso operativo limitato: upload foto/documenti, note operative e propri caricamenti.',
     permissions: ['upload:photos', 'upload:documents', 'view:own-uploads'],
     menu: [
       { label: 'Dashboard', path: '/dashboard' },
@@ -46,7 +68,7 @@ export const roleConfig = {
 export const roles = Object.values(roleConfig)
 
 export function getRole(roleId) {
-  return roleConfig[roleId] ?? roleConfig.admin
+  return roleConfig[roleId] ?? roleConfig.employee
 }
 
 export function getDashboardNavForRole(roleId) {
