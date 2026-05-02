@@ -1,7 +1,10 @@
-const fallbackSupabaseUrl = ['https://qmdwfdfmhhhghykfahfo', 'supabase', 'co'].join('.')
+const fallbackProjectRef = 'qmdwfdfmhhhghykfahfo'
+const fallbackSupabaseUrl = `https://${fallbackProjectRef}.supabase.co`
+const fallbackSupabaseFunctionsUrl = `https://${fallbackProjectRef}.functions.supabase.co`
 const fallbackSupabaseAnonKey = 'sb_publishable_raEK7djY88sSILLUQ821Aw_LasJfO6x'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || fallbackSupabaseUrl
+const supabaseFunctionsUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL || fallbackSupabaseFunctionsUrl
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? fallbackSupabaseAnonKey
 
 const AUTH_STORAGE_KEY = 'europaservice-auth-session-v001'
@@ -179,7 +182,7 @@ export async function inviteUserFromAdmin({ email, fullName, role }) {
   }
 
   try {
-    const response = await fetch(`${supabaseUrl}/functions/v1/invite-user`, {
+    const response = await fetch(`${supabaseFunctionsUrl}/invite-user`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${session.access_token}`,
@@ -197,7 +200,7 @@ export async function inviteUserFromAdmin({ email, fullName, role }) {
 
     return { data, error: null, source: 'supabase' }
   } catch (error) {
-    return { data: null, error, source: 'supabase' }
+    return { data: null, error: new Error(`${error.message}. Endpoint: ${supabaseFunctionsUrl}/invite-user`), source: 'supabase' }
   }
 }
 
