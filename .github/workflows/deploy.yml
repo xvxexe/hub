@@ -36,6 +36,7 @@ jobs:
           GITHUB_PAGES: 'true'
           VITE_SUPABASE_URL: 'https://qmdwfdfmhhhghykfahfo.supabase.co'
           VITE_SUPABASE_ANON_KEY: 'sb_publishable_raEK7djY88sSILLUQ821Aw_LasJfO6x'
+          VITE_GOOGLE_SHEETS_SYNC_URL: 'https://script.google.com/macros/s/AKfycbw-QeSDBIIShY3CaI4Ra10NdBA1XWcl9LBhupHkHVITCgBt3XcqsIh8xNSj3Ox3vM7y4w/exec'
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
