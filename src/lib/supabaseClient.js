@@ -182,7 +182,8 @@ export async function inviteUserFromAdmin({ email, fullName, role }) {
     const response = await fetch(`${supabaseUrl}/functions/v1/invite-user`, {
       method: 'POST',
       headers: {
-        ...authHeaders(session.access_token),
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, full_name: fullName, role }),
     })
