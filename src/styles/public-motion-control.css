@@ -1,0 +1,214 @@
+/*
+  Controllo generale animazioni sito pubblico.
+  Layer finale caricato dopo public-polish.css.
+*/
+
+:root {
+  --motion-slow: 2.4s;
+  --motion-medium: 1.8s;
+  --motion-image: 3s;
+  --motion-reveal: 1.9s;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-hover: cubic-bezier(0.33, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .premium-animate-item,
+  .premium-scroll-reveal,
+  .premium-section-heading,
+  .premium-split-copy,
+  .premium-split-image,
+  .premium-service-card,
+  .premium-project-card,
+  .premium-card,
+  .premium-stats article,
+  .premium-process article,
+  .premium-key-facts article,
+  .premium-timeline article,
+  .premium-faq details,
+  .premium-final-cta,
+  .premium-case-split article,
+  .premium-contact-intro-card,
+  .premium-map-card,
+  .premium-form {
+    animation-duration: var(--motion-reveal) !important;
+    animation-timing-function: var(--motion-ease) !important;
+  }
+
+  .premium-scroll-reveal {
+    animation-range: entry 0% cover 42% !important;
+  }
+
+  .premium-animate-item:nth-child(1) { animation-delay: 0.10s !important; }
+  .premium-animate-item:nth-child(2) { animation-delay: 0.24s !important; }
+  .premium-animate-item:nth-child(3) { animation-delay: 0.38s !important; }
+  .premium-animate-item:nth-child(4) { animation-delay: 0.52s !important; }
+  .premium-animate-item:nth-child(5) { animation-delay: 0.66s !important; }
+
+  .premium-image-split,
+  .premium-case-split,
+  .premium-contact-layout,
+  .premium-section,
+  .premium-section-heading,
+  .premium-split-copy,
+  .premium-service-card,
+  .premium-project-card,
+  .premium-card,
+  .premium-stats article,
+  .premium-process article,
+  .premium-key-facts article,
+  .premium-metric-panel,
+  .premium-faq details,
+  .premium-timeline article,
+  .premium-final-cta,
+  .premium-case-split article,
+  .premium-contact-intro-card,
+  .premium-map-card,
+  .premium-form,
+  .premium-featured-project {
+    transition-property: transform, box-shadow, border-color, background-color, background, opacity, filter !important;
+    transition-duration: var(--motion-slow), var(--motion-slow), var(--motion-slow), var(--motion-slow), var(--motion-slow), var(--motion-slow), var(--motion-slow) !important;
+    transition-timing-function: var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover) !important;
+  }
+
+  .premium-service-card:hover,
+  .premium-project-card:hover,
+  .premium-card:hover,
+  .premium-stats article:hover,
+  .premium-process article:hover,
+  .premium-key-facts article:hover,
+  .premium-metric-panel:hover,
+  .premium-faq details:hover,
+  .premium-timeline article:hover,
+  .premium-case-split article:hover,
+  .premium-contact-intro-card:hover,
+  .premium-map-card:hover,
+  .premium-form:hover {
+    transform: translateY(-6px) scale(1.006) !important;
+    transition-duration: var(--motion-slow) !important;
+    transition-timing-function: var(--motion-ease-hover) !important;
+  }
+
+  .premium-image-split:hover .premium-split-copy,
+  .premium-image-split:hover .premium-split-image,
+  .premium-case-split:hover article,
+  .premium-contact-layout:hover .premium-contact-intro-card,
+  .premium-contact-layout:hover .premium-form {
+    transition-duration: var(--motion-slow) !important;
+    transition-timing-function: var(--motion-ease-hover) !important;
+  }
+
+  .premium-hero-bg,
+  .premium-service-image,
+  .premium-project-image,
+  .premium-gallery-image,
+  .premium-split-image,
+  img[class*='premium-'] {
+    transition-property: transform, filter, opacity !important;
+    transition-duration: var(--motion-image), var(--motion-image), var(--motion-image) !important;
+    transition-timing-function: var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover) !important;
+  }
+
+  .premium-service-card:hover .premium-service-image,
+  .premium-project-card:hover .premium-project-image,
+  .premium-image-split:hover .premium-split-image,
+  .premium-gallery-image:hover,
+  .premium-split-image:hover {
+    transform: scale(1.055) !important;
+    filter: saturate(1.08) contrast(1.035) brightness(1.015) !important;
+    transition-duration: var(--motion-image) !important;
+  }
+
+  .premium-button,
+  .premium-card-arrow,
+  .premium-tags small,
+  .premium-sector-row span,
+  .premium-logo-row span,
+  .premium-filter-pills button,
+  .premium-icon,
+  .service-icon,
+  .step-number,
+  .top-nav a,
+  .nav-cta,
+  .nav-private,
+  .mobile-menu-links a,
+  .mobile-menu-cta-panel {
+    transition-property: transform, box-shadow, background-color, background, border-color, color, opacity !important;
+    transition-duration: var(--motion-medium), var(--motion-medium), var(--motion-medium), var(--motion-medium), var(--motion-medium), var(--motion-medium), var(--motion-medium) !important;
+    transition-timing-function: var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover) !important;
+  }
+
+  .premium-button:active,
+  .premium-card-arrow:active,
+  .premium-filter-pills button:active,
+  .mobile-menu-button:active {
+    transition-duration: 0.16s !important;
+  }
+
+  .premium-hero-bg {
+    animation-duration: 48s !important;
+  }
+
+  .premium-chip-marquee-track,
+  .premium-hero-meta-track {
+    animation-duration: 60s !important;
+  }
+
+  .premium-chip-marquee-slow .premium-chip-marquee-track {
+    animation-duration: 78s !important;
+  }
+
+  .premium-tags small,
+  .premium-filter-pills button {
+    animation-duration: 11s !important;
+  }
+
+  .premium-scroll-hint span {
+    animation-duration: 3.2s !important;
+  }
+
+  .premium-stats strong,
+  .premium-key-facts strong,
+  .premium-metric-panel strong,
+  .hero-panel strong {
+    animation-duration: 10s !important;
+  }
+}
+
+@media (max-width: 640px) and (prefers-reduced-motion: no-preference) {
+  :root {
+    --motion-slow: 1.85s;
+    --motion-medium: 1.25s;
+    --motion-image: 2.25s;
+    --motion-reveal: 1.45s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-animate-item,
+  .premium-scroll-reveal,
+  .premium-section-heading,
+  .premium-split-copy,
+  .premium-split-image,
+  .premium-service-card,
+  .premium-project-card,
+  .premium-card,
+  .premium-stats article,
+  .premium-process article,
+  .premium-key-facts article,
+  .premium-timeline article,
+  .premium-faq details,
+  .premium-final-cta,
+  .premium-case-split article,
+  .premium-contact-intro-card,
+  .premium-map-card,
+  .premium-form,
+  .premium-hero-bg,
+  .premium-chip-marquee-track,
+  .premium-hero-meta-track,
+  .premium-tags small,
+  .premium-filter-pills button {
+    animation: none !important;
+    transition: none !important;
+  }
+}
