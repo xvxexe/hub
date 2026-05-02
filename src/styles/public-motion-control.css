@@ -1,280 +1,178 @@
 /*
-  Controllo generale animazioni sito pubblico.
-  Layer finale caricato dopo public-polish.css.
+  CONTROLLO FINALE ANIMAZIONI PUBBLICHE
+  File caricato per ultimo. Regole volutamente semplici e aggressive.
 */
 
 :root {
-  --motion-slow: 2.8s;
-  --motion-medium: 2s;
-  --motion-image: 3.2s;
-  --motion-reveal: 2s;
-  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --motion-ease-hover: cubic-bezier(0.33, 0, 0.2, 1);
+  --public-slow-motion: 4s;
+  --public-medium-motion: 2.6s;
+  --public-image-motion: 4.5s;
+  --public-smooth-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .premium-animate-item,
-  .premium-scroll-reveal,
-  .premium-section-heading,
-  .premium-split-copy,
-  .premium-split-image,
-  .premium-service-card,
-  .premium-project-card,
-  .premium-card,
-  .premium-stats article,
-  .premium-process article,
-  .premium-key-facts article,
-  .premium-timeline article,
-  .premium-faq details,
-  .premium-final-cta,
-  .premium-case-split article,
-  .premium-contact-intro-card,
-  .premium-map-card,
-  .premium-form {
-    animation-duration: var(--motion-reveal) !important;
-    animation-timing-function: var(--motion-ease) !important;
+  /* Contenitori principali */
+  main .premium-card,
+  main .premium-service-card,
+  main .premium-project-card,
+  main .premium-stats article,
+  main .premium-process article,
+  main .premium-key-facts article,
+  main .premium-metric-panel,
+  main .premium-faq details,
+  main .premium-timeline article,
+  main .premium-case-split article,
+  main .premium-contact-intro-card,
+  main .premium-map-card,
+  main .premium-form,
+  main .premium-final-cta,
+  main .premium-split-copy,
+  main .premium-section-heading {
+    transition: transform var(--public-slow-motion) var(--public-smooth-ease),
+      box-shadow var(--public-slow-motion) var(--public-smooth-ease),
+      border-color var(--public-slow-motion) var(--public-smooth-ease),
+      background var(--public-slow-motion) var(--public-smooth-ease),
+      opacity var(--public-slow-motion) var(--public-smooth-ease),
+      filter var(--public-slow-motion) var(--public-smooth-ease) !important;
+    will-change: transform, box-shadow, border-color, background;
   }
 
-  .premium-scroll-reveal {
-    animation-range: entry 0% cover 42% !important;
-  }
-
-  .premium-animate-item:nth-child(1) { animation-delay: 0.10s !important; }
-  .premium-animate-item:nth-child(2) { animation-delay: 0.24s !important; }
-  .premium-animate-item:nth-child(3) { animation-delay: 0.38s !important; }
-  .premium-animate-item:nth-child(4) { animation-delay: 0.52s !important; }
-  .premium-animate-item:nth-child(5) { animation-delay: 0.66s !important; }
-
-  .premium-image-split,
-  .premium-case-split,
-  .premium-contact-layout,
-  .premium-section,
-  .premium-section-heading,
-  .premium-split-copy,
-  .premium-service-card,
-  .premium-project-card,
-  .premium-card,
-  .premium-stats article,
-  .premium-process article,
-  .premium-key-facts article,
-  .premium-metric-panel,
-  .premium-faq details,
-  .premium-timeline article,
-  .premium-final-cta,
-  .premium-case-split article,
-  .premium-contact-intro-card,
-  .premium-map-card,
-  .premium-form,
-  .premium-featured-project {
-    transition-property: transform, box-shadow, border-color, background-color, background, opacity, filter !important;
-    transition-duration: var(--motion-slow), var(--motion-slow), var(--motion-slow), var(--motion-slow), var(--motion-slow), var(--motion-slow), var(--motion-slow) !important;
-    transition-timing-function: var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover) !important;
-  }
-
-  .premium-service-card:hover,
-  .premium-project-card:hover,
-  .premium-card:hover,
-  .premium-stats article:hover,
-  .premium-process article:hover,
-  .premium-key-facts article:hover,
-  .premium-metric-panel:hover,
-  .premium-faq details:hover,
-  .premium-timeline article:hover,
-  .premium-case-split article:hover,
-  .premium-contact-intro-card:hover,
-  .premium-map-card:hover,
-  .premium-form:hover {
-    transform: translateY(-6px) scale(1.006) !important;
-    transition-duration: var(--motion-slow) !important;
-    transition-timing-function: var(--motion-ease-hover) !important;
-  }
-
-  .premium-image-split:hover .premium-split-copy,
-  .premium-image-split:hover .premium-split-image,
-  .premium-case-split:hover article,
-  .premium-contact-layout:hover .premium-contact-intro-card,
-  .premium-contact-layout:hover .premium-form {
-    transition-duration: var(--motion-slow) !important;
-    transition-timing-function: var(--motion-ease-hover) !important;
-  }
-
-  .premium-hero-bg,
-  .premium-service-image,
-  .premium-project-image,
-  .premium-gallery-image,
-  .premium-split-image,
-  img[class*='premium-'] {
-    transition-property: transform, filter, opacity !important;
-    transition-duration: var(--motion-image), var(--motion-image), var(--motion-image) !important;
-    transition-timing-function: var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover) !important;
-  }
-
-  .premium-service-card:hover .premium-service-image,
-  .premium-project-card:hover .premium-project-image,
-  .premium-image-split:hover .premium-split-image,
-  .premium-gallery-image:hover,
-  .premium-split-image:hover {
-    transform: scale(1.055) !important;
-    filter: saturate(1.08) contrast(1.035) brightness(1.015) !important;
-    transition-duration: var(--motion-image) !important;
-  }
-
-  .premium-button,
-  .premium-card-arrow,
-  .premium-tags small,
-  .premium-sector-row span,
-  .premium-logo-row span,
-  .premium-filter-pills button,
-  .premium-icon,
-  .service-icon,
-  .step-number,
-  .top-nav a,
-  .nav-cta,
-  .nav-private,
-  .mobile-menu-links a,
-  .mobile-menu-cta-panel {
-    transition-property: transform, box-shadow, background-color, background, border-color, color, opacity !important;
-    transition-duration: var(--motion-medium), var(--motion-medium), var(--motion-medium), var(--motion-medium), var(--motion-medium), var(--motion-medium), var(--motion-medium) !important;
-    transition-timing-function: var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover), var(--motion-ease-hover) !important;
-  }
-
-  .premium-button:active,
-  .premium-card-arrow:active,
-  .premium-filter-pills button:active,
-  .mobile-menu-button:active {
-    transition-duration: 0.16s !important;
-  }
-
-  .premium-hero-bg {
-    animation-duration: 48s !important;
-  }
-
-  .premium-chip-marquee-track,
-  .premium-hero-meta-track {
-    animation-duration: 60s !important;
-  }
-
-  .premium-chip-marquee-slow .premium-chip-marquee-track {
-    animation-duration: 78s !important;
-  }
-
-  .premium-tags small,
-  .premium-filter-pills button {
-    animation-duration: 11s !important;
-  }
-
-  .premium-scroll-hint span {
-    animation-duration: 3.2s !important;
-  }
-
-  .premium-stats strong,
-  .premium-key-facts strong,
-  .premium-metric-panel strong,
-  .hero-panel strong {
-    animation-duration: 10s !important;
-  }
-
-  /* Override finale reale: prende il DOM pubblico e forza TUTTE le transizioni visibili. */
-  html body .app-shell > main :is(
-    .premium-stats article,
-    .premium-card,
-    .premium-service-card,
-    .premium-project-card,
-    .premium-process article,
-    .premium-key-facts article,
-    .premium-metric-panel,
-    .premium-faq details,
-    .premium-timeline article,
-    .premium-case-split article,
-    .premium-contact-intro-card,
-    .premium-map-card,
-    .premium-form,
-    .premium-section-heading,
-    .premium-split-copy
-  ) {
-    transition: all 3s var(--motion-ease-hover) !important;
-  }
-
-  html body .app-shell > main :is(
-    .premium-stats article,
-    .premium-card,
-    .premium-service-card,
-    .premium-project-card,
-    .premium-process article,
-    .premium-key-facts article,
-    .premium-metric-panel,
-    .premium-faq details,
-    .premium-timeline article,
-    .premium-case-split article,
-    .premium-contact-intro-card,
-    .premium-map-card,
-    .premium-form
-  ):hover {
+  main .premium-card:hover,
+  main .premium-service-card:hover,
+  main .premium-project-card:hover,
+  main .premium-stats article:hover,
+  main .premium-process article:hover,
+  main .premium-key-facts article:hover,
+  main .premium-metric-panel:hover,
+  main .premium-faq details:hover,
+  main .premium-timeline article:hover,
+  main .premium-case-split article:hover,
+  main .premium-contact-intro-card:hover,
+  main .premium-map-card:hover,
+  main .premium-form:hover {
     transform: translateY(-10px) scale(1.012) !important;
     box-shadow: 0 34px 90px rgba(15, 23, 42, 0.16) !important;
     border-color: rgba(184, 100, 43, 0.34) !important;
-    transition: all 3s var(--motion-ease-hover) !important;
+    transition: transform var(--public-slow-motion) var(--public-smooth-ease),
+      box-shadow var(--public-slow-motion) var(--public-smooth-ease),
+      border-color var(--public-slow-motion) var(--public-smooth-ease),
+      background var(--public-slow-motion) var(--public-smooth-ease) !important;
   }
 
-  html body .app-shell > main :is(
-    .premium-service-image,
-    .premium-project-image,
-    .premium-gallery-image,
-    .premium-split-image,
-    img[class*='premium-']
-  ) {
-    transition: all 3.2s var(--motion-ease-hover) !important;
+  /* Immagini */
+  main .premium-service-image,
+  main .premium-project-image,
+  main .premium-gallery-image,
+  main .premium-split-image,
+  main img[class*='premium-'] {
+    transition: transform var(--public-image-motion) var(--public-smooth-ease),
+      filter var(--public-image-motion) var(--public-smooth-ease),
+      opacity var(--public-image-motion) var(--public-smooth-ease) !important;
+    will-change: transform, filter;
   }
 
-  html body .app-shell > main :is(
-    .premium-button,
-    .premium-card-arrow,
-    .premium-tags small,
-    .premium-sector-row span,
-    .premium-logo-row span,
-    .premium-filter-pills button,
-    .premium-icon,
-    .top-nav a,
-    .nav-cta,
-    .nav-private
-  ) {
-    transition: all 2s var(--motion-ease-hover) !important;
+  main .premium-service-card:hover .premium-service-image,
+  main .premium-project-card:hover .premium-project-image,
+  main .premium-gallery-image:hover,
+  main .premium-split-image:hover,
+  main .premium-image-split:hover .premium-split-image {
+    transform: scale(1.06) !important;
+    filter: saturate(1.1) contrast(1.04) brightness(1.02) !important;
+  }
+
+  /* Bottoni, pill, chip e icone */
+  main .premium-button,
+  main .premium-card-arrow,
+  main .premium-tags small,
+  main .premium-sector-row span,
+  main .premium-logo-row span,
+  main .premium-filter-pills button,
+  main .premium-icon,
+  main .service-icon,
+  main .step-number,
+  .site-header .top-nav a,
+  .site-header .nav-cta,
+  .site-header .nav-private {
+    transition: transform var(--public-medium-motion) var(--public-smooth-ease),
+      box-shadow var(--public-medium-motion) var(--public-smooth-ease),
+      border-color var(--public-medium-motion) var(--public-smooth-ease),
+      background var(--public-medium-motion) var(--public-smooth-ease),
+      color var(--public-medium-motion) var(--public-smooth-ease),
+      opacity var(--public-medium-motion) var(--public-smooth-ease) !important;
+  }
+
+  /* Click resta veloce */
+  main .premium-button:active,
+  main .premium-card-arrow:active,
+  main .premium-filter-pills button:active,
+  .mobile-menu-button:active {
+    transition-duration: 0.14s !important;
+  }
+
+  /* Animazioni di entrata */
+  main .premium-animate-item,
+  main .premium-scroll-reveal {
+    animation-duration: 2.4s !important;
+    animation-timing-function: var(--public-smooth-ease) !important;
+  }
+
+  main .premium-scroll-reveal {
+    animation-range: entry 0% cover 45% !important;
+  }
+
+  /* Animazioni continue */
+  main .premium-hero-bg {
+    animation-duration: 60s !important;
+  }
+
+  main .premium-chip-marquee-track,
+  main .premium-hero-meta-track {
+    animation-duration: 75s !important;
+  }
+
+  main .premium-chip-marquee-slow .premium-chip-marquee-track {
+    animation-duration: 95s !important;
+  }
+
+  main .premium-tags small,
+  main .premium-filter-pills button {
+    animation-duration: 14s !important;
+  }
+
+  main .premium-scroll-hint span {
+    animation-duration: 4s !important;
   }
 }
 
 @media (max-width: 640px) and (prefers-reduced-motion: no-preference) {
   :root {
-    --motion-slow: 1.85s;
-    --motion-medium: 1.25s;
-    --motion-image: 2.25s;
-    --motion-reveal: 1.45s;
+    --public-slow-motion: 2.4s;
+    --public-medium-motion: 1.6s;
+    --public-image-motion: 2.8s;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .premium-animate-item,
-  .premium-scroll-reveal,
-  .premium-section-heading,
-  .premium-split-copy,
-  .premium-split-image,
-  .premium-service-card,
-  .premium-project-card,
-  .premium-card,
-  .premium-stats article,
-  .premium-process article,
-  .premium-key-facts article,
-  .premium-timeline article,
-  .premium-faq details,
-  .premium-final-cta,
-  .premium-case-split article,
-  .premium-contact-intro-card,
-  .premium-map-card,
-  .premium-form,
-  .premium-hero-bg,
-  .premium-chip-marquee-track,
-  .premium-hero-meta-track,
-  .premium-tags small,
-  .premium-filter-pills button {
+  main .premium-animate-item,
+  main .premium-scroll-reveal,
+  main .premium-card,
+  main .premium-service-card,
+  main .premium-project-card,
+  main .premium-stats article,
+  main .premium-process article,
+  main .premium-key-facts article,
+  main .premium-timeline article,
+  main .premium-faq details,
+  main .premium-final-cta,
+  main .premium-case-split article,
+  main .premium-contact-intro-card,
+  main .premium-map-card,
+  main .premium-form,
+  main .premium-hero-bg,
+  main .premium-chip-marquee-track,
+  main .premium-hero-meta-track,
+  main .premium-tags small,
+  main .premium-filter-pills button {
     animation: none !important;
     transition: none !important;
   }
