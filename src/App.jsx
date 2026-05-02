@@ -105,6 +105,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
     return (
       <CantiereDetail
         cantiereId={path.split('/').at(-1)}
+        documents={mockStore.documents}
         documentUploads={mockStore.documentUploads}
         fotoUploads={mockStore.fotoUploads}
         session={session}
@@ -163,7 +164,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
     return <ContabilitaMock documents={mockStore.documents} />
   }
   if (path === '/dashboard/report') {
-    return <ReportMock />
+    return <ReportMock documents={mockStore.documents} />
   }
   if (path === '/dashboard/dipendenti') {
     return (
