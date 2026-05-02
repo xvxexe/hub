@@ -14,6 +14,10 @@ const roleOptions = [
   { value: 'admin', label: 'Admin' },
 ]
 
+function normalizeRole(value) {
+  return String(value ?? '').trim().toLowerCase()
+}
+
 export function SettingsMock({ session }) {
   const [syncStatus, setSyncStatus] = useState(null)
   const [isRunning, setIsRunning] = useState(false)
@@ -25,7 +29,7 @@ export function SettingsMock({ session }) {
     fullName: '',
     role: 'employee',
   })
-  const isAdmin = session?.role === 'admin'
+  const isAdmin = normalizeRole(session?.role) === 'admin'
 
   useEffect(() => {
     if (isAdmin) {
@@ -124,7 +128,7 @@ export function SettingsMock({ session }) {
       </DashboardHeader>
 
       {isAdmin ? (
-        <section className="internal-panel internal-padded">
+        <section className="internal-panel internal-padded admin-invitations-panel">
           <div className="section-heading panel-title-row">
             <div>
               <h2>Invita persone</h2>
@@ -177,7 +181,7 @@ export function SettingsMock({ session }) {
       ) : null}
 
       {isAdmin ? (
-        <section className="internal-panel internal-padded">
+        <section className="internal-panel internal-padded admin-invitations-panel">
           <div className="section-heading panel-title-row">
             <h2>Inviti preparati</h2>
             <StatusBadge>{invitations.length} totali</StatusBadge>
