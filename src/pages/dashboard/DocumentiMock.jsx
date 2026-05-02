@@ -4,9 +4,8 @@ import { AlertPanel, DashboardHeader, DataModeBadge, MockActionModal, StatCard }
 import { InternalIcon } from '../../components/InternalIcons'
 import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
-import { formatDate, mockCantieri } from '../../data/mockCantieri'
-import { recentWhatsAppUploads } from '../../data/mockHubData'
-import { tipiDocumento } from '../../data/mockUploads'
+
+const tipiDocumentoFallback = ['Fattura', 'Bonifico', 'Ricevuta', 'FIR', 'Preventivo', 'Scontrino', 'Riepilogo tab', 'Altro']
 
 export function DocumentiMock({ session, store }) {
   const [selectedId, setSelectedId] = useState(store.documents[0]?.id ?? null)
@@ -20,7 +19,13 @@ export function DocumentiMock({ session, store }) {
     search: '',
   })
 
-  const rows = store.documents
+  const rows = store.documents ?? []
+  const cantieri = useMemo(() => getCantieriFromRows(rows), [rows])
+  const tipiDocumento = useMemo(() => {
+    const realTypes = [...new Set(rows.map((row) => row.tipoDocumento).filter(Boolean))]
+    return realTypes.length ? realTypes : tipiDocumentoFallback
+  }, [rows])
+
   const filteredRows = useMemo(() => {
     const search = filters.search.trim().toLowerCase()
 
@@ -34,12 +39,11 @@ export function DocumentiMock({ session, store }) {
         (filters.quick === 'da-verificare' && status === 'Da verificare') ||
         (filters.quick === 'duplicati' && status === 'Possibile duplicato') ||
         (filters.quick === 'incompleti' && status === 'Incompleto')
-      const matchesSearch =
-        search === '' ||
-        row.fornitore.toLowerCase().includes(search) ||
-        row.descrizione.toLowerCase().includes(search) ||
-        row.fileName.toLowerCase().includes(search) ||
-        row.cantiere.toLowerCase().includes(search)
+      const haystack = [row.fornitore, row.descrizione, row.fileName, row.numeroDocumento, row.cantiere, row.categoria]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      const matchesSearch = search === '' || haystack.includes(search)
 
       return matchesCantiere && matchesType && matchesStatus && matchesQuick && matchesSearch
     })
@@ -66,12 +70,11 @@ export function DocumentiMock({ session, store }) {
   return (
     <>
       <DashboardHeader
-        eyebrow="Documenti mock"
+        eyebrow="Documenti reali"
         title="Centro documenti"
-        description="Gestisci, verifica e controlla tutta la documentazione aziendale."
+        description="Dati letti da Supabase, importati da BARCELO_ROMA_master."
       >
-        <DataModeBadge />
-        <button className="button button-secondary" type="button" onClick={store.resetMockStore}>Reset mock</button>
+        <DataModeBadge>Dati reali Supabase</DataModeBadge>
         <a className="button button-primary" href="#/dashboard/upload">Carica documento</a>
       </DashboardHeader>
 
@@ -103,7 +106,7 @@ export function DocumentiMock({ session, store }) {
           Cantiere
           <select value={filters.cantiereId} onChange={(event) => updateFilter('cantiereId', event.target.value)}>
             <option value="tutti">Tutti</option>
-            {mockCantieri.map((cantiere) => <option key={cantiere.id} value={cantiere.id}>{cantiere.nome}</option>)}
+            {cantieri.map((cantiere) => <option key={cantiere.id} value={cantiere.id}>{cantiere.nome}</option>)}
           </select>
         </label>
         <label>
@@ -118,10 +121,10 @@ export function DocumentiMock({ session, store }) {
       </section>
 
       <section className="stats-grid hub-kpi-grid">
-        <StatCard icon="file" tone="amber" label="Da controllare" value={toCheck.length} hint="+2 rispetto alla settimana scorsa" />
-        <StatCard icon="check" tone="green" label="Verificati" value={verified.length} hint="+10 rispetto alla settimana scorsa" />
-        <StatCard icon="inbox" label="In attesa" value={incomplete.length} hint="Stabile rispetto alla settimana scorsa" />
-        <StatCard icon="warning" tone="red" label="Duplicati" value={duplicates.length} hint="+2 rispetto alla settimana scorsa" />
+        <StatCard icon="file" tone="amber" label="Da controllare" value={toCheck.length} hint="Dati reali" />
+        <StatCard icon="check" tone="green" label="Confermati" value={verified.length} hint="Dati reali" />
+        <StatCard icon="inbox" label="In attesa" value={incomplete.length} hint="Dati reali" />
+        <StatCard icon="warning" tone="red" label="Duplicati" value={duplicates.length} hint="Dati reali" />
       </section>
 
       <AlertPanel
@@ -153,7 +156,7 @@ export function DocumentiMock({ session, store }) {
                     key={row.id}
                   >
                     <button className="document-row-select" type="button" onClick={() => setSelectedId(row.id)}>
-                      <strong>{row.fileName}</strong>
+                      <strong>{row.numeroDocumento ?? row.fileName}</strong>
                       <span>{row.tipoDocumento}</span>
                       <span>{row.fornitore}</span>
                       <span>{row.cantiere}</span>
@@ -164,13 +167,13 @@ export function DocumentiMock({ session, store }) {
                     <button
                       className="row-menu"
                       type="button"
-                      aria-label={`Azioni per ${row.fileName}`}
+                      aria-label={`Azioni per ${row.numeroDocumento ?? row.fileName}`}
                       onClick={() => {
                         setSelectedId(row.id)
                         setModalAction({
                           icon: 'more',
-                          title: `Azioni documento`,
-                          text: `${row.fileName}: scegli un'azione rapida mock dal pannello laterale o apri il dettaglio completo.`,
+                          title: 'Azioni documento',
+                          text: `${row.numeroDocumento ?? row.fileName}: scegli un'azione rapida dal pannello laterale o apri il dettaglio completo.`,
                           confirmLabel: 'Ok',
                         })
                       }}
@@ -200,7 +203,7 @@ export function DocumentiMock({ session, store }) {
             </>
           ) : (
             <EmptyState title="Nessun documento trovato">
-              Modifica cantiere, tipo, stato o ricerca per visualizzare altri documenti mock.
+              Modifica cantiere, tipo, stato o ricerca per visualizzare altri documenti reali.
             </EmptyState>
           )}
         </section>
@@ -210,13 +213,13 @@ export function DocumentiMock({ session, store }) {
 
       <div className="internal-two-column">
         <section className="internal-panel">
-          <div className="section-heading panel-title-row"><h2>Caricamenti recenti da WhatsApp</h2><a className="button button-secondary button-small" href="#/dashboard/caricamenti">Vedi tutti</a></div>
+          <div className="section-heading panel-title-row"><h2>Righe Google Sheets importate</h2><a className="button button-secondary button-small" href="#/dashboard/contabilita">Vedi contabilità</a></div>
           <div className="compact-upload-list">
-            {recentWhatsAppUploads.map((upload) => (
-              <article className="compact-upload-row" key={upload.id}>
-                <span className={`file-chip file-${upload.type}`}>{upload.type === 'pdf' ? 'PDF' : 'IMG'}</span>
-                <div><strong>{upload.fileName}</strong><small>{upload.cantiere}</small></div>
-                <StatusBadge>{upload.status}</StatusBadge>
+            {rows.slice(0, 5).map((row) => (
+              <article className="compact-upload-row" key={`recent-${row.id}`}>
+                <span className="file-chip file-pdf">TAB</span>
+                <div><strong>{row.numeroDocumento ?? row.descrizione}</strong><small>{row.cantiere}</small></div>
+                <StatusBadge>{displayStatus(row.statoVerifica)}</StatusBadge>
               </article>
             ))}
           </div>
@@ -224,24 +227,12 @@ export function DocumentiMock({ session, store }) {
         <section className="internal-panel">
           <div className="section-heading panel-title-row">
             <h2>Attività e cronologia</h2>
-            <button
-              className="button button-secondary button-small"
-              type="button"
-              onClick={() => setModalAction({
-                icon: 'report',
-                title: 'Cronologia completa mock',
-                text: 'La cronologia completa sarà collegata al backend. Per ora le attività visibili sono generate dai dati mock locali.',
-                confirmLabel: 'Ho capito',
-              })}
-            >
-              Vedi tutte
-            </button>
           </div>
           <div className="activity-feed">
             {filteredRows.slice(0, 5).map((row) => (
               <a className="activity-item interactive-row" href={`#/dashboard/documenti/${row.id}`} key={`activity-${row.id}`}>
                 <span />
-                <div><strong>{row.fornitore} ha caricato {row.fileName}</strong><small>{row.cantiere} · {formatDate(row.dataDocumento)}</small></div>
+                <div><strong>{row.fornitore} · {row.numeroDocumento ?? row.fileName}</strong><small>{row.cantiere} · {formatDate(row.dataDocumento)}</small></div>
                 <StatusBadge>{displayStatus(row.statoVerifica)}</StatusBadge>
               </a>
             ))}
@@ -291,8 +282,8 @@ function DocumentPreviewPanel({ document, canEdit, store }) {
           type="button"
           onClick={() => setModalAction({
             icon: 'tag',
-            title: 'Assegna tab mock',
-            text: 'Assegna il documento a una categoria dimostrativa per preparare il futuro workflow documentale.',
+            title: 'Assegna tab',
+            text: 'Assegna il documento a una categoria contabile.',
             confirmLabel: 'Assegna tab',
             fields: [{ label: 'Tab', type: 'select', options: ['Fatture fornitori', 'Bonifici', 'FIR rifiuti', 'SAL'] }],
           })}
@@ -305,6 +296,20 @@ function DocumentPreviewPanel({ document, canEdit, store }) {
   )
 }
 
+function getCantieriFromRows(rows) {
+  const map = new Map()
+  rows.forEach((row) => {
+    if (!row.cantiereId) return
+    map.set(row.cantiereId, { id: row.cantiereId, nome: row.cantiere ?? row.cantiereId })
+  })
+  return [...map.values()]
+}
+
+function formatDate(date) {
+  if (!date) return '-'
+  return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(date))
+}
+
 function displayStatus(status) {
   if (status === 'Possibile duplicato') return 'Duplicato'
   if (status === 'Da verificare') return 'Da controllare'
@@ -313,5 +318,10 @@ function displayStatus(status) {
 }
 
 function hasAmountWarning(row) {
-  return Number(row.imponibile || 0) + Number(row.iva || 0) !== Number(row.totale || 0) && row.tipoDocumento !== 'Bonifico'
+  const imponibile = Number(row.imponibile || 0)
+  const iva = Number(row.iva || 0)
+  const totale = Number(row.totale || 0)
+  if (row.tipoDocumento === 'Bonifico') return false
+  if (!imponibile && !iva) return false
+  return Math.abs((imponibile + iva) - totale) > 0.01
 }
