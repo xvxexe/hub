@@ -321,6 +321,43 @@
     transition-duration: 1.55s !important;
     transition-timing-function: var(--pub-ease-hover-slow) !important;
   }
+
+  /* Override assoluto contenitori: forza l'intera lista proprietà, non solo la durata. */
+  html body main .premium-stats article,
+  html body main .premium-service-card,
+  html body main .premium-project-card,
+  html body main .premium-card,
+  html body main .premium-process article,
+  html body main .premium-key-facts article,
+  html body main .premium-metric-panel,
+  html body main .premium-faq details,
+  html body main .premium-timeline article,
+  html body main .premium-case-split article,
+  html body main .premium-contact-intro-card,
+  html body main .premium-map-card {
+    will-change: transform, box-shadow, border-color, background;
+    transition-property: transform, box-shadow, border-color, background, opacity !important;
+    transition-duration: 2.6s, 2.6s, 2.6s, 2.6s, 2.6s !important;
+    transition-timing-function: var(--pub-ease-hover-slow), var(--pub-ease-hover-slow), var(--pub-ease-hover-slow), var(--pub-ease-hover-slow), var(--pub-ease-hover-slow) !important;
+    transition-delay: 0s, 0s, 0s, 0s, 0s !important;
+  }
+
+  html body main .premium-stats article:hover,
+  html body main .premium-service-card:hover,
+  html body main .premium-project-card:hover,
+  html body main .premium-card:hover,
+  html body main .premium-process article:hover,
+  html body main .premium-key-facts article:hover,
+  html body main .premium-metric-panel:hover,
+  html body main .premium-faq details:hover,
+  html body main .premium-timeline article:hover,
+  html body main .premium-case-split article:hover,
+  html body main .premium-contact-intro-card:hover,
+  html body main .premium-map-card:hover {
+    transition-property: transform, box-shadow, border-color, background, opacity !important;
+    transition-duration: 2.6s, 2.6s, 2.6s, 2.6s, 2.6s !important;
+    transition-timing-function: var(--pub-ease-hover-slow), var(--pub-ease-hover-slow), var(--pub-ease-hover-slow), var(--pub-ease-hover-slow), var(--pub-ease-hover-slow) !important;
+  }
 }
 
 @keyframes premiumAuraDrift {
