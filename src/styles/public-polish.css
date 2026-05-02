@@ -1,17 +1,7 @@
 /*
   Public polish layer EuropaService.
-  Unifica: navigazione mobile pubblica, fix contrasto, marquee e micro-interazioni.
-  Caricato dopo public-redesign.css.
+  Solo navbar mobile, contrasti e rifiniture statiche. Nessuna animazione.
 */
-
-:root {
-  --pub-ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
-  --pub-ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
-  --pub-ease-hover-slow: cubic-bezier(0.33, 0, 0.2, 1);
-  --pub-hover-container: 2.6s;
-  --pub-hover-item: 1.55s;
-  --pub-hover-image: 2.8s;
-}
 
 /* -----------------------------
    Navigazione pubblica mobile
@@ -27,6 +17,7 @@
   color: #111827 !important;
   font-weight: 900 !important;
   padding: 0.65rem 0.95rem !important;
+  transition: none !important;
 }
 
 .nav-private:hover,
@@ -40,11 +31,11 @@
   position: relative !important;
   z-index: 10020 !important;
   border-radius: 999px !important;
-  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease !important;
+  transition: none !important;
 }
 
 .mobile-menu-button span {
-  transition: transform 0.22s ease, opacity 0.16s ease, background 0.18s ease !important;
+  transition: none !important;
   transform-origin: center !important;
 }
 
@@ -61,7 +52,7 @@
   pointer-events: none !important;
   background: rgba(9, 14, 23, 0.48) !important;
   backdrop-filter: blur(10px) !important;
-  transition: opacity 0.22s ease !important;
+  transition: none !important;
 }
 
 .mobile-menu-backdrop.open {
@@ -90,7 +81,7 @@
   pointer-events: none !important;
   opacity: 0 !important;
   transform: translateX(100%) !important;
-  transition: transform 0.95s var(--pub-ease-smooth), opacity 0.85s var(--pub-ease-smooth) !important;
+  transition: none !important;
 }
 
 .mobile-public-menu.open {
@@ -165,7 +156,7 @@
   color: #111827 !important;
   padding: 0.92rem 1rem !important;
   text-decoration: none !important;
-  transition: transform 0.85s var(--pub-ease-smooth), background 0.85s var(--pub-ease-smooth), border-color 0.85s var(--pub-ease-smooth) !important;
+  transition: none !important;
 }
 
 .mobile-menu-links a span {
@@ -205,7 +196,7 @@
     linear-gradient(135deg, #111827 0%, #17324d 100%) !important;
   color: #fff !important;
   padding: 1rem !important;
-  transition: transform 0.85s var(--pub-ease-smooth), background 0.85s var(--pub-ease-smooth) !important;
+  transition: none !important;
 }
 
 .mobile-menu-cta-panel small {
@@ -328,7 +319,7 @@
 .premium-map-card span { opacity: 1 !important; }
 
 /* -----------------------------
-   Marquee e animazioni continue
+   Chip statici
 ------------------------------ */
 .premium-chip-marquee,
 .premium-sector-row,
@@ -347,13 +338,10 @@
   display: flex !important;
   width: max-content !important;
   gap: 0.5rem !important;
-  will-change: transform !important;
-  animation: premiumMarquee 42s linear infinite !important;
+  animation: none !important;
+  transform: none !important;
+  will-change: auto !important;
 }
-
-.premium-chip-marquee-slow .premium-chip-marquee-track { animation-duration: 58s !important; }
-.premium-chip-marquee:hover .premium-chip-marquee-track,
-.premium-hero-meta:hover .premium-hero-meta-track { animation-play-state: paused !important; }
 
 .premium-chip-marquee span,
 .premium-sector-row span,
@@ -364,313 +352,18 @@
 }
 
 .premium-tags small,
-.premium-filter-pills button { animation: premiumChipFloat 8s ease-in-out infinite !important; }
-.premium-tags small:nth-child(2), .premium-filter-pills button:nth-child(2) { animation-delay: 0.35s !important; }
-.premium-tags small:nth-child(3), .premium-filter-pills button:nth-child(3) { animation-delay: 0.7s !important; }
-.premium-tags small:nth-child(4), .premium-filter-pills button:nth-child(4) { animation-delay: 1.05s !important; }
-.premium-filter-pills button:nth-child(5) { animation-delay: 1.4s !important; }
-
-/* -----------------------------
-   Micro-interazioni pubbliche
------------------------------- */
-@media (prefers-reduced-motion: no-preference) {
-  html { scroll-behavior: smooth; }
-
-  .premium-hero-bg {
-    animation-duration: 34s !important;
-    animation-timing-function: ease-in-out !important;
-  }
-
-  .premium-hero-overlay-layer::before,
-  .premium-hero-overlay-layer::after {
-    content: '';
-    position: absolute;
-    inset: auto;
-    pointer-events: none;
-    border-radius: 999px;
-    filter: blur(18px);
-    opacity: 0.34;
-    will-change: transform, opacity;
-  }
-
-  .premium-hero-overlay-layer::before {
-    width: 18rem;
-    height: 18rem;
-    right: 8%;
-    top: 18%;
-    background: rgba(184, 100, 43, 0.28);
-    animation: premiumAuraDrift 18s var(--pub-ease-soft) infinite alternate;
-  }
-
-  .premium-hero-overlay-layer::after {
-    width: 22rem;
-    height: 22rem;
-    left: 42%;
-    bottom: -8rem;
-    background: rgba(23, 50, 77, 0.45);
-    animation: premiumAuraDriftReverse 24s var(--pub-ease-soft) infinite alternate;
-  }
-
-  .premium-animate-item {
-    animation-duration: 1.05s !important;
-    animation-timing-function: var(--pub-ease-smooth) !important;
-  }
-
-  .premium-scroll-reveal {
-    animation-duration: 1.15s !important;
-    animation-timing-function: var(--pub-ease-smooth) !important;
-    animation-range: entry 0% cover 30% !important;
-  }
-
-  .premium-service-card,
-  .premium-project-card,
-  .premium-card,
-  .premium-stats article,
-  .premium-process article,
-  .premium-key-facts article,
-  .premium-metric-panel,
-  .premium-faq details,
-  .premium-contact-intro-card,
-  .premium-map-card,
-  .premium-timeline article,
-  .premium-form,
-  .premium-case-split article {
-    transition-property: transform, box-shadow, border-color, background, opacity !important;
-    transition-duration: var(--pub-hover-container), var(--pub-hover-container), var(--pub-hover-container), var(--pub-hover-container), var(--pub-hover-container) !important;
-    transition-timing-function: var(--pub-ease-hover-slow), var(--pub-ease-hover-slow), var(--pub-ease-hover-slow), var(--pub-ease-hover-slow), var(--pub-ease-hover-slow) !important;
-    transition-delay: 0s, 0s, 0s, 0s, 0s !important;
-    will-change: transform, box-shadow, border-color, background;
-  }
-
-  .premium-service-card:hover,
-  .premium-project-card:hover,
-  .premium-card:hover,
-  .premium-stats article:hover,
-  .premium-process article:hover,
-  .premium-key-facts article:hover,
-  .premium-metric-panel:hover,
-  .premium-faq details:hover,
-  .premium-timeline article:hover,
-  .premium-case-split article:hover,
-  .premium-contact-intro-card:hover,
-  .premium-map-card:hover {
-    transform: translateY(-8px) scale(1.012) !important;
-    box-shadow: 0 32px 90px rgba(15, 23, 42, 0.14) !important;
-    border-color: rgba(184, 100, 43, 0.28) !important;
-  }
-
-  .premium-service-card,
-  .premium-project-card,
-  .premium-card,
-  .premium-faq details,
-  .premium-timeline article {
-    position: relative;
-    isolation: isolate;
-  }
-
-  .premium-service-card::before,
-  .premium-project-card::before,
-  .premium-card::before,
-  .premium-faq details::before,
-  .premium-timeline article::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: radial-gradient(circle at 50% 20%, rgba(184, 100, 43, 0.12), transparent 16rem);
-    opacity: 0;
-    transition: opacity var(--pub-hover-container) var(--pub-ease-hover-slow) !important;
-  }
-
-  .premium-service-card:hover::before,
-  .premium-project-card:hover::before,
-  .premium-card:hover::before,
-  .premium-faq details:hover::before,
-  .premium-timeline article:hover::before { opacity: 1; }
-
-  .premium-button,
-  .premium-card-arrow,
-  .premium-filter-pills button,
-  .premium-tags small,
-  .premium-sector-row span,
-  .premium-logo-row span,
-  .site-header .top-nav a,
-  .site-header .nav-cta {
-    transition:
-      transform var(--pub-hover-item) var(--pub-ease-hover-slow),
-      box-shadow var(--pub-hover-item) var(--pub-ease-hover-slow),
-      background var(--pub-hover-item) var(--pub-ease-hover-slow),
-      color var(--pub-hover-item) var(--pub-ease-hover-slow),
-      border-color var(--pub-hover-item) var(--pub-ease-hover-slow),
-      opacity var(--pub-hover-item) var(--pub-ease-hover-slow) !important;
-  }
-
-  .premium-button:hover,
-  .site-header .nav-cta:hover {
-    transform: translateY(-3px) scale(1.015) !important;
-    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16) !important;
-  }
-
-  .premium-button:active,
-  .premium-card-arrow:active,
-  .premium-filter-pills button:active,
-  .mobile-menu-button:active {
-    transform: scale(0.98) !important;
-    transition-duration: 0.18s !important;
-  }
-
-  .premium-card-arrow:hover { transform: translateX(5px) scale(1.04) !important; }
-
-  .premium-service-image,
-  .premium-project-image,
-  .premium-gallery-image,
-  .premium-split-image {
-    transform-origin: center;
-    transition: transform var(--pub-hover-image) var(--pub-ease-hover-slow), filter var(--pub-hover-image) var(--pub-ease-hover-slow) !important;
-  }
-
-  .premium-service-card:hover .premium-service-image,
-  .premium-project-card:hover .premium-project-image,
-  .premium-gallery-image:hover,
-  .premium-split-image:hover {
-    transform: scale(1.065) !important;
-    filter: saturate(1.08) contrast(1.04) brightness(1.02) !important;
-  }
-
-  .premium-icon,
-  .service-icon,
-  .step-number {
-    transition: transform 1.75s var(--pub-ease-hover-slow), background 1.75s var(--pub-ease-hover-slow) !important;
-  }
-
-  .premium-card:hover .premium-icon,
-  .premium-service-card:hover .premium-icon,
-  .premium-process article:hover .step-number {
-    transform: translateY(-2px) rotate(-4deg) scale(1.08) !important;
-  }
-
-  .premium-stats strong,
-  .premium-key-facts strong,
-  .premium-metric-panel strong,
-  .hero-panel strong { animation: premiumSoftPulse 7s ease-in-out infinite; }
-
-  .premium-final-cta,
-  .premium-case-split article,
-  .premium-contact-intro-card {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .premium-final-cta::before,
-  .premium-case-split article::after,
-  .premium-contact-intro-card::after {
-    content: '';
-    position: absolute;
-    width: 18rem;
-    height: 18rem;
-    border-radius: 999px;
-    pointer-events: none;
-    background: radial-gradient(circle, rgba(184, 100, 43, 0.16), transparent 65%);
-    filter: blur(4px);
-    opacity: 0.7;
-    animation: premiumBlobFloat 16s var(--pub-ease-soft) infinite alternate;
-  }
-
-  .premium-final-cta::before { right: -7rem; top: -8rem; }
-  .premium-case-split article::after,
-  .premium-contact-intro-card::after { right: -9rem; bottom: -9rem; }
-
-  .premium-faq details[open] {
-    transform: translateY(-3px) !important;
-    border-color: rgba(184, 100, 43, 0.32) !important;
-  }
-
-  .premium-faq details[open] p { animation: premiumAnswerReveal 0.95s var(--pub-ease-smooth) both; }
-
-  .premium-form input:focus,
-  .premium-form select:focus,
-  .premium-form textarea:focus {
-    border-color: rgba(184, 100, 43, 0.55) !important;
-    box-shadow: 0 0 0 4px rgba(184, 100, 43, 0.11) !important;
-    transform: translateY(-1px);
-    transition: border-color 0.95s var(--pub-ease-smooth), box-shadow 0.95s var(--pub-ease-smooth), transform 0.95s var(--pub-ease-smooth) !important;
-  }
+.premium-filter-pills button {
+  animation: none !important;
 }
 
-@supports not (animation-timeline: view()) {
-  .premium-scroll-reveal {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-  }
-}
-
-@keyframes premiumChipFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
-@keyframes premiumAuraDrift {
-  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.22; }
-  100% { transform: translate3d(-3rem, 2rem, 0) scale(1.18); opacity: 0.42; }
-}
-
-@keyframes premiumAuraDriftReverse {
-  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.18; }
-  100% { transform: translate3d(3rem, -1.8rem, 0) scale(1.14); opacity: 0.34; }
-}
-
-@keyframes premiumBlobFloat {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  100% { transform: translate3d(-2.2rem, 1.4rem, 0) scale(1.16); }
-}
-
-@keyframes premiumSoftPulse {
-  0%, 100% { opacity: 1; transform: translateY(0); }
-  50% { opacity: 0.86; transform: translateY(-1px); }
-}
-
-@keyframes premiumAnswerReveal {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 640px) {
-  .premium-chip-marquee-track,
-  .premium-hero-meta-track { animation-duration: 32s !important; }
-  .premium-chip-marquee-slow .premium-chip-marquee-track { animation-duration: 40s !important; }
-  .premium-contact-intro-card { padding: 1.25rem !important; }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .premium-hero-bg { animation-duration: 28s !important; }
-    .premium-service-card:hover,
-    .premium-project-card:hover,
-    .premium-card:hover,
-    .premium-stats article:hover,
-    .premium-process article:hover { transform: translateY(-4px) scale(1.006) !important; }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mobile-public-menu,
-  .mobile-menu-backdrop,
-  .mobile-menu-button,
-  .mobile-menu-button span,
-  .mobile-menu-links a,
-  .premium-chip-marquee-track,
-  .premium-hero-meta-track,
-  .premium-tags small,
-  .premium-filter-pills button,
-  .premium-hero-overlay-layer::before,
-  .premium-hero-overlay-layer::after,
-  .premium-final-cta::before,
-  .premium-case-split article::after,
-  .premium-contact-intro-card::after,
-  .premium-stats strong,
-  .premium-key-facts strong,
-  .premium-metric-panel strong,
-  .hero-panel strong {
-    animation: none !important;
-    transition: none !important;
-  }
+/* Kill switch pubblico: nessuna animazione/transizione nel sito pubblico */
+.app-shell > main *,
+.app-shell > main *::before,
+.app-shell > main *::after,
+.site-header *,
+.site-header *::before,
+.site-header *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
 }
