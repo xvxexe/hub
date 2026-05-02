@@ -73,6 +73,10 @@ function AdminDashboard({ documentUploads, documents, activities }) {
 
   return (
     <>
+      <div className="hub-summary-first">
+        <CostSummaryPanel total={accountingTotals.totale} categoryTotals={categoryTotals} />
+      </div>
+
       <div className="hub-toolbar">
         <label className="date-filter">
           <span>Periodo</span>
@@ -135,8 +139,7 @@ function AdminDashboard({ documentUploads, documents, activities }) {
         </section>
       </div>
 
-      <div className="internal-two-column">
-        <CostSummaryPanel total={accountingTotals.totale} categoryTotals={categoryTotals} />
+      <div className="hub-activity-row">
         <ActivityFeed title="Attività recenti" items={(activities.length ? activities : []).slice(0, 5).map((item) => ({
           title: item.description,
           meta: `${item.author ?? 'Sistema'} · ${item.date ?? ''}`,
@@ -266,7 +269,7 @@ function normalizeDocumentStatus(status) {
 function CostSummaryPanel({ total, categoryTotals }) {
   return (
     <section className="internal-panel">
-      <PanelTitle title="Riepilogo costi" />
+      <PanelTitle title="Riepilogo spese" />
       <div className="cost-summary">
         <div>
           <span>Totale costi</span>
