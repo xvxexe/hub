@@ -6,7 +6,7 @@ import {
   importGoogleSheetsToSupabase,
   isGoogleSheetsSyncConfigured,
 } from '../../lib/googleSheetsSync'
-import { supabaseRequest } from '../../lib/supabaseClient'
+import { inviteUserFromAdmin, supabaseRequest } from '../../lib/supabaseClient'
 
 const roleOptions = [
   { value: 'employee', label: 'Dipendente' },
@@ -55,7 +55,7 @@ export function SettingsMock({ session }) {
     setInviteStatus(null)
 
     if (!isAdmin) {
-      setInviteStatus({ type: 'error', message: 'Solo un admin può preparare inviti.' })
+      setInviteStatus({ type: 'error', message: 'Solo un admin può invitare utenti.' })
       return
     }
 
@@ -68,15 +68,10 @@ export function SettingsMock({ session }) {
     }
 
     setInviteLoading(true)
-    const result = await supabaseRequest('invitations', {
-      method: 'POST',
-      body: JSON.stringify({
-        email,
-        full_name: fullName,
-        role: inviteForm.role,
-        invited_by: session.id,
-        status: 'pending',
-      }),
+    const result = await inviteUserFromAdmin({
+      email,
+      fullName,
+      role: inviteForm.role,
     })
     setInviteLoading(false)
 
@@ -88,7 +83,7 @@ export function SettingsMock({ session }) {
     setInviteForm({ email: '', fullName: '', role: 'employee' })
     setInviteStatus({
       type: 'success',
-      message: 'Invito preparato. Ora crea lo stesso utente in Supabase Auth e poi collegalo al profilo/ruolo indicato.',
+      message: 'Utente creato/invitato correttamente in Supabase Auth e profilo collegato al ruolo selezionato.',
     })
     await loadInvitations()
   }
@@ -132,7 +127,7 @@ export function SettingsMock({ session }) {
           <div className="section-heading panel-title-row">
             <div>
               <h2>Invita persone</h2>
-              <p>Prepara un nuovo accesso con ruolo corretto. Il ruolo non si cambia più manualmente dalla UI: viene letto da Supabase.</p>
+              <p>Crea/invita un utente reale in Supabase Auth e assegna subito il ruolo corretto in profiles.</p>
             </div>
             <StatusBadge>Solo admin</StatusBadge>
           </div>
@@ -169,7 +164,7 @@ export function SettingsMock({ session }) {
             </label>
             <div className="full-row">
               <button className="button button-primary" type="submit" disabled={inviteLoading}>
-                {inviteLoading ? 'Creo invito...' : 'Prepara invito'}
+                {inviteLoading ? 'Creo/invito utente...' : 'Crea e invita utente'}
               </button>
             </div>
           </form>
@@ -183,7 +178,7 @@ export function SettingsMock({ session }) {
       {isAdmin ? (
         <section className="internal-panel internal-padded admin-invitations-panel">
           <div className="section-heading panel-title-row">
-            <h2>Inviti preparati</h2>
+            <h2>Inviti / utenti creati</h2>
             <StatusBadge>{invitations.length} totali</StatusBadge>
           </div>
           <div className="admin-invite-list">
@@ -197,7 +192,7 @@ export function SettingsMock({ session }) {
                 <StatusBadge>{invite.status}</StatusBadge>
               </article>
             )) : (
-              <p>Nessun invito preparato.</p>
+              <p>Nessun invito ancora creato.</p>
             )}
           </div>
         </section>
