@@ -83,9 +83,19 @@ export function SettingsMock({ session }) {
     setInviteForm({ email: '', fullName: '', role: 'employee' })
     setInviteStatus({
       type: 'success',
-      message: 'Utente creato/invitato correttamente in Supabase Auth e profilo collegato al ruolo selezionato.',
+      message: result.data?.message || 'Utente creato e profilo collegato al ruolo selezionato.',
+      actionLink: result.data?.actionLink,
     })
     await loadInvitations()
+  }
+
+  async function copyInviteLink() {
+    if (!inviteStatus?.actionLink) return
+    await navigator.clipboard.writeText(inviteStatus.actionLink)
+    setInviteStatus((current) => ({
+      ...current,
+      message: 'Link invito copiato. Mandalo alla persona su WhatsApp o email.',
+    }))
   }
 
   async function runImport() {
@@ -127,7 +137,7 @@ export function SettingsMock({ session }) {
           <div className="section-heading panel-title-row">
             <div>
               <h2>Invita persone</h2>
-              <p>Crea/invita un utente reale in Supabase Auth e assegna subito il ruolo corretto in profiles.</p>
+              <p>Crea l’utente reale in Supabase Auth, assegna il ruolo e genera un link invito da inviare manualmente.</p>
             </div>
             <StatusBadge>Solo admin</StatusBadge>
           </div>
@@ -164,13 +174,23 @@ export function SettingsMock({ session }) {
             </label>
             <div className="full-row">
               <button className="button button-primary" type="submit" disabled={inviteLoading}>
-                {inviteLoading ? 'Creo/invito utente...' : 'Crea e invita utente'}
+                {inviteLoading ? 'Creo link invito...' : 'Crea utente e link invito'}
               </button>
             </div>
           </form>
 
           {inviteStatus ? (
-            <p className="role-description login-error">{inviteStatus.message}</p>
+            <div className="role-description login-error">
+              <p>{inviteStatus.message}</p>
+              {inviteStatus.actionLink ? (
+                <div className="admin-invite-link-box">
+                  <input readOnly value={inviteStatus.actionLink} />
+                  <button className="button button-secondary" type="button" onClick={copyInviteLink}>
+                    Copia link
+                  </button>
+                </div>
+              ) : null}
+            </div>
           ) : null}
         </section>
       ) : null}
