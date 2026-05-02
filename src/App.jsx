@@ -97,6 +97,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
         fotoUploads={mockStore.fotoUploads}
         activities={mockStore.activities}
         estimates={mockStore.estimates}
+        syncState={mockStore.syncState}
       />
     )
   }
