@@ -32,35 +32,45 @@ export function useMockStore(session) {
       if (!isSupabaseConfigured) return
 
       try {
-        if (isGoogleSheetsSyncConfigured) {
-          setSyncState({ status: 'syncing-sheets', error: null })
-          const sheetsImport = await importGoogleSheetsToSupabase()
-          if (!cancelled && sheetsImport.ok && sheetsImport.store) {
-            setStore(sheetsImport.store)
-            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sheetsImport.store))
-            setSyncState({ status: 'supabase', error: null })
-            return
-          }
-        }
-
         const remote = await fetchRemoteStore()
         if (cancelled) return
 
         if (remote.error) {
           setSyncState({ status: 'error', error: remote.error.message })
-          return
-        }
-
-        if (remote.data) {
+        } else if (isValidStore(remote.data)) {
           setStore(remote.data)
           window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remote.data))
           setSyncState({ status: 'supabase', error: null })
+        } else {
+          setSyncState({ status: 'empty', error: null })
+        }
+
+        if (!isGoogleSheetsSyncConfigured) return
+
+        setSyncState({ status: 'syncing-sheets', error: null })
+        const sheetsImport = await importGoogleSheetsToSupabase()
+        if (cancelled) return
+
+        if (sheetsImport.ok && isValidStore(sheetsImport.store)) {
+          setStore(sheetsImport.store)
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sheetsImport.store))
+          setSyncState({ status: 'supabase', error: null })
+          return
+        }
+
+        if (isValidStore(remote.data)) {
+          setStore(remote.data)
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remote.data))
+          setSyncState({
+            status: 'supabase',
+            error: sheetsImport.error ? `Sync Google Sheets saltato: ${sheetsImport.error}` : 'Sync Google Sheets saltato: import vuoto.',
+          })
           return
         }
 
         setStore(EMPTY_STORE)
         window.localStorage.removeItem(STORAGE_KEY)
-        setSyncState({ status: 'empty', error: null })
+        setSyncState({ status: 'empty', error: sheetsImport.error ?? 'Nessun dato disponibile.' })
       } catch (error) {
         if (!cancelled) setSyncState({ status: 'error', error: error.message })
       }
@@ -74,6 +84,11 @@ export function useMockStore(session) {
   }, [])
 
   async function persist(nextStore) {
+    if (!isValidStore(nextStore)) {
+      setSyncState({ status: 'error', error: 'Store non valido: salvataggio bloccato.' })
+      return
+    }
+
     setStore(nextStore)
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStore))
 
@@ -212,15 +227,28 @@ export function useMockStore(session) {
 }
 
 function loadStore() {
-  if (isSupabaseConfigured) return EMPTY_STORE
-
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY)
-    if (stored) return JSON.parse(stored)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      if (isValidStore(parsed)) return parsed
+    }
   } catch {
     window.localStorage.removeItem(STORAGE_KEY)
   }
   return EMPTY_STORE
+}
+
+function isValidStore(data) {
+  return Boolean(
+    data
+      && typeof data === 'object'
+      && Array.isArray(data.documents)
+      && data.documents.length > 0
+      && Array.isArray(data.photos)
+      && Array.isArray(data.estimates)
+      && Array.isArray(data.activities),
+  )
 }
 
 function uploadToDocument(upload) {
