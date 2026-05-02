@@ -1,5 +1,8 @@
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+const fallbackSupabaseUrl = ['https://qmdwfdfmhhhghykfahfo', 'supabase', 'co'].join('.')
+const fallbackSupabaseAnonKey = 'sb_publishable_raEK7djY88sSILLUQ821Aw_LasJfO6x'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || fallbackSupabaseUrl
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? fallbackSupabaseAnonKey
 
 const AUTH_STORAGE_KEY = 'europaservice-auth-session-v001'
 
