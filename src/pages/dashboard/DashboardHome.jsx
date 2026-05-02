@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   ActivityFeed,
   AlertPanel,
@@ -15,12 +15,6 @@ import { ProgressBar } from '../../components/ProgressBar'
 import { RecentUploadList } from '../../components/RecentUploadList'
 import { StatusBadge } from '../../components/StatusBadge'
 import { StatusDot } from '../../components/StatusDot'
-import { mockCantieri } from '../../data/mockCantieri'
-import {
-  costBreakdown,
-  recentWhatsAppUploads,
-  reminders,
-} from '../../data/mockHubData'
 import {
   getAccountingAlerts,
   getAccountingTotals,
@@ -28,22 +22,25 @@ import {
 } from '../../data/mockMovimentiContabili'
 import { getRole } from '../../lib/roles'
 
-const documentFlow = ['Caricato', 'Da verificare', 'Confermato', 'Collegato al cantiere']
+const documentFlow = ['Importato', 'Da verificare', 'Confermato', 'Collegato al cantiere']
 const photoFlow = ['Caricata', 'Da revisionare', 'Approvata', 'Pubblicabile sul sito']
 const quoteFlow = ['Nuovo', 'Da valutare', 'Contattato', 'Accettato/Rifiutato']
 
-export function DashboardHome({ session, fotoUploads, documentUploads, documents = [], activities = [], estimates = [] }) {
+export function DashboardHome({ session, fotoUploads, documentUploads, documents = [], activities = [], estimates = [], syncState }) {
   const activeRole = getRole(session.role)
+  const isSupabase = syncState?.status === 'supabase'
 
   return (
     <>
       <DashboardHeader
-        eyebrow="Area interna mock"
+        eyebrow={isSupabase ? 'Area interna reale' : 'Area interna'}
         title={getDashboardTitle(session.role)}
-        description={activeRole.description}
+        description={isSupabase
+          ? 'Dati caricati da Supabase / BARCELO_ROMA_master Google Sheets.'
+          : activeRole.description}
         roleLabel={activeRole.label}
       >
-        <DataModeBadge />
+        <DataModeBadge>{isSupabase ? 'Dati reali Supabase' : syncState?.status === 'loading' ? 'Caricamento dati' : 'Dati locali'}</DataModeBadge>
       </DashboardHeader>
 
       {session.role === 'admin' ? (
@@ -51,7 +48,7 @@ export function DashboardHome({ session, fotoUploads, documentUploads, documents
       ) : null}
       {session.role === 'accounting' ? <AccountingDashboard documentUploads={documentUploads} documents={documents} /> : null}
       {session.role === 'employee' ? (
-        <EmployeeDashboard session={session} fotoUploads={fotoUploads} documentUploads={documentUploads} />
+        <EmployeeDashboard session={session} fotoUploads={fotoUploads} documentUploads={documentUploads} documents={documents} />
       ) : null}
     </>
   )
@@ -63,31 +60,34 @@ function getDashboardTitle(role) {
   return 'Dashboard admin / capo'
 }
 
-function AdminDashboard({ documentUploads, documents }) {
+function AdminDashboard({ documentUploads, documents, activities }) {
   const [modalAction, setModalAction] = useState(null)
-  const activeSites = mockCantieri.filter((cantiere) => cantiere.stato === 'attivo').length
   const accountingRows = documents.map(documentToAccountingRow)
   const accountingTotals = getAccountingTotals(accountingRows)
   const docsToCheck = documentUploads.filter((doc) => doc.stato === 'da verificare').length
+  const sites = useMemo(() => buildSitesFromDocuments(documents), [documents])
+  const categoryTotals = getCategoryTotals(accountingRows).filter((row) => row.totale > 0).slice(0, 6)
+  const pendingPayments = accountingRows
+    .filter((row) => row.pagamento?.toLowerCase().includes('da') || row.categoria?.toLowerCase().includes('bonifici'))
+    .reduce((total, row) => total + Number(row.totale || 0), 0)
 
   return (
     <>
       <div className="hub-toolbar">
         <label className="date-filter">
           <span>Periodo</span>
-          <select defaultValue="week">
-            <option value="week">15 - 22 Maggio 2026</option>
-            <option value="month">Questo mese</option>
-            <option value="quarter">Questo trimestre</option>
+          <select defaultValue="current">
+            <option value="current">BARCELO ROMA MASTER</option>
+            <option value="all">Tutti i dati importati</option>
           </select>
         </label>
       </div>
 
       <div className="stats-grid hub-kpi-grid">
-        <StatCard icon="building" label="Totale cantieri attivi" value={activeSites} hint="+2 rispetto alla settimana scorsa" />
-        <StatCard icon="file" tone="amber" label="Documenti da controllare" value={docsToCheck} hint="+6 rispetto alla settimana scorsa" />
-        <StatCard icon="wallet" tone="green" label="Spese del mese" value={<MoneyValue value={accountingTotals.totale} />} hint="-8,4% rispetto al mese scorso" />
-        <StatCard icon="calendar" tone="purple" label="Pagamenti in attesa" value={<MoneyValue value={56230.4} />} hint="5 pagamenti" />
+        <StatCard icon="building" label="Cantieri reali" value={sites.length} hint="Fonte Supabase" />
+        <StatCard icon="file" tone="amber" label="Documenti da controllare" value={docsToCheck} hint={`${documents.length} righe importate`} />
+        <StatCard icon="wallet" tone="green" label="Totale spese" value={<MoneyValue value={accountingTotals.totale} />} hint="Da BARCELO_ROMA_master" />
+        <StatCard icon="calendar" tone="purple" label="Pagamenti / da classificare" value={<MoneyValue value={pendingPayments} />} hint="Bonifici e righe da verificare" />
       </div>
 
       <div className="hub-dashboard-grid">
@@ -95,7 +95,7 @@ function AdminDashboard({ documentUploads, documents }) {
           <PanelTitle title="Attività documenti recenti" actionHref="#/dashboard/documenti" />
           <div className="hub-table">
             <div className="hub-table-head hub-doc-row">
-              <span>Documento</span><span>Cantiere</span><span>Caricato da</span><span>Data</span><span>Stato</span>
+              <span>Documento</span><span>Cantiere</span><span>Origine</span><span>Data</span><span>Stato</span>
             </div>
             {documentUploads.slice(0, 5).map((doc) => {
               const documentStatus = normalizeDocumentStatus(doc.stato)
@@ -117,48 +117,45 @@ function AdminDashboard({ documentUploads, documents }) {
         <section className="internal-panel site-progress-panel">
           <PanelTitle title="Andamento cantieri" actionHref="#/dashboard/cantieri" />
           <div className="site-progress-list">
-            {mockCantieri.slice(0, 5).map((cantiere) => {
-              const siteStatus = cantiere.stato === 'attivo' ? 'In corso' : cantiere.stato
-              return (
-                <a className="site-progress-row" href={`#/dashboard/cantieri/${cantiere.id}`} key={cantiere.id}>
-                  <div className="site-progress-main">
-                    <strong>{cantiere.nome}</strong>
-                    <small>{cantiere.localita}</small>
-                  </div>
-                  <div className="site-progress-meter">
-                    <ProgressBar value={cantiere.avanzamento} />
-                  </div>
-                  <div className="site-progress-meta">
-                    <StatusDot status={siteStatus} label={siteStatus} />
-                  </div>
-                </a>
-              )
-            })}
+            {sites.map((cantiere) => (
+              <a className="site-progress-row" href={`#/dashboard/cantieri/${cantiere.id}`} key={cantiere.id}>
+                <div className="site-progress-main">
+                  <strong>{cantiere.nome}</strong>
+                  <small>{cantiere.localita}</small>
+                </div>
+                <div className="site-progress-meter">
+                  <ProgressBar value={cantiere.avanzamento} />
+                </div>
+                <div className="site-progress-meta">
+                  <StatusDot status={cantiere.statoLabel} label={cantiere.statoLabel} />
+                </div>
+              </a>
+            ))}
           </div>
         </section>
       </div>
 
       <div className="internal-two-column">
-        <CostSummaryPanel total={accountingTotals.totale} />
-        <ActivityFeed title="Attività e promemoria" items={reminders.map((item) => ({
-          title: item.title,
-          meta: `${item.site} · ${item.due}`,
-          status: item.priority,
+        <CostSummaryPanel total={accountingTotals.totale} categoryTotals={categoryTotals} />
+        <ActivityFeed title="Attività recenti" items={(activities.length ? activities : []).slice(0, 5).map((item) => ({
+          title: item.description,
+          meta: `${item.author ?? 'Sistema'} · ${item.date ?? ''}`,
+          status: item.type,
         }))} />
       </div>
 
       <div className="internal-two-column hub-lower-grid">
         <section className="internal-panel">
-          <PanelTitle title="Ultimi caricamenti da WhatsApp" actionHref="#/dashboard/caricamenti" />
+          <PanelTitle title="Righe Google Sheets importate" actionHref="#/dashboard/contabilita" />
           <div className="compact-upload-list">
-            {recentWhatsAppUploads.map((upload) => (
-              <article className="compact-upload-row" key={upload.id}>
-                <span className={`file-chip file-${upload.type}`}>{upload.type === 'pdf' ? 'PDF' : 'IMG'}</span>
+            {documents.slice(0, 5).map((document) => (
+              <article className="compact-upload-row" key={document.id}>
+                <span className="file-chip file-pdf">TAB</span>
                 <div>
-                  <strong>{upload.fileName}</strong>
-                  <small>{upload.cantiere}</small>
+                  <strong>{document.numeroDocumento ?? document.descrizione}</strong>
+                  <small>{document.categoria}</small>
                 </div>
-                <span>{upload.date}</span>
+                <span><MoneyValue value={document.totale ?? document.importoTotale ?? 0} /></span>
               </article>
             ))}
           </div>
@@ -167,11 +164,9 @@ function AdminDashboard({ documentUploads, documents }) {
         <section className="internal-panel dashboard-quick-actions-panel">
           <PanelTitle title="Azioni rapide" />
           <div className="quick-actions-grid quick-actions-compact">
-            <QuickActionCard icon="upload" title="Carica documento" text="Upload mock" href="#/dashboard/upload" action="Apri" />
-            <QuickActionCard icon="building" title="Nuovo cantiere" text="Scheda mock" action="Crea" onClick={() => setModalAction(mockActions.newSite)} />
-            <QuickActionCard icon="wallet" title="Nuova spesa" text="Movimento mock" action="Inserisci" onClick={() => setModalAction(mockActions.newExpense)} />
-            <QuickActionCard icon="estimate" title="Crea preventivo" text="Pipeline mock" action="Crea" onClick={() => setModalAction(mockActions.newEstimate)} />
-            <QuickActionCard icon="report" title="Report PDF" text="Anteprima mock" action="Genera" onClick={() => setModalAction(mockActions.report)} />
+            <QuickActionCard icon="upload" title="Carica documento" text="Nuovo documento reale" href="#/dashboard/upload" action="Apri" />
+            <QuickActionCard icon="wallet" title="Nuova spesa" text="Movimento contabile" action="Inserisci" onClick={() => setModalAction(mockActions.newExpense)} />
+            <QuickActionCard icon="report" title="Report" text="Riepilogo cantiere" action="Apri" href="#/dashboard/report" />
           </div>
         </section>
       </div>
@@ -189,40 +184,20 @@ function AdminDashboard({ documentUploads, documents }) {
 }
 
 const mockActions = {
-  newSite: {
-    icon: 'building',
-    title: 'Nuovo cantiere mock',
-    text: 'Crea una scheda cantiere dimostrativa. Nessun dato viene inviato a un backend reale.',
-    confirmLabel: 'Crea cantiere',
-    fields: [
-      { label: 'Nome cantiere', placeholder: 'Es. Hotel Garda' },
-      { label: 'Responsabile', type: 'select', options: ['Gianni Europa', 'Marco Ferri', 'Sara Costa'] },
-    ],
-  },
   newExpense: {
     icon: 'wallet',
-    title: 'Nuova spesa mock',
-    text: 'Registra una spesa dimostrativa collegabile alla contabilità mock.',
+    title: 'Nuova spesa',
+    text: 'Registra una nuova spesa collegabile al cantiere reale.',
     confirmLabel: 'Inserisci spesa',
     fields: [
       { label: 'Fornitore', placeholder: 'Es. Eurofer' },
       { label: 'Importo', type: 'number', placeholder: '0,00' },
     ],
   },
-  newEstimate: {
-    icon: 'estimate',
-    title: 'Crea preventivo mock',
-    text: 'Apre una bozza preventivo dimostrativa per preparare la futura pipeline commerciale.',
-    confirmLabel: 'Crea preventivo',
-    fields: [
-      { label: 'Cliente', placeholder: 'Nome cliente' },
-      { label: 'Tipo lavoro', type: 'select', options: ['Cartongesso', 'Finiture interne', 'Ristrutturazione tecnica'] },
-    ],
-  },
   report: {
     icon: 'report',
-    title: 'Report PDF mock',
-    text: 'Genera una conferma dimostrativa. Il PDF reale resta non implementato come previsto dalla roadmap.',
+    title: 'Report',
+    text: 'Genera una conferma dimostrativa. Il PDF reale resta non implementato.',
     confirmLabel: 'Genera anteprima',
   },
 }
@@ -241,10 +216,8 @@ function FloatingQuickActions({ onModalAction }) {
 
   const actions = [
     { icon: 'upload', label: 'Carica documento', hint: 'Apri upload', href: '#/dashboard/upload' },
-    { icon: 'building', label: 'Nuovo cantiere', hint: 'Scheda mock', action: () => onModalAction(mockActions.newSite) },
-    { icon: 'wallet', label: 'Nuova spesa', hint: 'Movimento mock', action: () => onModalAction(mockActions.newExpense) },
-    { icon: 'estimate', label: 'Preventivo', hint: 'Pipeline mock', action: () => onModalAction(mockActions.newEstimate) },
-    { icon: 'report', label: 'Report PDF', hint: 'Anteprima', action: () => onModalAction(mockActions.report) },
+    { icon: 'wallet', label: 'Nuova spesa', hint: 'Movimento reale', action: () => onModalAction(mockActions.newExpense) },
+    { icon: 'report', label: 'Report', hint: 'Riepilogo', href: '#/dashboard/report' },
   ]
 
   function runAction(action) {
@@ -290,7 +263,7 @@ function normalizeDocumentStatus(status) {
   return status
 }
 
-function CostSummaryPanel({ total }) {
+function CostSummaryPanel({ total, categoryTotals }) {
   return (
     <section className="internal-panel">
       <PanelTitle title="Riepilogo costi" />
@@ -298,17 +271,17 @@ function CostSummaryPanel({ total }) {
         <div>
           <span>Totale costi</span>
           <strong><MoneyValue value={total} /></strong>
-          <small className="positive-trend">-8,4% rispetto al mese scorso</small>
+          <small className="positive-trend">Da dati reali importati</small>
         </div>
         <div className="donut-chart" aria-label="Ripartizione costi">
           <span>Totale<br /><MoneyValue value={total} /></span>
         </div>
         <div className="cost-legend">
-          {costBreakdown.map((item) => (
-            <div key={item.label}>
-              <span style={{ background: item.color }} />
-              <strong>{item.label}</strong>
-              <small><MoneyValue value={item.value} /> · {item.percent}%</small>
+          {categoryTotals.map((item) => (
+            <div key={item.categoria}>
+              <span />
+              <strong>{item.categoria}</strong>
+              <small><MoneyValue value={item.totale} /></small>
             </div>
           ))}
         </div>
@@ -341,7 +314,7 @@ function AccountingDashboard({ documentUploads, documents }) {
         <StatCard label="Bonifici da collegare" value={transfersToLink.length} />
         <StatCard label="FIR incompleti" value={firIncomplete.length} />
         <StatCard label="Possibili duplicati" value={duplicates.length} />
-        <StatCard label="IVA mock" value={<MoneyValue value={totals.iva} />} />
+        <StatCard label="IVA" value={<MoneyValue value={totals.iva} />} />
         <StatCard label="Documenti senza cantiere" value={documentsWithoutSite.length} />
       </div>
 
@@ -395,7 +368,8 @@ function documentToAccountingRow(document) {
   }
 }
 
-function EmployeeDashboard({ session, fotoUploads, documentUploads }) {
+function EmployeeDashboard({ session, fotoUploads, documentUploads, documents }) {
+  const sites = buildSitesFromDocuments(documents)
   const myPhotos = fotoUploads.filter((upload) => upload.caricatoDa === session.name)
   const myDocuments = documentUploads.filter((upload) => upload.caricatoDa === session.name)
 
@@ -404,8 +378,8 @@ function EmployeeDashboard({ session, fotoUploads, documentUploads }) {
       <section className="employee-action-panel employee-action-panel-strong">
         <label>
           Scegli cantiere
-          <select defaultValue={mockCantieri[0].id}>
-            {mockCantieri.map((cantiere) => (
+          <select defaultValue={sites[0]?.id ?? 'barcelo-roma'}>
+            {sites.map((cantiere) => (
               <option key={cantiere.id} value={cantiere.id}>{cantiere.nome}</option>
             ))}
           </select>
@@ -417,7 +391,7 @@ function EmployeeDashboard({ session, fotoUploads, documentUploads }) {
         </div>
         <label>
           Nota rapida
-          <textarea rows="4" placeholder="Scrivi una nota operativa mock" />
+          <textarea rows="4" placeholder="Scrivi una nota operativa" />
         </label>
       </section>
 
@@ -428,4 +402,31 @@ function EmployeeDashboard({ session, fotoUploads, documentUploads }) {
       <WorkflowStepper title="Flusso foto" steps={photoFlow} />
     </>
   )
+}
+
+function buildSitesFromDocuments(documents) {
+  const groups = documents.reduce((acc, document) => {
+    const id = document.cantiereId ?? 'barcelo-roma'
+    const name = document.cantiere ?? 'Barcelò Roma'
+    if (!acc[id]) {
+      acc[id] = {
+        id,
+        nome: name,
+        localita: id === 'barcelo-roma' ? 'Roma, zona Eur' : 'Da Google Sheets',
+        statoLabel: 'In corso',
+        totale: 0,
+        movimenti: 0,
+      }
+    }
+    acc[id].totale += Number(document.totale || document.importoTotale || 0)
+    acc[id].movimenti += Number(document.movimentiCount || 1)
+    return acc
+  }, {})
+
+  const sites = Object.values(groups)
+  const maxTotal = Math.max(...sites.map((site) => site.totale), 1)
+  return sites.map((site) => ({
+    ...site,
+    avanzamento: Math.max(5, Math.round((site.totale / maxTotal) * 100)),
+  }))
 }
