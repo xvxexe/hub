@@ -1,54 +1,43 @@
 import { useMemo, useState } from 'react'
 import { DashboardHeader, DataModeBadge, MockActionModal, StatCard } from '../../components/InternalComponents'
+import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
 import { StatusBadge } from '../../components/StatusBadge'
-import {
-  formatCurrency,
-  formatDate,
-  getCantiereTotals,
-  mockCantieri,
-  statiCantiere,
-} from '../../data/mockCantieri'
-import { reminders } from '../../data/mockHubData'
 
-export function CantieriList() {
+export function CantieriList({ documents = [] }) {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('tutti')
-  const [manager, setManager] = useState('tutti')
-  const [sort, setSort] = useState('avanzamento-desc')
+  const [sort, setSort] = useState('spese-desc')
   const [page, setPage] = useState(1)
   const [modalAction, setModalAction] = useState(null)
-  const managers = [...new Set(mockCantieri.map((cantiere) => cantiere.responsabile))]
+  const cantieri = useMemo(() => buildCantieriFromDocuments(documents), [documents])
 
   const filteredCantieri = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
 
-    return mockCantieri
+    return cantieri
       .filter((cantiere) => {
         const matchesSearch =
           normalizedSearch === '' ||
           cantiere.nome.toLowerCase().includes(normalizedSearch) ||
-          cantiere.cliente.toLowerCase().includes(normalizedSearch) ||
           cantiere.localita.toLowerCase().includes(normalizedSearch)
         const matchesStatus = status === 'tutti' || cantiere.stato === status
-        const matchesManager = manager === 'tutti' || cantiere.responsabile === manager
-
-        return matchesSearch && matchesStatus && matchesManager
+        return matchesSearch && matchesStatus
       })
       .sort((a, b) => {
-        if (sort === 'avanzamento-desc') return b.avanzamento - a.avanzamento
-        if (sort === 'avanzamento-asc') return a.avanzamento - b.avanzamento
-        if (sort === 'data-desc') return new Date(b.dataInizio) - new Date(a.dataInizio)
-        if (sort === 'data-asc') return new Date(a.dataInizio) - new Date(b.dataInizio)
-        return a.nome.localeCompare(b.nome)
+        if (sort === 'spese-desc') return b.spese - a.spese
+        if (sort === 'spese-asc') return a.spese - b.spese
+        if (sort === 'movimenti-desc') return b.movimenti - a.movimenti
+        if (sort === 'nome') return a.nome.localeCompare(b.nome)
+        return b.avanzamento - a.avanzamento
       })
-  }, [manager, search, sort, status])
+  }, [cantieri, search, sort, status])
 
-  const active = mockCantieri.filter((item) => item.stato === 'attivo').length
-  const waiting = mockCantieri.filter((item) => item.stato === 'da avviare').length
-  const delayed = mockCantieri.filter((item) => item.problemi.some((problem) => problem.priorita === 'Alta')).length
-  const closed = mockCantieri.filter((item) => item.stato === 'completato').length
-  const featured = filteredCantieri[0] ?? mockCantieri[0]
+  const active = cantieri.filter((item) => item.stato === 'attivo').length
+  const waiting = cantieri.filter((item) => item.stato === 'da-verificare').length
+  const delayed = documents.filter((item) => item.statoVerifica === 'Possibile duplicato' || item.statoVerifica === 'Incompleto').length
+  const totalCost = cantieri.reduce((sum, item) => sum + item.spese, 0)
+  const featured = filteredCantieri[0] ?? cantieri[0]
   const pageSize = 6
   const totalPages = Math.max(1, Math.ceil(filteredCantieri.length / pageSize))
   const currentPage = Math.min(page, totalPages)
@@ -58,18 +47,11 @@ export function CantieriList() {
   return (
     <>
       <DashboardHeader
-        eyebrow="Cantieri mock"
+        eyebrow="Cantieri reali"
         title="Gestione cantieri"
-        description="Monitora lo stato, i costi e l’avanzamento di tutti i cantieri."
+        description="Elenco generato dai dati Supabase importati da BARCELO_ROMA_master."
       >
-        <DataModeBadge />
-        <button
-          className="button button-primary"
-          type="button"
-          onClick={() => setModalAction(newSiteAction)}
-        >
-          Nuovo cantiere
-        </button>
+        <DataModeBadge>Dati reali Supabase</DataModeBadge>
       </DashboardHeader>
 
       <section className="cantieri-tools" aria-label="Filtri cantieri">
@@ -82,7 +64,7 @@ export function CantieriList() {
               setSearch(event.target.value)
               setPage(1)
             }}
-            placeholder="Cantiere, cliente, località..."
+            placeholder="Cantiere, località..."
           />
         </label>
         <label>
@@ -92,17 +74,8 @@ export function CantieriList() {
             setPage(1)
           }}>
             <option value="tutti">Tutti gli stati</option>
-            {statiCantiere.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>
-        <label>
-          Responsabile
-          <select value={manager} onChange={(event) => {
-            setManager(event.target.value)
-            setPage(1)
-          }}>
-            <option value="tutti">Tutti i responsabili</option>
-            {managers.map((item) => <option key={item} value={item}>{item}</option>)}
+            <option value="attivo">In corso</option>
+            <option value="da-verificare">Da verificare</option>
           </select>
         </label>
         <label>
@@ -111,20 +84,19 @@ export function CantieriList() {
             setSort(event.target.value)
             setPage(1)
           }}>
-            <option value="avanzamento-desc">Recenti</option>
-            <option value="avanzamento-asc">Avanzamento basso</option>
-            <option value="data-desc">Data inizio recente</option>
-            <option value="data-asc">Data inizio vecchia</option>
+            <option value="spese-desc">Spese alte</option>
+            <option value="spese-asc">Spese basse</option>
+            <option value="movimenti-desc">Più movimenti</option>
             <option value="nome">Nome</option>
           </select>
         </label>
       </section>
 
       <section className="stats-grid hub-kpi-grid">
-        <StatCard icon="building" label="Cantieri attivi" value={active} hint="+2 rispetto alla settimana scorsa" />
-        <StatCard icon="calendar" tone="amber" label="In attesa" value={waiting} hint="+1 rispetto alla settimana scorsa" />
-        <StatCard icon="warning" tone="red" label="In ritardo" value={delayed} hint="+2 rispetto alla settimana scorsa" />
-        <StatCard icon="check" tone="green" label="Chiusi questo mese" value={closed} hint="+3 rispetto al mese scorso" />
+        <StatCard icon="building" label="Cantieri reali" value={cantieri.length} hint="Da Supabase" />
+        <StatCard icon="calendar" tone="amber" label="In corso" value={active} hint="Dati importati" />
+        <StatCard icon="warning" tone="red" label="Da controllare" value={delayed} hint="Incompleti o duplicati" />
+        <StatCard icon="wallet" tone="green" label="Totale spese" value={<MoneyValue value={totalCost} />} hint="BARCELO_ROMA_master" />
       </section>
 
       <div className="cantieri-page-layout">
@@ -137,26 +109,21 @@ export function CantieriList() {
             <>
               <div className="hub-table cantieri-data-table">
                 <div className="hub-table-head cantieri-data-row">
-                  <span>Nome cantiere</span><span>Località</span><span>Cliente</span><span>Stato</span><span>Avanzamento</span><span>Budget</span><span>Spese</span><span>Responsabile</span><span>Ultimo agg.</span>
+                  <span>Nome cantiere</span><span>Località</span><span>Origine</span><span>Stato</span><span>Avanzamento</span><span>Movimenti</span><span>Spese</span><span>Responsabile</span><span>Ultimo agg.</span>
                 </div>
-                {paginatedCantieri.map((cantiere) => {
-                  const totals = getCantiereTotals(cantiere)
-                  const budget = getMockBudget(cantiere)
-
-                  return (
-                    <a className="hub-table-row cantieri-data-row" href={`#/dashboard/cantieri/${cantiere.id}`} key={cantiere.id}>
-                      <strong>{cantiere.nome}</strong>
-                      <span>{cantiere.localita}</span>
-                      <span>{cantiere.cliente}</span>
-                      <StatusBadge>{displaySiteStatus(cantiere)}</StatusBadge>
-                      <ProgressBar value={cantiere.avanzamento} />
-                      <span>{formatCurrency(budget)}</span>
-                      <span>{formatCurrency(totals.spese)}</span>
-                      <span>{cantiere.responsabile}</span>
-                      <span>{formatDate(cantiere.dataInizio)}</span>
-                    </a>
-                  )
-                })}
+                {paginatedCantieri.map((cantiere) => (
+                  <a className="hub-table-row cantieri-data-row" href={`#/dashboard/cantieri/${cantiere.id}`} key={cantiere.id}>
+                    <strong>{cantiere.nome}</strong>
+                    <span>{cantiere.localita}</span>
+                    <span>Google Sheets</span>
+                    <StatusBadge>{displaySiteStatus(cantiere)}</StatusBadge>
+                    <ProgressBar value={cantiere.avanzamento} />
+                    <span>{cantiere.movimenti}</span>
+                    <span><MoneyValue value={cantiere.spese} /></span>
+                    <span>{cantiere.responsabile}</span>
+                    <span>{formatDate(cantiere.lastDate)}</span>
+                  </a>
+                ))}
               </div>
               <div className="pagination-bar">
                 <span>Mostra {pageStart + 1} - {Math.min(pageStart + pageSize, filteredCantieri.length)} di {filteredCantieri.length} cantieri</span>
@@ -177,35 +144,24 @@ export function CantieriList() {
           ) : (
             <section className="empty-state">
               <h2>Nessun cantiere trovato</h2>
-              <p>Modifica ricerca o filtro stato per visualizzare altri cantieri mock.</p>
+              <p>Modifica ricerca o filtro stato.</p>
             </section>
           )}
         </section>
 
         <aside className="cantieri-side-stack">
-          <FeaturedSite cantiere={featured} />
+          {featured ? <FeaturedSite cantiere={featured} /> : null}
           <section className="internal-panel">
             <div className="section-heading panel-title-row">
-              <h2>Scadenze cantiere</h2>
-              <button
-                className="button button-secondary button-small"
-                type="button"
-                onClick={() => setModalAction({
-                  icon: 'calendar',
-                  title: 'Tutte le scadenze mock',
-                  text: 'Vista calendario dimostrativa pronta per essere collegata a scadenze reali, promemoria e notifiche.',
-                  confirmLabel: 'Ok',
-                })}
-              >
-                Vedi tutte
-              </button>
+              <h2>Righe principali</h2>
+              <a className="button button-secondary button-small" href="#/dashboard/documenti">Documenti</a>
             </div>
             <div className="activity-feed">
-              {reminders.slice(0, 3).map((item) => (
+              {documents.slice(0, 4).map((item) => (
                 <article className="activity-item" key={item.id}>
                   <span />
-                  <div><strong>{item.site}</strong><small>{item.title}</small></div>
-                  <StatusBadge>{item.priority}</StatusBadge>
+                  <div><strong>{item.numeroDocumento ?? item.descrizione}</strong><small>{item.categoria}</small></div>
+                  <StatusBadge>{item.statoVerifica}</StatusBadge>
                 </article>
               ))}
             </div>
@@ -213,8 +169,8 @@ export function CantieriList() {
           <section className="internal-panel">
             <div className="section-heading panel-title-row"><h2>Azioni rapide</h2></div>
             <div className="quick-actions-grid quick-actions-compact">
-              <button className="quick-action-card" type="button" onClick={() => setModalAction(newSiteAction)}><strong>Nuovo cantiere</strong><span>Crea</span></button>
-              <a className="quick-action-card" href="#/dashboard/report"><strong>Report cantieri</strong><span>PDF</span></a>
+              <a className="quick-action-card" href="#/dashboard/report"><strong>Report cantiere</strong><span>Apri</span></a>
+              <a className="quick-action-card" href="#/dashboard/documenti"><strong>Documenti</strong><span>Vedi</span></a>
             </div>
           </section>
         </aside>
@@ -224,20 +180,7 @@ export function CantieriList() {
   )
 }
 
-const newSiteAction = {
-  icon: 'building',
-  title: 'Nuovo cantiere mock',
-  text: 'Crea la scheda iniziale del cantiere nei dati mock locali. Il backend reale sarà collegabile mantenendo questi campi.',
-  confirmLabel: 'Crea cantiere mock',
-  fields: [
-    { label: 'Nome cantiere', placeholder: 'Es. Hotel Centro - fase 2' },
-    { label: 'Responsabile', type: 'select', options: ['Marco Ferri', 'Giulia Riva', 'Luca Bianchi'] },
-    { label: 'Stato', type: 'select', options: ['In corso', 'Da avviare', 'Critico'] },
-  ],
-}
-
 function FeaturedSite({ cantiere }) {
-  const totals = getCantiereTotals(cantiere)
   return (
     <section className="internal-panel featured-site">
       <div className="section-heading panel-title-row">
@@ -248,9 +191,9 @@ function FeaturedSite({ cantiere }) {
       <small>{cantiere.localita}</small>
       <ProgressBar value={cantiere.avanzamento} />
       <dl className="detail-list">
-        <div><dt>Budget</dt><dd>{formatCurrency(getMockBudget(cantiere))}</dd></div>
-        <div><dt>Spese</dt><dd>{formatCurrency(totals.spese)}</dd></div>
-        <div><dt>Scadenza prevista</dt><dd>{formatDate(cantiere.dataFinePrevista)}</dd></div>
+        <div><dt>Movimenti</dt><dd>{cantiere.movimenti}</dd></div>
+        <div><dt>Spese</dt><dd><MoneyValue value={cantiere.spese} /></dd></div>
+        <div><dt>Ultimo aggiornamento</dt><dd>{formatDate(cantiere.lastDate)}</dd></div>
         <div><dt>Responsabile</dt><dd>{cantiere.responsabile}</dd></div>
       </dl>
       <div className="row-actions">
@@ -262,19 +205,44 @@ function FeaturedSite({ cantiere }) {
   )
 }
 
+function buildCantieriFromDocuments(documents) {
+  const groups = documents.reduce((acc, document) => {
+    const id = document.cantiereId ?? 'barcelo-roma'
+    const name = document.cantiere ?? 'Barcelò Roma'
+    if (!acc[id]) {
+      acc[id] = {
+        id,
+        nome: name,
+        localita: id === 'barcelo-roma' ? 'Roma, zona Eur' : 'Da Google Sheets',
+        stato: 'attivo',
+        responsabile: 'Gianni Europa',
+        spese: 0,
+        movimenti: 0,
+        lastDate: document.dataDocumento,
+      }
+    }
+    acc[id].spese += Number(document.totale || document.importoTotale || 0)
+    acc[id].movimenti += Number(document.movimentiCount || 1)
+    if (document.dataDocumento && new Date(document.dataDocumento) > new Date(acc[id].lastDate || 0)) {
+      acc[id].lastDate = document.dataDocumento
+    }
+    return acc
+  }, {})
+
+  const sites = Object.values(groups)
+  const maxTotal = Math.max(...sites.map((site) => site.spese), 1)
+  return sites.map((site) => ({
+    ...site,
+    avanzamento: Math.max(5, Math.round((site.spese / maxTotal) * 100)),
+  }))
+}
+
 function displaySiteStatus(cantiere) {
-  if (cantiere.problemi.some((problem) => problem.priorita === 'Alta')) return 'Critico'
   if (cantiere.stato === 'attivo') return 'In corso'
-  if (cantiere.stato === 'completato') return 'Chiuso'
   return cantiere.stato
 }
 
-function getMockBudget(cantiere) {
-  return {
-    'barcelo-roma': 1245000,
-    'residenza-verdi': 1250000,
-    'negozio-centro': 950000,
-    'hotel-interno-milano': 4200000,
-    'condominio-bianchi': 1900000,
-  }[cantiere.id] ?? 750000
+function formatDate(date) {
+  if (!date) return '-'
+  return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(date))
 }
