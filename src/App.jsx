@@ -178,7 +178,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
       <DashboardListPage
         eyebrow="Dipendenti"
         title="Squadra e assegnazioni"
-        description="Utenti e ruoli collegati a Supabase Auth. Gestione completa inviti nella prossima fase."
+        description="Utenti e ruoli collegati a Supabase Auth. Gli inviti si preparano da Impostazioni solo per admin."
         rows={employees}
         columns={[
           { label: 'Nome', key: 'name' },
@@ -189,7 +189,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
     )
   }
   if (path === '/dashboard/impostazioni') {
-    return <SettingsMock />
+    return <SettingsMock session={session} />
   }
 
   return <Home />
