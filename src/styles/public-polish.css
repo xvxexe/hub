@@ -4,7 +4,6 @@
   --pub-hover-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --pub-card-motion: 1.45s;
   --pub-item-motion: 0.95s;
-  --pub-image-motion: 2.2s;
   --pub-reveal-motion: 1.2s;
 }
 
@@ -108,19 +107,36 @@
 .premium-final-cta .premium-eyebrow, .premium-case-split .premium-eyebrow { color: var(--pub-accent, #b8642b) !important; }
 .premium-final-cta p:not(.premium-eyebrow) { color: rgba(255,255,255,.82) !important; }
 
-/* Motion pulito */
+/* Motion pulito, senza animazioni sulle immagini */
 @media (prefers-reduced-motion: no-preference) {
-  .premium-hero-bg { transform: scale(1.035) !important; animation: premiumHeroImage 34s ease-in-out infinite alternate !important; }
+  .premium-hero-bg,
+  .premium-service-image,
+  .premium-project-image,
+  .premium-gallery-image,
+  .premium-split-image {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
   .premium-animate-item { opacity: 0 !important; transform: translateY(18px) !important; animation: premiumHeroReveal var(--pub-reveal-motion) var(--pub-motion-ease) forwards !important; }
   .premium-animate-item:nth-child(1) { animation-delay: .08s !important; }
   .premium-animate-item:nth-child(2) { animation-delay: .18s !important; }
   .premium-animate-item:nth-child(3) { animation-delay: .28s !important; }
   .premium-animate-item:nth-child(4) { animation-delay: .38s !important; }
+
   .premium-scroll-reveal { opacity: 1 !important; transform: none !important; animation: premiumScrollReveal 1.25s var(--pub-motion-ease) both !important; animation-timeline: view() !important; animation-range: entry 0% cover 34% !important; }
   .premium-card, .premium-project-card, .premium-service-card, .premium-stats article, .premium-process article, .premium-key-facts article, .premium-metric-panel, .premium-faq details, .premium-case-split article, .premium-form, .premium-timeline article { transition: transform var(--pub-card-motion) var(--pub-hover-ease), box-shadow var(--pub-card-motion) var(--pub-hover-ease), border-color var(--pub-card-motion) var(--pub-hover-ease), background var(--pub-card-motion) var(--pub-hover-ease) !important; }
   .premium-card:hover, .premium-project-card:hover, .premium-service-card:hover, .premium-stats article:hover, .premium-process article:hover, .premium-case-split article:hover, .premium-form:hover, .premium-timeline article:hover { transform: translateY(-6px) scale(1.006) !important; box-shadow: 0 30px 80px rgba(15,23,42,.13) !important; border-color: rgba(184,100,43,.28) !important; }
-  .premium-service-image, .premium-project-image, .premium-gallery-image, .premium-split-image { transition: transform var(--pub-image-motion) var(--pub-hover-ease), filter var(--pub-image-motion) var(--pub-hover-ease) !important; }
-  .premium-service-card:hover .premium-service-image, .premium-project-card:hover .premium-project-image, .premium-split-image:hover, .premium-gallery-image:hover { transform: scale(1.045) !important; filter: saturate(1.08) contrast(1.035) brightness(1.015) !important; }
+
+  .premium-service-card:hover .premium-service-image,
+  .premium-project-card:hover .premium-project-image,
+  .premium-split-image:hover,
+  .premium-gallery-image:hover {
+    transform: none !important;
+    filter: none !important;
+  }
+
   .premium-button, .premium-icon, .premium-card-arrow, .premium-tags small, .premium-sector-row span, .premium-logo-row span, .premium-filter-pills button, .premium-form input, .premium-form select, .premium-form textarea { transition: transform var(--pub-item-motion) var(--pub-hover-ease), box-shadow var(--pub-item-motion) var(--pub-hover-ease), border-color var(--pub-item-motion) var(--pub-hover-ease), background var(--pub-item-motion) var(--pub-hover-ease), color var(--pub-item-motion) var(--pub-hover-ease) !important; }
   .premium-button:hover { transform: translateY(-2px) !important; }
   .premium-card-arrow:hover { transform: translateX(4px) !important; }
@@ -128,16 +144,15 @@
   .premium-card:hover .premium-icon, .premium-service-card:hover .premium-icon { transform: rotate(-3deg) scale(1.05) !important; }
 }
 
-/* Marquee come prima */
+/* Marquee/carousel animati */
 .premium-chip-marquee, .premium-sector-row, .premium-logo-row { display: block !important; overflow: hidden !important; width: min(100%, var(--pub-max, 1180px)) !important; max-width: min(100%, var(--pub-max, 1180px)) !important; padding-block: .35rem !important; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent) !important; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent) !important; }
-.premium-chip-marquee-track, .premium-hero-meta-track { display: flex !important; width: max-content !important; gap: .5rem !important; will-change: transform !important; animation: premiumMarquee 42s linear infinite !important; }
+.premium-chip-marquee-track, .premium-hero-meta-track { display: flex !important; width: max-content !important; gap: .5rem !important; will-change: transform !important; animation: premiumMarquee 42s linear infinite !important; transform: translateX(0); }
 .premium-chip-marquee-slow .premium-chip-marquee-track { animation-duration: 58s !important; }
 .premium-chip-marquee:hover .premium-chip-marquee-track, .premium-hero-meta:hover .premium-hero-meta-track { animation-play-state: paused !important; }
 .premium-chip-marquee span, .premium-sector-row span, .premium-logo-row span { flex: 0 0 auto !important; animation: none !important; white-space: nowrap !important; }
 
 @keyframes premiumHeroReveal { to { opacity: 1; transform: translateY(0); } }
-@keyframes premiumHeroImage { from { transform: scale(1.035); } to { transform: scale(1.075) translate3d(-0.8%, -0.5%, 0); } }
 @keyframes premiumMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes premiumScrollReveal { from { opacity: 0; transform: translateY(34px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-@media (prefers-reduced-motion: reduce) { .mobile-public-menu, .mobile-menu-backdrop, .mobile-menu-button, .mobile-menu-button span, .mobile-menu-links a, .premium-hero-bg, .premium-animate-item, .premium-scroll-reveal, .premium-chip-marquee-track, .premium-hero-meta-track { animation: none !important; transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .mobile-public-menu, .mobile-menu-backdrop, .mobile-menu-button, .mobile-menu-button span, .mobile-menu-links a, .premium-animate-item, .premium-scroll-reveal, .premium-chip-marquee-track, .premium-hero-meta-track { animation: none !important; transition: none !important; } }
