@@ -4,10 +4,10 @@
 */
 
 :root {
-  --motion-slow: 2.4s;
-  --motion-medium: 1.8s;
-  --motion-image: 3s;
-  --motion-reveal: 1.9s;
+  --motion-slow: 2.8s;
+  --motion-medium: 2s;
+  --motion-image: 3.2s;
+  --motion-reveal: 2s;
   --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --motion-ease-hover: cubic-bezier(0.33, 0, 0.2, 1);
 }
@@ -172,6 +172,73 @@
   .premium-metric-panel strong,
   .hero-panel strong {
     animation-duration: 10s !important;
+  }
+
+  /* Override finale reale: prende il DOM pubblico e forza TUTTE le transizioni visibili. */
+  html body .app-shell > main :is(
+    .premium-stats article,
+    .premium-card,
+    .premium-service-card,
+    .premium-project-card,
+    .premium-process article,
+    .premium-key-facts article,
+    .premium-metric-panel,
+    .premium-faq details,
+    .premium-timeline article,
+    .premium-case-split article,
+    .premium-contact-intro-card,
+    .premium-map-card,
+    .premium-form,
+    .premium-section-heading,
+    .premium-split-copy
+  ) {
+    transition: all 3s var(--motion-ease-hover) !important;
+  }
+
+  html body .app-shell > main :is(
+    .premium-stats article,
+    .premium-card,
+    .premium-service-card,
+    .premium-project-card,
+    .premium-process article,
+    .premium-key-facts article,
+    .premium-metric-panel,
+    .premium-faq details,
+    .premium-timeline article,
+    .premium-case-split article,
+    .premium-contact-intro-card,
+    .premium-map-card,
+    .premium-form
+  ):hover {
+    transform: translateY(-10px) scale(1.012) !important;
+    box-shadow: 0 34px 90px rgba(15, 23, 42, 0.16) !important;
+    border-color: rgba(184, 100, 43, 0.34) !important;
+    transition: all 3s var(--motion-ease-hover) !important;
+  }
+
+  html body .app-shell > main :is(
+    .premium-service-image,
+    .premium-project-image,
+    .premium-gallery-image,
+    .premium-split-image,
+    img[class*='premium-']
+  ) {
+    transition: all 3.2s var(--motion-ease-hover) !important;
+  }
+
+  html body .app-shell > main :is(
+    .premium-button,
+    .premium-card-arrow,
+    .premium-tags small,
+    .premium-sector-row span,
+    .premium-logo-row span,
+    .premium-filter-pills button,
+    .premium-icon,
+    .top-nav a,
+    .nav-cta,
+    .nav-private
+  ) {
+    transition: all 2s var(--motion-ease-hover) !important;
   }
 }
 
