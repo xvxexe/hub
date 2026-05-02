@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { mockCantieri } from '../data/mockCantieri'
 import { quotes } from '../data/mockData'
 import { mockMovimentiContabili } from '../data/mockMovimentiContabili'
 import { mockDocumentUploads, mockFotoUploads } from '../data/mockUploads'
+import { fetchRemoteStore, saveRemoteStore, seedRemoteStore } from '../lib/supabaseStore'
 
 const STORAGE_KEY = 'europaservice-mock-store-v057'
 
@@ -13,10 +14,62 @@ const priorities = ['Bassa', 'Media', 'Alta']
 
 export function useMockStore(session) {
   const [store, setStore] = useState(() => loadStore())
+  const [syncState, setSyncState] = useState({ status: 'local', error: null })
 
-  function persist(nextStore) {
+  useEffect(() => {
+    let cancelled = false
+
+    async function hydrateFromSupabase() {
+      try {
+        const seeded = await seedRemoteStore(store)
+        if (cancelled) return
+
+        if (seeded.error) {
+          setSyncState({ status: 'error', error: seeded.error.message })
+          return
+        }
+
+        const remote = await fetchRemoteStore()
+        if (cancelled) return
+
+        if (remote.error) {
+          setSyncState({ status: 'error', error: remote.error.message })
+          return
+        }
+
+        if (remote.data) {
+          setStore(remote.data)
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remote.data))
+          setSyncState({ status: 'supabase', error: null })
+          return
+        }
+
+        setSyncState({ status: 'local', error: null })
+      } catch (error) {
+        if (!cancelled) setSyncState({ status: 'error', error: error.message })
+      }
+    }
+
+    hydrateFromSupabase()
+
+    return () => {
+      cancelled = true
+    }
+    // La prima idratazione deve partire una sola volta dal fallback locale.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function persist(nextStore) {
     setStore(nextStore)
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStore))
+
+    const saved = await saveRemoteStore(nextStore)
+    if (saved.error) {
+      setSyncState({ status: 'error', error: saved.error.message })
+      return
+    }
+
+    setSyncState({ status: saved.source === 'supabase' ? 'supabase' : 'local', error: null })
   }
 
   function actor() {
@@ -104,6 +157,7 @@ export function useMockStore(session) {
 
   return {
     ...store,
+    syncState,
     documentUploads: store.documents.map(documentToUpload),
     fotoUploads: store.photos,
     documentStatuses,
