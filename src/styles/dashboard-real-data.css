@@ -340,39 +340,114 @@
   grid-template-columns: minmax(12rem, 1.4fr) minmax(8rem, 0.85fr) minmax(8rem, 0.85fr) minmax(6.5rem, 0.55fr) minmax(7.5rem, 0.65fr);
 }
 
-/* Fix pagina documenti: tabella non schiacciata */
-@media (min-width: 1180px) {
-  .document-center-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(24rem, 0.45fr);
-    gap: var(--real-gap);
-  }
+/* Pagina documenti: card reali leggibili, niente testo verticale */
+.document-page-fixed {
+  grid-template-columns: minmax(0, 1fr) minmax(23rem, 0.42fr);
+  align-items: start;
+}
 
-  .document-center-layout .document-preview-panel {
+.document-list-panel {
+  min-width: 0;
+}
+
+.document-card-list {
+  display: grid;
+  gap: 0.78rem;
+}
+
+.document-card-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 0.95rem;
+  background: var(--white);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
+}
+
+.document-card-row.selected {
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: 0 16px 35px rgba(37, 99, 235, 0.09);
+}
+
+.document-card-main {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.document-card-titleline {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.document-card-titleline strong {
+  min-width: 0;
+  font-size: 0.98rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.document-card-titleline .status-badge {
+  flex: 0 0 auto;
+}
+
+.document-card-main p {
+  margin: 0;
+  color: var(--dash-muted, #667380);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.document-card-meta {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.document-card-meta span {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+  color: var(--dash-muted, #667380);
+  font-size: 0.82rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.document-card-meta b {
+  color: var(--dash-subtle, #94a0a8);
+  font-size: 0.65rem;
+  font-weight: 760;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.document-card-meta span:last-child {
+  color: var(--dash-text, #111827);
+  font-weight: 700;
+}
+
+.document-card-menu {
+  justify-self: end;
+}
+
+@media (min-width: 1180px) {
+  .document-page-fixed .document-preview-panel {
     position: sticky;
     top: 6.2rem;
     align-self: start;
-  }
-
-  .document-center-layout .document-data-table,
-  .document-center-layout .hub-table {
-    overflow-x: auto;
-  }
-
-  .document-center-layout .document-data-row {
-    min-width: 58rem;
-  }
-
-  .document-center-layout .hub-table-row {
-    padding-block: 0.8rem;
-  }
-
-  .document-center-layout .status-badge {
-    justify-self: start;
-    white-space: nowrap;
-  }
-
-  .document-center-layout .row-menu {
-    justify-self: end;
   }
 }
 
@@ -781,7 +856,8 @@
   .document-center-layout,
   .cantieri-page-layout,
   .cantiere-detail-header,
-  .cantiere-overview-grid {
+  .cantiere-overview-grid,
+  .document-page-fixed {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -804,6 +880,10 @@
 
   .donut-chart {
     justify-self: start;
+  }
+
+  .document-card-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -902,6 +982,23 @@
   }
 
   .document-data-row > .row-menu {
+    justify-self: start;
+  }
+
+  .document-card-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .document-card-titleline {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .document-card-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .document-card-menu {
     justify-self: start;
   }
 
