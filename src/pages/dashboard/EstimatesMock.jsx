@@ -6,8 +6,8 @@ import { StatusBadge } from '../../components/StatusBadge'
 export function EstimatesMock({ session, store }) {
   const [filters, setFilters] = useState({ status: 'tutti', urgency: 'tutti', customerType: 'tutti' })
   const canEdit = session.role === 'admin'
-  const urgencyOptions = [...new Set(store.estimates.map((estimate) => estimate.urgency))]
-  const customerTypes = [...new Set(store.estimates.map((estimate) => estimate.customerType))]
+  const urgencyOptions = [...new Set(store.estimates.map((estimate) => estimate.urgency).filter(Boolean))]
+  const customerTypes = [...new Set(store.estimates.map((estimate) => estimate.customerType).filter(Boolean))]
 
   const rows = useMemo(() => store.estimates.filter((estimate) => {
     const matchesStatus = filters.status === 'tutti' || estimate.status === filters.status
@@ -22,8 +22,8 @@ export function EstimatesMock({ session, store }) {
 
   return (
     <>
-      <DashboardHeader eyebrow="Preventivi" title="Richieste preventivo" description="Pipeline mock delle richieste ricevute dal sito pubblico.">
-        <DataModeBadge />
+      <DashboardHeader eyebrow="Preventivi" title="Richieste preventivo" description="Pipeline collegata allo store Supabase. Al momento non risultano preventivi reali importati.">
+        <DataModeBadge>Dati reali Supabase</DataModeBadge>
       </DashboardHeader>
 
       <section className="stats-grid">
@@ -76,7 +76,7 @@ export function EstimatesMock({ session, store }) {
             ))}
           </div>
         ) : (
-          <EmptyState title="Nessun preventivo trovato">Modifica i filtri per visualizzare altre richieste mock.</EmptyState>
+          <EmptyState title="Nessun preventivo reale trovato">Quando arriveranno richieste preventivo reali, verranno mostrate qui da Supabase.</EmptyState>
         )}
       </section>
     </>
