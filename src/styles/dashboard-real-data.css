@@ -25,6 +25,7 @@
 .site-progress-row,
 .hub-table-row,
 .table-row,
+.data-row,
 .document-row,
 .photo-card,
 .estimate-card,
@@ -111,7 +112,9 @@
 .table-card,
 .stat-card,
 .employee-action-panel,
-.document-preview-panel {
+.document-preview-panel,
+.accounting-section,
+.accounting-site-card {
   overflow: hidden;
   border-radius: var(--real-radius);
 }
@@ -119,7 +122,8 @@
 .internal-panel,
 .info-card,
 .table-card,
-.document-preview-panel {
+.document-preview-panel,
+.accounting-section {
   padding: var(--real-panel-pad);
 }
 
@@ -182,7 +186,7 @@
   text-overflow: ellipsis;
 }
 
-/* Tabelle reali: niente colonne schiacciate, riga leggibile e scroll solo interno quando serve */
+/* Tabelle reali */
 .hub-table,
 .table-card,
 .document-data-table,
@@ -258,13 +262,13 @@
 .document-data-row {
   display: grid;
   grid-template-columns:
-    minmax(12rem, 1.5fr)
-    minmax(6rem, 0.7fr)
-    minmax(9rem, 1fr)
-    minmax(8rem, 0.9fr)
+    minmax(13rem, 1.45fr)
+    minmax(7rem, 0.7fr)
+    minmax(9rem, 0.95fr)
+    minmax(8rem, 0.85fr)
     minmax(6.5rem, 0.65fr)
-    minmax(7rem, 0.75fr)
-    minmax(7.5rem, 0.75fr)
+    minmax(7rem, 0.7fr)
+    minmax(7.5rem, 0.65fr)
     minmax(3rem, auto);
   gap: 0.75rem;
   align-items: center;
@@ -336,7 +340,43 @@
   grid-template-columns: minmax(12rem, 1.4fr) minmax(8rem, 0.85fr) minmax(8rem, 0.85fr) minmax(6.5rem, 0.55fr) minmax(7.5rem, 0.65fr);
 }
 
-/* Cantiere reale: tab lunghi e importi devono stare allineati */
+/* Fix pagina documenti: tabella non schiacciata */
+@media (min-width: 1180px) {
+  .document-center-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(24rem, 0.45fr);
+    gap: var(--real-gap);
+  }
+
+  .document-center-layout .document-preview-panel {
+    position: sticky;
+    top: 6.2rem;
+    align-self: start;
+  }
+
+  .document-center-layout .document-data-table,
+  .document-center-layout .hub-table {
+    overflow-x: auto;
+  }
+
+  .document-center-layout .document-data-row {
+    min-width: 58rem;
+  }
+
+  .document-center-layout .hub-table-row {
+    padding-block: 0.8rem;
+  }
+
+  .document-center-layout .status-badge {
+    justify-self: start;
+    white-space: nowrap;
+  }
+
+  .document-center-layout .row-menu {
+    justify-self: end;
+  }
+}
+
+/* Cantiere reale */
 .cantiere-detail-header,
 .detail-summary-grid,
 .cantiere-overview-grid,
@@ -452,7 +492,7 @@
   align-items: center;
 }
 
-/* Liste compatte con dati reali */
+/* Liste compatte */
 .activity-feed,
 .compact-upload-list,
 .site-progress-list,
@@ -493,10 +533,7 @@
 
 .site-progress-main,
 .site-progress-meter,
-.site-progress-meta {
-  min-width: 0;
-}
-
+.site-progress-meta,
 .progress-block,
 .progress-label,
 .progress-track {
@@ -512,10 +549,12 @@
   white-space: nowrap;
 }
 
-/* Filtri: non devono creare buchi o campi giganti */
+/* Filtri */
 .cantieri-tools,
 .document-filters,
-.upload-filters {
+.upload-filters,
+.accounting-filters,
+.real-accounting-filters {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: 0.8rem;
@@ -525,6 +564,8 @@
 .cantieri-tools label,
 .document-filters label,
 .upload-filters label,
+.accounting-filters label,
+.real-accounting-filters label,
 .date-filter {
   display: grid;
   min-width: 0;
@@ -537,12 +578,16 @@
 .document-filters select,
 .upload-filters input,
 .upload-filters select,
+.accounting-filters input,
+.accounting-filters select,
+.real-accounting-filters input,
+.real-accounting-filters select,
 .date-filter select {
   width: 100%;
   min-width: 0;
 }
 
-/* Pannelli detail/preview: contenuti lunghi ma ordinati */
+/* Pannelli detail/preview */
 .document-preview-panel,
 .cantieri-side-stack {
   display: grid;
@@ -580,7 +625,157 @@
   gap: 0.35rem;
 }
 
-/* Desktop medio: evitare colonne laterali troppo strette */
+/* Contabilità reale: tabelle e grafici più leggibili */
+.real-accounting-section {
+  margin-top: var(--real-gap);
+  background: var(--white);
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.05);
+}
+
+.real-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.accounting-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  background: var(--white);
+}
+
+.real-accounting-table {
+  width: 100%;
+  min-width: 76rem;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.real-accounting-table th,
+.real-accounting-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.real-accounting-table th {
+  color: var(--dash-subtle, #94a0a8);
+  font-size: 0.72rem;
+  font-weight: 720;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.real-accounting-table td:nth-child(2) {
+  width: 16rem;
+}
+
+.real-accounting-table td:nth-child(5),
+.real-accounting-table td:nth-child(6),
+.real-accounting-table td:nth-child(7) {
+  white-space: nowrap;
+}
+
+.accounting-mobile-list {
+  display: none;
+}
+
+.real-site-grid,
+.accounting-site-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--real-gap);
+}
+
+.accounting-site-card {
+  padding: var(--real-panel-pad);
+  border: 1px solid var(--border);
+  background: var(--white);
+}
+
+.compact-category-card {
+  overflow: hidden;
+}
+
+.compact-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.8rem;
+}
+
+.compact-breakdown .compact-category-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.55rem;
+}
+
+.compact-category-item {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.82rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: #f8fafc;
+}
+
+.compact-category-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.compact-category-top strong,
+.compact-category-top span,
+.compact-category-item small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.compact-category-top span {
+  flex: 0 0 auto;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.compact-category-bar {
+  width: 100%;
+  max-width: 16rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #e6ecf3;
+  overflow: hidden;
+}
+
+.compact-category-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #2563eb;
+}
+
+.accounting-alert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.8rem;
+}
+
+.accounting-alert {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: #fff;
+}
+
+/* Desktop medio */
 @media (max-width: 1180px) {
   .hub-dashboard-grid,
   .document-center-layout,
@@ -598,7 +793,8 @@
   }
 
   .detail-summary-grid,
-  .accounting-summary-grid {
+  .accounting-summary-grid,
+  .real-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -650,6 +846,7 @@
   .hub-kpi-grid,
   .detail-summary-grid,
   .accounting-summary-grid,
+  .real-summary-grid,
   .material-cards,
   .quick-actions-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -659,7 +856,8 @@
   .info-card,
   .table-card,
   .stat-card,
-  .document-preview-panel {
+  .document-preview-panel,
+  .accounting-section {
     padding: 0.82rem;
   }
 
@@ -760,6 +958,44 @@
 
   .pagination-bar {
     justify-content: flex-start;
+  }
+
+  .accounting-table-wrap {
+    display: none;
+  }
+
+  .accounting-mobile-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .accounting-mobile-card {
+    display: grid;
+    gap: 0.55rem;
+    padding: 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    background: var(--white);
+  }
+
+  .compact-meta {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .compact-meta div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+  }
+
+  .compact-category-grid,
+  .compact-breakdown .compact-category-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .compact-category-bar {
+    max-width: 100%;
   }
 }
 
