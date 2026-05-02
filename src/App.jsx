@@ -6,6 +6,7 @@ import {
 } from './data/mockData'
 import { useMockStore } from './hooks/useMockStore'
 import { canAccessDashboardPath, normalizePath } from './lib/navigation'
+import { fetchCurrentAuthSession, signInWithPassword, signOutSupabase } from './lib/supabaseClient'
 import { roles } from './lib/roles'
 import { CaricamentiRecenti } from './pages/dashboard/CaricamentiRecenti'
 import { AccountingMovementDetail } from './pages/dashboard/AccountingMovementDetail'
@@ -72,6 +73,8 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
         selectedRole={selectedRole}
         onRoleSelect={handlers.onRoleSelect}
         onLogin={handlers.onLogin}
+        loginError={handlers.loginError}
+        loginLoading={handlers.loginLoading}
       />
     )
   }
@@ -82,6 +85,8 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
         selectedRole={selectedRole}
         onRoleSelect={handlers.onRoleSelect}
         onLogin={handlers.onLogin}
+        loginError={handlers.loginError}
+        loginLoading={handlers.loginLoading}
       />
     )
   }
@@ -173,7 +178,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
       <DashboardListPage
         eyebrow="Dipendenti"
         title="Squadra e assegnazioni"
-        description="Anagrafica provvisoria per preparare ruoli e permessi nelle fasi successive."
+        description="Utenti e ruoli collegati a Supabase Auth. Gestione completa inviti nella prossima fase."
         rows={employees}
         columns={[
           { label: 'Nome', key: 'name' },
@@ -194,25 +199,68 @@ export default function App() {
   const path = useHashPath()
   const [selectedRole, setSelectedRole] = useState('admin')
   const [session, setSession] = useState(null)
+  const [loginError, setLoginError] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
   const mockStore = useMockStore(session)
 
-  function loginWithSelectedRole() {
-    const user = mockUsers.find((item) => item.role === selectedRole) ?? mockUsers[0]
-    setSession(user)
-    navigateTo('/dashboard')
+  useEffect(() => {
+    let cancelled = false
+
+    async function restoreSession() {
+      const restored = await fetchCurrentAuthSession()
+      if (!cancelled && restored.data) {
+        setSession(restored.data)
+        setSelectedRole(restored.data.role)
+      }
+    }
+
+    restoreSession()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  async function loginWithCredentials(credentials) {
+    setLoginError('')
+    setLoginLoading(true)
+
+    try {
+      if (credentials?.email && credentials?.password) {
+        const result = await signInWithPassword(credentials)
+        if (result.error) {
+          setLoginError(result.error.message)
+          return
+        }
+
+        setSession(result.data)
+        setSelectedRole(result.data.role)
+        navigateTo('/dashboard')
+        return
+      }
+
+      const user = mockUsers.find((item) => item.role === selectedRole) ?? mockUsers[0]
+      setSession({ ...user, authMode: 'mock' })
+      navigateTo('/dashboard')
+    } finally {
+      setLoginLoading(false)
+    }
   }
 
   function changeRole(role) {
+    if (session?.authMode === 'supabase') return
+
     const user = mockUsers.find((item) => item.role === role) ?? mockUsers[0]
     setSelectedRole(role)
-    setSession(user)
+    setSession({ ...user, authMode: 'mock' })
 
     if (!canAccessDashboardPath(path, role)) {
       navigateTo('/dashboard')
     }
   }
 
-  function logout() {
+  async function logout() {
+    await signOutSupabase()
     setSession(null)
     navigateTo('/dashboard/login')
   }
@@ -227,8 +275,10 @@ export default function App() {
       dataStore={mockStore}
     >
       {renderRoute(path, session, selectedRole, {
-        onLogin: loginWithSelectedRole,
+        onLogin: loginWithCredentials,
         onRoleSelect: setSelectedRole,
+        loginError,
+        loginLoading,
       }, mockStore)}
     </AppShell>
   )
