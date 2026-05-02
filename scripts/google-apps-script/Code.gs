@@ -86,8 +86,9 @@ function buildStoreFromMaster_() {
   SUMMARY_TABS.forEach((tabName) => {
     const sheet = ss.getSheetByName(tabName);
     if (!sheet) return;
-    const values = sheet.getDataRange().getDisplayValues();
-    const totals = readTabTotals_(values);
+    const displayValues = sheet.getDataRange().getDisplayValues();
+    const rawValues = sheet.getDataRange().getValues();
+    const totals = readTabTotals_(displayValues, rawValues);
     if (totals.totale === 0 && totals.imponibile === 0 && totals.iva === 0) return;
 
     documents.push({
@@ -143,8 +144,9 @@ function buildStoreFromMaster_() {
         acc.imponibile += Number(doc.imponibile || 0);
         acc.iva += Number(doc.iva || 0);
         acc.totale += Number(doc.totale || 0);
+        acc.tabs += 1;
         return acc;
-      }, { imponibile: 0, iva: 0, totale: 0, tabs: mergedDocuments.length }),
+      }, { imponibile: 0, iva: 0, totale: 0, tabs: 0 }),
     },
   };
 
@@ -194,57 +196,99 @@ function readHubSyncData_(ss) {
 function mergeDocuments_(masterDocs, syncedDocs) {
   const map = new Map();
   masterDocs.forEach((doc) => map.set(doc.id, doc));
+
   syncedDocs.forEach((doc) => {
     if (!doc.id) return;
-    map.set(doc.id, { ...map.get(doc.id), ...doc, source: doc.source || 'hub-sync-data' });
+    // Non far sovrascrivere ai dati esportati in Hub_Sync_Data i riepiloghi letti direttamente dai tab master.
+    // Hub_Sync_Data serve per dati creati dal sito, non per sostituire le formule/totali del master.
+    if (String(doc.id).startsWith('sheet-')) return;
+    map.set(doc.id, { ...doc, source: doc.source || 'hub-sync-data' });
   });
+
   return Array.from(map.values());
 }
 
-function readTabTotals_(values) {
-  const flatRows = values.map((row) => row.map((cell) => String(cell || '').trim()));
-  const text = flatRows.flat().join(' ').toLowerCase();
-  const allNumbers = flatRows.flat().map(parseNumber_).filter((value) => value !== null && value > 0);
-  const total = findValueNear_(flatRows, ['totale generale', 'totale spese', 'totale complessivo', 'totale']) || Math.max(...allNumbers, 0);
-  const imponibile = findValueNear_(flatRows, ['imponibile', 'totale imponibile']) || 0;
-  const iva = findValueNear_(flatRows, ['iva', 'totale iva']) || 0;
-  const movimentoRows = flatRows.filter((row) => row.some((cell) => /\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}/.test(cell)) || row.some((cell) => parseNumber_(cell) !== null && parseNumber_(cell) > 0));
+function readTabTotals_(displayValues, rawValues) {
+  const displayRows = displayValues.map((row) => row.map((cell) => String(cell || '').trim()));
+  const rawRows = rawValues || displayValues;
 
-  return {
-    imponibile: round2_(imponibile),
-    iva: round2_(iva),
-    totale: round2_(total),
-    movimenti: Math.max(1, Math.min(movimentoRows.length, 999)),
-    debug: text.slice(0, 120),
-  };
+  // Struttura standard dei tab: riga riepilogo con N. righe / Imponibile € / IVA € / Totale €.
+  for (let r = 0; r < displayRows.length; r += 1) {
+    const normalizedRow = displayRows[r].map(normalizeLabel_);
+    const hasSummary = normalizedRow.includes('n righe') && normalizedRow.includes('imponibile') && normalizedRow.includes('iva') && normalizedRow.includes('totale');
+    if (!hasSummary) continue;
+
+    return {
+      movimenti: readValueAfterLabel_(displayRows[r], rawRows[r], 'n righe'),
+      imponibile: round2_(readValueAfterLabel_(displayRows[r], rawRows[r], 'imponibile')),
+      iva: round2_(readValueAfterLabel_(displayRows[r], rawRows[r], 'iva')),
+      totale: round2_(readValueAfterLabel_(displayRows[r], rawRows[r], 'totale')),
+    };
+  }
+
+  // Fallback per tab non standard: usa intestazioni Data / Imponibile / IVA / Totale, ignorando titoli, note e date.
+  const headerIndex = displayRows.findIndex((row) => row.map(normalizeLabel_).includes('data') && row.map(normalizeLabel_).includes('totale'));
+  if (headerIndex >= 0) {
+    const headers = displayRows[headerIndex].map(normalizeLabel_);
+    const imponibileIndex = headers.findIndex((value) => value === 'imponibile');
+    const ivaIndex = headers.findIndex((value) => value === 'iva');
+    const totaleIndex = headers.findIndex((value) => value === 'totale');
+
+    let imponibile = 0;
+    let iva = 0;
+    let totale = 0;
+    let movimenti = 0;
+
+    for (let r = headerIndex + 1; r < displayRows.length; r += 1) {
+      const hasData = displayRows[r].some((cell) => cell !== '');
+      if (!hasData) continue;
+      const rowTotal = parseNumber_(displayRows[r][totaleIndex]);
+      if (rowTotal === null || rowTotal === 0) continue;
+      movimenti += 1;
+      imponibile += parseNumber_(displayRows[r][imponibileIndex]) || 0;
+      iva += parseNumber_(displayRows[r][ivaIndex]) || 0;
+      totale += rowTotal;
+    }
+
+    return { imponibile: round2_(imponibile), iva: round2_(iva), totale: round2_(totale), movimenti: Math.max(1, movimenti) };
+  }
+
+  return { imponibile: 0, iva: 0, totale: 0, movimenti: 0 };
 }
 
-function findValueNear_(rows, labels) {
-  for (let r = 0; r < rows.length; r += 1) {
-    for (let c = 0; c < rows[r].length; c += 1) {
-      const cell = rows[r][c].toLowerCase();
-      if (!labels.some((label) => cell.includes(label))) continue;
-      for (let offset = 1; offset <= 6; offset += 1) {
-        const right = rows[r][c + offset];
-        const valueRight = parseNumber_(right);
-        if (valueRight !== null) return valueRight;
-      }
-      for (let offset = 1; offset <= 6; offset += 1) {
-        const down = rows[r + offset] && rows[r + offset][c];
-        const valueDown = parseNumber_(down);
-        if (valueDown !== null) return valueDown;
-      }
-    }
+function readValueAfterLabel_(displayRow, rawRow, label) {
+  const normalized = displayRow.map(normalizeLabel_);
+  const index = normalized.findIndex((cell) => cell === label);
+  if (index < 0) return 0;
+
+  for (let c = index + 1; c < displayRow.length; c += 1) {
+    const rawValue = rawRow && rawRow[c] !== undefined ? rawRow[c] : displayRow[c];
+    const parsed = parseNumber_(rawValue);
+    if (parsed !== null) return parsed;
   }
+
   return 0;
+}
+
+function normalizeLabel_(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/€/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
 }
 
 function parseNumber_(value) {
   if (value === null || value === undefined || value === '') return null;
-  const raw = String(value).replace(/€/g, '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
-  const match = raw.match(/-?\d+(\.\d+)?/);
-  if (!match) return null;
-  const parsed = Number(match[0]);
+  if (Object.prototype.toString.call(value) === '[object Date]') return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+
+  const text = String(value).trim();
+  if (/^\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}$/.test(text)) return null;
+
+  const raw = text.replace(/€/g, '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+  if (!/^-?\d+(\.\d+)?$/.test(raw)) return null;
+  const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
