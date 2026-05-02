@@ -36,6 +36,7 @@ import { Services } from './pages/public/Services'
 import './styles/global.css'
 import './styles/public-redesign.css'
 import './styles/public-polish.css'
+import './styles/public-motion-control.css'
 import './styles/dashboard-polish.css'
 import './styles/dashboard-mobile-compact.css'
 
@@ -45,7 +46,7 @@ function useHashPath() {
   useEffect(() => {
     const onHashChange = () => setPath(normalizePath(window.location.hash))
     window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange')
   }, [])
 
   return path
