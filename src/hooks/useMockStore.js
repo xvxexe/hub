@@ -1,34 +1,36 @@
 import { useEffect, useState } from 'react'
-import { mockCantieri } from '../data/mockCantieri'
-import { quotes } from '../data/mockData'
-import { mockMovimentiContabili } from '../data/mockMovimentiContabili'
-import { mockDocumentUploads, mockFotoUploads } from '../data/mockUploads'
-import { fetchRemoteStore, saveRemoteStore, seedRemoteStore } from '../lib/supabaseStore'
+import { isSupabaseConfigured } from '../lib/supabaseClient'
+import { fetchRemoteStore, saveRemoteStore } from '../lib/supabaseStore'
 
-const STORAGE_KEY = 'europaservice-mock-store-v057'
+const STORAGE_KEY = 'europaservice-real-store-v001'
 
 const documentStatuses = ['Da verificare', 'Confermato', 'Incompleto', 'Possibile duplicato', 'Scartato']
 const photoStatuses = ['Da revisionare', 'Approvata', 'Pubblicata', 'Non pubblicabile']
 const estimateStatuses = ['Nuovo', 'Da valutare', 'Contattato', 'In attesa cliente', 'Accettato', 'Rifiutato', 'Archiviato']
 const priorities = ['Bassa', 'Media', 'Alta']
 
+const EMPTY_STORE = {
+  documents: [],
+  photos: [],
+  estimates: [],
+  notes: [],
+  activities: [],
+}
+
 export function useMockStore(session) {
   const [store, setStore] = useState(() => loadStore())
-  const [syncState, setSyncState] = useState({ status: 'local', error: null })
+  const [syncState, setSyncState] = useState({
+    status: isSupabaseConfigured ? 'loading' : 'local',
+    error: null,
+  })
 
   useEffect(() => {
     let cancelled = false
 
     async function hydrateFromSupabase() {
+      if (!isSupabaseConfigured) return
+
       try {
-        const seeded = await seedRemoteStore(store)
-        if (cancelled) return
-
-        if (seeded.error) {
-          setSyncState({ status: 'error', error: seeded.error.message })
-          return
-        }
-
         const remote = await fetchRemoteStore()
         if (cancelled) return
 
@@ -44,7 +46,9 @@ export function useMockStore(session) {
           return
         }
 
-        setSyncState({ status: 'local', error: null })
+        setStore(EMPTY_STORE)
+        window.localStorage.removeItem(STORAGE_KEY)
+        setSyncState({ status: 'empty', error: null })
       } catch (error) {
         if (!cancelled) setSyncState({ status: 'error', error: error.message })
       }
@@ -55,8 +59,6 @@ export function useMockStore(session) {
     return () => {
       cancelled = true
     }
-    // La prima idratazione deve partire una sola volta dal fallback locale.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function persist(nextStore) {
@@ -73,7 +75,7 @@ export function useMockStore(session) {
   }
 
   function actor() {
-    return session?.name ?? 'Sistema mock'
+    return session?.name ?? 'Sistema'
   }
 
   function addActivityLog(activity) {
@@ -151,8 +153,7 @@ export function useMockStore(session) {
   }
 
   function resetMockStore() {
-    const nextStore = createInitialStore()
-    persist(nextStore)
+    persist(EMPTY_STORE)
   }
 
   return {
@@ -164,10 +165,10 @@ export function useMockStore(session) {
     photoStatuses,
     estimateStatuses,
     priorities,
-    updateDocumentStatus: (id, status) => updateEntity('documents', id, { statoVerifica: status }, `Documento segnato come ${status}`),
+    updateDocumentStatus: (id, status) => updateEntity('documents', id, { statoVerifica: status, stato: status.toLowerCase() }, `Documento segnato come ${status}`),
     updateDocumentData: (id, data) => updateEntity('documents', id, data, 'Documento modificato'),
-    markDocumentChecked: (id) => updateEntity('documents', id, { statoVerifica: 'Confermato' }, 'Documento segnato come controllato'),
-    markDocumentDuplicate: (id) => updateEntity('documents', id, { statoVerifica: 'Possibile duplicato' }, 'Documento segnato come possibile duplicato'),
+    markDocumentChecked: (id) => updateEntity('documents', id, { statoVerifica: 'Confermato', stato: 'confermato' }, 'Documento segnato come controllato'),
+    markDocumentDuplicate: (id) => updateEntity('documents', id, { statoVerifica: 'Possibile duplicato', stato: 'possibile duplicato' }, 'Documento segnato come possibile duplicato'),
     updatePhotoStatus: (id, status) => updateEntity('photos', id, {
       stato: status,
       pubblicata: status === 'Pubblicata',
@@ -191,72 +192,15 @@ export function useMockStore(session) {
 }
 
 function loadStore() {
+  if (isSupabaseConfigured) return EMPTY_STORE
+
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY)
     if (stored) return JSON.parse(stored)
   } catch {
     window.localStorage.removeItem(STORAGE_KEY)
   }
-  return createInitialStore()
-}
-
-function createInitialStore() {
-  return {
-    documents: [
-      ...mockMovimentiContabili.map(movementToDocument),
-      ...mockDocumentUploads.map(uploadToDocument),
-    ],
-    photos: mockFotoUploads.map(normalizePhoto),
-    estimates: quotes.map((quote, index) => ({
-      id: `estimate-${index + 1}`,
-      client: quote.client,
-      phone: '+39 045 000 0000',
-      email: `${quote.client.toLowerCase().replaceAll(' ', '.')}@example.com`,
-      city: index === 1 ? 'Peschiera del Garda' : 'Verona',
-      customerType: index === 1 ? 'Hotel' : index === 2 ? 'Azienda' : 'Privato',
-      workType: quote.request,
-      description: `Richiesta mock per ${quote.request}.`,
-      urgency: index === 0 ? 'Entro 2 settimane' : 'Da programmare',
-      budget: quote.value,
-      contactPreference: 'Telefono',
-      status: quote.status,
-      priority: index === 0 ? 'Alta' : 'Media',
-      internalNotes: '',
-      requestDate: `2026-04-${28 + index}`,
-      value: quote.value,
-      request: quote.request,
-    })),
-    notes: [],
-    activities: [
-      createActivity({ type: 'system', entityType: 'dashboard', entityId: 'init', description: 'Store mock inizializzato con dati locali' }, 'Sistema mock'),
-    ],
-  }
-}
-
-function movementToDocument(row) {
-  const cantiere = mockCantieri.find((item) => item.id === row.cantiereId)
-  return {
-    id: row.id,
-    cantiereId: row.cantiereId,
-    cantiere: cantiere?.nome ?? row.cantiereId,
-    tipoDocumento: row.tipoDocumento,
-    fornitore: row.fornitore,
-    descrizione: row.descrizione,
-    numeroDocumento: row.numeroDocumento,
-    dataDocumento: row.data,
-    categoria: row.categoria,
-    imponibile: row.imponibile,
-    iva: row.iva,
-    totale: row.totale,
-    importoTotale: row.totale,
-    pagamento: row.pagamento,
-    statoVerifica: row.statoVerifica,
-    stato: row.statoVerifica.toLowerCase(),
-    fileName: row.documentoCollegato,
-    note: row.note,
-    nota: row.note,
-    source: 'movimento-contabile',
-  }
+  return EMPTY_STORE
 }
 
 function uploadToDocument(upload) {
@@ -287,6 +231,8 @@ function uploadToDocument(upload) {
 }
 
 function documentToUpload(document) {
+  const status = document.statoVerifica ?? document.stato ?? 'Da verificare'
+
   return {
     id: document.id,
     cantiereId: document.cantiereId,
@@ -296,11 +242,11 @@ function documentToUpload(document) {
     descrizione: document.descrizione,
     dataDocumento: document.dataDocumento,
     importoTotale: document.totale,
-    fileName: document.fileName,
+    fileName: document.numeroDocumento ?? document.fileName ?? document.descrizione,
     nota: document.note,
-    caricatoDa: document.caricatoDa ?? 'Sistema mock',
+    caricatoDa: document.caricatoDa ?? document.fornitore ?? 'Google Sheets',
     dataCaricamento: document.dataCaricamento ?? document.dataDocumento,
-    stato: document.statoVerifica.toLowerCase(),
+    stato: String(status).toLowerCase(),
   }
 }
 
