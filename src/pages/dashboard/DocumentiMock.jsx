@@ -138,34 +138,36 @@ export function DocumentiMock({ session, store }) {
         }))}
       />
 
-      <div className="document-center-layout">
-        <section className="accounting-section document-table-panel">
+      <div className="document-center-layout document-page-fixed">
+        <section className="accounting-section document-table-panel document-list-panel">
           <div className="section-heading panel-title-row">
             <h2>Tutti i documenti ({filteredRows.length})</h2>
             <span className="data-mode-badge"><MoneyValue value={totalAmount} /></span>
           </div>
           {filteredRows.length > 0 ? (
             <>
-              <div className="hub-table document-data-table">
-                <div className="hub-table-head document-data-row">
-                  <span>Documento</span><span>Tipo</span><span>Fornitore</span><span>Cantiere</span><span>Data</span><span>Importo</span><span>Stato</span><span>Azioni</span>
-                </div>
+              <div className="document-card-list">
                 {paginatedRows.map((row) => (
-                  <div
-                    className={`hub-table-row document-data-row ${selectedDocument?.id === row.id ? 'selected' : ''} ${hasAmountWarning(row) ? 'validation-warning-row' : ''}`}
+                  <article
+                    className={`document-card-row ${selectedDocument?.id === row.id ? 'selected' : ''} ${hasAmountWarning(row) ? 'validation-warning-row' : ''}`}
                     key={row.id}
                   >
-                    <button className="document-row-select" type="button" onClick={() => setSelectedId(row.id)}>
-                      <strong>{row.numeroDocumento ?? row.fileName}</strong>
-                      <span>{row.tipoDocumento}</span>
-                      <span>{row.fornitore}</span>
-                      <span>{row.cantiere}</span>
-                      <span>{formatDate(row.dataDocumento)}</span>
-                      <span><MoneyValue value={row.totale} /></span>
-                      <StatusBadge>{displayStatus(row.statoVerifica)}</StatusBadge>
+                    <button className="document-card-main" type="button" onClick={() => setSelectedId(row.id)}>
+                      <div className="document-card-titleline">
+                        <strong>{row.numeroDocumento ?? row.fileName}</strong>
+                        <StatusBadge>{displayStatus(row.statoVerifica)}</StatusBadge>
+                      </div>
+                      <p>{row.descrizione}</p>
+                      <div className="document-card-meta">
+                        <span><b>Tipo</b>{row.tipoDocumento}</span>
+                        <span><b>Fornitore</b>{row.fornitore}</span>
+                        <span><b>Cantiere</b>{row.cantiere}</span>
+                        <span><b>Data</b>{formatDate(row.dataDocumento)}</span>
+                        <span><b>Importo</b><MoneyValue value={row.totale} /></span>
+                      </div>
                     </button>
                     <button
-                      className="row-menu"
+                      className="row-menu document-card-menu"
                       type="button"
                       aria-label={`Azioni per ${row.numeroDocumento ?? row.fileName}`}
                       onClick={() => {
@@ -180,7 +182,7 @@ export function DocumentiMock({ session, store }) {
                     >
                       <InternalIcon name="more" size={17} />
                     </button>
-                  </div>
+                  </article>
                 ))}
               </div>
               <div className="pagination-bar">
