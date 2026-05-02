@@ -328,6 +328,77 @@
   max-width: 100%;
 }
 
+/* Fix leggibilità area privata: percentuali non duplicate e badge senza testi tagliati */
+.site-progress-meter > span {
+  display: none;
+}
+
+.site-progress-meter .progress-block {
+  gap: 0.42rem;
+}
+
+.site-progress-meter .progress-label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.site-progress-meter .progress-label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-progress-meter .progress-label strong {
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+
+.site-progress-meta {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 6.5rem;
+}
+
+.site-progress-meta .status-dot {
+  justify-content: flex-end;
+}
+
+.status-dot small,
+.status-badge {
+  white-space: nowrap;
+}
+
+.status-badge {
+  align-items: center;
+  max-width: 100%;
+  min-height: 2rem;
+  padding: 0.42rem 0.7rem;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.desktop-status-cell {
+  display: flex;
+  justify-content: flex-start;
+  min-width: 0;
+  overflow: visible;
+}
+
+.hub-doc-row {
+  grid-template-columns: minmax(12rem, 1.5fr) minmax(8rem, 1fr) minmax(8rem, 1fr) minmax(6.8rem, 0.65fr) minmax(8.5rem, 0.78fr);
+}
+
+.hub-table-row {
+  align-items: center;
+  overflow: visible;
+}
+
+.mobile-status-dot {
+  display: none;
+}
+
 @media (max-width: 767px) {
   .dashboard-main {
     padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
