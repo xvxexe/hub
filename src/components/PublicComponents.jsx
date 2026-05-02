@@ -28,15 +28,15 @@ export function PremiumHero({
       />
       <div className="premium-hero-overlay-layer" />
       <div className="premium-hero-copy">
-        {eyebrow ? <p className="premium-eyebrow premium-animate-item">{eyebrow}</p> : null}
-        <h1 className="premium-animate-item">{title}</h1>
-        {text ? <p className="premium-animate-item">{text}</p> : null}
-        <div className="premium-actions premium-animate-item">
+        {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
+        <h1>{title}</h1>
+        {text ? <p>{text}</p> : null}
+        <div className="premium-actions">
           <a className="premium-button premium-button-primary" href={primaryHref}>{primaryLabel}</a>
           <a className="premium-button premium-button-secondary" href={secondaryHref}>{secondaryLabel}</a>
         </div>
         {meta.length > 0 ? (
-          <div className="premium-hero-meta premium-animate-item" aria-label="Settori e servizi principali">
+          <div className="premium-hero-meta" aria-label="Settori e servizi principali">
             <div className="premium-hero-meta-track">
               {marqueeItems.map((item, index) => <span key={`${item}-${index}`}>{item}</span>)}
             </div>
