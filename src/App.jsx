@@ -46,7 +46,7 @@ function useHashPath() {
   useEffect(() => {
     const onHashChange = () => setPath(normalizePath(window.location.hash))
     window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange')
+    return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
   return path
