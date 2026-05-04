@@ -6,7 +6,6 @@ import {
   DataModeBadge,
   MockActionModal,
   QuickActionCard,
-  StatCard,
   WorkflowStepper,
 } from '../../components/InternalComponents'
 import { InternalIcon } from '../../components/InternalIcons'
@@ -73,30 +72,55 @@ function AdminDashboard({ documentUploads, documents, activities }) {
 
   return (
     <>
-      <div className="hub-summary-first">
-        <CostSummaryPanel total={accountingTotals.totale} categoryTotals={categoryTotals} />
+      <div className="hub-priority-grid">
+        <div className="hub-summary-first">
+          <CostSummaryPanel total={accountingTotals.totale} categoryTotals={categoryTotals} />
+        </div>
+
+        <section className="internal-panel hub-command-panel">
+          <div className="hub-command-head">
+            <div>
+              <span className="eyebrow">Centro controllo</span>
+              <h2>Operativo oggi</h2>
+              <p>Filtri, verifiche e scorciatoie nello stesso punto.</p>
+            </div>
+          </div>
+
+          <label className="date-filter hub-period-control">
+            <span>Periodo</span>
+            <select defaultValue="current">
+              <option value="current">BARCELO ROMA MASTER</option>
+              <option value="all">Tutti i dati importati</option>
+            </select>
+          </label>
+
+          <div className="hub-command-actions">
+            <a href="#/dashboard/documenti">
+              <InternalIcon name="file" size={17} />
+              <span><b>Controlla documenti</b><small>{docsToCheck} da verificare</small></span>
+            </a>
+            <a href="#/dashboard/contabilita">
+              <InternalIcon name="wallet" size={17} />
+              <span><b>Apri contabilità</b><small>Righe e bonifici</small></span>
+            </a>
+            <button type="button" onClick={() => setModalAction(mockActions.newExpense)}>
+              <InternalIcon name="plus" size={17} />
+              <span><b>Nuova spesa</b><small>Inserimento rapido</small></span>
+            </button>
+          </div>
+        </section>
       </div>
 
-      <div className="hub-toolbar">
-        <label className="date-filter">
-          <span>Periodo</span>
-          <select defaultValue="current">
-            <option value="current">BARCELO ROMA MASTER</option>
-            <option value="all">Tutti i dati importati</option>
-          </select>
-        </label>
+      <div className="hub-kpi-strip" aria-label="Indicatori principali">
+        <MiniKpi icon="building" label="Cantieri" value={sites.length} hint="Fonte Supabase" />
+        <MiniKpi icon="file" label="Da controllare" value={docsToCheck} hint={`${documents.length} righe importate`} tone="amber" />
+        <MiniKpi icon="wallet" label="Totale spese" value={<MoneyValue value={accountingTotals.totale} />} hint="Master importato" tone="green" />
+        <MiniKpi icon="calendar" label="Pagamenti" value={<MoneyValue value={pendingPayments} />} hint="Da classificare" tone="purple" />
       </div>
 
-      <div className="stats-grid hub-kpi-grid">
-        <StatCard icon="building" label="Cantieri reali" value={sites.length} hint="Fonte Supabase" />
-        <StatCard icon="file" tone="amber" label="Documenti da controllare" value={docsToCheck} hint={`${documents.length} righe importate`} />
-        <StatCard icon="wallet" tone="green" label="Totale spese" value={<MoneyValue value={accountingTotals.totale} />} hint="Da BARCELO_ROMA_master" />
-        <StatCard icon="calendar" tone="purple" label="Pagamenti / da classificare" value={<MoneyValue value={pendingPayments} />} hint="Bonifici e righe da verificare" />
-      </div>
-
-      <div className="hub-dashboard-grid">
-        <section className="internal-panel hub-panel-wide">
-          <PanelTitle title="Attività documenti recenti" actionHref="#/dashboard/documenti" />
+      <div className="hub-workspace-grid">
+        <section className="internal-panel hub-panel-wide hub-documents-panel">
+          <PanelTitle title="Documenti recenti da lavorare" actionHref="#/dashboard/documenti" />
           <div className="hub-table">
             <div className="hub-table-head hub-doc-row">
               <span>Documento</span><span>Cantiere</span><span>Origine</span><span>Data</span><span>Stato</span>
@@ -115,63 +139,53 @@ function AdminDashboard({ documentUploads, documents, activities }) {
               )
             })}
           </div>
-          <a className="text-link" href="#/dashboard/documenti">Vedi tutti i documenti</a>
         </section>
 
-        <section className="internal-panel site-progress-panel">
-          <PanelTitle title="Andamento cantieri" actionHref="#/dashboard/cantieri" />
-          <div className="site-progress-list">
-            {sites.map((cantiere) => (
-              <a className="site-progress-row" href={`#/dashboard/cantieri/${cantiere.id}`} key={cantiere.id}>
-                <div className="site-progress-main">
-                  <strong>{cantiere.nome}</strong>
-                  <small>{cantiere.localita}</small>
-                </div>
-                <div className="site-progress-meter">
-                  <ProgressBar value={cantiere.avanzamento} />
-                </div>
-                <div className="site-progress-meta">
-                  <StatusDot status={cantiere.statoLabel} label={cantiere.statoLabel} />
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
+        <div className="hub-side-stack">
+          <section className="internal-panel site-progress-panel">
+            <PanelTitle title="Cantieri" actionHref="#/dashboard/cantieri" />
+            <div className="site-progress-list">
+              {sites.map((cantiere) => (
+                <a className="site-progress-row" href={`#/dashboard/cantieri/${cantiere.id}`} key={cantiere.id}>
+                  <div className="site-progress-main">
+                    <strong>{cantiere.nome}</strong>
+                    <small>{cantiere.localita}</small>
+                  </div>
+                  <div className="site-progress-meter">
+                    <ProgressBar value={cantiere.avanzamento} />
+                  </div>
+                  <div className="site-progress-meta">
+                    <StatusDot status={cantiere.statoLabel} label={cantiere.statoLabel} />
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+
+          <section className="internal-panel hub-imported-panel">
+            <PanelTitle title="Ultime righe importate" actionHref="#/dashboard/contabilita" />
+            <div className="compact-upload-list">
+              {documents.slice(0, 4).map((document) => (
+                <article className="compact-upload-row" key={document.id}>
+                  <span className="file-chip file-pdf">TAB</span>
+                  <div>
+                    <strong>{document.numeroDocumento ?? document.descrizione}</strong>
+                    <small>{document.categoria}</small>
+                  </div>
+                  <span><MoneyValue value={document.totale ?? document.importoTotale ?? 0} /></span>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
       </div>
 
-      <div className="hub-activity-row">
+      <div className="hub-activity-row hub-activity-compact">
         <ActivityFeed title="Attività recenti" items={(activities.length ? activities : []).slice(0, 5).map((item) => ({
           title: item.description,
           meta: `${item.author ?? 'Sistema'} · ${item.date ?? ''}`,
           status: item.type,
         }))} />
-      </div>
-
-      <div className="internal-two-column hub-lower-grid">
-        <section className="internal-panel">
-          <PanelTitle title="Righe Google Sheets importate" actionHref="#/dashboard/contabilita" />
-          <div className="compact-upload-list">
-            {documents.slice(0, 5).map((document) => (
-              <article className="compact-upload-row" key={document.id}>
-                <span className="file-chip file-pdf">TAB</span>
-                <div>
-                  <strong>{document.numeroDocumento ?? document.descrizione}</strong>
-                  <small>{document.categoria}</small>
-                </div>
-                <span><MoneyValue value={document.totale ?? document.importoTotale ?? 0} /></span>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="internal-panel dashboard-quick-actions-panel">
-          <PanelTitle title="Azioni rapide" />
-          <div className="quick-actions-grid quick-actions-compact">
-            <QuickActionCard icon="upload" title="Carica documento" text="Nuovo documento reale" href="#/dashboard/upload" action="Apri" />
-            <QuickActionCard icon="wallet" title="Nuova spesa" text="Movimento contabile" action="Inserisci" onClick={() => setModalAction(mockActions.newExpense)} />
-            <QuickActionCard icon="report" title="Report" text="Riepilogo cantiere" action="Apri" href="#/dashboard/report" />
-          </div>
-        </section>
       </div>
 
       <FloatingQuickActions onModalAction={setModalAction} />
@@ -266,28 +280,50 @@ function normalizeDocumentStatus(status) {
   return status
 }
 
+function MiniKpi({ icon, label, value, hint, tone = 'blue' }) {
+  return (
+    <article className={`hub-mini-kpi hub-mini-kpi-${tone}`}>
+      <span className="hub-mini-kpi-icon"><InternalIcon name={icon} size={17} /></span>
+      <div>
+        <span>{label}</span>
+        <strong>{value}</strong>
+        <small>{hint}</small>
+      </div>
+    </article>
+  )
+}
+
 function CostSummaryPanel({ total, categoryTotals }) {
   return (
-    <section className="internal-panel">
-      <PanelTitle title="Riepilogo spese" />
-      <div className="cost-summary">
+    <section className="internal-panel cost-card-redesign">
+      <div className="cost-card-head">
         <div>
+          <span className="eyebrow">Spese</span>
+          <h2>Riepilogo spese</h2>
+          <p>Vista compatta per capire subito dove stanno andando i costi.</p>
+        </div>
+        <a className="button button-secondary button-small" href="#/dashboard/contabilita">Dettaglio</a>
+      </div>
+
+      <div className="cost-summary cost-summary-redesign">
+        <div className="cost-total-block">
           <span>Totale costi</span>
           <strong><MoneyValue value={total} /></strong>
-          <small className="positive-trend">Da dati reali importati</small>
+          <small className="positive-trend">Dati reali importati</small>
         </div>
         <div className="donut-chart" aria-label="Ripartizione costi">
           <span>Totale<br /><MoneyValue value={total} /></span>
         </div>
-        <div className="cost-legend">
-          {categoryTotals.map((item) => (
-            <div key={item.categoria}>
-              <span />
-              <strong>{item.categoria}</strong>
-              <small><MoneyValue value={item.totale} /></small>
-            </div>
-          ))}
-        </div>
+      </div>
+
+      <div className="cost-legend cost-legend-redesign">
+        {categoryTotals.map((item) => (
+          <div key={item.categoria}>
+            <span />
+            <strong>{item.categoria}</strong>
+            <small><MoneyValue value={item.totale} /></small>
+          </div>
+        ))}
       </div>
     </section>
   )
@@ -313,12 +349,12 @@ function AccountingDashboard({ documentUploads, documents }) {
   return (
     <>
       <div className="stats-grid">
-        <StatCard label="Fatture da verificare" value={documentsToCheck.length} />
-        <StatCard label="Bonifici da collegare" value={transfersToLink.length} />
-        <StatCard label="FIR incompleti" value={firIncomplete.length} />
-        <StatCard label="Possibili duplicati" value={duplicates.length} />
-        <StatCard label="IVA" value={<MoneyValue value={totals.iva} />} />
-        <StatCard label="Documenti senza cantiere" value={documentsWithoutSite.length} />
+        <MiniKpi label="Fatture da verificare" value={documentsToCheck.length} />
+        <MiniKpi label="Bonifici da collegare" value={transfersToLink.length} />
+        <MiniKpi label="FIR incompleti" value={firIncomplete.length} />
+        <MiniKpi label="Possibili duplicati" value={duplicates.length} />
+        <MiniKpi label="IVA" value={<MoneyValue value={totals.iva} />} />
+        <MiniKpi label="Documenti senza cantiere" value={documentsWithoutSite.length} />
       </div>
 
       <div className="internal-two-column">
