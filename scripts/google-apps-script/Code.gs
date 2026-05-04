@@ -2,32 +2,16 @@ const SPREADSHEET_ID = '1J3fW7BwEF6fAqtXxbKpLdSR5NVVbP2cMeZIHFr7bbao';
 const SYNC_DATA_SHEET = 'Hub_Sync_Data';
 const SYNC_LOG_SHEET = 'Hub_Sync_Log';
 const DELETED_RECORDS_SHEET = 'Deleted_Records';
-const RIEPILOGO_SHEET = 'Riepilogo';
 const DEFAULT_CANTIERE_ID = 'barcelo-roma';
 const DEFAULT_CANTIERE_NAME = 'Barcelò Roma';
 
-const SUMMARY_TABS = [
-  'Piscina',
-  'Vitto',
-  'Alloggi',
-  'Scala_Aiuola',
-  'Soffitti_F2',
-  'Scarichi_Pergole',
-  'Massetti_Griglia',
-  'Lavori_Extra_Annesso',
-  'Rifiuti_Container',
-  'Da_classificare',
-  'Allungamento_ Marciapiede_Ristorante',
-  'Chiusura_Pilastri_Muratura',
-  'Fase2_Rete_Soffitti_Antincendio',
-  'Piscina_Impianti_Elettrici',
-  'Materiale_Fase_Due',
-  'Fabbro_Tanasuica_Georgian',
-  'Riempimento_Aiuole',
-  'Lavori_Extra_Non_Specificati',
-  'Impianto_Irrigazione',
-  'FIR_rifiuti',
-];
+const SKIP_SHEET_NAMES = new Set([
+  'riepilogo',
+  'drive_documenti',
+  'hub_sync_data',
+  'hub_sync_log',
+  'deleted_records',
+]);
 
 const SYNC_HEADERS = [
   'id',
@@ -68,7 +52,7 @@ function doGet(e) {
   try {
     ensureSyncSheets_();
     if (action === 'import') return json_({ ok: true, ...buildStoreFromMaster_() });
-    if (action === 'ping') return json_({ ok: true, message: 'Google Sheets sync online', spreadsheetId: SPREADSHEET_ID });
+    if (action === 'ping' || action === 'health') return json_({ ok: true, parser: 'row-level-v2', message: 'Google Sheets sync online', spreadsheetId: SPREADSHEET_ID });
     return json_({ ok: false, error: `Azione non supportata: ${action}` });
   } catch (error) {
     return json_({ ok: false, error: error.message, stack: error.stack });
@@ -89,26 +73,26 @@ function doPost(e) {
 
 function setupHubSyncSheets() {
   ensureSyncSheets_();
-  SpreadsheetApp.getUi().alert('Hub sync pronto: creati/aggiornati Hub_Sync_Data, Hub_Sync_Log e Deleted_Records.');
+  SpreadsheetApp.getUi().alert('Hub sync pronto: import riga-per-riga attivo. Pubblica una nuova versione Web App dopo aver salvato.');
 }
 
 function buildStoreFromMaster_() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const riepilogoDocuments = readRiepilogoDocuments_(ss);
-  const tabDocuments = riepilogoDocuments.length ? [] : readSummaryTabDocuments_(ss);
-  const masterDocuments = riepilogoDocuments.length ? riepilogoDocuments : tabDocuments;
+  const parsed = readMovementRowsFromTabs_(ss);
   const exportedDocs = readHubSyncData_(ss);
-  const mergedDocuments = mergeDocuments_(masterDocuments, exportedDocs);
+  const mergedDocuments = mergeDocuments_(parsed.documents, exportedDocs);
+  const movements = buildMovementsFromDocuments_(mergedDocuments, parsed.movements);
   const totals = mergedDocuments.reduce((acc, doc) => {
     acc.imponibile += Number(doc.imponibile || 0);
     acc.iva += Number(doc.iva || 0);
     acc.totale += Number(doc.totale || 0);
-    acc.tabs += 1;
+    acc.rows += 1;
     return acc;
-  }, { imponibile: 0, iva: 0, totale: 0, tabs: 0 });
+  }, { imponibile: 0, iva: 0, totale: 0, rows: 0 });
 
   const store = {
     documents: mergedDocuments,
+    movements,
     photos: [],
     estimates: [],
     notes: [],
@@ -117,9 +101,7 @@ function buildStoreFromMaster_() {
       date: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
       author: 'Google Sheets Sync',
       type: 'sync',
-      description: riepilogoDocuments.length
-        ? `Importati ${riepilogoDocuments.length} tab dal foglio Riepilogo BARCELO_ROMA_master`
-        : 'Importati dati da BARCELO_ROMA_master tramite tab singoli',
+      description: `Importate ${mergedDocuments.length} righe operative da BARCELO_ROMA_master`,
       entityType: 'google-sheet',
       entityId: SPREADSHEET_ID,
     }],
@@ -128,106 +110,164 @@ function buildStoreFromMaster_() {
       name: 'BARCELO_ROMA_master',
       spreadsheetId: SPREADSHEET_ID,
       importedAt: new Date().toISOString(),
-      mode: riepilogoDocuments.length ? 'riepilogo-sheet-sync' : 'apps-script-sync',
+      parser: 'row-level-v2',
+      mode: 'movement-row-sync',
+      parsedSheets: parsed.parsedSheets,
+      skippedSheets: parsed.skippedSheets,
       totals,
     },
   };
 
-  log_('IMPORT_TO_SUPABASE_PAYLOAD', `Documenti preparati: ${mergedDocuments.length}; totale: ${round2_(totals.totale)}; fonte: ${riepilogoDocuments.length ? RIEPILOGO_SHEET : 'tab singoli'}`);
-  return { store, summary: { documents: mergedDocuments.length, photos: 0, estimates: 0, totals } };
+  log_('IMPORT_TO_SUPABASE_PAYLOAD', `Righe operative: ${mergedDocuments.length}; movimenti: ${movements.length}; totale: ${round2_(totals.totale)}; tab letti: ${parsed.parsedSheets.length}`);
+
+  return {
+    store,
+    summary: {
+      parser: 'row-level-v2',
+      documents: mergedDocuments.length,
+      movements: movements.length,
+      photos: 0,
+      estimates: 0,
+      totals,
+      parsedSheets: parsed.parsedSheets,
+      skippedSheets: parsed.skippedSheets,
+    },
+  };
 }
 
-function readSummaryTabDocuments_(ss) {
+function readMovementRowsFromTabs_(ss) {
   const documents = [];
+  const movements = [];
+  const parsedSheets = [];
+  const skippedSheets = [];
 
-  SUMMARY_TABS.forEach((tabName) => {
-    const sheet = ss.getSheetByName(tabName);
-    if (!sheet) return;
-    const displayValues = sheet.getDataRange().getDisplayValues();
-    const rawValues = sheet.getDataRange().getValues();
-    const totals = readTabTotals_(displayValues, rawValues);
-    if (totals.totale === 0 && totals.imponibile === 0 && totals.iva === 0) return;
-    documents.push(createTabDocument_(tabName, labelFromTab_(tabName), totals, 'tab-singolo'));
+  ss.getSheets().forEach((sheet) => {
+    const sheetName = sheet.getName();
+    const normalizedSheetName = normalizeKey_(sheetName);
+
+    if (shouldSkipSheet_(normalizedSheetName)) {
+      skippedSheets.push(sheetName);
+      return;
+    }
+
+    const range = sheet.getDataRange();
+    const displayValues = range.getDisplayValues();
+    const rawValues = range.getValues();
+    const headerInfo = findMovementHeader_(displayValues);
+
+    if (!headerInfo) {
+      skippedSheets.push(sheetName);
+      return;
+    }
+
+    const before = documents.length;
+    for (let r = headerInfo.rowIndex + 1; r < displayValues.length; r += 1) {
+      const parsed = parseMovementRow_(displayValues[r], rawValues[r], headerInfo.headers, sheetName, r + 1);
+      if (!parsed) continue;
+      documents.push(parsed.document);
+      movements.push(parsed.movement);
+    }
+
+    const importedRows = documents.length - before;
+    if (importedRows > 0) parsedSheets.push({ sheetName, importedRows });
+    if (importedRows === 0) skippedSheets.push(sheetName);
   });
 
-  return documents;
+  return { documents, movements, parsedSheets, skippedSheets };
 }
 
-function readRiepilogoDocuments_(ss) {
-  const sheet = ss.getSheetByName(RIEPILOGO_SHEET);
-  if (!sheet) return [];
+function parseMovementRow_(displayRow, rawRow, headers, sheetName, spreadsheetRowNumber) {
+  const row = rowToObject_(headers, displayRow, rawRow);
+  const date = normalizeDate_(row.data.raw || row.data.display);
+  const documentNumber = cleanText_(row.documento.display || row.documento.raw);
+  const description = cleanText_(row.descrizione.display || row.documento.display || row.descrizione.raw || row.documento.raw);
+  const supplier = cleanText_(row.fornitore.display || row.fornitore.raw);
+  const method = cleanText_(row.metodo.display || row.metodo.raw) || 'Non indicato';
+  const rawCategory = cleanText_(row.categoria.display || row.categoria.raw) || 'Extra / Altro';
+  const imponibile = parseMoney_(row.imponibile.raw !== '' ? row.imponibile.raw : row.imponibile.display);
+  const iva = parseMoney_(row.iva.raw !== '' ? row.iva.raw : row.iva.display);
+  const total = parseMoney_(row.totale.raw !== '' ? row.totale.raw : row.totale.display);
+  const note = cleanText_(row.note.display || row.note.raw);
+  const fileStatus = cleanText_(row.statoFile.display || row.statoFile.raw);
+  const fileName = cleanText_(row.nomeFilePrincipale.display || row.nomeFilePrincipale.raw);
+  const otherVersions = cleanText_(row.altreVersioni.display || row.altreVersioni.raw);
+  const formats = cleanText_(row.formatiDisp.display || row.formatiDisp.raw);
+  const drivePath = cleanText_(row.percorsoDriveAtteso.display || row.percorsoDriveAtteso.raw);
+  const fileUrl = cleanText_(row.urlFile.display || row.urlFile.raw);
 
-  const range = sheet.getDataRange();
-  const displayValues = range.getDisplayValues();
-  const rawValues = range.getValues();
-  const normalizedRows = displayValues.map((row) => row.map(normalizeLabel_));
-  const headerIndex = normalizedRows.findIndex((row) => (
-    row.includes('tab principale')
-    && row.includes('descrizione')
-    && row.some((cell) => cell.includes('movimenti'))
-    && row.includes('imponibile')
-    && row.includes('iva')
-    && row.includes('totale')
-  ));
+  if (!date && !documentNumber && !description && !supplier && !total && !imponibile && !iva) return null;
+  if (!total && !imponibile && !iva && !documentNumber && !description) return null;
 
-  if (headerIndex < 0) return [];
+  const id = stableId_(['document', sheetName, spreadsheetRowNumber, date, documentNumber, description, supplier, total].join('|'));
+  const category = normalizeCategory_(rawCategory);
+  const status = normalizeVerificationStatus_(fileStatus);
+  const tipoDocumento = inferDocumentType_(row.tipo.display || row.tipo.raw, documentNumber, category, method);
+  const computedTotal = total || round2_(imponibile + iva);
+  const noteParts = [
+    note,
+    `Tab: ${sheetName}`,
+    rawCategory && rawCategory !== category ? `Categoria originale: ${rawCategory}` : '',
+    otherVersions ? `Altre versioni: ${otherVersions}` : '',
+    formats ? `Formati: ${formats}` : '',
+    fileUrl ? `URL file: ${fileUrl}` : '',
+  ].filter(Boolean);
 
-  const headers = normalizedRows[headerIndex];
-  const tabIndex = headers.indexOf('tab principale');
-  const descriptionIndex = headers.indexOf('descrizione');
-  const movementsIndex = headers.findIndex((cell) => cell.includes('movimenti'));
-  const imponibileIndex = headers.indexOf('imponibile');
-  const ivaIndex = headers.indexOf('iva');
-  const totaleIndex = headers.indexOf('totale');
-  const documents = [];
-
-  for (let r = headerIndex + 1; r < displayValues.length; r += 1) {
-    const displayRow = displayValues[r];
-    const rawRow = rawValues[r];
-    const tabName = String(displayRow[tabIndex] || '').trim();
-    const description = String(displayRow[descriptionIndex] || '').trim();
-    if (!tabName) continue;
-
-    const totals = {
-      movimenti: Math.max(1, Math.round(getNumberAt_(displayRow, rawRow, movementsIndex) || 1)),
-      imponibile: round2_(getNumberAt_(displayRow, rawRow, imponibileIndex) || 0),
-      iva: round2_(getNumberAt_(displayRow, rawRow, ivaIndex) || 0),
-      totale: round2_(getNumberAt_(displayRow, rawRow, totaleIndex) || 0),
-    };
-
-    if (totals.totale === 0 && totals.imponibile === 0 && totals.iva === 0) continue;
-    documents.push(createTabDocument_(tabName, description || labelFromTab_(tabName), totals, RIEPILOGO_SHEET));
-  }
-
-  return documents;
-}
-
-function createTabDocument_(tabName, description, totals, sourceTab) {
-  return {
-    id: `sheet-${slug_(tabName)}`,
+  const document = {
+    id,
     cantiereId: DEFAULT_CANTIERE_ID,
     cantiere: DEFAULT_CANTIERE_NAME,
-    tipoDocumento: 'Riepilogo tab',
-    fornitore: 'BARCELO_ROMA_master',
-    descrizione: `${tabName} - ${description}`,
-    numeroDocumento: tabName,
-    dataDocumento: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
-    categoria: guessCategory_(tabName),
-    imponibile: totals.imponibile,
-    iva: totals.iva,
-    totale: totals.totale,
-    importoTotale: totals.totale,
-    pagamento: tabName === 'Da_classificare' ? 'Da classificare' : 'Da dettaglio Google Sheets',
-    statoVerifica: 'Confermato',
-    stato: 'confermato',
-    fileName: 'BARCELO_ROMA_master',
-    note: `${totals.movimenti || 1} movimenti nel tab ${tabName}. Fonte: ${sourceTab} / BARCELO_ROMA_master.`,
-    nota: `${totals.movimenti || 1} movimenti nel tab ${tabName}. Fonte: ${sourceTab} / BARCELO_ROMA_master.`,
-    source: 'google-sheets-sync',
-    sheetTab: tabName,
-    movimentiCount: totals.movimenti || 1,
+    tipoDocumento,
+    fornitore: supplier || 'DA VERIFICARE',
+    descrizione: description || documentNumber || 'Movimento Google Sheets',
+    numeroDocumento: documentNumber || `${sheetName} riga ${spreadsheetRowNumber}`,
+    dataDocumento: date,
+    categoria: category,
+    imponibile,
+    iva,
+    totale: computedTotal,
+    importoTotale: computedTotal,
+    pagamento: method,
+    statoVerifica: status,
+    stato: String(status).toLowerCase(),
+    fileName: fileName || documentNumber || '',
+    storagePath: drivePath || '',
+    storageBucket: drivePath ? 'documents' : '',
+    note: noteParts.join(' · '),
+    nota: noteParts.join(' · '),
+    caricatoDa: 'Google Sheets import',
+    dataCaricamento: new Date().toISOString().slice(0, 10),
+    source: 'google-sheets-row-import',
+    sheetTab: sheetName,
+    movimentiCount: 1,
     updatedAt: new Date().toISOString(),
   };
+
+  const movement = {
+    id: `movement-${id}`,
+    documentId: id,
+    cantiereId: DEFAULT_CANTIERE_ID,
+    cantiere: DEFAULT_CANTIERE_NAME,
+    data: date,
+    descrizione: document.descrizione,
+    fornitore: document.fornitore,
+    categoria: category,
+    tipoDocumento,
+    numeroDocumento: document.numeroDocumento,
+    imponibile,
+    iva,
+    totale: computedTotal,
+    pagamento: method,
+    statoVerifica: status,
+    documentoCollegato: fileName || documentNumber || '',
+    fileName: fileName || '',
+    storagePath: drivePath || '',
+    storageBucket: drivePath ? 'documents' : '',
+    note: document.note,
+    source: 'google-sheets-row-import',
+    updatedAt: new Date().toISOString(),
+  };
+
+  return { document, movement };
 }
 
 function exportStoreToSyncSheet_(store, deletedRecords) {
@@ -291,119 +331,200 @@ function mergeDocuments_(masterDocs, syncedDocs) {
   syncedDocs.forEach((doc) => {
     if (!doc.id) return;
     if (String(doc.id).startsWith('sheet-')) return;
+    if (doc.source === 'google-sheets-sync') return;
     map.set(doc.id, { ...doc, source: doc.source || 'hub-sync-data' });
   });
 
   return Array.from(map.values());
 }
 
-function readTabTotals_(displayValues, rawValues) {
-  const displayRows = displayValues.map((row) => row.map((cell) => String(cell || '').trim()));
-  const rawRows = rawValues || displayValues;
+function buildMovementsFromDocuments_(documents, parsedMovements) {
+  const parsedMap = new Map(parsedMovements.map((movement) => [movement.documentId, movement]));
+  return documents.map((doc) => parsedMap.get(doc.id) || {
+    id: `movement-${doc.id}`,
+    documentId: doc.id,
+    cantiereId: doc.cantiereId || DEFAULT_CANTIERE_ID,
+    cantiere: doc.cantiere || DEFAULT_CANTIERE_NAME,
+    data: doc.dataDocumento || '',
+    descrizione: doc.descrizione || doc.tipoDocumento || 'Movimento contabile',
+    fornitore: doc.fornitore || 'Non indicato',
+    categoria: doc.categoria || 'Extra / Altro',
+    tipoDocumento: doc.tipoDocumento || 'Altro',
+    numeroDocumento: doc.numeroDocumento || doc.fileName || doc.id,
+    imponibile: Number(doc.imponibile || 0),
+    iva: Number(doc.iva || 0),
+    totale: Number(doc.totale || doc.importoTotale || 0),
+    pagamento: doc.pagamento || 'Non indicato',
+    statoVerifica: doc.statoVerifica || 'Da verificare',
+    documentoCollegato: doc.fileName || doc.numeroDocumento || '',
+    fileName: doc.fileName || '',
+    storagePath: doc.storagePath || '',
+    storageBucket: doc.storageBucket || '',
+    note: doc.note || doc.nota || '',
+    source: doc.source || 'hub-sync-data',
+  });
+}
 
-  for (let r = 0; r < displayRows.length; r += 1) {
-    const normalizedRow = displayRows[r].map(normalizeLabel_);
-    const hasSummary = normalizedRow.includes('n righe') && normalizedRow.includes('imponibile') && normalizedRow.includes('iva') && normalizedRow.includes('totale');
-    if (!hasSummary) continue;
+function findMovementHeader_(displayValues) {
+  for (let rowIndex = 0; rowIndex < Math.min(displayValues.length, 20); rowIndex += 1) {
+    const normalizedHeaders = displayValues[rowIndex].map((cell) => normalizeHeader_(cell));
+    const hasMainHeaders = ['data', 'documento', 'descrizione', 'fornitore', 'categoria', 'totale'].every((key) => normalizedHeaders.includes(key));
+    if (!hasMainHeaders) continue;
 
     return {
-      movimenti: readValueAfterLabel_(displayRows[r], rawRows[r], 'n righe'),
-      imponibile: round2_(readValueAfterLabel_(displayRows[r], rawRows[r], 'imponibile')),
-      iva: round2_(readValueAfterLabel_(displayRows[r], rawRows[r], 'iva')),
-      totale: round2_(readValueAfterLabel_(displayRows[r], rawRows[r], 'totale')),
+      rowIndex,
+      headers: normalizedHeaders,
     };
   }
+  return null;
+}
 
-  const headerIndex = displayRows.findIndex((row) => row.map(normalizeLabel_).includes('data') && row.map(normalizeLabel_).includes('totale'));
-  if (headerIndex >= 0) {
-    const headers = displayRows[headerIndex].map(normalizeLabel_);
-    const imponibileIndex = headers.findIndex((value) => value === 'imponibile');
-    const ivaIndex = headers.findIndex((value) => value === 'iva');
-    const totaleIndex = headers.findIndex((value) => value === 'totale');
+function rowToObject_(headers, displayRow, rawRow) {
+  const emptyCell = { display: '', raw: '' };
+  return headers.reduce((acc, header, index) => {
+    if (!header) return acc;
+    acc[header] = {
+      display: displayRow[index] !== undefined ? displayRow[index] : '',
+      raw: rawRow[index] !== undefined ? rawRow[index] : '',
+    };
+    return acc;
+  }, {
+    data: emptyCell,
+    documento: emptyCell,
+    tipo: emptyCell,
+    descrizione: emptyCell,
+    fornitore: emptyCell,
+    metodo: emptyCell,
+    categoria: emptyCell,
+    imponibile: emptyCell,
+    iva: emptyCell,
+    totale: emptyCell,
+    note: emptyCell,
+    statoFile: emptyCell,
+    nomeFilePrincipale: emptyCell,
+    altreVersioni: emptyCell,
+    formatiDisp: emptyCell,
+    percorsoDriveAtteso: emptyCell,
+    urlFile: emptyCell,
+  });
+}
 
-    let imponibile = 0;
-    let iva = 0;
-    let totale = 0;
-    let movimenti = 0;
+function normalizeHeader_(value) {
+  const header = normalizeKey_(value);
+  const map = {
+    data: 'data',
+    data_inizio: 'data',
+    documento: 'documento',
+    tipo: 'tipo',
+    descrizione: 'descrizione',
+    fornitore: 'fornitore',
+    metodo: 'metodo',
+    metodo_periodo: 'metodo',
+    categoria: 'categoria',
+    imponibile: 'imponibile',
+    imponibile_e: 'imponibile',
+    iva: 'iva',
+    iva_e: 'iva',
+    totale: 'totale',
+    totale_e: 'totale',
+    note: 'note',
+    stato_file: 'statoFile',
+    nome_file_principale: 'nomeFilePrincipale',
+    altre_versioni: 'altreVersioni',
+    formati_disp: 'formatiDisp',
+    percorso_drive_atteso: 'percorsoDriveAtteso',
+    url_file: 'urlFile',
+    url_file_incolla_link_drive: 'urlFile',
+  };
+  return map[header] || header;
+}
 
-    for (let r = headerIndex + 1; r < displayRows.length; r += 1) {
-      const hasData = displayRows[r].some((cell) => cell !== '');
-      if (!hasData) continue;
-      const rowTotal = parseNumber_(displayRows[r][totaleIndex]);
-      if (rowTotal === null || rowTotal === 0) continue;
-      movimenti += 1;
-      imponibile += parseNumber_(displayRows[r][imponibileIndex]) || 0;
-      iva += parseNumber_(displayRows[r][ivaIndex]) || 0;
-      totale += rowTotal;
-    }
+function shouldSkipSheet_(normalizedSheetName) {
+  if (SKIP_SHEET_NAMES.has(normalizedSheetName)) return true;
+  if (normalizedSheetName.startsWith('dett_')) return true;
+  if (normalizedSheetName.includes('riepilogo')) return true;
+  if (normalizedSheetName.includes('sync')) return true;
+  return false;
+}
 
-    return { imponibile: round2_(imponibile), iva: round2_(iva), totale: round2_(totale), movimenti: Math.max(1, movimenti) };
+function normalizeCategory_(value) {
+  const normalized = normalizeKey_(value);
+  if (!normalized) return 'Extra / Altro';
+  if (normalized.includes('vitto') || normalized.includes('pasti') || normalized.includes('supermercato')) return 'Vitto';
+  if (normalized.includes('alloggio') || normalized.includes('alloggi') || normalized.includes('affitto') || normalized.includes('booking')) return 'Alloggi';
+  if (normalized.includes('rifiuti') || normalized.includes('fir') || normalized.includes('container')) return 'FIR / Rifiuti';
+  if (normalized.includes('bonifico') || normalized.includes('pagamento') || normalized.includes('commission')) return 'Bonifici / Pagamenti';
+  if (normalized.includes('noleggi') || normalized.includes('noleggio') || normalized.includes('servizi')) return 'Noleggi / Servizi';
+  if (normalized.includes('manodopera')) return 'Manodopera';
+  if (normalized.includes('material') || normalized.includes('ferro') || normalized.includes('cemento') || normalized.includes('muratura') || normalized.includes('cartongesso') || normalized.includes('piscina') || normalized.includes('soffitti') || normalized.includes('irrigazione') || normalized.includes('aiuole')) return 'Materiali';
+  return cleanText_(value) || 'Extra / Altro';
+}
+
+function inferDocumentType_(typeValue, documentNumber, category, method) {
+  const source = normalizeKey_(`${typeValue} ${documentNumber} ${category} ${method}`);
+  if (source.includes('bonifico')) return 'Bonifico';
+  if (source.includes('fir')) return 'FIR';
+  if (source.includes('ricevuta')) return 'Ricevuta';
+  if (source.includes('preventivo')) return 'Preventivo';
+  if (source.includes('nota_credito') || source.includes('nota credito')) return 'Nota credito';
+  if (source.includes('fattura') || source.includes('_b') || source.includes('docc') || /\d+\s*b/.test(source)) return 'Fattura';
+  return cleanText_(typeValue) || 'Movimento';
+}
+
+function normalizeVerificationStatus_(value) {
+  const normalized = normalizeKey_(value);
+  if (normalized === 'ok' || normalized === 'confermato') return 'Confermato';
+  if (normalized === 'mancante' || normalized === 'incompleto') return 'Incompleto';
+  if (normalized.includes('duplic')) return 'Possibile duplicato';
+  return 'Da verificare';
+}
+
+function normalizeDate_(value) {
+  if (!value) return '';
+  if (Object.prototype.toString.call(value) === '[object Date]' && !Number.isNaN(value.getTime())) {
+    return Utilities.formatDate(value, Session.getScriptTimeZone(), 'yyyy-MM-dd');
   }
-
-  return { imponibile: 0, iva: 0, totale: 0, movimenti: 0 };
+  const text = cleanText_(value);
+  if (!text) return '';
+  const parsed = new Date(text);
+  if (!Number.isNaN(parsed.getTime())) return Utilities.formatDate(parsed, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  return text.slice(0, 10);
 }
 
-function getNumberAt_(displayRow, rawRow, index) {
-  if (index < 0) return 0;
-  const rawValue = rawRow && rawRow[index] !== undefined ? rawRow[index] : null;
-  const rawParsed = parseNumber_(rawValue);
-  if (rawParsed !== null) return rawParsed;
-  return parseNumber_(displayRow[index]) || 0;
-}
-
-function readValueAfterLabel_(displayRow, rawRow, label) {
-  const normalized = displayRow.map(normalizeLabel_);
-  const index = normalized.findIndex((cell) => cell === label);
-  if (index < 0) return 0;
-
-  for (let c = index + 1; c < displayRow.length; c += 1) {
-    const rawValue = rawRow && rawRow[c] !== undefined ? rawRow[c] : displayRow[c];
-    const parsed = parseNumber_(rawValue);
-    if (parsed !== null) return parsed;
-  }
-
-  return 0;
-}
-
-function normalizeLabel_(value) {
-  return String(value || '')
-    .toLowerCase()
+function parseMoney_(value) {
+  if (typeof value === 'number') return round2_(value);
+  const text = cleanText_(value);
+  if (!text) return 0;
+  const normalized = text
     .replace(/€/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
+    .replace(/\s/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.');
+  const number = Number(normalized);
+  return Number.isFinite(number) ? round2_(number) : 0;
 }
 
-function parseNumber_(value) {
-  if (value === null || value === undefined || value === '') return null;
-  if (Object.prototype.toString.call(value) === '[object Date]') return null;
-  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
-
-  const text = String(value).trim();
-  if (/^\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}$/.test(text)) return null;
-
-  const raw = text.replace(/€/g, '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
-  if (!/^-?\d+(\.\d+)?$/.test(raw)) return null;
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) ? parsed : null;
+function cleanText_(value) {
+  if (value === null || value === undefined) return '';
+  return String(value).trim();
 }
 
-function guessCategory_(tabName) {
-  const t = tabName.toLowerCase();
-  if (t.includes('vitto')) return 'Vitto';
-  if (t.includes('alloggi')) return 'Alloggi';
-  if (t.includes('rifiuti') || t.includes('fir') || t.includes('container')) return 'FIR / Rifiuti';
-  if (t.includes('bonific') || t.includes('classificare')) return 'Bonifici / Pagamenti';
-  if (t.includes('fabbro')) return 'Manodopera';
-  if (t.includes('noleggi')) return 'Noleggi / Servizi';
-  return 'Materiali';
+function normalizeKey_(value) {
+  return cleanText_(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/€/g, 'e')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
 }
 
-function labelFromTab_(tabName) {
-  return tabName.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
-function slug_(text) {
-  return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+function stableId_(value) {
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, value);
+  return digest
+    .slice(0, 12)
+    .map((byte) => (byte + 256).toString(16).slice(-2))
+    .join('');
 }
 
 function round2_(value) {
