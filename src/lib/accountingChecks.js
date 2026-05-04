@@ -37,7 +37,7 @@ export function findDuplicateMovements(target, movements = []) {
 
       if (documentNumberMatch) reasons.push('stesso numero documento')
       if (fileMatch) reasons.push('stesso file/storage path')
-      if (supplierMatch && amountMatch && dateMatch) reasons.push('stesso fornitore, data e totale')
+      if (supplierMatch && amountMatch && dateMatch && hasRealSupplier(targetSupplier)) reasons.push('stesso fornitore, data e totale')
 
       return reasons.length ? { movement, reasons } : null
     })
@@ -48,7 +48,7 @@ export function findSoftDuplicateHints(target, movements = []) {
   if (!target) return []
 
   const targetSupplier = normalizeAccountingKey(target.fornitore)
-  if (!targetSupplier || !Number(target.totale || 0)) return []
+  if (!hasRealSupplier(targetSupplier) || !Number(target.totale || 0)) return []
 
   return movements
     .filter((movement) => movement.id !== target.id)
@@ -94,5 +94,22 @@ function normalizeStrongKey(value) {
   if (!normalized) return ''
   if (['-', 'n/d', 'nd', 'non indicato', 'da collegare', 'inserimento manuale'].includes(normalized)) return ''
   if (normalized.startsWith('manuale-manual-expense-')) return ''
+  if (isMasterSourceValue(normalized)) return ''
   return normalized
+}
+
+function hasRealSupplier(value) {
+  return Boolean(value) && !isMasterSourceValue(value) && !['non indicato', 'da dettaglio google sheets'].includes(value)
+}
+
+function isMasterSourceValue(value) {
+  return Boolean(
+    value.includes('barcelo_roma_master')
+      || value.includes('barcelo-roma-master')
+      || value.includes('barcelo roma master')
+      || value.includes('google sheets')
+      || value.includes('riepilogo / barcelo_roma_master')
+      || value.endsWith('_master')
+      || value.endsWith('-master'),
+  )
 }
