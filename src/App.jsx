@@ -48,6 +48,7 @@ import './styles/dashboard-upload-redesign.css'
 import './styles/dashboard-caricamenti-redesign.css'
 import './styles/dashboard-documenti-redesign.css'
 import './styles/dashboard-contabilita-redesign.css'
+import './styles/dashboard-final-uniformity.css'
 
 function useHashPath() {
   const [path, setPath] = useState(() => normalizePath(window.location.hash))
