@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { DashboardHeader, DataModeBadge, MockActionModal } from '../../components/InternalComponents'
+import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import {
   DataCardRow,
   KpiCard,
@@ -10,55 +10,84 @@ import {
 import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
 import { StatusBadge } from '../../components/StatusBadge'
+import {
+  buildDuplicateIdSet,
+  buildReportCategoryTotals,
+  buildReportPendingRows,
+  buildReportRows,
+  buildReportSites,
+  openOperationalReportPdf,
+} from '../../lib/reportExport'
 
-export function ReportMock({ documents = [] }) {
-  const [modalAction, setModalAction] = useState(null)
-  const rows = documents.map(toAccountingRow)
-  const sites = useMemo(() => buildSites(rows), [rows])
-  const categoryTotals = useMemo(() => buildCategoryTotals(rows), [rows])
+export function ReportMock({ documents = [], store = null }) {
+  const [exportStatus, setExportStatus] = useState(null)
+  const rows = useMemo(() => buildReportRows({ documents, movements: store?.movements ?? [] }), [documents, store?.movements])
+  const duplicateIds = useMemo(() => buildDuplicateIdSet(rows), [rows])
+  const sites = useMemo(() => buildReportSites(rows), [rows])
+  const categoryTotals = useMemo(() => buildReportCategoryTotals(rows), [rows])
   const totals = rows.reduce((acc, row) => ({
     imponibile: acc.imponibile + row.imponibile,
     iva: acc.iva + row.iva,
     totale: acc.totale + row.totale,
   }), { imponibile: 0, iva: 0, totale: 0 })
-  const pending = rows.filter((row) => ['Da verificare', 'Incompleto', 'Possibile duplicato'].includes(row.statoVerifica))
+  const pending = useMemo(() => buildReportPendingRows(rows, duplicateIds), [rows, duplicateIds])
   const payments = rows.filter((row) => row.pagamento?.toLowerCase().includes('bonifico') || row.categoria?.toLowerCase().includes('bonifici'))
-  const summary = buildBossSummary({ rows, sites, totals, pending, payments, categoryTotals })
+  const deletedRecords = store?.deletedRecords ?? []
+  const summary = buildBossSummary({ rows, sites, totals, pending, payments, categoryTotals, duplicateIds, deletedRecords })
+
+  function exportPdf() {
+    const result = openOperationalReportPdf({
+      rows,
+      sites,
+      categoryTotals,
+      pending,
+      payments,
+      duplicateIds,
+      deletedRecords,
+    })
+
+    setExportStatus(result.ok
+      ? { type: 'success', message: 'Report aperto in una nuova scheda. Usa “Salva come PDF” dalla finestra di stampa.' }
+      : { type: 'error', message: result.error })
+  }
 
   return (
     <>
       <DashboardHeader
         eyebrow="Report reale"
         title="Report"
-        description="Riepilogo direzionale dai dati Supabase importati da BARCELO_ROMA_master: costi, criticità, pagamenti e categorie."
+        description="Riepilogo direzionale dai dati Supabase: costi, criticità, pagamenti, duplicati e record eliminati."
       >
         <DataModeBadge>Dati reali Supabase</DataModeBadge>
-        <button
-          className="button button-primary button-small"
-          type="button"
-          onClick={() => setModalAction({
-            icon: 'report',
-            title: 'Export report',
-            text: 'La generazione PDF reale non è ancora collegata. I dati visualizzati sono già quelli reali dello store Supabase.',
-            confirmLabel: 'Ok',
-          })}
-        >
-          Report PDF
-        </button>
+        <button className="button button-primary button-small" type="button" onClick={exportPdf}>Report PDF</button>
       </DashboardHeader>
+
+      {exportStatus ? (
+        <section className={exportStatus.type === 'error' ? 'validation-alert-block' : 'accounting-alert success-alert'}>
+          <strong>{exportStatus.type === 'error' ? 'Export non riuscito' : 'Export avviato'}</strong>
+          <p>{exportStatus.message}</p>
+        </section>
+      ) : null}
 
       <KpiStrip ariaLabel="Indicatori report">
         <KpiCard icon="building" label="Cantieri" value={sites.length} hint="Nel master" />
-        <KpiCard icon="report" label="Righe importate" value={rows.length} hint="Movimenti" />
+        <KpiCard icon="report" label="Movimenti" value={rows.length} hint="Righe operative" />
         <KpiCard icon="wallet" tone="green" label="Imponibile" value={<MoneyValue value={totals.imponibile} />} hint="Totale netto" />
         <KpiCard icon="file" tone="amber" label="Totale spese" value={<MoneyValue value={totals.totale} />} hint="IVA inclusa" />
+      </KpiStrip>
+
+      <KpiStrip ariaLabel="Indicatori controlli report">
+        <KpiCard icon="warning" tone="amber" label="Verifiche aperte" value={pending.length} hint="Da controllare" />
+        <KpiCard icon="warning" tone="red" label="Duplicati reali" value={rows.filter((row) => duplicateIds.has(row.id)).length} hint="Match automatici" />
+        <KpiCard icon="file" label="Record eliminati" value={deletedRecords.length} hint="Tombstone" />
+        <KpiCard icon="wallet" tone="green" label="Pagamenti" value={payments.length} hint="Bonifici / pagamenti" />
       </KpiStrip>
 
       <section className="internal-panel">
         <div className="section-heading panel-title-row">
           <div>
             <h2>Sintesi capo</h2>
-            <p>Le informazioni più importanti prima dei dettagli: totale, problemi aperti e pagamenti da collegare.</p>
+            <p>Le informazioni più importanti prima dei dettagli: totale, problemi aperti, duplicati e pagamenti da collegare.</p>
           </div>
           <StatusBadge>{pending.length ? `${pending.length} verifiche` : 'Tutto ok'}</StatusBadge>
         </div>
@@ -84,6 +113,7 @@ export function ReportMock({ documents = [] }) {
           <>
             <CategoryPanel categoryTotals={categoryTotals} />
             <PaymentsPanel rows={payments.length ? payments : rows} />
+            <DeletedRecordsPanel rows={deletedRecords} />
           </>
         )}
       >
@@ -103,7 +133,7 @@ export function ReportMock({ documents = [] }) {
                   <small>{cantiere.localita} · <MoneyValue value={cantiere.totale} /></small>
                 </div>
                 <ProgressBar value={cantiere.avanzamento} />
-                <StatusBadge>In corso</StatusBadge>
+                <StatusBadge>{cantiere.movimenti} mov.</StatusBadge>
               </article>
             )) : <p>Nessun cantiere nei dati importati.</p>}
           </div>
@@ -113,22 +143,22 @@ export function ReportMock({ documents = [] }) {
           <div className="section-heading panel-title-row">
             <div>
               <h2>Verifiche in attesa</h2>
-              <p>Documenti che richiedono controllo prima del riepilogo definitivo.</p>
+              <p>Movimenti che richiedono controllo prima del riepilogo definitivo.</p>
             </div>
-            <a className="button button-secondary button-small" href="#/dashboard/documenti">Documenti</a>
+            <a className="button button-secondary button-small" href="#/dashboard/contabilita">Contabilità</a>
           </div>
           <div className="document-card-list">
-            {pending.length > 0 ? pending.slice(0, 6).map((item) => (
+            {pending.length > 0 ? pending.slice(0, 8).map((item) => (
               <DataCardRow
                 key={item.id}
                 icon="warning"
                 title={item.descrizione}
                 description={`${item.fornitore} · ${formatDate(item.data)}`}
-                status={displayStatus(item.statoVerifica)}
-                href={`#/dashboard/documenti/${item.id}`}
+                status={displayStatus(item, duplicateIds)}
+                href={`#/dashboard/contabilita/${item.id}`}
                 warning
                 meta={[
-                  { label: 'Documento', value: item.numeroDocumento },
+                  { label: 'Documento', value: item.documentoCollegato || item.numeroDocumento || 'Da collegare' },
                   { label: 'Categoria', value: item.categoria },
                   { label: 'Totale', value: <MoneyValue value={item.totale} /> },
                 ]}
@@ -137,8 +167,6 @@ export function ReportMock({ documents = [] }) {
           </div>
         </section>
       </WorkspaceLayout>
-
-      <MockActionModal action={modalAction} onClose={() => setModalAction(null)} />
     </>
   )
 }
@@ -186,8 +214,30 @@ function PaymentsPanel({ rows }) {
   )
 }
 
-function buildBossSummary({ rows, sites, totals, pending, payments, categoryTotals }) {
+function DeletedRecordsPanel({ rows }) {
+  return (
+    <SideContextPanel
+      title="Record eliminati"
+      description="Tombstone usati per evitare re-import da Google Sheets."
+    >
+      <div className="compact-upload-list">
+        {rows.length ? rows.slice(0, 6).map((record) => (
+          <div className="compact-upload-row" key={record.id}>
+            <span className="file-chip file-pdf">DEL</span>
+            <div>
+              <strong>{record.entityType ?? record.entity_type}</strong>
+              <small>{formatDate(record.deletedAt ?? record.deleted_at)} · {record.entityId ?? record.entity_id}</small>
+            </div>
+          </div>
+        )) : <p>Nessun record eliminato tracciato.</p>}
+      </div>
+    </SideContextPanel>
+  )
+}
+
+function buildBossSummary({ rows, sites, totals, pending, payments, categoryTotals, duplicateIds, deletedRecords }) {
   const biggestCategory = categoryTotals[0]
+  const duplicateCount = rows.filter((row) => duplicateIds.has(row.id)).length
   return [
     {
       icon: 'wallet',
@@ -204,14 +254,14 @@ function buildBossSummary({ rows, sites, totals, pending, payments, categoryTota
     {
       icon: pending.length ? 'warning' : 'check',
       title: pending.length ? 'Controlli ancora aperti' : 'Nessun controllo aperto',
-      description: pending.length ? 'Documenti da verificare prima di chiudere il riepilogo.' : 'I movimenti importati non hanno criticità aperte nei dati attuali.',
+      description: pending.length ? 'Movimenti da verificare prima di chiudere il riepilogo.' : 'I movimenti importati non hanno criticità aperte nei dati attuali.',
       status: pending.length ? 'Da controllare' : 'Ok',
-      href: '#/dashboard/documenti',
+      href: '#/dashboard/contabilita',
       warning: pending.length > 0,
       meta: [
-        { label: 'Documenti', value: pending.length },
-        { label: 'Righe importate', value: rows.length },
-        { label: 'Cantieri', value: sites.length },
+        { label: 'Verifiche', value: pending.length },
+        { label: 'Duplicati', value: duplicateCount },
+        { label: 'Eliminati', value: deletedRecords.length },
       ],
     },
     {
@@ -229,51 +279,13 @@ function buildBossSummary({ rows, sites, totals, pending, payments, categoryTota
   ]
 }
 
-function toAccountingRow(document) {
-  return {
-    id: document.id,
-    cantiereId: document.cantiereId ?? 'barcelo-roma',
-    cantiere: document.cantiere ?? 'Barcelò Roma',
-    data: document.dataDocumento,
-    descrizione: document.descrizione ?? document.tipoDocumento,
-    fornitore: document.fornitore ?? 'Non indicato',
-    categoria: document.categoria ?? 'Extra / Altro',
-    numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id,
-    imponibile: Number(document.imponibile || 0),
-    iva: Number(document.iva || 0),
-    totale: Number(document.totale || document.importoTotale || 0),
-    pagamento: document.pagamento ?? '',
-    statoVerifica: document.statoVerifica ?? 'Da verificare',
-  }
-}
-
-function buildSites(rows) {
-  const groups = rows.reduce((acc, row) => {
-    if (!acc[row.cantiereId]) acc[row.cantiereId] = { id: row.cantiereId, nome: row.cantiere, localita: 'Roma, zona Eur', totale: 0 }
-    acc[row.cantiereId].totale += row.totale
-    return acc
-  }, {})
-  const sites = Object.values(groups)
-  const max = Math.max(...sites.map((site) => site.totale), 1)
-  return sites.map((site) => ({ ...site, avanzamento: Math.max(5, Math.round((site.totale / max) * 100)) }))
-}
-
-function buildCategoryTotals(rows) {
-  const grouped = rows.reduce((acc, row) => {
-    acc[row.categoria] = (acc[row.categoria] ?? 0) + row.totale
-    return acc
-  }, {})
-  const total = Object.values(grouped).reduce((sum, value) => sum + value, 0) || 1
-  return Object.entries(grouped)
-    .map(([categoria, value]) => ({ categoria, totale: value, percent: Math.round((value / total) * 1000) / 10 }))
-    .sort((a, b) => b.totale - a.totale)
-}
-
-function displayStatus(status) {
-  if (status === 'Possibile duplicato') return 'Duplicato'
-  if (status === 'Da verificare') return 'Da controllare'
-  if (status === 'Incompleto') return 'In attesa'
-  return status
+function displayStatus(row, duplicateIds) {
+  if (duplicateIds.has(row.id)) return 'Duplicato reale'
+  if (!row.documentId && !row.documentoCollegato) return 'Da collegare'
+  if (row.statoVerifica === 'Possibile duplicato') return 'Duplicato'
+  if (row.statoVerifica === 'Da verificare') return 'Da controllare'
+  if (row.statoVerifica === 'Incompleto') return 'In attesa'
+  return row.statoVerifica
 }
 
 function formatDate(date) {
