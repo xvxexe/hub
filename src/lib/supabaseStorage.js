@@ -53,6 +53,37 @@ export async function uploadOperationalFile({ file, type, cantiereId, entityId }
   }
 }
 
+export async function deleteOperationalFile({ bucket, storagePath }) {
+  if (!bucket || !storagePath) return { data: null, error: null, source: 'none' }
+  if (!isSupabaseConfigured) return { data: null, error: new Error('Supabase non configurato'), source: 'local' }
+
+  const session = getStoredAuthSession()
+  if (!session?.access_token) {
+    return { data: null, error: new Error('Sessione Supabase non valida'), source: 'supabase-storage' }
+  }
+
+  const response = await fetch(`${supabaseUrl}/storage/v1/object/${bucket}/${storagePath}`, {
+    method: 'DELETE',
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  })
+
+  const text = await response.text()
+  const payload = parseMaybeJson(text)
+
+  if (!response.ok) {
+    return {
+      data: null,
+      error: new Error(payload?.message || payload?.error || `Storage delete error ${response.status}`),
+      source: 'supabase-storage',
+    }
+  }
+
+  return { data: payload ?? { deleted: true }, error: null, source: 'supabase-storage' }
+}
+
 export async function createSignedFileUrl({ bucket, storagePath, expiresIn = 3600 }) {
   if (!bucket || !storagePath) return { data: null, error: null, source: 'none' }
 
