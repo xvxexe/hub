@@ -28,7 +28,7 @@ const ENTITY_CONFIG = {
   },
 }
 
-export async function deleteOperationalEntity({ entityType, entity, session }) {
+export async function deleteOperationalEntity({ entityType, entity, session, reason = 'Eliminato da hub' }) {
   const config = ENTITY_CONFIG[entityType]
   if (!config) return { ok: false, error: `Tipo entità non eliminabile: ${entityType}` }
   if (!entity?.id) return { ok: false, error: 'Entità senza id: eliminazione bloccata.' }
@@ -38,6 +38,9 @@ export async function deleteOperationalEntity({ entityType, entity, session }) {
   }
 
   const storageBucket = entity.storageBucket ?? config.storageBucket
+  const tombstone = await recordDeletedEntity({ entityType, entity, session, reason, storageBucket })
+  if (tombstone.error) return { ok: false, error: tombstone.error.message }
+
   if (entity.storagePath && storageBucket) {
     const storageResult = await deleteOperationalFile({ bucket: storageBucket, storagePath: entity.storagePath })
     if (storageResult.error) return { ok: false, error: storageResult.error.message }
@@ -52,6 +55,57 @@ export async function deleteOperationalEntity({ entityType, entity, session }) {
   if (deletedEntity.error) return { ok: false, error: deletedEntity.error.message }
 
   return { ok: true }
+}
+
+export async function fetchDeletedRecords() {
+  const result = await supabaseRequest('deleted_records?select=entity_type,entity_id,source,deleted_at&order=deleted_at.desc', { method: 'GET' })
+  if (result.error) return result
+  return { ...result, data: Array.isArray(result.data) ? result.data : [] }
+}
+
+export function filterDeletedFromStore(store, deletedRecords) {
+  if (!store || !Array.isArray(deletedRecords) || deletedRecords.length === 0) return store
+  const deleted = new Set(deletedRecords.map((record) => `${record.entity_type}:${record.entity_id}`))
+
+  return {
+    ...store,
+    documents: Array.isArray(store.documents)
+      ? store.documents.filter((document) => !deleted.has(`documents:${document.id}`))
+      : [],
+    photos: Array.isArray(store.photos)
+      ? store.photos.filter((photo) => !deleted.has(`photos:${photo.id}`))
+      : [],
+    estimates: Array.isArray(store.estimates)
+      ? store.estimates.filter((estimate) => !deleted.has(`estimates:${estimate.id}`))
+      : [],
+  }
+}
+
+async function recordDeletedEntity({ entityType, entity, session, reason, storageBucket }) {
+  return supabaseRequest('deleted_records?on_conflict=entity_type,entity_id', {
+    method: 'POST',
+    headers: {
+      Prefer: 'resolution=merge-duplicates,return=minimal',
+    },
+    body: JSON.stringify({
+      id: `deleted-${entityType}-${entity.id}`,
+      entity_type: entityType,
+      entity_id: entity.id,
+      source: entity.source ?? 'hub',
+      storage_bucket: storageBucket ?? null,
+      storage_path: entity.storagePath ?? null,
+      reason,
+      deleted_by: session?.authMode === 'supabase' ? session.id : null,
+      deleted_by_name: session?.name ?? 'Sistema',
+      deleted_at: new Date().toISOString(),
+      metadata: {
+        fileName: entity.fileName ?? null,
+        cantiereId: entity.cantiereId ?? null,
+        cantiere: entity.cantiere ?? null,
+        label: entity.descrizione ?? entity.lavorazione ?? entity.fornitore ?? entity.fileName ?? null,
+      },
+    }),
+  })
 }
 
 function canDeleteEntity({ entityType, entity, session }) {
