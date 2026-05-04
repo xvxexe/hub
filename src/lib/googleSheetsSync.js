@@ -30,10 +30,11 @@ export async function importGoogleSheetsToSupabase(session = null) {
     return { ok: false, error: 'Risposta Google Sheets non valida: documents mancante.' }
   }
 
+  const incomingStore = normalizeImportedStore(payload.store)
   const deletedRecords = await fetchDeletedRecords()
   if (deletedRecords.error) return { ok: false, error: deletedRecords.error.message }
 
-  const filteredStore = filterDeletedFromStore(payload.store, deletedRecords.data)
+  const filteredStore = filterDeletedFromStore(incomingStore, deletedRecords.data)
 
   const savedOperational = await saveOperationalStore(filteredStore, session)
   if (savedOperational.error) return { ok: false, error: savedOperational.error.message }
@@ -44,9 +45,10 @@ export async function importGoogleSheetsToSupabase(session = null) {
   notifyStoreSync(filteredStore)
 
   const removedByTombstones = {
-    documents: payload.store.documents.length - filteredStore.documents.length,
-    photos: (payload.store.photos?.length ?? 0) - (filteredStore.photos?.length ?? 0),
-    estimates: (payload.store.estimates?.length ?? 0) - (filteredStore.estimates?.length ?? 0),
+    documents: incomingStore.documents.length - filteredStore.documents.length,
+    movements: incomingStore.movements.length - filteredStore.movements.length,
+    photos: (incomingStore.photos?.length ?? 0) - (filteredStore.photos?.length ?? 0),
+    estimates: (incomingStore.estimates?.length ?? 0) - (filteredStore.estimates?.length ?? 0),
   }
 
   return {
@@ -54,7 +56,9 @@ export async function importGoogleSheetsToSupabase(session = null) {
     store: filteredStore,
     summary: {
       ...(payload.summary ?? {}),
+      parser: payload.summary?.parser ?? payload.store?.source?.parser ?? 'legacy',
       documents: filteredStore.documents.length,
+      movements: filteredStore.movements.length,
       photos: filteredStore.photos?.length ?? 0,
       estimates: filteredStore.estimates?.length ?? 0,
       removedByTombstones,
@@ -91,6 +95,7 @@ export async function exportSupabaseToGoogleSheets(storeOverride = null) {
     ok: true,
     summary: payload.summary ?? {
       documents: store.documents?.length ?? 0,
+      movements: store.movements?.length ?? 0,
       photos: store.photos?.length ?? 0,
       estimates: store.estimates?.length ?? 0,
       deletedRecords: deletedRecords.data?.length ?? 0,
@@ -106,6 +111,48 @@ async function loadBestAvailableStore() {
   const legacy = await fetchRemoteStore()
   if (legacy.error) throw legacy.error
   return legacy.data
+}
+
+function normalizeImportedStore(store) {
+  const documents = Array.isArray(store.documents) ? store.documents : []
+  const movements = Array.isArray(store.movements) && store.movements.length
+    ? store.movements
+    : documents.map(documentToMovement)
+
+  return {
+    ...store,
+    documents,
+    movements,
+    photos: Array.isArray(store.photos) ? store.photos : [],
+    estimates: Array.isArray(store.estimates) ? store.estimates : [],
+    notes: Array.isArray(store.notes) ? store.notes : [],
+    activities: Array.isArray(store.activities) ? store.activities : [],
+  }
+}
+
+function documentToMovement(document) {
+  return {
+    id: `movement-${document.id}`,
+    documentId: document.id,
+    cantiereId: document.cantiereId ?? 'barcelo-roma',
+    cantiere: document.cantiere ?? 'Barcelò Roma',
+    data: document.dataDocumento,
+    descrizione: document.descrizione ?? document.tipoDocumento ?? 'Documento',
+    fornitore: document.fornitore ?? 'Non indicato',
+    categoria: document.categoria ?? 'Extra / Altro',
+    tipoDocumento: document.tipoDocumento ?? 'Altro',
+    numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id,
+    imponibile: Number(document.imponibile || 0),
+    iva: Number(document.iva || 0),
+    totale: Number(document.totale || document.importoTotale || 0),
+    pagamento: document.pagamento ?? 'Non indicato',
+    statoVerifica: document.statoVerifica ?? 'Da verificare',
+    documentoCollegato: document.fileName ?? document.numeroDocumento ?? '',
+    fileName: document.fileName,
+    storagePath: document.storagePath,
+    storageBucket: document.storageBucket ?? 'documents',
+    note: document.notes ?? document.note ?? document.nota ?? '',
+  }
 }
 
 function notifyStoreSync(store) {
