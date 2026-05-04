@@ -37,9 +37,9 @@ export function PhotoDetail({ photoId, session, store }) {
 
   return (
     <>
-      <DashboardHeader eyebrow="Dettaglio foto" title={`${photo.cantiere} · ${photo.zona}`} description="Revisione foto, pubblicabilità mock e note operative.">
+      <DashboardHeader eyebrow="Dettaglio foto" title={`${photo.cantiere} · ${photo.zona}`} description="Revisione foto, file reale, pubblicabilità e note operative.">
         <StatusBadge>{photo.stato}</StatusBadge>
-        <DataModeBadge />
+        <DataModeBadge>{photo.storagePath ? 'File reale Storage' : 'Dato importato'}</DataModeBadge>
       </DashboardHeader>
 
       <section className="detail-action-bar">
@@ -57,7 +57,7 @@ export function PhotoDetail({ photoId, session, store }) {
 
       <section className="detail-layout internal-padded">
         <article className="info-card">
-          <FilePreviewMock fileName={photo.fileName} type="image" />
+          <FilePreviewMock fileName={photo.fileName} type="image" storagePath={photo.storagePath} storageBucket={photo.storageBucket ?? 'site-photos'} />
           <dl className="detail-list">
             <div><dt>Cantiere</dt><dd>{photo.cantiere}</dd></div>
             <div><dt>Avanzamento</dt><dd>{photo.avanzamento}</dd></div>
@@ -73,8 +73,8 @@ export function PhotoDetail({ photoId, session, store }) {
           <EditableField label="Lavorazione" value={form.lavorazione} onChange={(value) => update('lavorazione', value)} disabled={!canPublish} />
           <EditableField label="Pubblicabile" value={form.pubblicabile} onChange={(value) => update('pubblicabile', value)} options={['da valutare', 'si', 'no']} disabled={!canPublish} />
           <label className="form-wide">Nota<textarea rows="4" value={form.nota ?? ''} onChange={(event) => update('nota', event.target.value)} disabled={session.role === 'employee' && !canEditOwnNote} /></label>
-          <label className="form-wide">Descrizione pubblica mock<textarea rows="4" value={form.descrizionePubblica ?? ''} onChange={(event) => update('descrizionePubblica', event.target.value)} disabled={!canPublish} /></label>
-          <button className="button button-primary" type="submit" disabled={session.role === 'employee' && !canEditOwnNote}>Salva modifiche mock</button>
+          <label className="form-wide">Descrizione pubblica<textarea rows="4" value={form.descrizionePubblica ?? ''} onChange={(event) => update('descrizionePubblica', event.target.value)} disabled={!canPublish} /></label>
+          <button className="button button-primary" type="submit" disabled={session.role === 'employee' && !canEditOwnNote}>Salva modifiche</button>
         </form>
       </section>
 
