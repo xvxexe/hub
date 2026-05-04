@@ -1,0 +1,341 @@
+/* Final uniformity pass for the private dashboard pages. */
+
+.dashboard-main .internal-workspace-main,
+.dashboard-main .internal-workspace-sidebar {
+  min-width: 0;
+}
+
+.dashboard-main .internal-side-context {
+  display: grid;
+  gap: 0.62rem;
+}
+
+.dashboard-main .internal-side-context > .section-heading {
+  margin-bottom: 0;
+}
+
+.dashboard-main .internal-workspace-sidebar .internal-panel + .internal-panel,
+.dashboard-main .internal-workspace-sidebar .internal-side-context + .internal-side-context {
+  margin-top: 0;
+}
+
+.dashboard-main .internal-data-card-row {
+  align-items: start;
+  cursor: default;
+}
+
+.dashboard-main button.internal-data-card-row {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.dashboard-main a.internal-data-card-row {
+  cursor: pointer;
+}
+
+.dashboard-main .internal-data-card-main > p,
+.dashboard-main .document-card-main > p,
+.dashboard-main .section-heading p,
+.dashboard-main .internal-command-copy p,
+.dashboard-main .internal-side-context p,
+.dashboard-main .document-preview-sheet p,
+.dashboard-main .internal-panel > p {
+  color: var(--dash-muted, #6f7b85);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.dashboard-main .internal-data-card-titleline > strong,
+.dashboard-main .recent-upload-title > h3,
+.dashboard-main .document-card-titleline > strong,
+.dashboard-main .compact-upload-row strong,
+.dashboard-main .activity-item strong,
+.dashboard-main .quick-action-card strong {
+  overflow: hidden;
+  color: var(--dash-title, #17212b);
+  font-weight: 760;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+}
+
+.dashboard-main .internal-data-card-main small,
+.dashboard-main .compact-upload-row small,
+.dashboard-main .activity-item small,
+.dashboard-main .quick-action-card span,
+.dashboard-main .selected-site-hero small {
+  color: var(--dash-muted, #6f7b85);
+}
+
+.dashboard-main .internal-data-card-meta {
+  margin: 0;
+}
+
+.dashboard-main .internal-data-card-meta dd,
+.dashboard-main .detail-list dd,
+.dashboard-main .selected-site-meta dd {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-main .internal-data-card-action {
+  min-width: 7.6rem;
+}
+
+.dashboard-main .internal-action-list {
+  min-width: 7.6rem;
+}
+
+.dashboard-main .internal-action-list .button {
+  justify-content: center;
+}
+
+.dashboard-main .internal-filter-grid > button,
+.dashboard-main .internal-filter-grid .button {
+  min-height: 2.45rem;
+  align-self: end;
+}
+
+.dashboard-main .internal-filter-grid input[readonly] {
+  color: var(--dash-muted, #6f7b85);
+  background: rgba(248, 250, 252, 0.96);
+}
+
+.dashboard-main .internal-kpi-strip + .internal-kpi-strip {
+  margin-top: 0.55rem;
+}
+
+.dashboard-main .accounting-warning-row td {
+  background: rgba(255, 251, 235, 0.72);
+}
+
+.dashboard-main .upload-type-switch {
+  width: 100%;
+}
+
+.dashboard-main .upload-type-switch button {
+  min-height: 3.2rem;
+}
+
+.dashboard-main .upload-form-panel {
+  overflow: hidden;
+}
+
+.dashboard-main .upload-file-zone {
+  border-radius: 0.95rem;
+}
+
+.dashboard-main .admin-invite-form,
+.dashboard-main .upload-form-grid {
+  align-items: end;
+}
+
+.dashboard-main .internal-two-column .internal-panel,
+.dashboard-main .internal-workspace-layout .internal-panel {
+  width: 100%;
+}
+
+.dashboard-main .quick-actions-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-main .quick-action-card {
+  display: grid;
+  gap: 0.28rem;
+  min-height: 5.2rem;
+  align-content: center;
+}
+
+.dashboard-main .selected-site-meta,
+.dashboard-main .detail-list {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.dashboard-main .selected-site-meta {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-main .selected-site-meta div,
+.dashboard-main .detail-list div {
+  border: 1px solid rgba(224, 231, 235, 0.82);
+  border-radius: 0.75rem;
+  background: rgba(248, 250, 252, 0.72);
+  padding: 0.5rem;
+}
+
+.dashboard-main .selected-category-list {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.dashboard-main .selected-category-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dashboard-main .compact-upload-row,
+.dashboard-main .activity-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.dashboard-main .file-chip {
+  display: inline-grid;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 0.72rem;
+  background: rgba(37, 99, 235, 0.09);
+  color: #2563eb;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.dashboard-main .file-chip.file-pdf {
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+}
+
+.dashboard-main .workflow-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.dashboard-main .workflow-step > span {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 0.65rem;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.dashboard-main .document-preview-panel.internal-side-context {
+  position: sticky;
+  top: 5.75rem;
+}
+
+@media (max-width: 1180px) {
+  .dashboard-main .document-preview-panel.internal-side-context {
+    position: static;
+  }
+
+  .dashboard-main .internal-data-card-action,
+  .dashboard-main .internal-action-list {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard-main {
+    padding-bottom: 5.5rem;
+  }
+
+  .dashboard-main .dashboard-header.internal-header {
+    gap: 0.72rem;
+  }
+
+  .dashboard-main .dashboard-header.internal-header .button,
+  .dashboard-main .dashboard-header.internal-header .data-mode-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dashboard-main .internal-command-body,
+  .dashboard-main .upload-type-switch {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-main .internal-kpi-card strong {
+    white-space: normal;
+  }
+
+  .dashboard-main .internal-kpi-card em,
+  .dashboard-main .internal-kpi-card small {
+    white-space: normal;
+  }
+
+  .dashboard-main .internal-data-card-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .dashboard-main .internal-data-card-titleline {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .dashboard-main .internal-data-card-titleline .status-badge,
+  .dashboard-main .recent-upload-title .status-badge {
+    align-self: flex-start;
+  }
+
+  .dashboard-main .internal-data-card-action,
+  .dashboard-main .internal-action-list {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .dashboard-main .internal-data-card-action .button,
+  .dashboard-main .internal-action-list .button {
+    width: 100%;
+  }
+
+  .dashboard-main .quick-actions-grid,
+  .dashboard-main .selected-site-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-main .compact-upload-row,
+  .dashboard-main .activity-item {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .dashboard-main .compact-upload-row .status-badge,
+  .dashboard-main .activity-item .status-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .dashboard-main .admin-invite-link-box {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .dashboard-main .admin-invite-link-box .button {
+    width: 100%;
+  }
+
+  .dashboard-main .upload-submit-row {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .dashboard-main .upload-submit-row .button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-main .internal-kpi-card {
+    min-height: 0;
+  }
+
+  .dashboard-main .internal-data-card-row {
+    padding: 0.54rem;
+  }
+
+  .dashboard-main .pagination-bar button {
+    min-width: 2rem;
+  }
+}
