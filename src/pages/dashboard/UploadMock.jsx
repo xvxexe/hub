@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
+import {
+  CommandPanel,
+  KpiCard,
+  KpiStrip,
+  SideContextPanel,
+  WorkspaceLayout,
+} from '../../components/InternalLayout'
 import { InternalIcon } from '../../components/InternalIcons'
 import { RecentUploadList } from '../../components/RecentUploadList'
 import { StatusBadge } from '../../components/StatusBadge'
@@ -78,9 +85,15 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
         description="Flusso compatto: scegli cosa caricare, compila i dati utili, controlla destinazione e ultimi caricamenti senza cambiare pagina."
       >
         <DataModeBadge>Flusso mock locale</DataModeBadge>
+        <a className="button button-secondary button-small" href="#/dashboard/caricamenti">Caricamenti</a>
       </DashboardHeader>
 
-      <section className="upload-command-center" aria-label="Scelta caricamento">
+      <CommandPanel
+        eyebrow="Scelta caricamento"
+        title={activeType === 'foto' ? 'Foto → revisione' : 'Documento → verifica contabile'}
+        description="La scelta del tipo cambia form, checklist e destinazione del caricamento."
+        aside={<StatusBadge>{activeType === 'foto' ? 'Da revisionare' : 'Da verificare'}</StatusBadge>}
+      >
         <div className="upload-type-switch">
           {canUploadFoto ? (
             <button type="button" aria-pressed={activeType === 'foto'} onClick={() => setActiveType('foto')}>
@@ -93,47 +106,43 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
             <span><b>Documento</b><small>Fatture, bonifici, ricevute, FIR</small></span>
           </button>
         </div>
-        <div className="upload-command-summary">
-          <span className="eyebrow">Percorso</span>
-          <strong>{activeType === 'foto' ? 'Foto → revisione' : 'Documento → verifica contabile'}</strong>
-          <small>La scelta del tipo cambia form, checklist e destinazione del caricamento.</small>
-        </div>
-      </section>
+      </CommandPanel>
 
-      <section className="upload-kpi-strip" aria-label="Indicatori upload">
-        <UploadMetric icon="image" label="Foto" value={visibleFotoUploads.length} hint={isAccounting ? 'Nascoste per contabilità' : 'Da revisionare'} muted={isAccounting} />
-        <UploadMetric icon="file" label="Documenti" value={visibleDocumentUploads.length} hint="Da verificare" />
-        <UploadMetric icon="warning" tone="amber" label="Aperti" value={stats.toReview} hint="Stati da lavorare" />
-        <UploadMetric icon="check" tone="green" label="Recenti" value={stats.recentCount} hint="Ultimi 7 giorni" />
-      </section>
+      <KpiStrip ariaLabel="Indicatori upload">
+        <KpiCard icon="image" label="Foto" value={visibleFotoUploads.length} hint={isAccounting ? 'Nascoste per contabilità' : 'Da revisionare'} muted={isAccounting} />
+        <KpiCard icon="file" label="Documenti" value={visibleDocumentUploads.length} hint="Da verificare" />
+        <KpiCard icon="warning" tone="amber" label="Aperti" value={stats.toReview} hint="Stati da lavorare" />
+        <KpiCard icon="check" tone="green" label="Recenti" value={stats.recentCount} hint="Ultimi 7 giorni" />
+      </KpiStrip>
 
-      <div className="upload-workspace-layout">
-        <main className="upload-main-column">
-          <section className="upload-form-panel">
-            <div className="upload-form-head">
-              <div>
-                <span className="eyebrow">Step principale</span>
-                <h2>{activeType === 'foto' ? 'Carica foto cantiere' : 'Carica documento'}</h2>
-                <p>{activeType === 'foto'
-                  ? 'I campi principali sono cantiere, zona e lavorazione perché servono per ritrovare la foto dopo.'
-                  : 'I campi principali sono cantiere, tipo, fornitore e importo perché servono per il controllo contabile.'}</p>
-              </div>
-              <StatusBadge>{activeType === 'foto' ? 'Da revisionare' : 'Da verificare'}</StatusBadge>
+      <WorkspaceLayout
+        className="upload-workspace"
+        sidebar={(
+          <>
+            <UploadDestinationCard activeType={activeType} selectedSite={selectedSite} activeForm={activeForm} isEmployee={isEmployee} />
+            <UploadChecklist activeType={activeType} isEmployee={isEmployee} />
+            <RecentCompactPanel activeType={activeType} fotoUploads={visibleFotoUploads} documentUploads={visibleDocumentUploads} />
+          </>
+        )}
+      >
+        <section className="internal-panel upload-form-panel">
+          <div className="section-heading panel-title-row">
+            <div>
+              <span className="eyebrow">Step principale</span>
+              <h2>{activeType === 'foto' ? 'Carica foto cantiere' : 'Carica documento'}</h2>
+              <p>{activeType === 'foto'
+                ? 'Cantiere, zona e lavorazione servono per ritrovare subito la foto dopo.'
+                : 'Cantiere, tipo, fornitore e importo servono per il controllo contabile.'}</p>
             </div>
-            {activeType === 'foto' ? (
-              <FotoForm form={fotoForm} onChange={updateFoto} onSubmit={submitFoto} compact={isEmployee} />
-            ) : (
-              <DocumentForm form={documentForm} onChange={updateDocument} onSubmit={submitDocument} compact={isEmployee} />
-            )}
-          </section>
-        </main>
-
-        <aside className="upload-context-column">
-          <UploadDestinationCard activeType={activeType} selectedSite={selectedSite} activeForm={activeForm} isEmployee={isEmployee} />
-          <UploadChecklist activeType={activeType} isEmployee={isEmployee} />
-          <RecentCompactPanel activeType={activeType} fotoUploads={visibleFotoUploads} documentUploads={visibleDocumentUploads} />
-        </aside>
-      </div>
+            <StatusBadge>{activeType === 'foto' ? 'Da revisionare' : 'Da verificare'}</StatusBadge>
+          </div>
+          {activeType === 'foto' ? (
+            <FotoForm form={fotoForm} onChange={updateFoto} onSubmit={submitFoto} compact={isEmployee} />
+          ) : (
+            <DocumentForm form={documentForm} onChange={updateDocument} onSubmit={submitDocument} compact={isEmployee} />
+          )}
+        </section>
+      </WorkspaceLayout>
 
       <section className="upload-recent-redesign">
         {canUploadFoto ? <RecentUploadList title="Foto caricate di recente" type="foto" uploads={visibleFotoUploads} /> : null}
@@ -143,27 +152,15 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
   )
 }
 
-function UploadMetric({ icon, label, value, hint, tone = 'blue', muted = false }) {
-  return (
-    <article className={`upload-metric upload-metric-${tone} ${muted ? 'is-muted' : ''}`}>
-      <span><InternalIcon name={icon} size={17} /></span>
-      <div><small>{label}</small><strong>{value}</strong><em>{hint}</em></div>
-    </article>
-  )
-}
-
 function UploadDestinationCard({ activeType, selectedSite, activeForm, isEmployee }) {
   return (
-    <section className="upload-side-card upload-destination-card">
-      <div className="section-heading panel-title-row">
-        <div><h2>Dove finisce</h2><p>Sta accanto al form perché conferma subito destinazione e stato iniziale.</p></div>
-      </div>
+    <SideContextPanel title="Dove finisce" description="Conferma subito destinazione, stato iniziale e visibilità del caricamento.">
       <div className="upload-destination-flow">
         <article><span>1</span><div><strong>{selectedSite?.nome ?? 'Cantiere'}</strong><small>Cantiere selezionato</small></div></article>
         <article><span>2</span><div><strong>{activeType === 'foto' ? activeForm.zona || 'Zona' : activeForm.tipoDocumento}</strong><small>{activeType === 'foto' ? 'Zona / lavorazione' : 'Tipo documento'}</small></div></article>
         <article><span>3</span><div><strong>{activeType === 'foto' ? 'Revisione foto' : 'Controllo contabile'}</strong><small>{isEmployee ? 'Visibile nei tuoi caricamenti' : 'Visibile ad admin e contabilità'}</small></div></article>
       </div>
-    </section>
+    </SideContextPanel>
   )
 }
 
@@ -173,12 +170,11 @@ function UploadChecklist({ activeType, isEmployee }) {
     : ['Cantiere corretto', 'Tipo documento corretto', isEmployee ? 'PDF/foto leggibile' : 'Fornitore e importo', 'Nota se ci sono dubbi']
 
   return (
-    <section className="upload-side-card upload-checklist-card">
-      <div className="section-heading panel-title-row"><h2>Checklist</h2></div>
+    <SideContextPanel title="Checklist" description="Controlli minimi prima di inviare.">
       <div className="upload-checklist">
         {checks.map((check) => <article key={check}><InternalIcon name="check" size={15} /><span>{check}</span></article>)}
       </div>
-    </section>
+    </SideContextPanel>
   )
 }
 
@@ -187,22 +183,22 @@ function RecentCompactPanel({ activeType, fotoUploads, documentUploads }) {
   const typeLabel = activeType === 'foto' ? 'foto' : 'documenti'
 
   return (
-    <section className="upload-side-card upload-mini-recent-card">
-      <div className="section-heading panel-title-row">
-        <div><h2>Ultimi {typeLabel}</h2><p>Qui controlli subito se stai duplicando qualcosa.</p></div>
-        <a className="button button-secondary button-small" href="#/dashboard/caricamenti">Tutti</a>
-      </div>
-      <div className="upload-mini-list">
+    <SideContextPanel
+      title={`Ultimi ${typeLabel}`}
+      description="Controllo rapido per evitare caricamenti doppi."
+      action={<a className="button button-secondary button-small" href="#/dashboard/caricamenti">Tutti</a>}
+    >
+      <div className="compact-upload-list">
         {uploads.slice(0, 4).map((upload) => (
-          <a href={activeType === 'foto' ? `#/dashboard/foto/${upload.id}` : `#/dashboard/documenti/${upload.id}`} key={upload.id}>
+          <a className="compact-upload-row" href={activeType === 'foto' ? `#/dashboard/foto/${upload.id}` : `#/dashboard/documenti/${upload.id}`} key={upload.id}>
             <span className="file-chip file-pdf">{activeType === 'foto' ? 'IMG' : 'DOC'}</span>
             <div><strong>{activeType === 'foto' ? upload.lavorazione : upload.descrizione}</strong><small>{upload.cantiere} · {upload.fileName || 'file mock'}</small></div>
             <StatusBadge>{upload.stato}</StatusBadge>
           </a>
         ))}
-        {uploads.length === 0 ? <article><span className="file-chip">0</span><div><strong>Nessun caricamento</strong><small>Gli ultimi elementi appariranno qui.</small></div></article> : null}
+        {uploads.length === 0 ? <article className="accounting-alert"><strong>Nessun caricamento</strong><small>Gli ultimi elementi appariranno qui.</small></article> : null}
       </div>
-    </section>
+    </SideContextPanel>
   )
 }
 
