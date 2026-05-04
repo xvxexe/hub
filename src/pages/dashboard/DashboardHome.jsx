@@ -4,8 +4,6 @@ import {
   AlertPanel,
   DashboardHeader,
   DataModeBadge,
-  MockActionModal,
-  QuickActionCard,
   WorkflowStepper,
 } from '../../components/InternalComponents'
 import { InternalIcon } from '../../components/InternalIcons'
@@ -60,7 +58,6 @@ function getDashboardTitle(role) {
 }
 
 function AdminDashboard({ documentUploads, documents, activities }) {
-  const [modalAction, setModalAction] = useState(null)
   const accountingRows = documents.map(documentToAccountingRow)
   const accountingTotals = getAccountingTotals(accountingRows)
   const docsToCheck = documentUploads.filter((doc) => doc.stato === 'da verificare').length
@@ -103,10 +100,10 @@ function AdminDashboard({ documentUploads, documents, activities }) {
               <InternalIcon name="wallet" size={17} />
               <span><b>Apri contabilità</b><small>Righe e bonifici</small></span>
             </a>
-            <button type="button" onClick={() => setModalAction(mockActions.newExpense)}>
+            <a href="#/dashboard/contabilita">
               <InternalIcon name="plus" size={17} />
-              <span><b>Nuova spesa</b><small>Inserimento rapido</small></span>
-            </button>
+              <span><b>Nuova spesa</b><small>Form reale in contabilità</small></span>
+            </a>
           </div>
         </section>
       </div>
@@ -188,35 +185,15 @@ function AdminDashboard({ documentUploads, documents, activities }) {
         }))} />
       </div>
 
-      <FloatingQuickActions onModalAction={setModalAction} />
+      <FloatingQuickActions />
 
       <div className="internal-three-column workflow-desktop-only">
         <WorkflowStepper title="Flusso documenti" steps={documentFlow} />
         <WorkflowStepper title="Flusso foto" steps={photoFlow} />
         <WorkflowStepper title="Flusso preventivo" steps={quoteFlow} />
       </div>
-      <MockActionModal action={modalAction} onClose={() => setModalAction(null)} />
     </>
   )
-}
-
-const mockActions = {
-  newExpense: {
-    icon: 'wallet',
-    title: 'Nuova spesa',
-    text: 'Registra una nuova spesa collegabile al cantiere reale.',
-    confirmLabel: 'Inserisci spesa',
-    fields: [
-      { label: 'Fornitore', placeholder: 'Es. Eurofer' },
-      { label: 'Importo', type: 'number', placeholder: '0,00' },
-    ],
-  },
-  report: {
-    icon: 'report',
-    title: 'Report',
-    text: 'Genera una conferma dimostrativa. Il PDF reale resta non implementato.',
-    confirmLabel: 'Genera anteprima',
-  },
 }
 
 function PanelTitle({ title, actionHref }) {
@@ -228,19 +205,14 @@ function PanelTitle({ title, actionHref }) {
   )
 }
 
-function FloatingQuickActions({ onModalAction }) {
+function FloatingQuickActions() {
   const [isOpen, setIsOpen] = useState(false)
 
   const actions = [
     { icon: 'upload', label: 'Carica documento', hint: 'Apri upload', href: '#/dashboard/upload' },
-    { icon: 'wallet', label: 'Nuova spesa', hint: 'Movimento reale', action: () => onModalAction(mockActions.newExpense) },
+    { icon: 'wallet', label: 'Nuova spesa', hint: 'Form reale', href: '#/dashboard/contabilita' },
     { icon: 'report', label: 'Report', hint: 'Riepilogo', href: '#/dashboard/report' },
   ]
-
-  function runAction(action) {
-    setIsOpen(false)
-    action?.()
-  }
 
   return (
     <div className={isOpen ? 'floating-actions open' : 'floating-actions'}>
@@ -248,16 +220,11 @@ function FloatingQuickActions({ onModalAction }) {
       <div className="floating-actions-menu" aria-hidden={!isOpen}>
         <strong>Azioni rapide</strong>
         <div>
-          {actions.map((item) => item.href ? (
+          {actions.map((item) => (
             <a href={item.href} key={item.label} onClick={() => setIsOpen(false)}>
               <InternalIcon name={item.icon} size={18} />
               <span><b>{item.label}</b><small>{item.hint}</small></span>
             </a>
-          ) : (
-            <button key={item.label} type="button" onClick={() => runAction(item.action)}>
-              <InternalIcon name={item.icon} size={18} />
-              <span><b>{item.label}</b><small>{item.hint}</small></span>
-            </button>
           ))}
         </div>
       </div>
