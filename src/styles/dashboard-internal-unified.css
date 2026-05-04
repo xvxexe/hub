@@ -45,7 +45,11 @@
 .dashboard-main > .workflow-stepper,
 .dashboard-main > .recent-upload-list,
 .dashboard-main > .quick-actions-grid,
-.dashboard-main > .section:not(.dashboard-header) {
+.dashboard-main > .section:not(.dashboard-header),
+.dashboard-main > .internal-command-panel,
+.dashboard-main > .internal-filter-grid,
+.dashboard-main > .internal-kpi-strip,
+.dashboard-main > .internal-workspace-layout {
   width: var(--internal-page-width);
   margin-inline: auto;
 }
@@ -82,7 +86,8 @@
 .dashboard-main > .accounting-filters,
 .cantieri-tools,
 .accounting-filters,
-.document-filters {
+.document-filters,
+.internal-filter-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
   gap: 0.62rem;
@@ -98,6 +103,7 @@
 .cantieri-tools label,
 .accounting-filters label,
 .document-filters label,
+.internal-filter-grid label,
 .date-filter,
 .mock-form label,
 .employee-action-panel label {
@@ -116,6 +122,9 @@
 .accounting-filters select,
 .document-filters input,
 .document-filters select,
+.internal-filter-grid input,
+.internal-filter-grid select,
+.internal-filter-grid textarea,
 .mock-form input,
 .mock-form select,
 .mock-form textarea,
@@ -142,6 +151,8 @@
 .cantieri-tools input::placeholder,
 .accounting-filters input::placeholder,
 .document-filters input::placeholder,
+.internal-filter-grid input::placeholder,
+.internal-filter-grid textarea::placeholder,
 .mock-form textarea::placeholder,
 .mock-form input::placeholder {
   color: #9aa6af;
@@ -150,7 +161,8 @@
 .dashboard-main .stats-grid.hub-kpi-grid,
 .dashboard-main .stats-grid,
 .dashboard-main .accounting-summary-grid.real-summary-grid,
-.dashboard-main .accounting-summary-grid {
+.dashboard-main .accounting-summary-grid,
+.dashboard-main .internal-kpi-strip {
   display: grid !important;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--internal-gap);
@@ -160,7 +172,8 @@
 
 .dashboard-main .stat-card,
 .dashboard-main .internal-stat-card,
-.dashboard-main .accounting-summary-grid .stat-card {
+.dashboard-main .accounting-summary-grid .stat-card,
+.dashboard-main .internal-kpi-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
@@ -178,7 +191,9 @@
 }
 
 .dashboard-main .stat-icon,
-.dashboard-main .quick-action-icon {
+.dashboard-main .quick-action-icon,
+.dashboard-main .internal-kpi-icon,
+.dashboard-main .internal-data-card-icon {
   display: grid;
   width: 2.25rem;
   height: 2.25rem;
@@ -189,18 +204,24 @@
   color: #2563eb;
 }
 
-.dashboard-main .stat-tone-amber .stat-icon { background: rgba(245, 158, 11, 0.13); color: #b45309; }
-.dashboard-main .stat-tone-green .stat-icon { background: rgba(22, 163, 74, 0.13); color: #15803d; }
-.dashboard-main .stat-tone-red .stat-icon { background: rgba(220, 38, 38, 0.11); color: #b91c1c; }
-.dashboard-main .stat-tone-purple .stat-icon { background: rgba(168, 85, 247, 0.12); color: #7e22ce; }
+.dashboard-main .stat-tone-amber .stat-icon,
+.dashboard-main .internal-kpi-amber .internal-kpi-icon { background: rgba(245, 158, 11, 0.13); color: #b45309; }
+.dashboard-main .stat-tone-green .stat-icon,
+.dashboard-main .internal-kpi-green .internal-kpi-icon { background: rgba(22, 163, 74, 0.13); color: #15803d; }
+.dashboard-main .stat-tone-red .stat-icon,
+.dashboard-main .internal-kpi-red .internal-kpi-icon { background: rgba(220, 38, 38, 0.11); color: #b91c1c; }
+.dashboard-main .stat-tone-purple .stat-icon,
+.dashboard-main .internal-kpi-purple .internal-kpi-icon { background: rgba(168, 85, 247, 0.12); color: #7e22ce; }
 
 .dashboard-main .stat-card > div,
-.dashboard-main .stat-card:not(.internal-stat-card) {
+.dashboard-main .stat-card:not(.internal-stat-card),
+.dashboard-main .internal-kpi-card > div {
   display: grid;
   gap: 0.08rem;
 }
 
-.dashboard-main .stat-card span:not(.stat-icon) {
+.dashboard-main .stat-card span:not(.stat-icon),
+.dashboard-main .internal-kpi-card small {
   overflow: hidden;
   color: var(--dash-muted, #6f7b85);
   font-size: 0.7rem;
@@ -211,7 +232,8 @@
   white-space: nowrap;
 }
 
-.dashboard-main .stat-card strong {
+.dashboard-main .stat-card strong,
+.dashboard-main .internal-kpi-card strong {
   overflow: hidden;
   color: var(--dash-title, #17212b);
   font-size: clamp(1.18rem, 1.6vw, 1.48rem);
@@ -222,10 +244,12 @@
   white-space: nowrap;
 }
 
-.dashboard-main .stat-card small {
+.dashboard-main .stat-card small,
+.dashboard-main .internal-kpi-card em {
   overflow: hidden;
   color: var(--dash-muted, #6f7b85);
   font-size: 0.72rem;
+  font-style: normal;
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -244,7 +268,8 @@
 .dashboard-main .login-card > .mock-form,
 .dashboard-main .accounting-site-card,
 .dashboard-main .category-breakdown,
-.dashboard-main .compact-category-card {
+.dashboard-main .compact-category-card,
+.dashboard-main .internal-command-panel {
   border: 1px solid var(--internal-border);
   border-radius: var(--internal-radius);
   background: var(--internal-card-bg);
@@ -259,7 +284,8 @@
 .dashboard-main .mock-form,
 .dashboard-main .accounting-site-card,
 .dashboard-main .category-breakdown,
-.dashboard-main .compact-category-card {
+.dashboard-main .compact-category-card,
+.dashboard-main .internal-command-panel {
   padding: var(--internal-panel-pad);
 }
 
@@ -273,7 +299,10 @@
 .dashboard-main > .dashboard-card-grid,
 .dashboard-main > .employee-action-panel,
 .dashboard-main > .mock-form,
-.dashboard-main > .section:not(.dashboard-header) {
+.dashboard-main > .section:not(.dashboard-header),
+.dashboard-main > .internal-command-panel,
+.dashboard-main > .internal-filter-grid,
+.dashboard-main > .internal-workspace-layout {
   margin-top: var(--internal-gap);
 }
 
@@ -283,7 +312,8 @@
 .dashboard-main .cantieri-page-layout,
 .dashboard-main .document-center-layout,
 .dashboard-main .accounting-site-grid,
-.dashboard-main .real-site-grid {
+.dashboard-main .real-site-grid,
+.dashboard-main .internal-workspace-layout {
   display: grid;
   gap: var(--internal-gap);
   align-items: start;
@@ -298,7 +328,8 @@
 }
 
 .dashboard-main .cantieri-page-layout,
-.dashboard-main .document-center-layout.document-page-fixed {
+.dashboard-main .document-center-layout.document-page-fixed,
+.dashboard-main .internal-workspace-layout {
   grid-template-columns: minmax(0, 1.2fr) minmax(20rem, 0.62fr);
 }
 
@@ -317,17 +348,21 @@
 .dashboard-main .quick-actions-grid,
 .dashboard-main .workflow-stepper,
 .dashboard-main .accounting-alert-grid,
-.dashboard-main .compact-category-grid {
+.dashboard-main .compact-category-grid,
+.dashboard-main .internal-workspace-sidebar,
+.dashboard-main .internal-action-list {
   display: grid;
   gap: 0.48rem;
 }
 
 .dashboard-main .document-preview-panel,
-.dashboard-main .cantieri-side-stack {
+.dashboard-main .cantieri-side-stack,
+.dashboard-main .internal-workspace-sidebar {
   align-self: start;
 }
 
-.dashboard-main .document-preview-panel {
+.dashboard-main .document-preview-panel,
+.dashboard-main .internal-workspace-sidebar.is-sticky {
   position: sticky;
   top: 5.75rem;
 }
@@ -366,7 +401,8 @@
 .dashboard-main .compact-upload-row:hover,
 .dashboard-main .hub-table-row:hover,
 .dashboard-main .document-card-row:hover,
-.dashboard-main .accounting-mobile-card:hover {
+.dashboard-main .accounting-mobile-card:hover,
+.dashboard-main .internal-data-card-row:hover {
   transform: translateY(-1px);
   box-shadow: var(--internal-shadow-hover);
 }
@@ -392,10 +428,13 @@
 .dashboard-main .workflow-step,
 .dashboard-main .project-row,
 .dashboard-main .data-row,
-.dashboard-main .table-row {
+.dashboard-main .table-row,
+.dashboard-main .internal-data-card-row {
   border: 1px solid rgba(224, 231, 235, 0.9);
   border-radius: 0.78rem;
   background: var(--internal-soft-bg);
+  color: inherit;
+  text-align: left;
   text-decoration: none;
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
 }
@@ -412,27 +451,37 @@
   padding: 0.5rem 0.58rem;
 }
 
-.dashboard-main .document-card-row {
+.dashboard-main .document-card-row,
+.dashboard-main .internal-data-card-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.5rem;
   padding: 0.58rem;
 }
 
+.dashboard-main .internal-data-card-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  width: 100%;
+}
+
 .dashboard-main .document-card-row.selected,
+.dashboard-main .internal-data-card-row.selected,
 .dashboard-main .hub-table-row[aria-current='page'],
 .dashboard-main .quick-action-card:focus-visible,
-.dashboard-main .document-card-row:focus-within {
+.dashboard-main .document-card-row:focus-within,
+.dashboard-main .internal-data-card-row:focus-visible {
   border-color: rgba(37, 99, 235, 0.32);
   background: rgba(239, 246, 255, 0.78);
 }
 
-.dashboard-main .validation-warning-row {
+.dashboard-main .validation-warning-row,
+.dashboard-main .internal-data-card-row.is-warning {
   border-color: rgba(245, 158, 11, 0.38);
   background: rgba(255, 251, 235, 0.86);
 }
 
-.dashboard-main .document-card-main {
+.dashboard-main .document-card-main,
+.dashboard-main .internal-data-card-main {
   display: grid;
   gap: 0.38rem;
   width: 100%;
@@ -446,7 +495,8 @@
 
 .dashboard-main .document-card-titleline,
 .dashboard-main .recent-upload-title,
-.dashboard-main .compact-category-top {
+.dashboard-main .compact-category-top,
+.dashboard-main .internal-data-card-titleline {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -454,7 +504,8 @@
 }
 
 .dashboard-main .document-card-meta,
-.dashboard-main .compact-meta {
+.dashboard-main .compact-meta,
+.dashboard-main .internal-data-card-meta {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.35rem;
@@ -462,13 +513,15 @@
 
 .dashboard-main .document-card-meta span,
 .dashboard-main .compact-meta div,
-.dashboard-main .detail-list div {
+.dashboard-main .detail-list div,
+.dashboard-main .internal-data-card-meta div {
   min-width: 0;
 }
 
 .dashboard-main .document-card-meta b,
 .dashboard-main .compact-meta dt,
-.dashboard-main .detail-list dt {
+.dashboard-main .detail-list dt,
+.dashboard-main .internal-data-card-meta dt {
   display: block;
   color: var(--dash-subtle, #94a0a8);
   font-size: 0.66rem;
@@ -479,10 +532,12 @@
 
 .dashboard-main .document-card-meta span,
 .dashboard-main .compact-meta dd,
-.dashboard-main .detail-list dd {
+.dashboard-main .detail-list dd,
+.dashboard-main .internal-data-card-meta dd {
   color: var(--dash-title, #17212b);
   font-size: 0.8rem;
   font-weight: 650;
+  margin: 0;
 }
 
 .dashboard-main .document-card-menu,
@@ -613,7 +668,8 @@
 
 .dashboard-main .document-actions-panel .button,
 .dashboard-main .row-actions .button,
-.dashboard-main .employee-actions .button {
+.dashboard-main .employee-actions .button,
+.dashboard-main .internal-action-list .button {
   width: 100%;
 }
 
@@ -671,11 +727,88 @@
   box-shadow: 0 26px 80px rgba(15, 23, 42, 0.22);
 }
 
+.dashboard-main .internal-command-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: var(--internal-gap);
+}
+
+.dashboard-main .internal-command-copy,
+.dashboard-main .internal-command-body,
+.dashboard-main .internal-command-aside {
+  min-width: 0;
+}
+
+.dashboard-main .internal-command-copy h2 {
+  color: var(--dash-title, #17212b);
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  letter-spacing: -0.035em;
+  margin: 0.12rem 0;
+}
+
+.dashboard-main .internal-command-copy p {
+  color: var(--dash-muted, #6f7b85);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.dashboard-main .internal-command-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.dashboard-main .internal-command-aside {
+  justify-self: end;
+}
+
+.dashboard-main .internal-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.dashboard-main .internal-data-card-action {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: end;
+}
+
+.dashboard-main .internal-mobile-action-menu {
+  display: none;
+}
+
+.dashboard-main .internal-mobile-action-menu summary {
+  min-height: 2.35rem;
+  border: 1px solid rgba(214, 224, 232, 0.96);
+  border-radius: 0.74rem;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 760;
+  list-style: none;
+  padding: 0.62rem 0.72rem;
+}
+
+.dashboard-main .internal-mobile-action-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.dashboard-main .internal-mobile-action-menu > div {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+}
+
 @media (max-width: 1180px) {
   .dashboard-main .stats-grid.hub-kpi-grid,
   .dashboard-main .stats-grid,
   .dashboard-main .accounting-summary-grid.real-summary-grid,
-  .dashboard-main .accounting-summary-grid {
+  .dashboard-main .accounting-summary-grid,
+  .dashboard-main .internal-kpi-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -683,12 +816,22 @@
   .dashboard-main .document-center-layout.document-page-fixed,
   .dashboard-main .detail-layout,
   .dashboard-main .internal-two-column,
-  .dashboard-main .internal-three-column {
+  .dashboard-main .internal-three-column,
+  .dashboard-main .internal-workspace-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .dashboard-main .document-preview-panel {
+  .dashboard-main .document-preview-panel,
+  .dashboard-main .internal-workspace-sidebar.is-sticky {
     position: static;
+  }
+
+  .dashboard-main .internal-command-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-main .internal-command-aside {
+    justify-self: stretch;
   }
 }
 
@@ -716,7 +859,11 @@
   .dashboard-main > .dashboard-card-grid,
   .dashboard-main > .employee-action-panel,
   .dashboard-main > .mock-form,
-  .dashboard-main > .section:not(.dashboard-header) {
+  .dashboard-main > .section:not(.dashboard-header),
+  .dashboard-main > .internal-command-panel,
+  .dashboard-main > .internal-filter-grid,
+  .dashboard-main > .internal-kpi-strip,
+  .dashboard-main > .internal-workspace-layout {
     width: 100%;
     padding-inline: 0.72rem;
   }
@@ -735,7 +882,8 @@
   .dashboard-main > .accounting-filters,
   .cantieri-tools,
   .accounting-filters,
-  .document-filters {
+  .document-filters,
+  .internal-filter-grid {
     grid-template-columns: minmax(0, 1fr);
     width: calc(100% - 1.44rem);
     padding: 0.72rem;
@@ -744,7 +892,8 @@
   .dashboard-main .stats-grid.hub-kpi-grid,
   .dashboard-main .stats-grid,
   .dashboard-main .accounting-summary-grid.real-summary-grid,
-  .dashboard-main .accounting-summary-grid {
+  .dashboard-main .accounting-summary-grid,
+  .dashboard-main .internal-kpi-strip {
     width: 100%;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.55rem;
@@ -752,27 +901,31 @@
   }
 
   .dashboard-main .stat-card,
-  .dashboard-main .internal-stat-card {
+  .dashboard-main .internal-stat-card,
+  .dashboard-main .internal-kpi-card {
     grid-template-columns: minmax(0, 1fr);
     min-height: 4.25rem;
     gap: 0.34rem;
     padding: 0.62rem;
   }
 
-  .dashboard-main .stat-icon {
+  .dashboard-main .stat-icon,
+  .dashboard-main .internal-kpi-icon {
     width: 1.95rem;
     height: 1.95rem;
     border-radius: 0.68rem;
   }
 
-  .dashboard-main .stat-card strong {
+  .dashboard-main .stat-card strong,
+  .dashboard-main .internal-kpi-card strong {
     font-size: 1.22rem;
   }
 
   .dashboard-main .panel-title-row,
   .dashboard-main .document-card-titleline,
   .dashboard-main .recent-upload-title,
-  .dashboard-main .compact-category-top {
+  .dashboard-main .compact-category-top,
+  .dashboard-main .internal-data-card-titleline {
     align-items: flex-start;
   }
 
@@ -809,18 +962,21 @@
     grid-column: 1 / -1;
   }
 
-  .dashboard-main .document-card-row {
+  .dashboard-main .document-card-row,
+  .dashboard-main .internal-data-card-row {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .dashboard-main .document-card-menu,
-  .dashboard-main .row-menu {
+  .dashboard-main .row-menu,
+  .dashboard-main .internal-data-card-action {
     justify-self: start;
   }
 
   .dashboard-main .document-card-meta,
   .dashboard-main .compact-meta,
-  .dashboard-main .invoice-lines {
+  .dashboard-main .invoice-lines,
+  .dashboard-main .internal-data-card-meta {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -859,8 +1015,22 @@
   .dashboard-main .mock-form,
   .dashboard-main .accounting-site-card,
   .dashboard-main .category-breakdown,
-  .dashboard-main .compact-category-card {
+  .dashboard-main .compact-category-card,
+  .dashboard-main .internal-command-panel {
     border-radius: 0.95rem;
+  }
+
+  .dashboard-main .internal-page-actions {
+    justify-content: stretch;
+  }
+
+  .dashboard-main .internal-page-actions .button,
+  .dashboard-main .internal-data-card-action .button {
+    width: 100%;
+  }
+
+  .dashboard-main .internal-mobile-action-menu {
+    display: block;
   }
 }
 
@@ -869,9 +1039,11 @@
   .dashboard-main .stats-grid,
   .dashboard-main .accounting-summary-grid.real-summary-grid,
   .dashboard-main .accounting-summary-grid,
+  .dashboard-main .internal-kpi-strip,
   .dashboard-main .document-card-meta,
   .dashboard-main .compact-meta,
-  .dashboard-main .invoice-lines {
+  .dashboard-main .invoice-lines,
+  .dashboard-main .internal-data-card-meta {
     grid-template-columns: minmax(0, 1fr);
   }
 }
