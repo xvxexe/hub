@@ -24,7 +24,10 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
     search: '',
   })
 
-  const sourceRows = useMemo(() => documents.map(documentToAccountingRow), [documents])
+  const sourceRows = useMemo(() => {
+    const movements = Array.isArray(store?.movements) ? store.movements : []
+    return movements.length ? movements.map(normalizeAccountingRow) : documents.map(documentToAccountingRow)
+  }, [documents, store?.movements])
   const sites = useMemo(() => buildSiteOptions(sourceRows), [sourceRows])
   const categories = useMemo(() => buildUniqueOptions(sourceRows, 'categoria', defaultCategories), [sourceRows])
   const statuses = useMemo(() => buildUniqueOptions(sourceRows, 'statoVerifica', defaultStatuses), [sourceRows])
@@ -148,7 +151,7 @@ function ManualExpenseForm({ store, session, sites, categories }) {
       source: 'manual-accounting-entry',
     })
 
-    setStatus({ type: 'success', message: 'Spesa inserita: controllala nella tabella movimenti e nel dettaglio documento.' })
+    setStatus({ type: 'success', message: 'Spesa inserita: controllala nella tabella movimenti. Puoi collegare o cambiare documento dal dettaglio movimento.' })
     setForm((current) => ({
       ...current,
       fornitore: '',
@@ -199,9 +202,32 @@ function ManualExpenseForm({ store, session, sites, categories }) {
   )
 }
 
-function documentToAccountingRow(document) {
+function normalizeAccountingRow(row) {
   return {
-    id: document.id,
+    id: row.id,
+    documentId: row.documentId,
+    cantiereId: row.cantiereId ?? 'barcelo-roma',
+    cantiere: row.cantiere ?? 'Barcelò Roma',
+    data: row.data ?? row.dataDocumento,
+    descrizione: row.descrizione ?? row.tipoDocumento ?? 'Movimento contabile',
+    fornitore: row.fornitore ?? 'Non indicato',
+    categoria: row.categoria ?? 'Extra / Altro',
+    tipoDocumento: row.tipoDocumento ?? 'Altro',
+    numeroDocumento: row.numeroDocumento ?? row.fileName ?? row.documentId ?? row.id,
+    imponibile: Number(row.imponibile || 0),
+    iva: Number(row.iva || 0),
+    totale: Number(row.totale || row.importoTotale || 0),
+    pagamento: row.pagamento ?? 'Non indicato',
+    statoVerifica: row.statoVerifica ?? 'Da verificare',
+    documentoCollegato: row.documentoCollegato ?? row.fileName ?? '',
+    note: row.notes ?? row.note ?? '',
+  }
+}
+
+function documentToAccountingRow(document) {
+  return normalizeAccountingRow({
+    id: `movement-${document.id}`,
+    documentId: document.id,
     cantiereId: document.cantiereId ?? 'barcelo-roma',
     cantiere: document.cantiere ?? 'Barcelò Roma',
     data: document.dataDocumento,
@@ -210,14 +236,14 @@ function documentToAccountingRow(document) {
     categoria: document.categoria ?? 'Extra / Altro',
     tipoDocumento: document.tipoDocumento ?? 'Altro',
     numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id,
-    imponibile: Number(document.imponibile || 0),
-    iva: Number(document.iva || 0),
-    totale: Number(document.totale || document.importoTotale || 0),
+    imponibile: document.imponibile,
+    iva: document.iva,
+    totale: document.totale ?? document.importoTotale,
     pagamento: document.pagamento ?? 'Non indicato',
     statoVerifica: document.statoVerifica ?? 'Da verificare',
     documentoCollegato: document.fileName,
     note: document.notes ?? document.note ?? '',
-  }
+  })
 }
 
 function AccountingFilters({ filters, onChange, sites, categories, statuses, docTypes }) {
@@ -265,10 +291,10 @@ function AccountingAlerts({ alerts }) {
 function AccountingTable({ rows }) {
   return (
     <section className="accounting-section real-accounting-section">
-      <div className="section-heading panel-title-row"><div><h2>Movimenti</h2><p>Tabella desktop con importi, IVA e stato documento. Su mobile diventa card.</p></div><StatusBadge>{rows.length} righe</StatusBadge></div>
+      <div className="section-heading panel-title-row"><div><h2>Movimenti</h2><p>Tabella desktop con importi, IVA, documento collegato e stato verifica. Su mobile diventa card.</p></div><StatusBadge>{rows.length} righe</StatusBadge></div>
       {rows.length > 0 ? (
         <>
-          <div className="accounting-table-wrap"><table className="accounting-table real-accounting-table"><thead><tr><th>Data</th><th>Descrizione</th><th>Fornitore</th><th>Categoria</th><th>Imponibile</th><th>IVA</th><th>Totale</th><th>Pagamento</th><th>Documento</th><th>Stato</th><th>Note</th><th>Azione</th></tr></thead><tbody>{rows.map((row) => { const warning = hasAmountWarning(row); return <tr className={warning ? 'accounting-warning-row' : undefined} key={row.id}><td>{formatDate(row.data)}</td><td>{row.descrizione}</td><td>{row.fornitore}</td><td>{row.categoria}</td><td><MoneyValue value={row.imponibile} /></td><td><MoneyValue value={row.iva} /></td><td><MoneyValue value={row.totale} /></td><td>{row.pagamento}</td><td>{row.tipoDocumento} {row.numeroDocumento}</td><td><StatusBadge>{warning ? 'Totale da verificare' : row.statoVerifica}</StatusBadge></td><td>{row.note}</td><td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td></tr> })}</tbody></table></div>
+          <div className="accounting-table-wrap"><table className="accounting-table real-accounting-table"><thead><tr><th>Data</th><th>Descrizione</th><th>Fornitore</th><th>Categoria</th><th>Imponibile</th><th>IVA</th><th>Totale</th><th>Pagamento</th><th>Documento collegato</th><th>Stato</th><th>Note</th><th>Azione</th></tr></thead><tbody>{rows.map((row) => { const warning = hasAmountWarning(row); return <tr className={warning ? 'accounting-warning-row' : undefined} key={row.id}><td>{formatDate(row.data)}</td><td>{row.descrizione}</td><td>{row.fornitore}</td><td>{row.categoria}</td><td><MoneyValue value={row.imponibile} /></td><td><MoneyValue value={row.iva} /></td><td><MoneyValue value={row.totale} /></td><td>{row.pagamento}</td><td>{row.documentoCollegato || 'Da collegare'}</td><td><StatusBadge>{warning ? 'Totale da verificare' : row.statoVerifica}</StatusBadge></td><td>{row.note}</td><td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td></tr> })}</tbody></table></div>
           <div className="accounting-mobile-list">{rows.map((row) => <AccountingMobileCard key={row.id} row={row} />)}</div>
         </>
       ) : <EmptyState title="Nessun movimento trovato">Modifica filtri, cantiere o ricerca per visualizzare altri movimenti contabili.</EmptyState>}
@@ -278,11 +304,11 @@ function AccountingTable({ rows }) {
 
 function AccountingMobileCard({ row }) {
   const warning = hasAmountWarning(row)
-  return <DataCardRow className="accounting-mobile-card" icon={warning ? 'warning' : 'wallet'} title={row.descrizione} description={`${row.fornitore} · ${row.categoria}`} status={warning ? 'Totale da verificare' : row.statoVerifica} href={`#/dashboard/contabilita/${row.id}`} warning={warning} meta={[{ label: 'Data', value: formatDate(row.data) }, { label: 'Imponibile', value: <MoneyValue value={row.imponibile} /> }, { label: 'IVA', value: <MoneyValue value={row.iva} /> }, { label: 'Totale', value: <MoneyValue value={row.totale} /> }, { label: 'Pagamento', value: row.pagamento }]}><small>{row.tipoDocumento} {row.numeroDocumento} · {row.note}</small></DataCardRow>
+  return <DataCardRow className="accounting-mobile-card" icon={warning ? 'warning' : 'wallet'} title={row.descrizione} description={`${row.fornitore} · ${row.categoria}`} status={warning ? 'Totale da verificare' : row.statoVerifica} href={`#/dashboard/contabilita/${row.id}`} warning={warning} meta={[{ label: 'Data', value: formatDate(row.data) }, { label: 'Imponibile', value: <MoneyValue value={row.imponibile} /> }, { label: 'IVA', value: <MoneyValue value={row.iva} /> }, { label: 'Totale', value: <MoneyValue value={row.totale} /> }, { label: 'Pagamento', value: row.pagamento }, { label: 'Documento', value: row.documentoCollegato || 'Da collegare' }]}><small>{row.numeroDocumento} · {row.note}</small></DataCardRow>
 }
 
 function CantiereAccountingSummary({ summaries }) {
-  return <section className="accounting-section real-accounting-section"><div className="section-heading panel-title-row"><div><h2>Riepilogo per cantiere</h2><p>Totali e controlli raggruppati per cantiere.</p></div><StatusBadge>{summaries.length} cantieri</StatusBadge></div><div className="accounting-site-grid real-site-grid">{summaries.map((summary) => <article className="accounting-site-card" key={summary.cantiere.id}><h3>{summary.cantiere.nome}</h3><dl className="detail-list"><div><dt>Imponibile</dt><dd><MoneyValue value={summary.totals.imponibile} /></dd></div><div><dt>IVA</dt><dd><MoneyValue value={summary.totals.iva} /></dd></div><div><dt>Totale spese</dt><dd><MoneyValue value={summary.totals.totale} /></dd></div><div><dt>Documenti</dt><dd>{summary.movimenti.length}</dd></div><div><dt>Da verificare</dt><dd>{summary.totals.daVerificare}</dd></div></dl><CategoryBreakdown rows={summary.categories} total={summary.totals.totale} compact /></article>)}</div></section>
+  return <section className="accounting-section real-accounting-section"><div className="section-heading panel-title-row"><div><h2>Riepilogo per cantiere</h2><p>Totali e controlli raggruppati per cantiere.</p></div><StatusBadge>{summaries.length} cantieri</StatusBadge></div><div className="accounting-site-grid real-site-grid">{summaries.map((summary) => <article className="accounting-site-card" key={summary.cantiere.id}><h3>{summary.cantiere.nome}</h3><dl className="detail-list"><div><dt>Imponibile</dt><dd><MoneyValue value={summary.totals.imponibile} /></dd></div><div><dt>IVA</dt><dd><MoneyValue value={summary.totals.iva} /></dd></div><div><dt>Totale spese</dt><dd><MoneyValue value={summary.totals.totale} /></dd></div><div><dt>Movimenti</dt><dd>{summary.movimenti.length}</dd></div><div><dt>Da verificare</dt><dd>{summary.totals.daVerificare}</dd></div></dl><CategoryBreakdown rows={summary.categories} total={summary.totals.totale} compact /></article>)}</div></section>
 }
 
 function CategoryBreakdown({ rows, total, compact = false }) {
@@ -305,7 +331,7 @@ function getCategoryTotals(rows) {
 }
 
 function getAccountingAlerts(rows) {
-  return rows.flatMap((row) => { const alerts = []; if (row.statoVerifica === 'Da verificare') alerts.push({ id: `${row.id}-check`, message: 'Da controllare', movimento: row }); if (row.statoVerifica === 'Possibile duplicato') alerts.push({ id: `${row.id}-duplicate`, message: 'Duplicato', movimento: row }); if (row.statoVerifica === 'Incompleto') alerts.push({ id: `${row.id}-incomplete`, message: 'Incompleto', movimento: row }); if (hasAmountWarning(row)) alerts.push({ id: `${row.id}-math`, message: 'Totale da verificare', movimento: row }); return alerts })
+  return rows.flatMap((row) => { const alerts = []; if (row.statoVerifica === 'Da verificare') alerts.push({ id: `${row.id}-check`, message: 'Da controllare', movimento: row }); if (row.statoVerifica === 'Possibile duplicato') alerts.push({ id: `${row.id}-duplicate`, message: 'Duplicato', movimento: row }); if (row.statoVerifica === 'Incompleto') alerts.push({ id: `${row.id}-incomplete`, message: 'Incompleto', movimento: row }); if (!row.documentId && !row.documentoCollegato) alerts.push({ id: `${row.id}-link`, message: 'Documento da collegare', movimento: row }); if (hasAmountWarning(row)) alerts.push({ id: `${row.id}-math`, message: 'Totale da verificare', movimento: row }); return alerts })
 }
 
 function hasAmountWarning(row) {
