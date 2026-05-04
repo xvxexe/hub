@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { exportSupabaseToGoogleSheets, isGoogleSheetsSyncConfigured, STORE_SYNC_EVENT } from '../lib/googleSheetsSync'
+import { deleteOperationalEntity } from '../lib/operationalDeletes'
 import { isSupabaseConfigured } from '../lib/supabaseClient'
 import { fetchOperationalStore, saveOperationalStore } from '../lib/supabaseOperationalStore'
 import { fetchRemoteStore, saveRemoteStore } from '../lib/supabaseStore'
@@ -156,6 +157,29 @@ export function useMockStore(session) {
     persist(nextStore)
   }
 
+  async function deleteEntity(collection, id) {
+    const entity = store[collection]?.find((item) => item.id === id)
+    if (!entity) return { ok: false, error: 'Elemento non trovato.' }
+
+    const result = await deleteOperationalEntity({ entityType: collection, entity, session })
+    if (!result.ok) {
+      setSyncState({ status: 'error', error: result.error })
+      return result
+    }
+
+    const nextStore = {
+      ...store,
+      [collection]: store[collection].filter((item) => item.id !== id),
+      notes: store.notes.filter((note) => !(note.entityType === collection && note.entityId === id)),
+      activities: store.activities.filter((activity) => !(activity.entityType === collection && activity.entityId === id)),
+    }
+
+    setStore(nextStore)
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStore))
+    setSyncState({ status: 'supabase', error: null })
+    return { ok: true }
+  }
+
   function addInternalNote(entityType, entityId, text) {
     if (!text.trim()) return
 
@@ -221,6 +245,7 @@ export function useMockStore(session) {
     priorities,
     updateDocumentStatus: (id, status) => updateEntity('documents', id, { statoVerifica: status, stato: status.toLowerCase() }, `Documento segnato come ${status}`),
     updateDocumentData: (id, data) => updateEntity('documents', id, data, 'Documento modificato'),
+    deleteDocument: (id) => deleteEntity('documents', id),
     markDocumentChecked: (id) => updateEntity('documents', id, { statoVerifica: 'Confermato', stato: 'confermato' }, 'Documento segnato come controllato'),
     markDocumentDuplicate: (id) => updateEntity('documents', id, { statoVerifica: 'Possibile duplicato', stato: 'possibile duplicato' }, 'Documento segnato come possibile duplicato'),
     updatePhotoStatus: (id, status) => updateEntity('photos', id, {
@@ -233,10 +258,12 @@ export function useMockStore(session) {
           : store.photos.find((photo) => photo.id === id)?.pubblicabile ?? 'da valutare',
     }, `Foto segnata come ${status}`),
     updatePhotoData: (id, data) => updateEntity('photos', id, data, 'Foto modificata'),
+    deletePhoto: (id) => deleteEntity('photos', id),
     approvePhoto: (id) => updateEntity('photos', id, { stato: 'Approvata', pubblicata: false }, 'Foto approvata'),
     markPhotoPublicable: (id, value) => updateEntity('photos', id, { pubblicabile: value ? 'si' : 'no' }, value ? 'Foto segnata pubblicabile' : 'Foto segnata non pubblicabile'),
     updateEstimateStatus: (id, status) => updateEntity('estimates', id, { status }, `Preventivo segnato come ${status}`),
     updateEstimateData: (id, data) => updateEntity('estimates', id, data, 'Preventivo modificato'),
+    deleteEstimate: (id) => deleteEntity('estimates', id),
     addInternalNote,
     addActivityLog,
     resetMockStore,
