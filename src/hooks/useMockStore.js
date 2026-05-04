@@ -14,6 +14,7 @@ const priorities = ['Bassa', 'Media', 'Alta']
 
 const EMPTY_STORE = {
   documents: [],
+  movements: [],
   photos: [],
   estimates: [],
   notes: [],
@@ -51,8 +52,8 @@ export function useMockStore(session) {
         }
 
         if (isValidStore(operational.data)) {
-          setStore(operational.data)
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(operational.data))
+          setStore(normalizeStore(operational.data))
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeStore(operational.data)))
           setSyncState({ status: 'supabase', error: null })
           return
         }
@@ -83,8 +84,9 @@ export function useMockStore(session) {
     function handleStoreSync(event) {
       const nextStore = event.detail?.store
       if (!isValidStore(nextStore)) return
-      setStore(nextStore)
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStore))
+      const normalized = normalizeStore(nextStore)
+      setStore(normalized)
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized))
       setSyncState({ status: 'supabase', error: null })
     }
 
@@ -93,23 +95,24 @@ export function useMockStore(session) {
   }, [])
 
   async function persist(nextStore) {
-    if (!isValidStore(nextStore)) {
+    const normalizedStore = normalizeStore(nextStore)
+    if (!isValidStore(normalizedStore)) {
       setSyncState({ status: 'error', error: 'Store non valido: salvataggio bloccato.' })
       return
     }
 
-    setStore(nextStore)
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStore))
+    setStore(normalizedStore)
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedStore))
 
     if (session?.authMode === 'supabase') {
-      const savedOperational = await saveOperationalStore(nextStore, session)
+      const savedOperational = await saveOperationalStore(normalizedStore, session)
       if (savedOperational.error) {
         setSyncState({ status: 'error', error: savedOperational.error.message })
         return
       }
 
       if (isGoogleSheetsSyncConfigured) {
-        const exported = await exportSupabaseToGoogleSheets(nextStore)
+        const exported = await exportSupabaseToGoogleSheets(normalizedStore)
         if (!exported.ok) {
           setSyncState({ status: 'error', error: exported.error })
           return
@@ -120,7 +123,7 @@ export function useMockStore(session) {
       return
     }
 
-    const savedLegacy = await saveRemoteStore(nextStore)
+    const savedLegacy = await saveRemoteStore(normalizedStore)
     if (savedLegacy.error) {
       setSyncState({ status: 'error', error: savedLegacy.error.message })
       return
@@ -157,6 +160,31 @@ export function useMockStore(session) {
     persist(nextStore)
   }
 
+  function upsertAccountingMovement(id, data, activityText) {
+    const current = store.movements.find((item) => item.id === id)
+    const nextMovement = normalizeMovement({
+      ...(current ?? {}),
+      ...data,
+      id,
+      updatedAt: new Date().toISOString(),
+    })
+
+    const movements = current
+      ? store.movements.map((item) => (item.id === id ? nextMovement : item))
+      : [nextMovement, ...store.movements]
+
+    persist({
+      ...store,
+      movements,
+      activities: [createActivity({
+        type: 'movements',
+        entityType: 'movements',
+        entityId: id,
+        description: `${entityLabel('movements', nextMovement)} ${activityText}`,
+      }, actor()), ...store.activities],
+    })
+  }
+
   async function deleteEntity(collection, id) {
     const entity = store[collection]?.find((item) => item.id === id)
     if (!entity) return { ok: false, error: 'Elemento non trovato.' }
@@ -170,6 +198,9 @@ export function useMockStore(session) {
     const nextStore = {
       ...store,
       [collection]: store[collection].filter((item) => item.id !== id),
+      movements: collection === 'documents'
+        ? store.movements.filter((movement) => movement.documentId !== id && movement.id !== `movement-${id}`)
+        : store.movements,
       notes: store.notes.filter((note) => !(note.entityType === collection && note.entityId === id)),
       activities: store.activities.filter((activity) => !(activity.entityType === collection && activity.entityId === id)),
     }
@@ -218,9 +249,15 @@ export function useMockStore(session) {
 
   function addDocumentUpload(upload) {
     const document = uploadToDocument(upload)
+    const movement = documentToMovement(document)
+    const existingMovement = store.movements.find((item) => item.id === movement.id)
+
     persist({
       ...store,
-      documents: [document, ...store.documents],
+      documents: [document, ...store.documents.filter((item) => item.id !== document.id)],
+      movements: existingMovement
+        ? store.movements.map((item) => (item.id === movement.id ? { ...item, ...movement } : item))
+        : [movement, ...store.movements],
       activities: [createActivity({
         type: 'document',
         entityType: 'documents',
@@ -248,6 +285,9 @@ export function useMockStore(session) {
     deleteDocument: (id) => deleteEntity('documents', id),
     markDocumentChecked: (id) => updateEntity('documents', id, { statoVerifica: 'Confermato', stato: 'confermato' }, 'Documento segnato come controllato'),
     markDocumentDuplicate: (id) => updateEntity('documents', id, { statoVerifica: 'Possibile duplicato', stato: 'possibile duplicato' }, 'Documento segnato come possibile duplicato'),
+    updateAccountingMovementData: (id, data) => upsertAccountingMovement(id, data, 'Movimento contabile modificato'),
+    linkAccountingMovementDocument: (id, document) => upsertAccountingMovement(id, movementLinkData(document), 'collegato a un documento'),
+    unlinkAccountingMovementDocument: (id) => upsertAccountingMovement(id, { documentId: null, documentoCollegato: '', fileName: '', storagePath: '', storageBucket: '' }, 'scollegato dal documento'),
     updatePhotoStatus: (id, status) => updateEntity('photos', id, {
       stato: status,
       pubblicata: status === 'Pubblicata',
@@ -275,7 +315,7 @@ export function useMockStore(session) {
 async function fetchLegacyStoreFallback() {
   const remote = await fetchRemoteStore()
   if (remote.error) return remote
-  return isValidStore(remote.data) ? remote : { ...remote, data: null }
+  return isValidStore(remote.data) ? { ...remote, data: normalizeStore(remote.data) } : { ...remote, data: null }
 }
 
 function loadStore() {
@@ -283,12 +323,25 @@ function loadStore() {
     const stored = window.localStorage.getItem(STORAGE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
-      if (isValidStore(parsed)) return parsed
+      if (isValidStore(parsed)) return normalizeStore(parsed)
     }
   } catch {
     window.localStorage.removeItem(STORAGE_KEY)
   }
   return EMPTY_STORE
+}
+
+function normalizeStore(data) {
+  return {
+    ...EMPTY_STORE,
+    ...(data ?? {}),
+    documents: Array.isArray(data?.documents) ? data.documents : [],
+    movements: Array.isArray(data?.movements) ? data.movements.map(normalizeMovement) : [],
+    photos: Array.isArray(data?.photos) ? data.photos : [],
+    estimates: Array.isArray(data?.estimates) ? data.estimates : [],
+    notes: Array.isArray(data?.notes) ? data.notes : [],
+    activities: Array.isArray(data?.activities) ? data.activities : [],
+  }
 }
 
 function isValidStore(data) {
@@ -330,7 +383,69 @@ function uploadToDocument(upload) {
     nota: upload.nota,
     caricatoDa: upload.caricatoDa,
     dataCaricamento: upload.dataCaricamento,
-    source: 'upload-documento',
+    source: upload.source ?? 'upload-documento',
+  }
+}
+
+function documentToMovement(document) {
+  return normalizeMovement({
+    id: `movement-${document.id}`,
+    documentId: document.id,
+    cantiereId: document.cantiereId ?? 'barcelo-roma',
+    cantiere: document.cantiere ?? 'Barcelò Roma',
+    data: document.dataDocumento,
+    descrizione: document.descrizione ?? document.tipoDocumento ?? 'Documento',
+    fornitore: document.fornitore,
+    categoria: document.categoria ?? 'Extra / Altro',
+    tipoDocumento: document.tipoDocumento ?? 'Altro',
+    numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id,
+    imponibile: document.imponibile,
+    iva: document.iva,
+    totale: document.totale ?? document.importoTotale,
+    pagamento: document.pagamento ?? 'Non indicato',
+    statoVerifica: document.statoVerifica ?? titleStatus(document.stato) ?? 'Da verificare',
+    documentoCollegato: document.fileName ?? document.numeroDocumento ?? '',
+    fileName: document.fileName,
+    storagePath: document.storagePath,
+    storageBucket: document.storageBucket ?? 'documents',
+    note: document.note ?? document.nota ?? '',
+    source: 'document-linked-movement',
+  })
+}
+
+function normalizeMovement(movement) {
+  return {
+    ...movement,
+    id: movement.id,
+    cantiereId: movement.cantiereId ?? 'barcelo-roma',
+    cantiere: movement.cantiere ?? 'Barcelò Roma',
+    data: movement.data ?? movement.dataDocumento ?? null,
+    descrizione: movement.descrizione ?? movement.tipoDocumento ?? 'Movimento contabile',
+    fornitore: movement.fornitore ?? 'Non indicato',
+    categoria: movement.categoria ?? 'Extra / Altro',
+    tipoDocumento: movement.tipoDocumento ?? 'Altro',
+    numeroDocumento: movement.numeroDocumento ?? movement.fileName ?? movement.id,
+    imponibile: Number(movement.imponibile || 0),
+    iva: Number(movement.iva || 0),
+    totale: Number(movement.totale || movement.importoTotale || 0),
+    pagamento: movement.pagamento ?? 'Non indicato',
+    statoVerifica: movement.statoVerifica ?? 'Da verificare',
+    documentoCollegato: movement.documentoCollegato ?? movement.fileName ?? '',
+    note: movement.note ?? movement.nota ?? '',
+  }
+}
+
+function movementLinkData(document) {
+  if (!document) return {}
+
+  return {
+    documentId: document.id,
+    documentoCollegato: document.fileName ?? document.numeroDocumento ?? document.descrizione ?? document.id,
+    fileName: document.fileName,
+    storagePath: document.storagePath,
+    storageBucket: document.storageBucket ?? 'documents',
+    tipoDocumento: document.tipoDocumento,
+    numeroDocumento: document.numeroDocumento ?? document.fileName,
   }
 }
 
@@ -402,6 +517,7 @@ function createActivity(activity, author) {
 
 function entityLabel(collection, entity) {
   if (collection === 'documents') return `Documento ${entity.tipoDocumento} ${entity.fornitore || entity.descrizione}`
+  if (collection === 'movements') return `Movimento ${entity.fornitore || entity.descrizione}`
   if (collection === 'photos') return `Foto ${entity.cantiere}`
   if (collection === 'estimates') return `Preventivo ${entity.client}`
   return 'Elemento'
