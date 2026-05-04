@@ -19,6 +19,7 @@ const EMPTY_STORE = {
   estimates: [],
   notes: [],
   activities: [],
+  deletedRecords: [],
 }
 
 export function useMockStore(session) {
@@ -341,6 +342,7 @@ function normalizeStore(data) {
     estimates: Array.isArray(data?.estimates) ? data.estimates : [],
     notes: Array.isArray(data?.notes) ? data.notes : [],
     activities: Array.isArray(data?.activities) ? data.activities : [],
+    deletedRecords: Array.isArray(data?.deletedRecords) ? data.deletedRecords : [],
   }
 }
 
