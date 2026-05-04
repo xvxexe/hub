@@ -1,6 +1,7 @@
 const SPREADSHEET_ID = '1J3fW7BwEF6fAqtXxbKpLdSR5NVVbP2cMeZIHFr7bbao';
 const SYNC_DATA_SHEET = 'Hub_Sync_Data';
 const SYNC_LOG_SHEET = 'Hub_Sync_Log';
+const RIEPILOGO_SHEET = 'Riepilogo';
 const DEFAULT_CANTIERE_ID = 'barcelo-roma';
 const DEFAULT_CANTIERE_NAME = 'Barcelò Roma';
 
@@ -81,45 +82,19 @@ function setupHubSyncSheets() {
 
 function buildStoreFromMaster_() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const documents = [];
-
-  SUMMARY_TABS.forEach((tabName) => {
-    const sheet = ss.getSheetByName(tabName);
-    if (!sheet) return;
-    const displayValues = sheet.getDataRange().getDisplayValues();
-    const rawValues = sheet.getDataRange().getValues();
-    const totals = readTabTotals_(displayValues, rawValues);
-    if (totals.totale === 0 && totals.imponibile === 0 && totals.iva === 0) return;
-
-    documents.push({
-      id: `sheet-${slug_(tabName)}`,
-      cantiereId: DEFAULT_CANTIERE_ID,
-      cantiere: DEFAULT_CANTIERE_NAME,
-      tipoDocumento: 'Riepilogo tab',
-      fornitore: 'BARCELO_ROMA_master',
-      descrizione: `${tabName} - ${labelFromTab_(tabName)}`,
-      numeroDocumento: tabName,
-      dataDocumento: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
-      categoria: guessCategory_(tabName),
-      imponibile: totals.imponibile,
-      iva: totals.iva,
-      totale: totals.totale,
-      importoTotale: totals.totale,
-      pagamento: tabName === 'Da_classificare' ? 'Da classificare' : 'Da dettaglio Google Sheets',
-      statoVerifica: 'Confermato',
-      stato: 'confermato',
-      fileName: 'BARCELO_ROMA_master',
-      note: `${totals.movimenti || 1} movimenti nel tab ${tabName}. Fonte: Google Sheets BARCELO_ROMA_master.`,
-      nota: `${totals.movimenti || 1} movimenti nel tab ${tabName}. Fonte: Google Sheets BARCELO_ROMA_master.`,
-      source: 'google-sheets-sync',
-      sheetTab: tabName,
-      movimentiCount: totals.movimenti || 1,
-      updatedAt: new Date().toISOString(),
-    });
-  });
-
+  const riepilogoDocuments = readRiepilogoDocuments_(ss);
+  const tabDocuments = riepilogoDocuments.length ? [] : readSummaryTabDocuments_(ss);
+  const masterDocuments = riepilogoDocuments.length ? riepilogoDocuments : tabDocuments;
   const exportedDocs = readHubSyncData_(ss);
-  const mergedDocuments = mergeDocuments_(documents, exportedDocs);
+  const mergedDocuments = mergeDocuments_(masterDocuments, exportedDocs);
+  const totals = mergedDocuments.reduce((acc, doc) => {
+    acc.imponibile += Number(doc.imponibile || 0);
+    acc.iva += Number(doc.iva || 0);
+    acc.totale += Number(doc.totale || 0);
+    acc.tabs += 1;
+    return acc;
+  }, { imponibile: 0, iva: 0, totale: 0, tabs: 0 });
+
   const store = {
     documents: mergedDocuments,
     photos: [],
@@ -130,7 +105,9 @@ function buildStoreFromMaster_() {
       date: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
       author: 'Google Sheets Sync',
       type: 'sync',
-      description: 'Importati dati da BARCELO_ROMA_master tramite Google Apps Script',
+      description: riepilogoDocuments.length
+        ? `Importati ${riepilogoDocuments.length} tab dal foglio Riepilogo BARCELO_ROMA_master`
+        : 'Importati dati da BARCELO_ROMA_master tramite tab singoli',
       entityType: 'google-sheet',
       entityId: SPREADSHEET_ID,
     }],
@@ -139,19 +116,106 @@ function buildStoreFromMaster_() {
       name: 'BARCELO_ROMA_master',
       spreadsheetId: SPREADSHEET_ID,
       importedAt: new Date().toISOString(),
-      mode: 'apps-script-sync',
-      totals: mergedDocuments.reduce((acc, doc) => {
-        acc.imponibile += Number(doc.imponibile || 0);
-        acc.iva += Number(doc.iva || 0);
-        acc.totale += Number(doc.totale || 0);
-        acc.tabs += 1;
-        return acc;
-      }, { imponibile: 0, iva: 0, totale: 0, tabs: 0 }),
+      mode: riepilogoDocuments.length ? 'riepilogo-sheet-sync' : 'apps-script-sync',
+      totals,
     },
   };
 
-  log_('IMPORT_TO_SUPABASE_PAYLOAD', `Documenti preparati: ${mergedDocuments.length}`);
-  return { store, summary: { documents: mergedDocuments.length, photos: 0, estimates: 0 } };
+  log_('IMPORT_TO_SUPABASE_PAYLOAD', `Documenti preparati: ${mergedDocuments.length}; totale: ${round2_(totals.totale)}; fonte: ${riepilogoDocuments.length ? RIEPILOGO_SHEET : 'tab singoli'}`);
+  return { store, summary: { documents: mergedDocuments.length, photos: 0, estimates: 0, totals } };
+}
+
+function readSummaryTabDocuments_(ss) {
+  const documents = [];
+
+  SUMMARY_TABS.forEach((tabName) => {
+    const sheet = ss.getSheetByName(tabName);
+    if (!sheet) return;
+    const displayValues = sheet.getDataRange().getDisplayValues();
+    const rawValues = sheet.getDataRange().getValues();
+    const totals = readTabTotals_(displayValues, rawValues);
+    if (totals.totale === 0 && totals.imponibile === 0 && totals.iva === 0) return;
+    documents.push(createTabDocument_(tabName, labelFromTab_(tabName), totals, 'tab-singolo'));
+  });
+
+  return documents;
+}
+
+function readRiepilogoDocuments_(ss) {
+  const sheet = ss.getSheetByName(RIEPILOGO_SHEET);
+  if (!sheet) return [];
+
+  const range = sheet.getDataRange();
+  const displayValues = range.getDisplayValues();
+  const rawValues = range.getValues();
+  const normalizedRows = displayValues.map((row) => row.map(normalizeLabel_));
+  const headerIndex = normalizedRows.findIndex((row) => (
+    row.includes('tab principale')
+    && row.includes('descrizione')
+    && row.some((cell) => cell.includes('movimenti'))
+    && row.includes('imponibile')
+    && row.includes('iva')
+    && row.includes('totale')
+  ));
+
+  if (headerIndex < 0) return [];
+
+  const headers = normalizedRows[headerIndex];
+  const tabIndex = headers.indexOf('tab principale');
+  const descriptionIndex = headers.indexOf('descrizione');
+  const movementsIndex = headers.findIndex((cell) => cell.includes('movimenti'));
+  const imponibileIndex = headers.indexOf('imponibile');
+  const ivaIndex = headers.indexOf('iva');
+  const totaleIndex = headers.indexOf('totale');
+  const documents = [];
+
+  for (let r = headerIndex + 1; r < displayValues.length; r += 1) {
+    const displayRow = displayValues[r];
+    const rawRow = rawValues[r];
+    const tabName = String(displayRow[tabIndex] || '').trim();
+    const description = String(displayRow[descriptionIndex] || '').trim();
+    if (!tabName) continue;
+
+    const totals = {
+      movimenti: Math.max(1, Math.round(getNumberAt_(displayRow, rawRow, movementsIndex) || 1)),
+      imponibile: round2_(getNumberAt_(displayRow, rawRow, imponibileIndex) || 0),
+      iva: round2_(getNumberAt_(displayRow, rawRow, ivaIndex) || 0),
+      totale: round2_(getNumberAt_(displayRow, rawRow, totaleIndex) || 0),
+    };
+
+    if (totals.totale === 0 && totals.imponibile === 0 && totals.iva === 0) continue;
+    documents.push(createTabDocument_(tabName, description || labelFromTab_(tabName), totals, RIEPILOGO_SHEET));
+  }
+
+  return documents;
+}
+
+function createTabDocument_(tabName, description, totals, sourceTab) {
+  return {
+    id: `sheet-${slug_(tabName)}`,
+    cantiereId: DEFAULT_CANTIERE_ID,
+    cantiere: DEFAULT_CANTIERE_NAME,
+    tipoDocumento: 'Riepilogo tab',
+    fornitore: 'BARCELO_ROMA_master',
+    descrizione: `${tabName} - ${description}`,
+    numeroDocumento: tabName,
+    dataDocumento: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    categoria: guessCategory_(tabName),
+    imponibile: totals.imponibile,
+    iva: totals.iva,
+    totale: totals.totale,
+    importoTotale: totals.totale,
+    pagamento: tabName === 'Da_classificare' ? 'Da classificare' : 'Da dettaglio Google Sheets',
+    statoVerifica: 'Confermato',
+    stato: 'confermato',
+    fileName: 'BARCELO_ROMA_master',
+    note: `${totals.movimenti || 1} movimenti nel tab ${tabName}. Fonte: ${sourceTab} / BARCELO_ROMA_master.`,
+    nota: `${totals.movimenti || 1} movimenti nel tab ${tabName}. Fonte: ${sourceTab} / BARCELO_ROMA_master.`,
+    source: 'google-sheets-sync',
+    sheetTab: tabName,
+    movimentiCount: totals.movimenti || 1,
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 function exportStoreToSyncSheet_(store) {
@@ -199,8 +263,6 @@ function mergeDocuments_(masterDocs, syncedDocs) {
 
   syncedDocs.forEach((doc) => {
     if (!doc.id) return;
-    // Non far sovrascrivere ai dati esportati in Hub_Sync_Data i riepiloghi letti direttamente dai tab master.
-    // Hub_Sync_Data serve per dati creati dal sito, non per sostituire le formule/totali del master.
     if (String(doc.id).startsWith('sheet-')) return;
     map.set(doc.id, { ...doc, source: doc.source || 'hub-sync-data' });
   });
@@ -212,7 +274,6 @@ function readTabTotals_(displayValues, rawValues) {
   const displayRows = displayValues.map((row) => row.map((cell) => String(cell || '').trim()));
   const rawRows = rawValues || displayValues;
 
-  // Struttura standard dei tab: riga riepilogo con N. righe / Imponibile € / IVA € / Totale €.
   for (let r = 0; r < displayRows.length; r += 1) {
     const normalizedRow = displayRows[r].map(normalizeLabel_);
     const hasSummary = normalizedRow.includes('n righe') && normalizedRow.includes('imponibile') && normalizedRow.includes('iva') && normalizedRow.includes('totale');
@@ -226,7 +287,6 @@ function readTabTotals_(displayValues, rawValues) {
     };
   }
 
-  // Fallback per tab non standard: usa intestazioni Data / Imponibile / IVA / Totale, ignorando titoli, note e date.
   const headerIndex = displayRows.findIndex((row) => row.map(normalizeLabel_).includes('data') && row.map(normalizeLabel_).includes('totale'));
   if (headerIndex >= 0) {
     const headers = displayRows[headerIndex].map(normalizeLabel_);
@@ -254,6 +314,14 @@ function readTabTotals_(displayValues, rawValues) {
   }
 
   return { imponibile: 0, iva: 0, totale: 0, movimenti: 0 };
+}
+
+function getNumberAt_(displayRow, rawRow, index) {
+  if (index < 0) return 0;
+  const rawValue = rawRow && rawRow[index] !== undefined ? rawRow[index] : null;
+  const rawParsed = parseNumber_(rawValue);
+  if (rawParsed !== null) return rawParsed;
+  return parseNumber_(displayRow[index]) || 0;
 }
 
 function readValueAfterLabel_(displayRow, rawRow, label) {
