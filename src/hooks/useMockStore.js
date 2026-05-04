@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { exportSupabaseToGoogleSheets, isGoogleSheetsSyncConfigured, STORE_SYNC_EVENT } from '../lib/googleSheetsSync'
 import { isSupabaseConfigured } from '../lib/supabaseClient'
+import { fetchOperationalStore, saveOperationalStore } from '../lib/supabaseOperationalStore'
 import { fetchRemoteStore, saveRemoteStore } from '../lib/supabaseStore'
 
 const STORAGE_KEY = 'europaservice-real-store-v001'
@@ -32,17 +33,34 @@ export function useMockStore(session) {
       if (!isSupabaseConfigured) return
 
       try {
-        const remote = await fetchRemoteStore()
+        const operational = await fetchOperationalStore()
         if (cancelled) return
 
-        if (remote.error) {
-          setSyncState({ status: 'error', error: remote.error.message })
+        if (operational.error) {
+          const legacy = await fetchLegacyStoreFallback()
+          if (cancelled) return
+          if (legacy.data) {
+            setStore(legacy.data)
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(legacy.data))
+            setSyncState({ status: 'supabase', error: `Fallback legacy app_store: ${operational.error.message}` })
+            return
+          }
+          setSyncState({ status: 'error', error: operational.error.message })
           return
         }
 
-        if (isValidStore(remote.data)) {
-          setStore(remote.data)
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remote.data))
+        if (isValidStore(operational.data)) {
+          setStore(operational.data)
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(operational.data))
+          setSyncState({ status: 'supabase', error: null })
+          return
+        }
+
+        const legacy = await fetchLegacyStoreFallback()
+        if (cancelled) return
+        if (legacy.data) {
+          setStore(legacy.data)
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(legacy.data))
           setSyncState({ status: 'supabase', error: null })
           return
         }
@@ -82,21 +100,32 @@ export function useMockStore(session) {
     setStore(nextStore)
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStore))
 
-    const saved = await saveRemoteStore(nextStore)
-    if (saved.error) {
-      setSyncState({ status: 'error', error: saved.error.message })
+    if (session?.authMode === 'supabase') {
+      const savedOperational = await saveOperationalStore(nextStore, session)
+      if (savedOperational.error) {
+        setSyncState({ status: 'error', error: savedOperational.error.message })
+        return
+      }
+
+      if (isGoogleSheetsSyncConfigured) {
+        const exported = await exportSupabaseToGoogleSheets(nextStore)
+        if (!exported.ok) {
+          setSyncState({ status: 'error', error: exported.error })
+          return
+        }
+      }
+
+      setSyncState({ status: 'supabase', error: null })
       return
     }
 
-    if (saved.source === 'supabase' && isGoogleSheetsSyncConfigured) {
-      const exported = await exportSupabaseToGoogleSheets(nextStore)
-      if (!exported.ok) {
-        setSyncState({ status: 'error', error: exported.error })
-        return
-      }
+    const savedLegacy = await saveRemoteStore(nextStore)
+    if (savedLegacy.error) {
+      setSyncState({ status: 'error', error: savedLegacy.error.message })
+      return
     }
 
-    setSyncState({ status: saved.source === 'supabase' ? 'supabase' : 'local', error: null })
+    setSyncState({ status: savedLegacy.source === 'supabase' ? 'supabase' : 'local', error: null })
   }
 
   function actor() {
@@ -216,6 +245,12 @@ export function useMockStore(session) {
   }
 }
 
+async function fetchLegacyStoreFallback() {
+  const remote = await fetchRemoteStore()
+  if (remote.error) return remote
+  return isValidStore(remote.data) ? remote : { ...remote, data: null }
+}
+
 function loadStore() {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY)
@@ -234,9 +269,9 @@ function isValidStore(data) {
     data
       && typeof data === 'object'
       && Array.isArray(data.documents)
-      && data.documents.length > 0
       && Array.isArray(data.photos)
       && Array.isArray(data.estimates)
+      && Array.isArray(data.notes)
       && Array.isArray(data.activities),
   )
 }
