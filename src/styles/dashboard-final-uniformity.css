@@ -224,6 +224,145 @@
   top: 5.75rem;
 }
 
+/* Professional micro-polish: readable badges, consistent type scale and safer rows. */
+.dashboard-main {
+  text-rendering: geometricPrecision;
+}
+
+.dashboard-main .status-badge,
+.dashboard-main .data-mode-badge,
+.dashboard-main .role-pill-light,
+.dashboard-main .role-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: min(100%, 13rem);
+  min-width: max-content;
+  min-height: 1.78rem;
+  padding: 0.38rem 0.68rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 720;
+  letter-spacing: 0.015em;
+  line-height: 1;
+  text-transform: none !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+.dashboard-main .desktop-status-cell,
+.dashboard-main .hub-table-row > span:last-child,
+.dashboard-main .document-card-titleline,
+.dashboard-main .internal-data-card-titleline,
+.dashboard-main .recent-upload-title {
+  overflow: visible;
+}
+
+.dashboard-main .desktop-status-cell {
+  justify-content: flex-end;
+  min-width: 8.75rem;
+}
+
+.dashboard-main .hub-doc-row {
+  grid-template-columns: minmax(13rem, 1.45fr) minmax(8.5rem, 0.95fr) minmax(8.5rem, 0.95fr) minmax(7.5rem, 0.7fr) minmax(9.75rem, 0.85fr);
+  column-gap: 0.75rem;
+}
+
+.dashboard-main .hub-table-row,
+.dashboard-main .site-progress-row,
+.dashboard-main .compact-upload-row,
+.dashboard-main .activity-item,
+.dashboard-main .internal-data-card-row {
+  isolation: isolate;
+}
+
+.dashboard-main .hub-table-row strong,
+.dashboard-main .hub-table-row span,
+.dashboard-main .compact-upload-row strong,
+.dashboard-main .compact-upload-row small,
+.dashboard-main .activity-item strong,
+.dashboard-main .activity-item small,
+.dashboard-main .internal-data-card-main > p,
+.dashboard-main .internal-data-card-meta dd {
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-main .hub-table-row .status-badge,
+.dashboard-main .compact-upload-row .status-badge,
+.dashboard-main .activity-item .status-badge,
+.dashboard-main .internal-data-card-titleline .status-badge,
+.dashboard-main .document-card-titleline .status-badge,
+.dashboard-main .recent-upload-title .status-badge {
+  flex: 0 0 auto;
+  overflow-wrap: normal;
+}
+
+.dashboard-main .internal-kpi-card,
+.dashboard-main .hub-mini-kpi,
+.dashboard-main .stat-card {
+  min-height: 4.35rem;
+}
+
+.dashboard-main .internal-kpi-card strong,
+.dashboard-main .hub-mini-kpi strong,
+.dashboard-main .stat-card strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-main .internal-kpi-card small,
+.dashboard-main .hub-mini-kpi span,
+.dashboard-main .stat-card span:not(.stat-icon) {
+  letter-spacing: 0.025em;
+}
+
+.dashboard-main .button,
+.dashboard-main .button-small,
+.dashboard-main .icon-button,
+.dashboard-main .row-menu,
+.dashboard-main .document-card-menu {
+  white-space: nowrap;
+}
+
+.dashboard-main .money-value,
+.dashboard-main .compact-upload-row > span:last-child,
+.dashboard-main .internal-data-card-meta dd:has(.money-value) {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dashboard-main .accounting-table th,
+.dashboard-main .accounting-table td {
+  white-space: nowrap;
+}
+
+.dashboard-main .accounting-table td:nth-child(2),
+.dashboard-main .accounting-table td:nth-child(3),
+.dashboard-main .accounting-table td:nth-child(4),
+.dashboard-main .accounting-table td:nth-child(9),
+.dashboard-main .accounting-table td:nth-child(11) {
+  max-width: 16rem;
+  white-space: normal;
+}
+
+.dashboard-main .panel-title-row {
+  align-items: flex-start;
+}
+
+.dashboard-main .panel-title-row > div,
+.dashboard-main .section-heading > div {
+  min-width: 0;
+}
+
+.dashboard-main .panel-title-row h2,
+.dashboard-main .section-heading h2 {
+  text-wrap: balance;
+}
+
 @media (max-width: 1180px) {
   .dashboard-main .document-preview-panel.internal-side-context {
     position: static;
@@ -232,6 +371,10 @@
   .dashboard-main .internal-data-card-action,
   .dashboard-main .internal-action-list {
     min-width: 0;
+  }
+
+  .dashboard-main .hub-doc-row {
+    grid-template-columns: minmax(11rem, 1.2fr) minmax(7rem, 0.8fr) minmax(7rem, 0.8fr) minmax(6.5rem, 0.65fr) minmax(8.75rem, 0.75fr);
   }
 }
 
@@ -324,6 +467,48 @@
   .dashboard-main .upload-submit-row .button {
     width: 100%;
   }
+
+  .dashboard-main .status-badge,
+  .dashboard-main .data-mode-badge,
+  .dashboard-main .role-pill-light,
+  .dashboard-main .role-pill {
+    max-width: 100%;
+    min-width: 0;
+    font-size: 0.68rem;
+  }
+
+  .dashboard-main .desktop-status-cell {
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  .dashboard-main .hub-doc-row,
+  .dashboard-main .hub-table-row.hub-doc-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.3rem 0.55rem;
+    align-items: start;
+  }
+
+  .dashboard-main .hub-table-row.hub-doc-row strong {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-main .hub-table-row.hub-doc-row span:nth-of-type(2),
+  .dashboard-main .hub-table-row.hub-doc-row span:nth-of-type(3) {
+    display: none;
+  }
+
+  .dashboard-main .hub-table-row.hub-doc-row .desktop-status-cell {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    align-self: center;
+  }
+
+  .dashboard-main .compact-upload-row > .status-badge,
+  .dashboard-main .activity-item > .status-badge {
+    margin-top: 0.2rem;
+  }
 }
 
 @media (max-width: 390px) {
@@ -337,5 +522,10 @@
 
   .dashboard-main .pagination-bar button {
     min-width: 2rem;
+  }
+
+  .dashboard-main .status-badge {
+    padding-inline: 0.55rem;
+    font-size: 0.66rem;
   }
 }
