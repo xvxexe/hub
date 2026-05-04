@@ -1,8 +1,8 @@
 import { findDuplicateMovements, hasAmountWarning } from './accountingChecks'
 
-export function openOperationalReportPdf({ rows, sites, categoryTotals, pending, payments, duplicateIds, deletedRecords = [] }) {
+export function openOperationalReportPdf({ rows, sites, categoryTotals, pending, payments, duplicateIds, deletedRecords = [], officialTotals = null, officialMaster = null }) {
   const generatedAt = new Date()
-  const totals = getTotals(rows)
+  const totals = officialTotals ?? getTotals(rows)
   const html = buildReportHtml({
     rows,
     sites,
@@ -12,6 +12,7 @@ export function openOperationalReportPdf({ rows, sites, categoryTotals, pending,
     duplicateIds,
     deletedRecords,
     totals,
+    officialMaster,
     generatedAt,
   })
 
@@ -111,10 +112,13 @@ export function buildReportCategoryTotals(rows) {
     .sort((a, b) => b.totale - a.totale)
 }
 
-function buildReportHtml({ rows, sites, categoryTotals, pending, payments, duplicateIds, deletedRecords, totals, generatedAt }) {
+function buildReportHtml({ rows, sites, categoryTotals, pending, payments, duplicateIds, deletedRecords, totals, officialMaster, generatedAt }) {
   const duplicateRows = rows.filter((row) => duplicateIds.has(row.id))
   const unlinkedRows = rows.filter((row) => !row.documentId && !row.documentoCollegato)
   const mathWarnings = rows.filter(hasAmountWarning)
+  const officialNote = officialMaster
+    ? 'I totali economici sono ufficiali e letti dal tab Riepilogo del master Google Sheets. Le righe operative sono incluse solo per dettaglio e controlli.'
+    : 'I totali economici sono calcolati dalle righe operative perché il master non ha ancora fornito i totali ufficiali.'
 
   return `<!doctype html>
 <html lang="it">
@@ -131,18 +135,16 @@ function buildReportHtml({ rows, sites, categoryTotals, pending, payments, dupli
     p, small { color: #64748b; }
     button { border: 1px solid #dbeafe; background: #2563eb; color: #fff; border-radius: 999px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
     .badge { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 12px; font-weight: 700; }
+    .official { border: 1px solid #bbf7d0; background: #f0fdf4; color: #166534; border-radius: 18px; padding: 14px; margin: 18px 0; }
     .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
     .kpi { border: 1px solid #e5e7eb; border-radius: 18px; padding: 16px; background: #f8fafc; }
     .kpi strong { display: block; font-size: 22px; margin-top: 8px; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
     th, td { border-bottom: 1px solid #e5e7eb; padding: 9px 8px; text-align: left; vertical-align: top; }
     th { background: #f1f5f9; color: #334155; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
-    tr.warning td { background: #fff7ed; }
     .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
     .card { border: 1px solid #e5e7eb; border-radius: 18px; padding: 14px; background: #fff; }
     .muted { color: #64748b; }
-    .danger { color: #b91c1c; font-weight: 700; }
-    .ok { color: #047857; font-weight: 700; }
     @media print { body { background: #fff; padding: 0; } .page { border: 0; border-radius: 0; } .no-print { display: none; } }
   </style>
 </head>
@@ -152,31 +154,33 @@ function buildReportHtml({ rows, sites, categoryTotals, pending, payments, dupli
       <div>
         <span class="badge">EuropaService · Hub operativo</span>
         <h1>Report contabilità cantieri</h1>
-        <p>Report generato il ${escapeHtml(formatDateTime(generatedAt))}. Include movimenti, categorie, verifiche aperte, duplicati e record eliminati tracciati.</p>
+        <p>Report generato il ${escapeHtml(formatDateTime(generatedAt))}.</p>
       </div>
       <button class="no-print" onclick="window.print()">Stampa / Salva PDF</button>
     </header>
 
+    <section class="official"><strong>${officialMaster ? 'Totali ufficiali master' : 'Totali calcolati'}</strong><p>${escapeHtml(officialNote)}</p></section>
+
     <section class="kpis">
-      <div class="kpi"><span>Movimenti</span><strong>${rows.length}</strong></div>
+      <div class="kpi"><span>Movimenti operativi</span><strong>${rows.length}</strong></div>
       <div class="kpi"><span>Imponibile</span><strong>${formatMoney(totals.imponibile)}</strong></div>
       <div class="kpi"><span>IVA</span><strong>${formatMoney(totals.iva)}</strong></div>
-      <div class="kpi"><span>Totale</span><strong>${formatMoney(totals.totale)}</strong></div>
+      <div class="kpi"><span>Totale ufficiale</span><strong>${formatMoney(totals.totale)}</strong></div>
     </section>
 
     <section class="grid">
       <div class="card"><strong>Verifiche aperte</strong><p>${pending.length} movimenti/documenti richiedono controllo.</p></div>
       <div class="card"><strong>Duplicati reali</strong><p>${duplicateRows.length} movimenti simili rilevati automaticamente.</p></div>
-      <div class="card"><strong>Importi non coerenti</strong><p>${mathWarnings.length} righe con imponibile + IVA diverso dal totale.</p></div>
+      <div class="card"><strong>Importi non coerenti</strong><p>${mathWarnings.length} righe operative con imponibile + IVA diverso dal totale riga.</p></div>
       <div class="card"><strong>Documenti da collegare</strong><p>${unlinkedRows.length} movimenti senza allegato/documento collegato.</p></div>
     </section>
 
     ${tableSection('Riepilogo per cantiere', ['Cantiere', 'Movimenti', 'Totale', 'Peso'], sites.map((site) => [site.nome, site.movimenti, formatMoney(site.totale), `${site.avanzamento}%`]))}
-    ${tableSection('Spese per categoria', ['Categoria', 'Totale', 'Percentuale'], categoryTotals.map((item) => [item.categoria, formatMoney(item.totale), `${item.percent}%`]))}
-    ${tableSection('Verifiche aperte', ['Data', 'Fornitore', 'Descrizione', 'Categoria', 'Totale', 'Problema'], pending.map((row) => [formatDate(row.data), row.fornitore, row.descrizione, row.categoria, formatMoney(row.totale), buildIssueLabel(row, duplicateIds)]), true)}
-    ${tableSection('Pagamenti / bonifici', ['Data', 'Fornitore', 'Descrizione', 'Totale', 'Documento'], payments.map((row) => [formatDate(row.data), row.fornitore, row.descrizione, formatMoney(row.totale), row.documentoCollegato || row.numeroDocumento]))}
+    ${tableSection(officialMaster ? 'Riepilogo ufficiale da master' : 'Spese per categoria', ['Voce', 'Totale', 'Percentuale'], categoryTotals.map((item) => [item.categoria, formatMoney(item.totale), item.percent ? `${item.percent}%` : '-']))}
+    ${tableSection('Verifiche aperte', ['Data', 'Fornitore', 'Descrizione', 'Categoria', 'Totale riga', 'Problema'], pending.map((row) => [formatDate(row.data), row.fornitore, row.descrizione, row.categoria, formatMoney(row.totale), buildIssueLabel(row, duplicateIds)]), true)}
+    ${tableSection('Pagamenti / bonifici', ['Data', 'Fornitore', 'Descrizione', 'Totale riga', 'Documento'], payments.map((row) => [formatDate(row.data), row.fornitore, row.descrizione, formatMoney(row.totale), row.documentoCollegato || row.numeroDocumento]))}
     ${tableSection('Record eliminati tracciati', ['Data', 'Tipo', 'Origine', 'Motivo'], deletedRecords.map((record) => [formatDate(record.deletedAt || record.deleted_at), record.entityType || record.entity_type, record.entityId || record.entity_id, record.reason || 'Eliminazione hub']), true)}
-    ${tableSection('Movimenti completi', ['Data', 'Fornitore', 'Descrizione', 'Categoria', 'Imponibile', 'IVA', 'Totale', 'Pagamento', 'Stato'], rows.map((row) => [formatDate(row.data), row.fornitore, row.descrizione, row.categoria, formatMoney(row.imponibile), formatMoney(row.iva), formatMoney(row.totale), row.pagamento, buildIssueLabel(row, duplicateIds)]), true)}
+    ${tableSection('Movimenti operativi completi', ['Data', 'Fornitore', 'Descrizione', 'Categoria', 'Imponibile riga', 'IVA riga', 'Totale riga', 'Pagamento', 'Stato'], rows.map((row) => [formatDate(row.data), row.fornitore, row.descrizione, row.categoria, formatMoney(row.imponibile), formatMoney(row.iva), formatMoney(row.totale), row.pagamento, buildIssueLabel(row, duplicateIds)]), true)}
   </main>
 </body>
 </html>`
