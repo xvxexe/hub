@@ -1,3 +1,4 @@
+import { fetchDeletedRecords, filterDeletedFromStore } from './operationalDeletes'
 import { fetchOperationalStore, saveOperationalStore } from './supabaseOperationalStore'
 import { fetchRemoteStore, saveRemoteStore } from './supabaseStore'
 
@@ -29,21 +30,34 @@ export async function importGoogleSheetsToSupabase(session = null) {
     return { ok: false, error: 'Risposta Google Sheets non valida: documents mancante.' }
   }
 
-  const savedOperational = await saveOperationalStore(payload.store, session)
+  const deletedRecords = await fetchDeletedRecords()
+  if (deletedRecords.error) return { ok: false, error: deletedRecords.error.message }
+
+  const filteredStore = filterDeletedFromStore(payload.store, deletedRecords.data)
+
+  const savedOperational = await saveOperationalStore(filteredStore, session)
   if (savedOperational.error) return { ok: false, error: savedOperational.error.message }
 
-  const savedLegacy = await saveRemoteStore(payload.store)
+  const savedLegacy = await saveRemoteStore(filteredStore)
   if (savedLegacy.error) return { ok: false, error: savedLegacy.error.message }
 
-  notifyStoreSync(payload.store)
+  notifyStoreSync(filteredStore)
+
+  const removedByTombstones = {
+    documents: payload.store.documents.length - filteredStore.documents.length,
+    photos: (payload.store.photos?.length ?? 0) - (filteredStore.photos?.length ?? 0),
+    estimates: (payload.store.estimates?.length ?? 0) - (filteredStore.estimates?.length ?? 0),
+  }
 
   return {
     ok: true,
-    store: payload.store,
-    summary: payload.summary ?? {
-      documents: payload.store.documents.length,
-      photos: payload.store.photos?.length ?? 0,
-      estimates: payload.store.estimates?.length ?? 0,
+    store: filteredStore,
+    summary: {
+      ...(payload.summary ?? {}),
+      documents: filteredStore.documents.length,
+      photos: filteredStore.photos?.length ?? 0,
+      estimates: filteredStore.estimates?.length ?? 0,
+      removedByTombstones,
     },
   }
 }
@@ -59,10 +73,13 @@ export async function exportSupabaseToGoogleSheets(storeOverride = null) {
   const store = storeOverride ?? await loadBestAvailableStore()
   if (!store) return { ok: false, error: 'Nessun dato Supabase da esportare.' }
 
+  const deletedRecords = await fetchDeletedRecords()
+  if (deletedRecords.error) return { ok: false, error: deletedRecords.error.message }
+
   const response = await fetch(syncUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'export', store }),
+    body: JSON.stringify({ action: 'export', store, deletedRecords: deletedRecords.data }),
   })
 
   const payload = await parseJsonResponse(response)
@@ -76,6 +93,7 @@ export async function exportSupabaseToGoogleSheets(storeOverride = null) {
       documents: store.documents?.length ?? 0,
       photos: store.photos?.length ?? 0,
       estimates: store.estimates?.length ?? 0,
+      deletedRecords: deletedRecords.data?.length ?? 0,
     },
   }
 }
