@@ -1,7 +1,13 @@
 import { useMemo, useState } from 'react'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
-import { FilePreviewMock } from '../../components/FilePreviewMock'
-import { InternalIcon } from '../../components/InternalIcons'
+import {
+  DataCardRow,
+  FilterGrid,
+  KpiCard,
+  KpiStrip,
+  SideContextPanel,
+  WorkspaceLayout,
+} from '../../components/InternalLayout'
 import { RecentUploadList } from '../../components/RecentUploadList'
 import { StatusBadge } from '../../components/StatusBadge'
 
@@ -60,77 +66,73 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
         <a className="button button-primary button-small" href="#/dashboard/upload">Nuovo upload</a>
       </DashboardHeader>
 
-      <section className="caricamenti-command-center" aria-label="Filtri caricamenti">
-        <div className="caricamenti-search-panel">
-          <div>
-            <span className="eyebrow">Trova caricamento</span>
-            <h2>Filtra prima di lavorare</h2>
-            <p>Questi controlli stanno in alto perché decidono tutta la coda sotto: priorità, foto, documenti e duplicati.</p>
+      <FilterGrid ariaLabel="Filtri caricamenti">
+        <label className="accounting-search">
+          Cerca
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Fornitore, file, lavorazione, nota..."
+          />
+        </label>
+        <label>
+          Cantiere
+          <select value={cantiereId} onChange={(event) => setCantiereId(event.target.value)}>
+            <option value="tutti">Tutti</option>
+            {cantieri.map((cantiere) => <option key={cantiere.id} value={cantiere.id}>{cantiere.nome}</option>)}
+          </select>
+        </label>
+        <label>
+          Tipo
+          <select value={tipo} onChange={(event) => setTipo(event.target.value)}>
+            <option value="tutti">Tutti</option>
+            {canSeePhotos ? <option value="foto">Foto</option> : null}
+            <option value="documento">Documento</option>
+            {tipiDocumento.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+        <label>
+          Stato
+          <select value={stato} onChange={(event) => setStato(event.target.value)}>
+            <option value="tutti">Tutti</option>
+            {canSeePhotos ? statiFoto.map((item) => <option key={item} value={item}>{item}</option>) : null}
+            {statiDocumenti.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+        <button className="button button-secondary" type="button" onClick={clearFilters}>Reset</button>
+      </FilterGrid>
+
+      <KpiStrip ariaLabel="Indicatori caricamenti">
+        <KpiCard icon="inbox" label="Totali filtrati" value={allFiltered.length} hint="Foto + documenti" />
+        <KpiCard icon="warning" tone="amber" label="Priorità" value={priorities.length} hint="Da lavorare" />
+        <KpiCard icon="file" tone="green" label="Documenti" value={filteredDocuments.length} hint="Contabilità" />
+        <KpiCard icon="image" tone="purple" label="Foto" value={filteredPhotos.length} hint={canSeePhotos ? 'Revisione' : 'Nascoste'} muted={!canSeePhotos} />
+      </KpiStrip>
+
+      <WorkspaceLayout
+        className="caricamenti-workspace"
+        sidebar={(
+          <>
+            {session.role !== 'employee' ? <PriorityPanel title="Da verificare" rows={toCheck} /> : null}
+            {session.role !== 'employee' ? <PriorityPanel title="Possibili duplicati" rows={duplicates} danger /> : null}
+            <WorkflowPanel role={session.role} />
+          </>
+        )}
+      >
+        <section className="internal-panel">
+          <div className="section-heading panel-title-row">
+            <div>
+              <h2>{priorities.length ? 'Coda prioritaria' : 'Ultimi caricamenti'}</h2>
+              <p>Lista operativa compatta: scegli un caricamento e apri il dettaglio corretto.</p>
+            </div>
+            <span className="data-mode-badge">{selectedQueue.length} elementi</span>
           </div>
-          <label className="caricamenti-search-input">
-            <InternalIcon name="search" size={18} />
-            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Fornitore, file, lavorazione, nota..." />
-          </label>
-        </div>
-
-        <div className="caricamenti-filter-grid">
-          <label>
-            Cantiere
-            <select value={cantiereId} onChange={(event) => setCantiereId(event.target.value)}>
-              <option value="tutti">Tutti</option>
-              {cantieri.map((cantiere) => <option key={cantiere.id} value={cantiere.id}>{cantiere.nome}</option>)}
-            </select>
-          </label>
-          <label>
-            Tipo
-            <select value={tipo} onChange={(event) => setTipo(event.target.value)}>
-              <option value="tutti">Tutti</option>
-              {canSeePhotos ? <option value="foto">Foto</option> : null}
-              <option value="documento">Documento</option>
-              {tipiDocumento.map((item) => <option key={item} value={item}>{item}</option>)}
-            </select>
-          </label>
-          <label>
-            Stato
-            <select value={stato} onChange={(event) => setStato(event.target.value)}>
-              <option value="tutti">Tutti</option>
-              {canSeePhotos ? statiFoto.map((item) => <option key={item} value={item}>{item}</option>) : null}
-              {statiDocumenti.map((item) => <option key={item} value={item}>{item}</option>)}
-            </select>
-          </label>
-          <button className="button button-secondary" type="button" onClick={clearFilters}>Reset</button>
-        </div>
-      </section>
-
-      <section className="caricamenti-kpi-strip" aria-label="Indicatori caricamenti">
-        <CaricamentiMetric icon="inbox" label="Totali filtrati" value={allFiltered.length} hint="Foto + documenti" />
-        <CaricamentiMetric icon="warning" tone="amber" label="Priorità" value={priorities.length} hint="Da lavorare" />
-        <CaricamentiMetric icon="file" tone="green" label="Documenti" value={filteredDocuments.length} hint="Contabilità" />
-        <CaricamentiMetric icon="image" tone="purple" label="Foto" value={filteredPhotos.length} hint={canSeePhotos ? 'Revisione' : 'Nascoste'} muted={!canSeePhotos} />
-      </section>
-
-      <div className="caricamenti-workspace-layout">
-        <main className="caricamenti-main-panel">
-          <section className="caricamenti-queue-panel">
-            <div className="section-heading panel-title-row">
-              <div>
-                <h2>{priorities.length ? 'Coda prioritaria' : 'Ultimi caricamenti'}</h2>
-                <p>La lista principale sta qui perché è il punto operativo: scegli un caricamento e apri il dettaglio.</p>
-              </div>
-              <span className="data-mode-badge">{selectedQueue.length} elementi</span>
-            </div>
-            <div className="caricamenti-queue-list">
-              {selectedQueue.length > 0 ? selectedQueue.map((upload) => <UploadQueueRow key={`${upload.uploadKind}-${upload.id}`} upload={upload} />) : <EmptyQueue />}
-            </div>
-          </section>
-        </main>
-
-        <aside className="caricamenti-side-column">
-          {session.role !== 'employee' ? <PriorityPanel title="Da verificare" rows={toCheck} /> : null}
-          {session.role !== 'employee' ? <PriorityPanel title="Possibili duplicati" rows={duplicates} danger /> : null}
-          <WorkflowPanel role={session.role} />
-        </aside>
-      </div>
+          <div className="document-card-list">
+            {selectedQueue.length > 0 ? selectedQueue.map((upload) => <UploadQueueRow key={`${upload.uploadKind}-${upload.id}`} upload={upload} />) : <EmptyQueue />}
+          </div>
+        </section>
+      </WorkspaceLayout>
 
       <section className={canSeePhotos ? 'caricamenti-recent-grid' : 'caricamenti-recent-grid single'}>
         {canSeePhotos ? <RecentUploadList title="Foto filtrate" type="foto" uploads={filteredPhotos} /> : null}
@@ -140,51 +142,54 @@ export function CaricamentiRecenti({ session, fotoUploads, documentUploads }) {
   )
 }
 
-function CaricamentiMetric({ icon, label, value, hint, tone = 'blue', muted = false }) {
-  return (
-    <article className={`caricamenti-metric caricamenti-metric-${tone} ${muted ? 'is-muted' : ''}`}>
-      <span><InternalIcon name={icon} size={17} /></span>
-      <div><small>{label}</small><strong>{value}</strong><em>{hint}</em></div>
-    </article>
-  )
-}
-
 function UploadQueueRow({ upload }) {
   const isPhoto = upload.uploadKind === 'foto'
   const href = isPhoto ? `#/dashboard/foto/${upload.id}` : `#/dashboard/documenti/${upload.id}`
   return (
-    <a className="caricamento-queue-row" href={href}>
-      <FilePreviewMock fileName={upload.fileName} type={isPhoto ? 'image' : 'file'} />
-      <div className="caricamento-queue-main">
-        <div className="caricamento-queue-title">
-          <strong>{isPhoto ? upload.lavorazione : upload.descrizione}</strong>
-          <StatusBadge>{displayStatus(upload.stato)}</StatusBadge>
-        </div>
-        <p>{upload.cantiere} · {isPhoto ? upload.zona : upload.tipoDocumento} · {upload.fileName || 'file mock'}</p>
-        <small>{formatDate(upload.dataCaricamento)} · {upload.caricatoDa}</small>
-      </div>
-      <span className="caricamento-kind-chip">{isPhoto ? 'Foto' : 'Documento'}</span>
-    </a>
+    <DataCardRow
+      icon={isPhoto ? 'image' : getDocumentIcon(upload.tipoDocumento)}
+      title={isPhoto ? upload.lavorazione : upload.descrizione}
+      description={`${upload.cantiere} · ${isPhoto ? upload.zona : upload.tipoDocumento} · ${upload.fileName || 'file mock'}`}
+      status={displayStatus(upload.stato)}
+      href={href}
+      warning={isPriorityUpload(upload)}
+      meta={[
+        { label: 'Tipo', value: isPhoto ? 'Foto' : 'Documento' },
+        { label: 'Data', value: formatDate(upload.dataCaricamento) },
+        { label: 'Caricato da', value: upload.caricatoDa ?? '-' },
+        { label: 'Cantiere', value: upload.cantiere ?? '-' },
+        { label: 'File', value: upload.fileName || '-' },
+      ]}
+    />
   )
 }
 
 function PriorityPanel({ title, rows, danger = false }) {
   return (
-    <section className={danger ? 'caricamenti-side-card danger' : 'caricamenti-side-card'}>
-      <div className="section-heading panel-title-row">
-        <h2>{title}</h2>
-        <a className="button button-secondary button-small" href="#/dashboard/documenti">Apri</a>
-      </div>
-      <div className="caricamenti-priority-list">
+    <SideContextPanel
+      className={danger ? 'caricamenti-side-card danger' : 'caricamenti-side-card'}
+      title={title}
+      description={danger ? 'Possibili duplicati da controllare prima di registrare.' : 'Documenti arrivati e ancora da verificare.'}
+      action={<a className="button button-secondary button-small" href="#/dashboard/documenti">Apri</a>}
+    >
+      <div className="document-card-list">
         {rows.length > 0 ? rows.slice(0, 4).map((row) => (
-          <a href={`#/dashboard/documenti/${row.id}`} key={row.id}>
-            <span className="file-chip file-pdf">DOC</span>
-            <div><strong>{row.fornitore || row.descrizione}</strong><small>{row.cantiere} · {row.fileName || row.tipoDocumento}</small></div>
-            <StatusBadge>{displayStatus(row.stato)}</StatusBadge>
-          </a>
-        )) : <article><span className="file-chip">OK</span><div><strong>Nessun elemento</strong><small>Niente da mostrare nei filtri attuali.</small></div></article>}
+          <DataCardRow
+            key={row.id}
+            icon={danger ? 'warning' : 'file'}
+            title={row.fornitore || row.descrizione}
+            description={`${row.cantiere} · ${row.fileName || row.tipoDocumento}`}
+            status={displayStatus(row.stato)}
+            href={`#/dashboard/documenti/${row.id}`}
+            warning={danger}
+            meta={[
+              { label: 'Tipo', value: row.tipoDocumento ?? 'Documento' },
+              { label: 'Data', value: formatDate(row.dataCaricamento) },
+            ]}
+          />
+        )) : <article className="accounting-alert"><strong>Nessun elemento</strong><small>Niente da mostrare nei filtri attuali.</small></article>}
       </div>
-    </section>
+    </SideContextPanel>
   )
 }
 
@@ -193,17 +198,16 @@ function WorkflowPanel({ role }) {
     ? ['Carica file dal cantiere', 'Controlla che sia leggibile', 'Riapri i tuoi caricamenti se serve']
     : ['Controlla priorità', 'Apri documento/foto', 'Conferma, classifica o segnala duplicato']
   return (
-    <section className="caricamenti-side-card workflow">
-      <div className="section-heading panel-title-row"><h2>Flusso consigliato</h2></div>
-      <div className="caricamenti-workflow-list">
-        {steps.map((step, index) => <article key={step}><span>{index + 1}</span><strong>{step}</strong></article>)}
+    <SideContextPanel title="Flusso consigliato" description="Ordine pratico per lavorare i caricamenti senza duplicare dati.">
+      <div className="workflow-stepper">
+        {steps.map((step, index) => <article className="workflow-step" key={step}><span>{index + 1}</span><strong>{step}</strong></article>)}
       </div>
-    </section>
+    </SideContextPanel>
   )
 }
 
 function EmptyQueue() {
-  return <article className="caricamenti-empty"><strong>Nessun caricamento trovato</strong><p>Modifica filtri o ricerca per visualizzare altri elementi.</p></article>
+  return <article className="accounting-alert"><strong>Nessun caricamento trovato</strong><small>Modifica filtri o ricerca per visualizzare altri elementi.</small></article>
 }
 
 function matchesFilters(upload, { cantiereId, tipo, stato, search, isPhoto }) {
@@ -243,6 +247,13 @@ function getCantieriFromUploads(uploads) {
     map.set(upload.cantiereId, { id: upload.cantiereId, nome: upload.cantiere ?? upload.cantiereId })
   })
   return [...map.values()]
+}
+
+function getDocumentIcon(tipoDocumento) {
+  if (tipoDocumento === 'Bonifico') return 'wallet'
+  if (tipoDocumento === 'Preventivo') return 'estimate'
+  if (tipoDocumento === 'FIR') return 'warning'
+  return 'file'
 }
 
 function formatDate(date) {
