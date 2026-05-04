@@ -14,6 +14,8 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
   const canAddNote = canEdit || (session.role === 'employee' && document?.caricatoDa === session.name && document?.statoVerifica === 'Da verificare')
   const resolvedBackHref = session.role === 'employee' ? '#/dashboard/caricamenti' : backHref
   const [form, setForm] = useState(document ?? {})
+  const [deleteStatus, setDeleteStatus] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   if (!document || (session.role === 'employee' && document.caricatoDa !== session.name)) {
     return (
@@ -39,6 +41,23 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
     })
   }
 
+  async function deleteDocument() {
+    setDeleteStatus(null)
+    const confirmed = window.confirm('Eliminare definitivamente questo documento, il file allegato, il movimento contabile collegato, note e log collegati?')
+    if (!confirmed) return
+
+    setIsDeleting(true)
+    const result = await store.deleteDocument(document.id)
+    setIsDeleting(false)
+
+    if (!result.ok) {
+      setDeleteStatus({ type: 'error', message: result.error })
+      return
+    }
+
+    window.location.hash = resolvedBackHref
+  }
+
   return (
     <>
       <DashboardHeader
@@ -59,9 +78,14 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
             <button className="button button-secondary" type="button" onClick={() => store.updateDocumentStatus(document.id, 'Incompleto')}>Segna incompleto</button>
             <button className="button button-secondary" type="button" onClick={() => store.markDocumentDuplicate(document.id)}>Segna duplicato</button>
             <button className="button button-secondary" type="button" onClick={() => store.updateDocumentStatus(document.id, 'Scartato')}>Scarta</button>
+            <button className="button button-danger" type="button" disabled={isDeleting} onClick={deleteDocument}>{isDeleting ? 'Elimino...' : 'Elimina'}</button>
           </>
         ) : null}
       </section>
+
+      {deleteStatus?.type === 'error' ? (
+        <section className="validation-alert-block"><strong>Eliminazione non riuscita</strong><p>{deleteStatus.message}</p></section>
+      ) : null}
 
       {amountWarning ? (
         <section className="validation-alert-block">
