@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { EditableField, EntityTimeline, NotesPanel } from '../../components/EntityPanels'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
@@ -17,6 +17,12 @@ export function AccountingMovementDetail({ movementId, session, store }) {
   const [form, setForm] = useState(movement ?? {})
   const [selectedDocumentId, setSelectedDocumentId] = useState(movement?.documentId ?? '')
   const [statusMessage, setStatusMessage] = useState(null)
+
+  useEffect(() => {
+    if (!movement) return
+    setForm(movement)
+    setSelectedDocumentId(movement.documentId ?? '')
+  }, [movement?.id, movement?.updatedAt, movement?.documentId])
 
   if (!movement || session.role === 'employee') {
     return (
