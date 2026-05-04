@@ -109,7 +109,7 @@ export function SettingsMock({ session }) {
   async function runImport() {
     setIsRunning(true)
     setSyncStatus({ type: 'loading', message: 'Import da Google Sheets verso Supabase in corso...' })
-    const result = await importGoogleSheetsToSupabase()
+    const result = await importGoogleSheetsToSupabase(session)
     setIsRunning(false)
     if (!result.ok) {
       setSyncStatus({ type: 'error', message: result.error })
