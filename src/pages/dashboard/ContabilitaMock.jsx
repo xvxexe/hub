@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react'
 import { EmptyState } from '../../components/EmptyState'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
+import {
+  DataCardRow,
+  FilterGrid,
+  KpiCard,
+  KpiStrip,
+} from '../../components/InternalLayout'
 import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
 
@@ -45,6 +51,7 @@ export function ContabilitaMock({ documents = [] }) {
   const siteSummaries = getSiteAccountingSummaries(filteredRows)
   const categoryTotals = getCategoryTotals(filteredRows)
   const alerts = getAccountingAlerts(filteredRows)
+  const mathWarnings = filteredRows.filter(hasAmountWarning).length
 
   function updateFilter(field, value) {
     setFilters((current) => ({ ...current, [field]: value }))
@@ -58,10 +65,11 @@ export function ContabilitaMock({ documents = [] }) {
         description="Movimenti, riepiloghi e controlli calcolati dai dati reali Supabase / BARCELO_ROMA_master."
       >
         <DataModeBadge>Dati reali Supabase</DataModeBadge>
+        <a className="button button-secondary button-small" href="#/dashboard/report">Report</a>
       </DashboardHeader>
 
       <AccountingFilters filters={filters} onChange={updateFilter} sites={sites} categories={categories} statuses={statuses} docTypes={docTypes} />
-      <AccountingSummaryCards totals={totals} />
+      <AccountingSummaryCards totals={totals} rowsCount={filteredRows.length} mathWarnings={mathWarnings} />
       <AccountingAlerts alerts={alerts} />
       <AccountingTable rows={filteredRows} />
       <CantiereAccountingSummary summaries={siteSummaries} />
@@ -93,7 +101,7 @@ function documentToAccountingRow(document) {
 
 function AccountingFilters({ filters, onChange, sites, categories, statuses, docTypes }) {
   return (
-    <section className="accounting-filters real-accounting-filters" aria-label="Filtri contabilità">
+    <FilterGrid className="real-accounting-filters" ariaLabel="Filtri contabilità">
       <label>
         Cantiere
         <select value={filters.cantiereId} onChange={(event) => onChange('cantiereId', event.target.value)}>
@@ -126,38 +134,55 @@ function AccountingFilters({ filters, onChange, sites, categories, statuses, doc
         Ricerca
         <input type="search" value={filters.search} onChange={(event) => onChange('search', event.target.value)} placeholder="Descrizione, fornitore, documento..." />
       </label>
-    </section>
+    </FilterGrid>
   )
 }
 
-function AccountingSummaryCards({ totals }) {
+function AccountingSummaryCards({ totals, rowsCount, mathWarnings }) {
   return (
-    <section className="accounting-summary-grid real-summary-grid">
-      <SummaryCard label="Totale imponibile" value={<MoneyValue value={totals.imponibile} />} />
-      <SummaryCard label="Totale IVA" value={<MoneyValue value={totals.iva} />} />
-      <SummaryCard label="Totale complessivo" value={<MoneyValue value={totals.totale} />} />
-      <SummaryCard label="Da verificare" value={totals.daVerificare} />
-      <SummaryCard label="Possibili duplicati" value={totals.duplicati} />
-      <SummaryCard label="Pagamenti / bonifici" value={<MoneyValue value={totals.pagamenti} />} />
-    </section>
+    <>
+      <KpiStrip ariaLabel="Indicatori economici contabilità">
+        <KpiCard icon="wallet" tone="green" label="Totale complessivo" value={<MoneyValue value={totals.totale} />} hint="IVA inclusa" />
+        <KpiCard icon="report" label="Totale imponibile" value={<MoneyValue value={totals.imponibile} />} hint="Netto" />
+        <KpiCard icon="file" tone="purple" label="Totale IVA" value={<MoneyValue value={totals.iva} />} hint="Imposta" />
+        <KpiCard icon="inbox" label="Movimenti" value={rowsCount} hint="Righe filtrate" />
+      </KpiStrip>
+      <KpiStrip className="accounting-operational-kpis" ariaLabel="Indicatori operativi contabilità">
+        <KpiCard icon="warning" tone="amber" label="Da verificare" value={totals.daVerificare} hint="Controllo aperto" />
+        <KpiCard icon="warning" tone="red" label="Possibili duplicati" value={totals.duplicati} hint="Da evitare" />
+        <KpiCard icon="wallet" tone="green" label="Pagamenti / bonifici" value={<MoneyValue value={totals.pagamenti} />} hint="Da collegare" />
+        <KpiCard icon="check" tone={mathWarnings ? 'amber' : 'green'} label="Controllo importi" value={mathWarnings} hint={mathWarnings ? 'Warning matematici' : 'Nessun errore'} />
+      </KpiStrip>
+    </>
   )
-}
-
-function SummaryCard({ label, value }) {
-  return <article className="stat-card"><span>{label}</span><strong>{value}</strong></article>
 }
 
 function AccountingAlerts({ alerts }) {
   return (
     <section className="accounting-section real-accounting-section">
-      <div className="section-heading"><h2>Controlli contabili</h2><p>Alert calcolati sui dati reali filtrati.</p></div>
-      <div className="accounting-alert-grid">
+      <div className="section-heading panel-title-row">
+        <div>
+          <h2>Controlli contabili</h2>
+          <p>Alert calcolati sui dati reali filtrati.</p>
+        </div>
+        <StatusBadge>{alerts.length ? `${alerts.length} alert` : 'Tutto ok'}</StatusBadge>
+      </div>
+      <div className="document-card-list">
         {alerts.length > 0 ? alerts.map((alert) => (
-          <article className="accounting-alert" key={alert.id}>
-            <StatusBadge>{alert.message}</StatusBadge>
-            <strong>{alert.movimento.descrizione}</strong>
-            <small>{alert.movimento.fornitore} · {alert.movimento.numeroDocumento}</small>
-          </article>
+          <DataCardRow
+            key={alert.id}
+            icon={alert.message === 'Duplicato' ? 'warning' : 'file'}
+            title={alert.movimento.descrizione}
+            description={`${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`}
+            status={alert.message}
+            href={`#/dashboard/contabilita/${alert.movimento.id}`}
+            warning={alert.message !== 'Da controllare'}
+            meta={[
+              { label: 'Categoria', value: alert.movimento.categoria },
+              { label: 'Totale', value: <MoneyValue value={alert.movimento.totale} /> },
+              { label: 'Pagamento', value: alert.movimento.pagamento },
+            ]}
+          />
         )) : (
           <article className="accounting-alert"><strong>Nessun alert sui filtri attuali</strong><small>I movimenti selezionati non hanno controlli aperti.</small></article>
         )}
@@ -169,18 +194,27 @@ function AccountingAlerts({ alerts }) {
 function AccountingTable({ rows }) {
   return (
     <section className="accounting-section real-accounting-section">
-      <div className="section-heading"><h2>Movimenti</h2><p>Tabella reale con importi, IVA e stato documento.</p></div>
+      <div className="section-heading panel-title-row">
+        <div>
+          <h2>Movimenti</h2>
+          <p>Tabella desktop con importi, IVA e stato documento. Su mobile diventa card.</p>
+        </div>
+        <StatusBadge>{rows.length} righe</StatusBadge>
+      </div>
       {rows.length > 0 ? (
         <>
           <div className="accounting-table-wrap">
             <table className="accounting-table real-accounting-table">
               <thead><tr><th>Data</th><th>Descrizione</th><th>Fornitore</th><th>Categoria</th><th>Imponibile</th><th>IVA</th><th>Totale</th><th>Pagamento</th><th>Documento</th><th>Stato</th><th>Note</th><th>Azione</th></tr></thead>
               <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id}>
-                    <td>{formatDate(row.data)}</td><td>{row.descrizione}</td><td>{row.fornitore}</td><td>{row.categoria}</td><td><MoneyValue value={row.imponibile} /></td><td><MoneyValue value={row.iva} /></td><td><MoneyValue value={row.totale} /></td><td>{row.pagamento}</td><td>{row.tipoDocumento} {row.numeroDocumento}</td><td><StatusBadge>{row.statoVerifica}</StatusBadge></td><td>{row.note}</td><td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td>
-                  </tr>
-                ))}
+                {rows.map((row) => {
+                  const warning = hasAmountWarning(row)
+                  return (
+                    <tr className={warning ? 'accounting-warning-row' : undefined} key={row.id}>
+                      <td>{formatDate(row.data)}</td><td>{row.descrizione}</td><td>{row.fornitore}</td><td>{row.categoria}</td><td><MoneyValue value={row.imponibile} /></td><td><MoneyValue value={row.iva} /></td><td><MoneyValue value={row.totale} /></td><td>{row.pagamento}</td><td>{row.tipoDocumento} {row.numeroDocumento}</td><td><StatusBadge>{warning ? 'Totale da verificare' : row.statoVerifica}</StatusBadge></td><td>{row.note}</td><td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -192,21 +226,39 @@ function AccountingTable({ rows }) {
 }
 
 function AccountingMobileCard({ row }) {
+  const warning = hasAmountWarning(row)
   return (
-    <article className="accounting-mobile-card">
-      <div className="recent-upload-title"><h3>{row.descrizione}</h3><StatusBadge>{row.statoVerifica}</StatusBadge></div>
-      <p>{row.fornitore} · {row.categoria}</p>
-      <dl className="compact-meta"><div><dt>Data</dt><dd>{formatDate(row.data)}</dd></div><div><dt>Totale</dt><dd><MoneyValue value={row.totale} /></dd></div><div><dt>Pagamento</dt><dd>{row.pagamento}</dd></div></dl>
+    <DataCardRow
+      className="accounting-mobile-card"
+      icon={warning ? 'warning' : 'wallet'}
+      title={row.descrizione}
+      description={`${row.fornitore} · ${row.categoria}`}
+      status={warning ? 'Totale da verificare' : row.statoVerifica}
+      href={`#/dashboard/contabilita/${row.id}`}
+      warning={warning}
+      meta={[
+        { label: 'Data', value: formatDate(row.data) },
+        { label: 'Imponibile', value: <MoneyValue value={row.imponibile} /> },
+        { label: 'IVA', value: <MoneyValue value={row.iva} /> },
+        { label: 'Totale', value: <MoneyValue value={row.totale} /> },
+        { label: 'Pagamento', value: row.pagamento },
+      ]}
+    >
       <small>{row.tipoDocumento} {row.numeroDocumento} · {row.note}</small>
-      <a className="button button-secondary" href={`#/dashboard/contabilita/${row.id}`}>Apri movimento</a>
-    </article>
+    </DataCardRow>
   )
 }
 
 function CantiereAccountingSummary({ summaries }) {
   return (
     <section className="accounting-section real-accounting-section">
-      <div className="section-heading"><h2>Riepilogo per cantiere</h2></div>
+      <div className="section-heading panel-title-row">
+        <div>
+          <h2>Riepilogo per cantiere</h2>
+          <p>Totali e controlli raggruppati per cantiere.</p>
+        </div>
+        <StatusBadge>{summaries.length} cantieri</StatusBadge>
+      </div>
       <div className="accounting-site-grid real-site-grid">
         {summaries.map((summary) => (
           <article className="accounting-site-card" key={summary.cantiere.id}>
@@ -232,7 +284,7 @@ function CategoryBreakdown({ rows, total, compact = false }) {
 
   return (
     <section className={compact ? 'category-breakdown compact-breakdown compact-category-card' : 'accounting-section real-accounting-section compact-category-card'}>
-      {!compact ? <div className="section-heading"><h2>Spese per categoria</h2></div> : null}
+      {!compact ? <div className="section-heading panel-title-row"><div><h2>Spese per categoria</h2><p>Distribuzione dei costi per categoria contabile standard.</p></div><StatusBadge>{visibleRows.length} categorie</StatusBadge></div> : null}
       <div className="compact-category-grid">
         {visibleRows.map((row) => {
           const percent = total > 0 ? Math.round((row.totale / total) * 100) : 0
@@ -281,9 +333,15 @@ function getAccountingAlerts(rows) {
     if (row.statoVerifica === 'Da verificare') alerts.push({ id: `${row.id}-check`, message: 'Da controllare', movimento: row })
     if (row.statoVerifica === 'Possibile duplicato') alerts.push({ id: `${row.id}-duplicate`, message: 'Duplicato', movimento: row })
     if (row.statoVerifica === 'Incompleto') alerts.push({ id: `${row.id}-incomplete`, message: 'Incompleto', movimento: row })
-    if (Math.abs((row.imponibile + row.iva) - row.totale) > 0.01 && (row.imponibile || row.iva)) alerts.push({ id: `${row.id}-math`, message: 'Totale da verificare', movimento: row })
+    if (hasAmountWarning(row)) alerts.push({ id: `${row.id}-math`, message: 'Totale da verificare', movimento: row })
     return alerts
   })
+}
+
+function hasAmountWarning(row) {
+  if (row.tipoDocumento === 'Bonifico') return false
+  if (!row.imponibile && !row.iva) return false
+  return Math.abs((row.imponibile + row.iva) - row.totale) > 0.01
 }
 
 function buildSiteOptions(rows) {
