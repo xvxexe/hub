@@ -1,6 +1,7 @@
 const SPREADSHEET_ID = '1J3fW7BwEF6fAqtXxbKpLdSR5NVVbP2cMeZIHFr7bbao';
 const SYNC_DATA_SHEET = 'Hub_Sync_Data';
 const SYNC_LOG_SHEET = 'Hub_Sync_Log';
+const DELETED_RECORDS_SHEET = 'Deleted_Records';
 const RIEPILOGO_SHEET = 'Riepilogo';
 const DEFAULT_CANTIERE_ID = 'barcelo-roma';
 const DEFAULT_CANTIERE_NAME = 'Barcelò Roma';
@@ -51,6 +52,17 @@ const SYNC_HEADERS = [
   'updatedAt',
 ];
 
+const DELETED_RECORDS_HEADERS = [
+  'entity_type',
+  'entity_id',
+  'source',
+  'deleted_at',
+  'deleted_by_name',
+  'reason',
+  'storage_bucket',
+  'storage_path',
+];
+
 function doGet(e) {
   const action = e && e.parameter && e.parameter.action ? e.parameter.action : 'import';
   try {
@@ -68,7 +80,7 @@ function doPost(e) {
     ensureSyncSheets_();
     const body = e && e.postData && e.postData.contents ? JSON.parse(e.postData.contents) : {};
     if (body.action !== 'export') return json_({ ok: false, error: 'Azione POST non supportata.' });
-    const summary = exportStoreToSyncSheet_(body.store || {});
+    const summary = exportStoreToSyncSheet_(body.store || {}, body.deletedRecords || []);
     return json_({ ok: true, summary });
   } catch (error) {
     return json_({ ok: false, error: error.message, stack: error.stack });
@@ -77,7 +89,7 @@ function doPost(e) {
 
 function setupHubSyncSheets() {
   ensureSyncSheets_();
-  SpreadsheetApp.getUi().alert('Hub sync pronto: creati/aggiornati Hub_Sync_Data e Hub_Sync_Log.');
+  SpreadsheetApp.getUi().alert('Hub sync pronto: creati/aggiornati Hub_Sync_Data, Hub_Sync_Log e Deleted_Records.');
 }
 
 function buildStoreFromMaster_() {
@@ -218,7 +230,7 @@ function createTabDocument_(tabName, description, totals, sourceTab) {
   };
 }
 
-function exportStoreToSyncSheet_(store) {
+function exportStoreToSyncSheet_(store, deletedRecords) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SYNC_DATA_SHEET);
   const docs = Array.isArray(store.documents) ? store.documents : [];
@@ -233,8 +245,23 @@ function exportStoreToSyncSheet_(store) {
 
   if (rows.length) sheet.getRange(2, 1, rows.length, SYNC_HEADERS.length).setValues(rows);
   sheet.autoResizeColumns(1, SYNC_HEADERS.length);
-  log_('EXPORT_FROM_SUPABASE', `Documenti esportati in ${SYNC_DATA_SHEET}: ${rows.length}`);
-  return { documents: rows.length, sheet: SYNC_DATA_SHEET };
+
+  const deletedCount = exportDeletedRecords_(ss, deletedRecords);
+  log_('EXPORT_FROM_SUPABASE', `Documenti esportati in ${SYNC_DATA_SHEET}: ${rows.length}; eliminati tracciati: ${deletedCount}`);
+  return { documents: rows.length, deletedRecords: deletedCount, sheet: SYNC_DATA_SHEET, deletedSheet: DELETED_RECORDS_SHEET };
+}
+
+function exportDeletedRecords_(ss, deletedRecords) {
+  const sheet = ss.getSheetByName(DELETED_RECORDS_SHEET);
+  const records = Array.isArray(deletedRecords) ? deletedRecords : [];
+
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, DELETED_RECORDS_HEADERS.length).setValues([DELETED_RECORDS_HEADERS]);
+
+  const rows = records.map((record) => DELETED_RECORDS_HEADERS.map((header) => record[header] ?? ''));
+  if (rows.length) sheet.getRange(2, 1, rows.length, DELETED_RECORDS_HEADERS.length).setValues(rows);
+  sheet.autoResizeColumns(1, DELETED_RECORDS_HEADERS.length);
+  return rows.length;
 }
 
 function readHubSyncData_(ss) {
@@ -392,6 +419,10 @@ function ensureSyncSheets_() {
   let logSheet = ss.getSheetByName(SYNC_LOG_SHEET);
   if (!logSheet) logSheet = ss.insertSheet(SYNC_LOG_SHEET);
   if (logSheet.getLastRow() === 0) logSheet.getRange(1, 1, 1, 3).setValues([['timestamp', 'azione', 'note']]);
+
+  let deletedSheet = ss.getSheetByName(DELETED_RECORDS_SHEET);
+  if (!deletedSheet) deletedSheet = ss.insertSheet(DELETED_RECORDS_SHEET);
+  if (deletedSheet.getLastRow() === 0) deletedSheet.getRange(1, 1, 1, DELETED_RECORDS_HEADERS.length).setValues([DELETED_RECORDS_HEADERS]);
 }
 
 function log_(action, note) {
