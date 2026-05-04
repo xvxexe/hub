@@ -13,8 +13,8 @@ export async function fetchOperationalStore() {
 
   try {
     const [documents, photos, notes, activities] = await Promise.all([
-      supabaseRequest('documents?select=*&order=data_documento.desc.nullslast,created_at.desc', { method: 'GET' }),
-      supabaseRequest('photos?select=*&order=created_at.desc', { method: 'GET' }),
+      supabaseRequest('documents?select=*,cantieri(nome)&order=data_documento.desc.nullslast,created_at.desc', { method: 'GET' }),
+      supabaseRequest('photos?select=*,cantieri(nome)&order=created_at.desc', { method: 'GET' }),
       supabaseRequest('notes?select=*&order=created_at.desc', { method: 'GET' }),
       supabaseRequest('activity_logs?select=*&order=created_at.desc&limit=100', { method: 'GET' }),
     ])
@@ -125,10 +125,12 @@ function buildCantieriRows(store) {
 }
 
 function fromDocumentRow(row) {
+  const cantiereName = row.cantieri?.nome ?? row.cantiere_nome ?? row.cantiere_id ?? 'Cantiere'
+
   return {
     id: row.id,
     cantiereId: row.cantiere_id,
-    cantiere: row.cantiere_id ? row.cantiere_nome ?? null : null,
+    cantiere: cantiereName,
     tipoDocumento: row.tipo_documento,
     fornitore: row.fornitore,
     descrizione: row.descrizione,
@@ -182,10 +184,12 @@ function toDocumentRow(document, session) {
 }
 
 function fromPhotoRow(row) {
+  const cantiereName = row.cantieri?.nome ?? row.cantiere_nome ?? row.cantiere_id ?? 'Cantiere'
+
   return {
     id: row.id,
     cantiereId: row.cantiere_id,
-    cantiere: row.cantiere_id ?? 'Cantiere',
+    cantiere: cantiereName,
     zona: row.zona,
     lavorazione: row.lavorazione,
     avanzamento: row.avanzamento,
