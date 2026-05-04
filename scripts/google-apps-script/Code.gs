@@ -52,7 +52,7 @@ function doGet(e) {
   try {
     ensureSyncSheets_();
     if (action === 'import') return json_({ ok: true, ...buildStoreFromMaster_() });
-    if (action === 'ping' || action === 'health') return json_({ ok: true, parser: 'row-level-v2', message: 'Google Sheets sync online', spreadsheetId: SPREADSHEET_ID });
+    if (action === 'ping' || action === 'health') return json_({ ok: true, parser: 'row-level-v3-official-master', message: 'Google Sheets sync online', spreadsheetId: SPREADSHEET_ID });
     return json_({ ok: false, error: `Azione non supportata: ${action}` });
   } catch (error) {
     return json_({ ok: false, error: error.message, stack: error.stack });
@@ -73,16 +73,17 @@ function doPost(e) {
 
 function setupHubSyncSheets() {
   ensureSyncSheets_();
-  SpreadsheetApp.getUi().alert('Hub sync pronto: import riga-per-riga attivo. Pubblica una nuova versione Web App dopo aver salvato.');
+  SpreadsheetApp.getUi().alert('Hub sync pronto: import riga-per-riga + totali ufficiali da Riepilogo. Pubblica una nuova versione Web App dopo aver salvato.');
 }
 
 function buildStoreFromMaster_() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const officialMaster = readOfficialMasterSummary_(ss);
   const parsed = readMovementRowsFromTabs_(ss);
   const exportedDocs = readHubSyncData_(ss);
   const mergedDocuments = mergeDocuments_(parsed.documents, exportedDocs);
   const movements = buildMovementsFromDocuments_(mergedDocuments, parsed.movements);
-  const totals = mergedDocuments.reduce((acc, doc) => {
+  const rowTotals = mergedDocuments.reduce((acc, doc) => {
     acc.imponibile += Number(doc.imponibile || 0);
     acc.iva += Number(doc.iva || 0);
     acc.totale += Number(doc.totale || 0);
@@ -101,7 +102,7 @@ function buildStoreFromMaster_() {
       date: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
       author: 'Google Sheets Sync',
       type: 'sync',
-      description: `Importate ${mergedDocuments.length} righe operative da BARCELO_ROMA_master`,
+      description: `Importate ${mergedDocuments.length} righe operative da BARCELO_ROMA_master. Totali ufficiali letti dal tab Riepilogo.`,
       entityType: 'google-sheet',
       entityId: SPREADSHEET_ID,
     }],
@@ -110,29 +111,105 @@ function buildStoreFromMaster_() {
       name: 'BARCELO_ROMA_master',
       spreadsheetId: SPREADSHEET_ID,
       importedAt: new Date().toISOString(),
-      parser: 'row-level-v2',
-      mode: 'movement-row-sync',
+      parser: 'row-level-v3-official-master',
+      mode: 'official-master-totals-plus-row-detail',
       parsedSheets: parsed.parsedSheets,
       skippedSheets: parsed.skippedSheets,
-      totals,
+      officialMaster,
+      totals: officialMaster.totals,
+      categoryTotals: officialMaster.categoryTotals,
+      rowTotals,
     },
   };
 
-  log_('IMPORT_TO_SUPABASE_PAYLOAD', `Righe operative: ${mergedDocuments.length}; movimenti: ${movements.length}; totale: ${round2_(totals.totale)}; tab letti: ${parsed.parsedSheets.length}`);
+  log_('IMPORT_TO_SUPABASE_PAYLOAD', `Totale ufficiale master: ${round2_(officialMaster.totals.totale)}; righe operative: ${mergedDocuments.length}; totale righe solo controllo: ${round2_(rowTotals.totale)}; tab letti: ${parsed.parsedSheets.length}`);
 
   return {
     store,
     summary: {
-      parser: 'row-level-v2',
+      parser: 'row-level-v3-official-master',
       documents: mergedDocuments.length,
       movements: movements.length,
       photos: 0,
       estimates: 0,
-      totals,
+      officialMaster,
+      totals: officialMaster.totals,
+      rowTotals,
       parsedSheets: parsed.parsedSheets,
       skippedSheets: parsed.skippedSheets,
     },
   };
+}
+
+function readOfficialMasterSummary_(ss) {
+  const sheet = ss.getSheetByName('Riepilogo');
+  const fallback = {
+    sourceSheet: 'Riepilogo',
+    officialMaster: true,
+    readAt: new Date().toISOString(),
+    totals: { imponibile: 0, iva: 0, totale: 0, rows: 0 },
+    categoryTotals: [],
+  };
+
+  if (!sheet) return fallback;
+
+  const values = sheet.getDataRange().getDisplayValues();
+  const flattened = values.flat();
+  const totals = { imponibile: 0, iva: 0, totale: 0, rows: 0 };
+
+  for (let i = 0; i < flattened.length; i += 1) {
+    const key = normalizeKey_(flattened[i]);
+    const next = flattened[i + 1];
+    if (key === 'n_tab_principali') totals.rows = parseMoney_(next);
+    if (key === 'imponibile_totale_e') totals.imponibile = parseMoney_(next);
+    if (key === 'iva_totale_e') totals.iva = parseMoney_(next);
+    if (key === 'totale_generale_e') totals.totale = parseMoney_(next);
+  }
+
+  const categoryTotals = [];
+  const headerInfo = findOfficialSummaryHeader_(values);
+  if (headerInfo) {
+    for (let r = headerInfo.rowIndex + 1; r < values.length; r += 1) {
+      const row = values[r];
+      const tab = cleanText_(row[headerInfo.map.tab]);
+      if (!tab) continue;
+
+      categoryTotals.push({
+        categoria: tab,
+        descrizione: cleanText_(row[headerInfo.map.descrizione]),
+        movimenti: parseMoney_(row[headerInfo.map.movimenti]),
+        imponibile: parseMoney_(row[headerInfo.map.imponibile]),
+        iva: parseMoney_(row[headerInfo.map.iva]),
+        totale: parseMoney_(row[headerInfo.map.totale]),
+        source: 'Riepilogo',
+      });
+    }
+  }
+
+  return {
+    sourceSheet: 'Riepilogo',
+    officialMaster: true,
+    readAt: new Date().toISOString(),
+    totals,
+    categoryTotals,
+  };
+}
+
+function findOfficialSummaryHeader_(values) {
+  for (let r = 0; r < values.length; r += 1) {
+    const headers = values[r].map((cell) => normalizeKey_(cell));
+    const tab = headers.indexOf('tab_principale');
+    const descrizione = headers.indexOf('descrizione');
+    const movimenti = headers.indexOf('n_movimenti');
+    const imponibile = headers.indexOf('imponibile_e');
+    const iva = headers.indexOf('iva_e');
+    const totale = headers.indexOf('totale_e');
+
+    if (tab >= 0 && descrizione >= 0 && movimenti >= 0 && imponibile >= 0 && iva >= 0 && totale >= 0) {
+      return { rowIndex: r, map: { tab, descrizione, movimenti, imponibile, iva, totale } };
+    }
+  }
+  return null;
 }
 
 function readMovementRowsFromTabs_(ss) {
