@@ -20,8 +20,8 @@ export function findDuplicateMovements(target, movements = []) {
   if (!target) return []
 
   const targetSupplier = normalizeAccountingKey(target.fornitore)
-  const targetDocNumber = normalizeAccountingKey(target.numeroDocumento)
-  const targetFile = normalizeAccountingKey(target.fileName || target.documentoCollegato || target.storagePath)
+  const targetDocNumber = normalizeStrongKey(target.numeroDocumento)
+  const targetFile = normalizeStrongKey(target.storagePath || target.fileName || target.documentoCollegato)
 
   return movements
     .filter((movement) => movement.id !== target.id)
@@ -30,17 +30,31 @@ export function findDuplicateMovements(target, movements = []) {
       const supplierMatch = targetSupplier && targetSupplier === normalizeAccountingKey(movement.fornitore)
       const amountMatch = sameAccountingAmount(target.totale, movement.totale)
       const dateMatch = sameAccountingDate(target.data, movement.data)
-      const documentNumberMatch = targetDocNumber && targetDocNumber === normalizeAccountingKey(movement.numeroDocumento)
-      const fileMatch = targetFile && targetFile === normalizeAccountingKey(movement.fileName || movement.documentoCollegato || movement.storagePath)
+      const movementDocNumber = normalizeStrongKey(movement.numeroDocumento)
+      const movementFile = normalizeStrongKey(movement.storagePath || movement.fileName || movement.documentoCollegato)
+      const documentNumberMatch = targetDocNumber && targetDocNumber === movementDocNumber
+      const fileMatch = targetFile && targetFile === movementFile
 
-      if (supplierMatch && amountMatch && dateMatch) reasons.push('stesso fornitore, data e totale')
       if (documentNumberMatch) reasons.push('stesso numero documento')
-      if (fileMatch) reasons.push('stesso file/documento collegato')
-      if (supplierMatch && amountMatch && !dateMatch) reasons.push('stesso fornitore e totale')
+      if (fileMatch) reasons.push('stesso file/storage path')
+      if (supplierMatch && amountMatch && dateMatch) reasons.push('stesso fornitore, data e totale')
 
       return reasons.length ? { movement, reasons } : null
     })
     .filter(Boolean)
+}
+
+export function findSoftDuplicateHints(target, movements = []) {
+  if (!target) return []
+
+  const targetSupplier = normalizeAccountingKey(target.fornitore)
+  if (!targetSupplier || !Number(target.totale || 0)) return []
+
+  return movements
+    .filter((movement) => movement.id !== target.id)
+    .filter((movement) => targetSupplier === normalizeAccountingKey(movement.fornitore))
+    .filter((movement) => sameAccountingAmount(target.totale, movement.totale) && !sameAccountingDate(target.data, movement.data))
+    .map((movement) => ({ movement, reasons: ['stesso fornitore e totale, data diversa'] }))
 }
 
 export function checkDocumentMovementCompatibility(document, movement) {
@@ -73,4 +87,12 @@ export function hasAmountWarning(row) {
   if (row?.tipoDocumento === 'Bonifico') return false
   if (!Number(row?.imponibile || 0) && !Number(row?.iva || 0)) return false
   return Math.abs((Number(row.imponibile || 0) + Number(row.iva || 0)) - Number(row.totale || 0)) > 0.01
+}
+
+function normalizeStrongKey(value) {
+  const normalized = normalizeAccountingKey(value)
+  if (!normalized) return ''
+  if (['-', 'n/d', 'nd', 'non indicato', 'da collegare', 'inserimento manuale'].includes(normalized)) return ''
+  if (normalized.startsWith('manuale-manual-expense-')) return ''
+  return normalized
 }
