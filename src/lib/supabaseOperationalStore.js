@@ -7,21 +7,23 @@ const EMPTY_OPERATIONAL_STORE = {
   estimates: [],
   notes: [],
   activities: [],
+  deletedRecords: [],
 }
 
 export async function fetchOperationalStore() {
   if (!isSupabaseConfigured) return { data: null, error: null, source: 'local' }
 
   try {
-    const [documents, movements, photos, notes, activities] = await Promise.all([
+    const [documents, movements, photos, notes, activities, deletedRecords] = await Promise.all([
       supabaseRequest('documents?select=*,cantieri(nome)&order=data_documento.desc.nullslast,created_at.desc', { method: 'GET' }),
       supabaseRequest('accounting_movements?select=*,cantieri(nome),documents(file_name,storage_path,tipo_documento,numero_documento)&order=data.desc.nullslast,created_at.desc', { method: 'GET' }),
       supabaseRequest('photos?select=*,cantieri(nome)&order=created_at.desc', { method: 'GET' }),
       supabaseRequest('notes?select=*&order=created_at.desc', { method: 'GET' }),
       supabaseRequest('activity_logs?select=*&order=created_at.desc&limit=100', { method: 'GET' }),
+      supabaseRequest('deleted_records?select=*&order=deleted_at.desc&limit=100', { method: 'GET' }),
     ])
 
-    const firstError = [documents, movements, photos, notes, activities].find((result) => result.error)
+    const firstError = [documents, movements, photos, notes, activities, deletedRecords].find((result) => result.error)
     if (firstError?.error) return { data: null, error: firstError.error, source: 'supabase-operational' }
 
     const documentRows = Array.isArray(documents.data) ? documents.data.map(fromDocumentRow) : []
@@ -34,6 +36,7 @@ export async function fetchOperationalStore() {
       photos: Array.isArray(photos.data) ? photos.data.map(fromPhotoRow) : [],
       notes: Array.isArray(notes.data) ? notes.data.map(fromNoteRow) : [],
       activities: Array.isArray(activities.data) ? activities.data.map(fromActivityRow) : [],
+      deletedRecords: Array.isArray(deletedRecords.data) ? deletedRecords.data.map(fromDeletedRecordRow) : [],
     }
 
     return {
@@ -98,7 +101,8 @@ function hasOperationalData(store) {
       || store.movements.length
       || store.photos.length
       || store.notes.length
-      || store.activities.length,
+      || store.activities.length
+      || store.deletedRecords.length,
   )
 }
 
@@ -354,6 +358,20 @@ function toActivityRow(activity, session) {
     description: activity.description ?? activity.title ?? 'Azione hub',
     actor_id: session?.authMode === 'supabase' ? session.id : null,
     actor_name: activity.author ?? session?.name ?? 'Sistema',
+  }
+}
+
+function fromDeletedRecordRow(row) {
+  return {
+    id: row.id,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    storageBucket: row.storage_bucket,
+    storagePath: row.storage_path,
+    reason: row.reason,
+    deletedBy: row.deleted_by,
+    deletedAt: row.deleted_at,
+    snapshot: row.snapshot,
   }
 }
 
