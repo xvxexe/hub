@@ -224,7 +224,6 @@ function CantiereRow({ cantiere, isSelected, onSelect }) {
       description={`${cantiere.localita} · ${cantiere.responsabile}`}
       status={displaySiteStatus(cantiere)}
       warning={cantiere.criticita > 0}
-      onClick={() => onSelect(cantiere.id)}
       meta={[
         { label: 'Spese', value: <MoneyValue value={cantiere.spese} /> },
         { label: 'Movimenti', value: cantiere.movimenti },
@@ -233,8 +232,8 @@ function CantiereRow({ cantiere, isSelected, onSelect }) {
       ]}
       action={(
         <ActionList>
-          <button className="button button-secondary button-small" type="button" onClick={(event) => { event.stopPropagation(); onSelect(cantiere.id) }}>Anteprima</button>
-          <a className="button button-secondary button-small" href={`#/dashboard/cantieri/${cantiere.id}`} onClick={(event) => event.stopPropagation()}>Apri</a>
+          <button className="button button-secondary button-small" type="button" onClick={() => onSelect(cantiere.id)}>Anteprima</button>
+          <a className="button button-secondary button-small" href={`#/dashboard/cantieri/${cantiere.id}`}>Apri</a>
         </ActionList>
       )}
     >
