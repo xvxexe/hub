@@ -94,7 +94,7 @@ export function DataCardRow({
     className,
   ].filter(Boolean).join(' ')
 
-  const content = (
+  const mainContent = (
     <>
       {icon ? <span className="internal-data-card-icon"><InternalIcon name={icon} size={18} /></span> : null}
       <div className="internal-data-card-main">
@@ -105,8 +105,8 @@ export function DataCardRow({
         {description ? <p>{description}</p> : null}
         {meta.length ? (
           <dl className="internal-data-card-meta">
-            {meta.map((item) => (
-              <div key={`${item.label}-${item.value}`}>
+            {meta.map((item, index) => (
+              <div key={`${item.label}-${index}`}>
                 <dt>{item.label}</dt>
                 <dd>{item.value}</dd>
               </div>
@@ -115,19 +115,32 @@ export function DataCardRow({
         ) : null}
         {children}
       </div>
+    </>
+  )
+
+  const content = (
+    <>
+      {mainContent}
       {action ? <div className="internal-data-card-action">{action}</div> : null}
     </>
   )
 
-  if (href) {
-    return <a className={rowClassName} href={href}>{content}</a>
+  if (href && !action) {
+    return <a className={rowClassName} href={href}>{mainContent}</a>
   }
 
-  if (onClick) {
-    return <button className={rowClassName} type="button" onClick={onClick}>{content}</button>
+  if (onClick && !action) {
+    return <button className={rowClassName} type="button" onClick={onClick}>{mainContent}</button>
   }
 
-  return <article className={rowClassName}>{content}</article>
+  return (
+    <article className={rowClassName}>
+      {href ? <a className="internal-data-card-main-link" href={href}>{mainContent}</a> : null}
+      {onClick ? <button className="internal-data-card-main-link" type="button" onClick={onClick}>{mainContent}</button> : null}
+      {!href && !onClick ? mainContent : null}
+      {action ? <div className="internal-data-card-action">{action}</div> : null}
+    </article>
+  )
 }
 
 export function ActionList({ children, className = '' }) {
