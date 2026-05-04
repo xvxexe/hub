@@ -3,10 +3,7 @@ import { findDuplicateMovements, hasAmountWarning } from './accountingChecks'
 export function openOperationalReportPdf({ rows, sites, categoryTotals, pending, payments, duplicateIds, deletedRecords = [] }) {
   const generatedAt = new Date()
   const totals = getTotals(rows)
-  const reportWindow = window.open('', '_blank', 'noopener,noreferrer,width=1200,height=900')
-  if (!reportWindow) return { ok: false, error: 'Popup bloccato dal browser. Abilita i popup per scaricare/stampare il PDF.' }
-
-  reportWindow.document.write(buildReportHtml({
+  const html = buildReportHtml({
     rows,
     sites,
     categoryTotals,
@@ -16,12 +13,35 @@ export function openOperationalReportPdf({ rows, sites, categoryTotals, pending,
     deletedRecords,
     totals,
     generatedAt,
-  }))
-  reportWindow.document.close()
-  reportWindow.focus()
-  reportWindow.setTimeout(() => reportWindow.print(), 350)
+  })
 
-  return { ok: true }
+  const reportWindow = window.open('', '_blank', 'width=1200,height=900')
+
+  if (!reportWindow) {
+    downloadReportHtml(html, generatedAt)
+    return {
+      ok: true,
+      mode: 'download',
+      message: 'Popup bloccato dal browser: ho scaricato un file HTML del report. Aprilo e usa Stampa → Salva come PDF.',
+    }
+  }
+
+  try {
+    reportWindow.document.open()
+    reportWindow.document.write(html)
+    reportWindow.document.close()
+    reportWindow.focus()
+    reportWindow.setTimeout(() => reportWindow.print(), 500)
+    return { ok: true, mode: 'popup' }
+  } catch (error) {
+    reportWindow.close()
+    downloadReportHtml(html, generatedAt)
+    return {
+      ok: true,
+      mode: 'download',
+      message: `Il browser non ha permesso di scrivere nella nuova scheda: ho scaricato un file HTML del report. Dettaglio: ${error.message}`,
+    }
+  }
 }
 
 export function buildReportRows({ documents = [], movements = [] }) {
@@ -109,6 +129,7 @@ function buildReportHtml({ rows, sites, categoryTotals, pending, payments, dupli
     h1 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.04em; }
     h2 { margin: 28px 0 12px; font-size: 18px; }
     p, small { color: #64748b; }
+    button { border: 1px solid #dbeafe; background: #2563eb; color: #fff; border-radius: 999px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
     .badge { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 12px; font-weight: 700; }
     .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
     .kpi { border: 1px solid #e5e7eb; border-radius: 18px; padding: 16px; background: #f8fafc; }
@@ -205,6 +226,18 @@ function documentToMovement(document) {
     statoVerifica: document.statoVerifica,
     documentoCollegato: document.fileName,
   }
+}
+
+function downloadReportHtml(html, generatedAt) {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `EuropaService_Report_${formatDateIso(generatedAt)}.html`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 function formatDate(date) {
