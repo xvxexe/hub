@@ -52,17 +52,20 @@ export async function saveOperationalStore(store, session) {
     const activities = store.activities.slice(0, 250).map((activity) => toActivityRow(activity, session))
     const movements = store.documents.map((document) => toAccountingMovementRow(document, session))
 
-    const writes = []
-    if (cantieri.length) writes.push(upsertRows('cantieri', cantieri))
-    if (documents.length) writes.push(upsertRows('documents', documents))
-    if (photos.length) writes.push(upsertRows('photos', photos))
-    if (movements.length) writes.push(upsertRows('accounting_movements', movements))
-    if (notes.length) writes.push(upsertRows('notes', notes))
-    if (activities.length) writes.push(upsertRows('activity_logs', activities))
+    const orderedWrites = [
+      ['cantieri', cantieri],
+      ['documents', documents],
+      ['photos', photos],
+      ['accounting_movements', movements],
+      ['notes', notes],
+      ['activity_logs', activities],
+    ]
 
-    const results = await Promise.all(writes)
-    const failed = results.find((result) => result.error)
-    if (failed?.error) return { error: failed.error, source: 'supabase-operational' }
+    for (const [table, rows] of orderedWrites) {
+      if (!rows.length) continue
+      const result = await upsertRows(table, rows)
+      if (result.error) return { error: result.error, source: 'supabase-operational' }
+    }
 
     return { error: null, source: 'supabase-operational' }
   } catch (error) {
