@@ -6,10 +6,12 @@ import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
 import { formatDate, mockCantieri } from '../../data/mockCantieri'
 import { categorieContabili, metodiPagamentoContabili, statiVerificaContabili } from '../../data/mockMovimentiContabili'
+import { checkDocumentMovementCompatibility, findDuplicateMovements, hasAmountWarning } from '../../lib/accountingChecks'
 
 export function AccountingMovementDetail({ movementId, session, store }) {
   const movement = useMemo(() => resolveMovement(movementId, store), [movementId, store])
   const documents = store.documents ?? []
+  const movements = store.movements ?? []
   const linkedDocument = documents.find((document) => document.id === movement?.documentId)
   const canEdit = session.role === 'admin' || session.role === 'accounting'
   const canViewEconomics = session.role !== 'employee'
@@ -37,7 +39,10 @@ export function AccountingMovementDetail({ movementId, session, store }) {
   }
 
   const amountWarning = canViewEconomics && hasAmountWarning(form)
+  const selectedDocument = documents.find((document) => document.id === selectedDocumentId)
   const documentOptions = buildDocumentOptions(documents, movement)
+  const compatibilityWarnings = selectedDocument ? checkDocumentMovementCompatibility(selectedDocument, form) : []
+  const duplicateMatches = findDuplicateMovements(form, movements.map(normalizeMovement)).slice(0, 4)
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: numberFields.includes(field) ? Number(value) : value }))
@@ -73,7 +78,12 @@ export function AccountingMovementDetail({ movementId, session, store }) {
       tipoDocumento: document.tipoDocumento ?? current.tipoDocumento,
       numeroDocumento: document.numeroDocumento ?? document.fileName ?? current.numeroDocumento,
     }))
-    setStatusMessage({ type: 'success', message: 'Documento collegato al movimento.' })
+    setStatusMessage({
+      type: compatibilityWarnings.length ? 'warning' : 'success',
+      message: compatibilityWarnings.length
+        ? 'Documento collegato, ma ci sono avvisi di compatibilità da controllare.'
+        : 'Documento collegato al movimento.',
+    })
   }
 
   function unlinkDocument() {
@@ -133,6 +143,21 @@ export function AccountingMovementDetail({ movementId, session, store }) {
         </section>
       ) : null}
 
+      {duplicateMatches.length ? (
+        <section className="validation-alert-block">
+          <strong>Possibili duplicati movimento</strong>
+          <p>Ho trovato movimenti simili per fornitore, data, totale, numero documento o file collegato.</p>
+          <ul>
+            {duplicateMatches.map(({ movement: duplicate, reasons }) => (
+              <li key={duplicate.id}>
+                <a className="text-link" href={`#/dashboard/contabilita/${duplicate.id}`}>{duplicate.fornitore} · {duplicate.descrizione}</a>
+                {' '}— {reasons.join(', ')} · <MoneyValue value={duplicate.totale} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="detail-layout internal-padded">
         <form className="mock-form detail-edit-form" onSubmit={save}>
           <EditableField label="Data" type="date" value={form.data ?? ''} onChange={(value) => update('data', value)} disabled={!canEdit} />
@@ -184,6 +209,17 @@ export function AccountingMovementDetail({ movementId, session, store }) {
             </div>
             <StatusBadge>{movement.documentId ? 'Collegato' : 'Da collegare'}</StatusBadge>
           </div>
+          {compatibilityWarnings.length ? (
+            <div className="validation-alert-block">
+              <strong>Compatibilità da verificare</strong>
+              <ul>{compatibilityWarnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
+            </div>
+          ) : selectedDocument ? (
+            <div className="accounting-alert success-alert">
+              <strong>Documento compatibile</strong>
+              <p>Cantiere, fornitore, data e totale non mostrano conflitti evidenti.</p>
+            </div>
+          ) : null}
           <form className="mock-form detail-edit-form" onSubmit={linkDocument}>
             <label className="form-wide">Documento da collegare<select value={selectedDocumentId} onChange={(event) => setSelectedDocumentId(event.target.value)}><option value="">Seleziona documento</option>{documentOptions.map((document) => <option key={document.id} value={document.id}>{document.label}</option>)}</select></label>
             <button className="button button-primary" type="submit">Collega documento</button>
@@ -273,12 +309,6 @@ function buildDocumentOptions(documents, movement) {
         document.totale ? `€ ${Number(document.totale).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null,
       ].filter(Boolean).join(' · '),
     }))
-}
-
-function hasAmountWarning(row) {
-  if (row.tipoDocumento === 'Bonifico') return false
-  if (!Number(row.imponibile || 0) && !Number(row.iva || 0)) return false
-  return Math.abs((Number(row.imponibile || 0) + Number(row.iva || 0)) - Number(row.totale || 0)) > 0.01
 }
 
 const numberFields = ['imponibile', 'iva', 'totale']
