@@ -1,4 +1,5 @@
 import { fetchDeletedRecords, filterDeletedFromStore } from './operationalDeletes'
+import { supabaseRequest } from './supabaseClient'
 import { fetchOperationalStore, saveOperationalStore } from './supabaseOperationalStore'
 import { fetchRemoteStore, saveRemoteStore } from './supabaseStore'
 
@@ -8,6 +9,11 @@ const fallbackSyncUrl = 'https://script.google.com/macros/s/AKfycbw-QeSDBIIShY3C
 const syncUrl = import.meta.env.VITE_GOOGLE_SHEETS_SYNC_URL || fallbackSyncUrl
 
 export const isGoogleSheetsSyncConfigured = Boolean(syncUrl)
+
+const GOOGLE_SHEETS_SOURCES = new Set([
+  'google-sheets-sync',
+  'google-sheets-row-import',
+])
 
 export async function importGoogleSheetsToSupabase(session = null) {
   if (!isGoogleSheetsSyncConfigured) {
@@ -35,6 +41,8 @@ export async function importGoogleSheetsToSupabase(session = null) {
   if (deletedRecords.error) return { ok: false, error: deletedRecords.error.message }
 
   const filteredStore = filterDeletedFromStore(incomingStore, deletedRecords.data)
+  const cleanup = await replaceGoogleSheetsSnapshot()
+  if (!cleanup.ok) return { ok: false, error: cleanup.error }
 
   const savedOperational = await saveOperationalStore(filteredStore, session)
   if (savedOperational.error) return { ok: false, error: savedOperational.error.message }
@@ -62,6 +70,7 @@ export async function importGoogleSheetsToSupabase(session = null) {
       photos: filteredStore.photos?.length ?? 0,
       estimates: filteredStore.estimates?.length ?? 0,
       removedByTombstones,
+      replacedGoogleSheetsSnapshot: cleanup.summary,
     },
   }
 }
@@ -130,6 +139,39 @@ function normalizeImportedStore(store) {
   }
 }
 
+async function replaceGoogleSheetsSnapshot() {
+  const existing = await supabaseRequest('documents?select=id,source&or=(source.eq.google-sheets-sync,source.eq.google-sheets-row-import,id.like.sheet-*)', { method: 'GET' })
+  if (existing.error) return { ok: false, error: existing.error.message }
+
+  const documentIds = (existing.data ?? [])
+    .filter((document) => GOOGLE_SHEETS_SOURCES.has(document.source) || String(document.id).startsWith('sheet-'))
+    .map((document) => document.id)
+
+  if (!documentIds.length) {
+    return { ok: true, summary: { documents: 0, movements: 0 } }
+  }
+
+  let deletedMovements = 0
+  let deletedDocuments = 0
+
+  for (const chunk of chunkArray(documentIds, 40)) {
+    const movementByDocument = await supabaseRequest(`accounting_movements?document_id=in.(${toPostgrestList(chunk)})`, { method: 'DELETE' })
+    if (movementByDocument.error) return { ok: false, error: movementByDocument.error.message }
+    deletedMovements += movementByDocument.data?.length ?? 0
+
+    const movementIds = chunk.map((id) => `movement-${id}`)
+    const movementById = await supabaseRequest(`accounting_movements?id=in.(${toPostgrestList(movementIds)})`, { method: 'DELETE' })
+    if (movementById.error) return { ok: false, error: movementById.error.message }
+    deletedMovements += movementById.data?.length ?? 0
+
+    const documents = await supabaseRequest(`documents?id=in.(${toPostgrestList(chunk)})`, { method: 'DELETE' })
+    if (documents.error) return { ok: false, error: documents.error.message }
+    deletedDocuments += documents.data?.length ?? 0
+  }
+
+  return { ok: true, summary: { documents: deletedDocuments, movements: deletedMovements } }
+}
+
 function documentToMovement(document) {
   return {
     id: `movement-${document.id}`,
@@ -158,6 +200,16 @@ function documentToMovement(document) {
 function notifyStoreSync(store) {
   if (typeof window === 'undefined') return
   window.dispatchEvent(new CustomEvent(STORE_SYNC_EVENT, { detail: { store } }))
+}
+
+function chunkArray(items, size) {
+  const chunks = []
+  for (let index = 0; index < items.length; index += size) chunks.push(items.slice(index, index + size))
+  return chunks
+}
+
+function toPostgrestList(values) {
+  return values.map((value) => `"${String(value).replace(/"/g, '\\"')}"`).join(',')
 }
 
 async function parseJsonResponse(response) {
