@@ -1,5 +1,7 @@
 import { fetchRemoteStore, saveRemoteStore } from './supabaseStore'
 
+export const STORE_SYNC_EVENT = 'europaservice-store-sync'
+
 const fallbackSyncUrl = 'https://script.google.com/macros/s/AKfycbw-QeSDBIIShY3CaI4Ra10NdBA1XWcl9LBhupHkHVITCgBt3XcqsIh8xNSj3Ox3vM7y4w/exec'
 const syncUrl = import.meta.env.VITE_GOOGLE_SHEETS_SYNC_URL || fallbackSyncUrl
 
@@ -28,6 +30,8 @@ export async function importGoogleSheetsToSupabase() {
 
   const saved = await saveRemoteStore(payload.store)
   if (saved.error) return { ok: false, error: saved.error.message }
+
+  notifyStoreSync(payload.store)
 
   return {
     ok: true,
@@ -76,6 +80,11 @@ async function loadRemoteStore() {
   const remote = await fetchRemoteStore()
   if (remote.error) throw remote.error
   return remote.data
+}
+
+function notifyStoreSync(store) {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(STORE_SYNC_EVENT, { detail: { store } }))
 }
 
 async function parseJsonResponse(response) {
