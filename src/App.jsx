@@ -177,7 +177,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
     return <AccountingMovementDetail movementId={path.split('/').at(-1)} session={session} store={mockStore} />
   }
   if (path === '/dashboard/contabilita') {
-    return <ContabilitaMock documents={mockStore.documents} />
+    return <ContabilitaMock documents={mockStore.documents} store={mockStore} session={session} />
   }
   if (path === '/dashboard/report') {
     return <ReportMock documents={mockStore.documents} />
