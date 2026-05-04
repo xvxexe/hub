@@ -1,3 +1,4 @@
+import { fetchOperationalStore, saveOperationalStore } from './supabaseOperationalStore'
 import { fetchRemoteStore, saveRemoteStore } from './supabaseStore'
 
 export const STORE_SYNC_EVENT = 'europaservice-store-sync'
@@ -7,7 +8,7 @@ const syncUrl = import.meta.env.VITE_GOOGLE_SHEETS_SYNC_URL || fallbackSyncUrl
 
 export const isGoogleSheetsSyncConfigured = Boolean(syncUrl)
 
-export async function importGoogleSheetsToSupabase() {
+export async function importGoogleSheetsToSupabase(session = null) {
   if (!isGoogleSheetsSyncConfigured) {
     return {
       ok: false,
@@ -28,8 +29,11 @@ export async function importGoogleSheetsToSupabase() {
     return { ok: false, error: 'Risposta Google Sheets non valida: documents mancante.' }
   }
 
-  const saved = await saveRemoteStore(payload.store)
-  if (saved.error) return { ok: false, error: saved.error.message }
+  const savedOperational = await saveOperationalStore(payload.store, session)
+  if (savedOperational.error) return { ok: false, error: savedOperational.error.message }
+
+  const savedLegacy = await saveRemoteStore(payload.store)
+  if (savedLegacy.error) return { ok: false, error: savedLegacy.error.message }
 
   notifyStoreSync(payload.store)
 
@@ -52,7 +56,7 @@ export async function exportSupabaseToGoogleSheets(storeOverride = null) {
     }
   }
 
-  const store = storeOverride ?? await loadRemoteStore()
+  const store = storeOverride ?? await loadBestAvailableStore()
   if (!store) return { ok: false, error: 'Nessun dato Supabase da esportare.' }
 
   const response = await fetch(syncUrl, {
@@ -76,10 +80,14 @@ export async function exportSupabaseToGoogleSheets(storeOverride = null) {
   }
 }
 
-async function loadRemoteStore() {
-  const remote = await fetchRemoteStore()
-  if (remote.error) throw remote.error
-  return remote.data
+async function loadBestAvailableStore() {
+  const operational = await fetchOperationalStore()
+  if (operational.error) throw operational.error
+  if (operational.data) return operational.data
+
+  const legacy = await fetchRemoteStore()
+  if (legacy.error) throw legacy.error
+  return legacy.data
 }
 
 function notifyStoreSync(store) {
