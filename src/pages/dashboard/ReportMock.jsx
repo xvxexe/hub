@@ -10,6 +10,7 @@ import {
 import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
 import { StatusBadge } from '../../components/StatusBadge'
+import { getOfficialMasterTotals, preferOfficialCategoryTotals, preferOfficialTotals } from '../../lib/masterTotals'
 import {
   buildDuplicateIdSet,
   buildReportCategoryTotals,
@@ -23,17 +24,21 @@ export function ReportMock({ documents = [], store = null }) {
   const [exportStatus, setExportStatus] = useState(null)
   const rows = useMemo(() => buildReportRows({ documents, movements: store?.movements ?? [] }), [documents, store?.movements])
   const duplicateIds = useMemo(() => buildDuplicateIdSet(rows), [rows])
-  const sites = useMemo(() => buildReportSites(rows), [rows])
-  const categoryTotals = useMemo(() => buildReportCategoryTotals(rows), [rows])
-  const totals = rows.reduce((acc, row) => ({
+  const calculatedSites = useMemo(() => buildReportSites(rows), [rows])
+  const calculatedCategoryTotals = useMemo(() => buildReportCategoryTotals(rows), [rows])
+  const calculatedTotals = rows.reduce((acc, row) => ({
     imponibile: acc.imponibile + row.imponibile,
     iva: acc.iva + row.iva,
     totale: acc.totale + row.totale,
   }), { imponibile: 0, iva: 0, totale: 0 })
+  const officialMaster = getOfficialMasterTotals(store)
+  const totals = preferOfficialTotals(store, calculatedTotals)
+  const categoryTotals = preferOfficialCategoryTotals(store, calculatedCategoryTotals)
+  const sites = buildOfficialSites(calculatedSites, totals, rows.length)
   const pending = useMemo(() => buildReportPendingRows(rows, duplicateIds), [rows, duplicateIds])
   const payments = rows.filter((row) => row.pagamento?.toLowerCase().includes('bonifico') || row.categoria?.toLowerCase().includes('bonifici'))
   const deletedRecords = store?.deletedRecords ?? []
-  const summary = buildBossSummary({ rows, sites, totals, pending, payments, categoryTotals, duplicateIds, deletedRecords })
+  const summary = buildBossSummary({ rows, sites, totals, pending, payments, categoryTotals, duplicateIds, deletedRecords, officialMaster })
 
   function exportPdf() {
     const result = openOperationalReportPdf({
@@ -44,10 +49,12 @@ export function ReportMock({ documents = [], store = null }) {
       payments,
       duplicateIds,
       deletedRecords,
+      officialTotals: totals,
+      officialMaster,
     })
 
     setExportStatus(result.ok
-      ? { type: 'success', message: 'Report aperto in una nuova scheda. Usa “Salva come PDF” dalla finestra di stampa.' }
+      ? { type: 'success', message: result.message ?? 'Report aperto in una nuova scheda. Usa “Salva come PDF” dalla finestra di stampa.' }
       : { type: 'error', message: result.error })
   }
 
@@ -56,9 +63,9 @@ export function ReportMock({ documents = [], store = null }) {
       <DashboardHeader
         eyebrow="Report reale"
         title="Report"
-        description="Riepilogo direzionale dai dati Supabase: costi, criticità, pagamenti, duplicati e record eliminati."
+        description="Riepilogo direzionale: numeri ufficiali dal master Google Sheets e righe operative per controlli/documenti."
       >
-        <DataModeBadge>Dati reali Supabase</DataModeBadge>
+        <DataModeBadge>{officialMaster ? 'Totali ufficiali master' : 'Dati reali Supabase'}</DataModeBadge>
         <button className="button button-primary button-small" type="button" onClick={exportPdf}>Report PDF</button>
       </DashboardHeader>
 
@@ -69,11 +76,18 @@ export function ReportMock({ documents = [], store = null }) {
         </section>
       ) : null}
 
+      {officialMaster ? (
+        <section className="accounting-alert success-alert">
+          <strong>Numeri ufficiali Google Sheets</strong>
+          <p>Totali economici letti dal tab Riepilogo del master. Le righe operative sotto non ricalcolano i KPI.</p>
+        </section>
+      ) : null}
+
       <KpiStrip ariaLabel="Indicatori report">
         <KpiCard icon="building" label="Cantieri" value={sites.length} hint="Nel master" />
         <KpiCard icon="report" label="Movimenti" value={rows.length} hint="Righe operative" />
-        <KpiCard icon="wallet" tone="green" label="Imponibile" value={<MoneyValue value={totals.imponibile} />} hint="Totale netto" />
-        <KpiCard icon="file" tone="amber" label="Totale spese" value={<MoneyValue value={totals.totale} />} hint="IVA inclusa" />
+        <KpiCard icon="wallet" tone="green" label="Imponibile" value={<MoneyValue value={totals.imponibile} />} hint={officialMaster ? 'Da master' : 'Totale netto'} />
+        <KpiCard icon="file" tone="amber" label="Totale spese" value={<MoneyValue value={totals.totale} />} hint={officialMaster ? 'Da master' : 'IVA inclusa'} />
       </KpiStrip>
 
       <KpiStrip ariaLabel="Indicatori controlli report">
@@ -87,7 +101,7 @@ export function ReportMock({ documents = [], store = null }) {
         <div className="section-heading panel-title-row">
           <div>
             <h2>Sintesi capo</h2>
-            <p>Le informazioni più importanti prima dei dettagli: totale, problemi aperti, duplicati e pagamenti da collegare.</p>
+            <p>Totali ufficiali, problemi aperti, duplicati e pagamenti da collegare.</p>
           </div>
           <StatusBadge>{pending.length ? `${pending.length} verifiche` : 'Tutto ok'}</StatusBadge>
         </div>
@@ -111,7 +125,7 @@ export function ReportMock({ documents = [], store = null }) {
         className="report-workspace"
         sidebar={(
           <>
-            <CategoryPanel categoryTotals={categoryTotals} />
+            <CategoryPanel categoryTotals={categoryTotals} official={Boolean(officialMaster)} />
             <PaymentsPanel rows={payments.length ? payments : rows} />
             <DeletedRecordsPanel rows={deletedRecords} />
           </>
@@ -121,7 +135,7 @@ export function ReportMock({ documents = [], store = null }) {
           <div className="section-heading panel-title-row">
             <div>
               <h2>Andamento cantieri</h2>
-              <p>Confronto rapido tra cantieri in base al totale registrato.</p>
+              <p>{officialMaster ? 'Totale cantiere letto dal master. Avanzamento grafico solo indicativo.' : 'Confronto rapido tra cantieri in base al totale registrato.'}</p>
             </div>
             <StatusBadge>{sites.length} cantieri</StatusBadge>
           </div>
@@ -143,7 +157,7 @@ export function ReportMock({ documents = [], store = null }) {
           <div className="section-heading panel-title-row">
             <div>
               <h2>Verifiche in attesa</h2>
-              <p>Movimenti che richiedono controllo prima del riepilogo definitivo.</p>
+              <p>Movimenti che richiedono controllo operativo. Non modificano i totali ufficiali del master.</p>
             </div>
             <a className="button button-secondary button-small" href="#/dashboard/contabilita">Contabilità</a>
           </div>
@@ -160,7 +174,7 @@ export function ReportMock({ documents = [], store = null }) {
                 meta={[
                   { label: 'Documento', value: item.documentoCollegato || item.numeroDocumento || 'Da collegare' },
                   { label: 'Categoria', value: item.categoria },
-                  { label: 'Totale', value: <MoneyValue value={item.totale} /> },
+                  { label: 'Totale riga', value: <MoneyValue value={item.totale} /> },
                 ]}
               />
             )) : <p>Nessuna verifica aperta nei dati importati.</p>}
@@ -171,11 +185,11 @@ export function ReportMock({ documents = [], store = null }) {
   )
 }
 
-function CategoryPanel({ categoryTotals }) {
+function CategoryPanel({ categoryTotals, official }) {
   return (
     <SideContextPanel
       title="Riepilogo costi"
-      description="Categorie ordinate per peso economico sul totale."
+      description={official ? 'Valori ufficiali dal tab Riepilogo del master.' : 'Categorie ordinate per peso economico sul totale.'}
       action={<a className="button button-secondary button-small" href="#/dashboard/contabilita">Dettaglio</a>}
     >
       <div className="cost-legend report-cost-list">
@@ -183,7 +197,7 @@ function CategoryPanel({ categoryTotals }) {
           <div key={item.categoria}>
             <span />
             <strong>{item.categoria}</strong>
-            <small><MoneyValue value={item.totale} /> · {item.percent}%</small>
+            <small><MoneyValue value={item.totale} />{item.percent ? ` · ${item.percent}%` : ''}</small>
           </div>
         )) : <p>Nessuna categoria nei dati importati.</p>}
       </div>
@@ -235,15 +249,15 @@ function DeletedRecordsPanel({ rows }) {
   )
 }
 
-function buildBossSummary({ rows, sites, totals, pending, payments, categoryTotals, duplicateIds, deletedRecords }) {
+function buildBossSummary({ rows, totals, pending, payments, categoryTotals, duplicateIds, deletedRecords, officialMaster }) {
   const biggestCategory = categoryTotals[0]
   const duplicateCount = rows.filter((row) => duplicateIds.has(row.id)).length
   return [
     {
       icon: 'wallet',
-      title: 'Totale spese registrate',
-      description: 'Valore complessivo importato dal master, IVA inclusa.',
-      status: 'Totale',
+      title: 'Totale spese ufficiale',
+      description: officialMaster ? 'Valore letto dal tab Riepilogo del master, IVA inclusa.' : 'Valore calcolato dalle righe operative perché il master non ha ancora inviato i totali ufficiali.',
+      status: officialMaster ? 'Da master' : 'Calcolato',
       href: '#/dashboard/contabilita',
       meta: [
         { label: 'Totale', value: <MoneyValue value={totals.totale} /> },
@@ -266,17 +280,23 @@ function buildBossSummary({ rows, sites, totals, pending, payments, categoryTota
     },
     {
       icon: 'report',
-      title: 'Categoria più pesante',
-      description: biggestCategory ? 'Categoria che pesa di più sul totale filtrato.' : 'Nessuna categoria disponibile nei dati importati.',
-      status: biggestCategory ? `${biggestCategory.percent}%` : 'N/D',
+      title: officialMaster ? 'Tab più pesante da master' : 'Categoria più pesante',
+      description: biggestCategory ? 'Voce che pesa di più sul totale visualizzato.' : 'Nessuna voce disponibile nei dati importati.',
+      status: biggestCategory?.percent ? `${biggestCategory.percent}%` : 'Master',
       href: '#/dashboard/report',
       meta: [
-        { label: 'Categoria', value: biggestCategory?.categoria ?? '-' },
+        { label: 'Voce', value: biggestCategory?.categoria ?? '-' },
         { label: 'Importo', value: biggestCategory ? <MoneyValue value={biggestCategory.totale} /> : '-' },
         { label: 'Pagamenti', value: payments.length },
       ],
     },
   ]
+}
+
+function buildOfficialSites(calculatedSites, totals, rowsCount) {
+  if (!totals?.isOfficialMaster) return calculatedSites
+  const first = calculatedSites[0] ?? { id: 'barcelo-roma', nome: 'Barcelò Roma', localita: 'Roma', movimenti: rowsCount }
+  return [{ ...first, totale: totals.totale, avanzamento: 100, movimenti: rowsCount }]
 }
 
 function displayStatus(row, duplicateIds) {
