@@ -1,5 +1,14 @@
 import { useMemo, useState } from 'react'
 import { DashboardHeader, DataModeBadge, MockActionModal } from '../../components/InternalComponents'
+import {
+  ActionList,
+  DataCardRow,
+  FilterGrid,
+  KpiCard,
+  KpiStrip,
+  SideContextPanel,
+  WorkspaceLayout,
+} from '../../components/InternalLayout'
 import { InternalIcon } from '../../components/InternalIcons'
 import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
@@ -75,7 +84,7 @@ export function CantieriList({ documents = [] }) {
       <DashboardHeader
         eyebrow="Cantieri reali"
         title="Gestione cantieri"
-        description="Vista operativa compatta: prima trovi il cantiere, poi vedi subito costi, criticità, documenti e azioni collegate."
+        description="Vista operativa compatta: trovi il cantiere, controlli costi, criticità, documenti e azioni collegate."
       >
         <DataModeBadge>Dati reali Supabase</DataModeBadge>
         <button
@@ -88,68 +97,70 @@ export function CantieriList({ documents = [] }) {
         </button>
       </DashboardHeader>
 
-      <section className="cantieri-command-center" aria-label="Controllo cantieri">
-        <div className="cantieri-search-card">
-          <div>
-            <span className="eyebrow">Ricerca e priorità</span>
-            <h2>Trova il cantiere da lavorare</h2>
-            <p>Filtri messi in alto perché decidono cosa mostrare nella lista e nel pannello laterale.</p>
-          </div>
-          <label className="cantieri-search-input">
-            <InternalIcon name="search" size={18} />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => updateSearch(event.target.value)}
-              placeholder="Cerca per nome, zona o responsabile..."
-            />
-          </label>
-          <div className="cantieri-segmented" aria-label="Filtro stato">
-            <button type="button" aria-pressed={status === 'tutti'} onClick={() => updateStatus('tutti')}>Tutti</button>
-            <button type="button" aria-pressed={status === 'attivo'} onClick={() => updateStatus('attivo')}>In corso</button>
-            <button type="button" aria-pressed={status === 'da-verificare'} onClick={() => updateStatus('da-verificare')}>Da controllare</button>
-          </div>
-        </div>
+      <FilterGrid ariaLabel="Filtri cantieri">
+        <label>
+          Cerca
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => updateSearch(event.target.value)}
+            placeholder="Nome, zona o responsabile..."
+          />
+        </label>
+        <label>
+          Stato
+          <select value={status} onChange={(event) => updateStatus(event.target.value)}>
+            <option value="tutti">Tutti</option>
+            <option value="attivo">In corso</option>
+            <option value="da-verificare">Da controllare</option>
+          </select>
+        </label>
+        <label>
+          Ordina elenco
+          <select value={sort} onChange={(event) => updateSort(event.target.value)}>
+            <option value="spese-desc">Spese più alte</option>
+            <option value="spese-asc">Spese più basse</option>
+            <option value="criticita-desc">Più criticità</option>
+            <option value="movimenti-desc">Più movimenti</option>
+            <option value="aggiornamento-desc">Ultimo aggiornamento</option>
+            <option value="nome">Nome A-Z</option>
+          </select>
+        </label>
+        <label>
+          Risultati
+          <input readOnly value={`${filteredCantieri.length} cantieri mostrati`} />
+        </label>
+      </FilterGrid>
 
-        <div className="cantieri-sort-card">
-          <label>
-            Ordina elenco
-            <select value={sort} onChange={(event) => updateSort(event.target.value)}>
-              <option value="spese-desc">Spese più alte</option>
-              <option value="spese-asc">Spese più basse</option>
-              <option value="criticita-desc">Più criticità</option>
-              <option value="movimenti-desc">Più movimenti</option>
-              <option value="aggiornamento-desc">Ultimo aggiornamento</option>
-              <option value="nome">Nome A-Z</option>
-            </select>
-          </label>
-          <div className="cantieri-filter-result">
-            <strong>{filteredCantieri.length}</strong>
-            <span>cantieri mostrati</span>
-          </div>
-        </div>
-      </section>
+      <KpiStrip ariaLabel="Indicatori cantieri">
+        <KpiCard icon="building" label="Cantieri" value={cantieri.length} hint={`${active} in corso`} />
+        <KpiCard icon="warning" tone="amber" label="Da controllare" value={toReview} hint={`${criticalDocuments.length} documenti critici`} />
+        <KpiCard icon="wallet" tone="green" label="Totale spese" value={<MoneyValue value={totalCost} />} hint="Somma cantieri" />
+        <KpiCard icon="report" tone="purple" label="Media cantiere" value={<MoneyValue value={averageCost} />} hint="Costo medio" />
+      </KpiStrip>
 
-      <section className="cantieri-overview-strip" aria-label="Indicatori cantieri">
-        <CantiereMetric icon="building" label="Cantieri" value={cantieri.length} hint={`${active} in corso`} />
-        <CantiereMetric icon="warning" tone="amber" label="Da controllare" value={toReview} hint={`${criticalDocuments.length} documenti critici`} />
-        <CantiereMetric icon="wallet" tone="green" label="Totale spese" value={<MoneyValue value={totalCost} />} hint="Somma cantieri" />
-        <CantiereMetric icon="report" tone="purple" label="Media cantiere" value={<MoneyValue value={averageCost} />} hint="Costo medio" />
-      </section>
-
-      <div className="cantieri-redesign-layout">
+      <WorkspaceLayout
+        className="cantieri-workspace"
+        sidebar={(
+          <>
+            {selectedCantiere ? <SelectedSitePanel cantiere={selectedCantiere} documents={selectedDocuments} /> : null}
+            <CriticalDocumentsPanel documents={criticalDocuments} />
+            <ActionsPanel selectedCantiere={selectedCantiere} />
+          </>
+        )}
+      >
         <section className="internal-panel cantieri-master-panel">
           <div className="section-heading panel-title-row">
             <div>
               <h2>Elenco operativo</h2>
-              <p>Lista principale a sinistra: è il punto da cui scegli il cantiere e confronti costi, stato e aggiornamenti.</p>
+              <p>Lista principale: scegli il cantiere e confronta costi, stato, criticità e aggiornamenti.</p>
             </div>
             <span className="data-mode-badge">{getSortLabel(sort)}</span>
           </div>
 
           {filteredCantieri.length > 0 ? (
             <>
-              <div className="cantieri-card-list">
+              <div className="document-card-list cantieri-card-list">
                 {paginatedCantieri.map((cantiere) => (
                   <CantiereRow
                     cantiere={cantiere}
@@ -184,40 +195,7 @@ export function CantieriList({ documents = [] }) {
             </section>
           )}
         </section>
-
-        <aside className="cantieri-context-column">
-          {selectedCantiere ? (
-            <SelectedSitePanel cantiere={selectedCantiere} documents={selectedDocuments} />
-          ) : null}
-          <CriticalDocumentsPanel documents={criticalDocuments} />
-          <section className="internal-panel cantieri-action-panel">
-            <div className="section-heading panel-title-row"><h2>Azioni vicine al contesto</h2></div>
-            <p>Azioni posizionate accanto al dettaglio cantiere: quando scegli un cantiere hai già qui documenti, report e contabilità.</p>
-            <div className="cantieri-action-grid">
-              <a className="quick-action-card" href={selectedCantiere ? `#/dashboard/cantieri/${selectedCantiere.id}` : '#/dashboard/cantieri'}>
-                <InternalIcon name="building" size={18} />
-                <strong>Apri dettaglio</strong>
-                <span>Cantiere</span>
-              </a>
-              <a className="quick-action-card" href="#/dashboard/documenti">
-                <InternalIcon name="file" size={18} />
-                <strong>Documenti</strong>
-                <span>Verifica</span>
-              </a>
-              <a className="quick-action-card" href="#/dashboard/contabilita">
-                <InternalIcon name="wallet" size={18} />
-                <strong>Contabilità</strong>
-                <span>Costi</span>
-              </a>
-              <a className="quick-action-card" href="#/dashboard/report">
-                <InternalIcon name="report" size={18} />
-                <strong>Report</strong>
-                <span>Riepilogo</span>
-              </a>
-            </div>
-          </section>
-        </aside>
-      </div>
+      </WorkspaceLayout>
 
       <MockActionModal action={modalAction} onClose={() => setModalAction(null)} />
     </>
@@ -237,40 +215,31 @@ const mockActions = {
   },
 }
 
-function CantiereMetric({ icon, label, value, hint, tone = 'blue' }) {
-  return (
-    <article className={`cantieri-metric cantieri-metric-${tone}`}>
-      <span><InternalIcon name={icon} size={17} /></span>
-      <div>
-        <small>{label}</small>
-        <strong>{value}</strong>
-        <em>{hint}</em>
-      </div>
-    </article>
-  )
-}
-
 function CantiereRow({ cantiere, isSelected, onSelect }) {
   return (
-    <article className={isSelected ? 'cantiere-row-card selected' : 'cantiere-row-card'}>
-      <button type="button" onClick={() => onSelect(cantiere.id)}>
-        <div className="cantiere-row-main">
-          <div>
-            <strong>{cantiere.nome}</strong>
-            <small>{cantiere.localita} · {cantiere.responsabile}</small>
-          </div>
-          <StatusBadge>{displaySiteStatus(cantiere)}</StatusBadge>
-        </div>
-        <div className="cantiere-row-stats">
-          <span><b><MoneyValue value={cantiere.spese} /></b><small>Spese</small></span>
-          <span><b>{cantiere.movimenti}</b><small>Movimenti</small></span>
-          <span><b>{cantiere.criticita}</b><small>Criticità</small></span>
-          <span><b>{formatDate(cantiere.lastDate)}</b><small>Aggiornato</small></span>
-        </div>
-        <ProgressBar value={cantiere.avanzamento} />
-      </button>
-      <a className="button button-secondary button-small" href={`#/dashboard/cantieri/${cantiere.id}`}>Apri</a>
-    </article>
+    <DataCardRow
+      icon="building"
+      selected={isSelected}
+      title={cantiere.nome}
+      description={`${cantiere.localita} · ${cantiere.responsabile}`}
+      status={displaySiteStatus(cantiere)}
+      warning={cantiere.criticita > 0}
+      onClick={() => onSelect(cantiere.id)}
+      meta={[
+        { label: 'Spese', value: <MoneyValue value={cantiere.spese} /> },
+        { label: 'Movimenti', value: cantiere.movimenti },
+        { label: 'Criticità', value: cantiere.criticita },
+        { label: 'Aggiornato', value: formatDate(cantiere.lastDate) },
+      ]}
+      action={(
+        <ActionList>
+          <button className="button button-secondary button-small" type="button" onClick={(event) => { event.stopPropagation(); onSelect(cantiere.id) }}>Anteprima</button>
+          <a className="button button-secondary button-small" href={`#/dashboard/cantieri/${cantiere.id}`} onClick={(event) => event.stopPropagation()}>Apri</a>
+        </ActionList>
+      )}
+    >
+      <ProgressBar value={cantiere.avanzamento} />
+    </DataCardRow>
   )
 }
 
@@ -278,14 +247,12 @@ function SelectedSitePanel({ cantiere, documents }) {
   const categoryPreview = getCategoryPreview(documents)
 
   return (
-    <section className="internal-panel selected-cantiere-panel">
-      <div className="section-heading panel-title-row">
-        <div>
-          <h2>Cantiere selezionato</h2>
-          <p>Pannello a destra perché cambia in base alla riga scelta e tiene le azioni vicine al contesto.</p>
-        </div>
-        <a className="button button-secondary button-small" href={`#/dashboard/cantieri/${cantiere.id}`}>Dettaglio</a>
-      </div>
+    <SideContextPanel
+      className="selected-cantiere-panel"
+      title="Cantiere selezionato"
+      description="Riepilogo rapido collegato alla riga scelta."
+      action={<a className="button button-secondary button-small" href={`#/dashboard/cantieri/${cantiere.id}`}>Dettaglio</a>}
+    >
       <div className="selected-site-hero">
         <span className="site-avatar">ES</span>
         <div>
@@ -301,45 +268,74 @@ function SelectedSitePanel({ cantiere, documents }) {
       </dl>
       <ProgressBar value={cantiere.avanzamento} />
       <div className="selected-category-list">
-        {categoryPreview.map((item) => (
+        {categoryPreview.length > 0 ? categoryPreview.map((item) => (
           <div key={item.categoria}>
             <span>{item.categoria}</span>
             <strong><MoneyValue value={item.totale} /></strong>
           </div>
-        ))}
+        )) : <p>Nessuna categoria collegata.</p>}
       </div>
-    </section>
+    </SideContextPanel>
   )
 }
 
 function CriticalDocumentsPanel({ documents }) {
   return (
-    <section className="internal-panel cantieri-critical-panel">
-      <div className="section-heading panel-title-row">
-        <div>
-          <h2>Da controllare</h2>
-          <p>Criticità sotto il dettaglio: dopo aver scelto il cantiere sai subito cosa sistemare.</p>
-        </div>
-        <a className="button button-secondary button-small" href="#/dashboard/documenti">Tutti</a>
-      </div>
-      <div className="critical-document-list">
+    <SideContextPanel
+      className="cantieri-critical-panel"
+      title="Da controllare"
+      description="Documenti critici collegati ai cantieri."
+      action={<a className="button button-secondary button-small" href="#/dashboard/documenti">Tutti</a>}
+    >
+      <div className="document-card-list">
         {documents.length > 0 ? documents.slice(0, 5).map((item) => (
-          <a className="critical-document-row" href={`#/dashboard/documenti/${item.id}`} key={item.id}>
-            <span className="file-chip file-pdf">DOC</span>
-            <div>
-              <strong>{item.numeroDocumento ?? item.descrizione}</strong>
-              <small>{item.cantiere} · {item.fornitore}</small>
-            </div>
-            <StatusBadge>{normalizeDocumentStatus(item.statoVerifica)}</StatusBadge>
-          </a>
+          <DataCardRow
+            key={item.id}
+            icon="warning"
+            title={item.numeroDocumento ?? item.descrizione}
+            description={`${item.cantiere} · ${item.fornitore}`}
+            status={normalizeDocumentStatus(item.statoVerifica)}
+            href={`#/dashboard/documenti/${item.id}`}
+            warning
+            meta={[
+              { label: 'Tipo', value: item.tipoDocumento ?? 'Documento' },
+              { label: 'Totale', value: <MoneyValue value={item.totale || item.importoTotale || 0} /> },
+            ]}
+          />
         )) : (
-          <article className="critical-document-row empty-critical">
-            <span className="file-chip">OK</span>
-            <div><strong>Nessuna criticità aperta</strong><small>I documenti importati risultano ordinati.</small></div>
-          </article>
+          <article className="accounting-alert"><strong>Nessuna criticità aperta</strong><small>I documenti importati risultano ordinati.</small></article>
         )}
       </div>
-    </section>
+    </SideContextPanel>
+  )
+}
+
+function ActionsPanel({ selectedCantiere }) {
+  return (
+    <SideContextPanel title="Azioni rapide" description="Scorciatoie collegate al cantiere selezionato.">
+      <div className="quick-actions-grid">
+        <a className="quick-action-card" href={selectedCantiere ? `#/dashboard/cantieri/${selectedCantiere.id}` : '#/dashboard/cantieri'}>
+          <InternalIcon name="building" size={18} />
+          <strong>Apri dettaglio</strong>
+          <span>Cantiere</span>
+        </a>
+        <a className="quick-action-card" href="#/dashboard/documenti">
+          <InternalIcon name="file" size={18} />
+          <strong>Documenti</strong>
+          <span>Verifica</span>
+        </a>
+        <a className="quick-action-card" href="#/dashboard/contabilita">
+          <InternalIcon name="wallet" size={18} />
+          <strong>Contabilità</strong>
+          <span>Costi</span>
+        </a>
+        <a className="quick-action-card" href="#/dashboard/report">
+          <InternalIcon name="report" size={18} />
+          <strong>Report</strong>
+          <span>Riepilogo</span>
+        </a>
+      </div>
+    </SideContextPanel>
   )
 }
 
