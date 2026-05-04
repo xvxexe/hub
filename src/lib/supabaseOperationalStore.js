@@ -14,7 +14,8 @@ export async function fetchOperationalStore() {
   if (!isSupabaseConfigured) return { data: null, error: null, source: 'local' }
 
   try {
-    const [documents, movements, photos, notes, activities, deletedRecords] = await Promise.all([
+    const [cantieri, documents, movements, photos, notes, activities, deletedRecords] = await Promise.all([
+      supabaseRequest('cantieri?select=id,nome,metadata&order=created_at.asc', { method: 'GET' }),
       supabaseRequest('documents?select=*,cantieri(nome)&order=data_documento.desc.nullslast,created_at.desc', { method: 'GET' }),
       supabaseRequest('accounting_movements?select=*,cantieri(nome),documents(file_name,storage_path,tipo_documento,numero_documento)&order=data.desc.nullslast,created_at.desc', { method: 'GET' }),
       supabaseRequest('photos?select=*,cantieri(nome)&order=created_at.desc', { method: 'GET' }),
@@ -23,11 +24,12 @@ export async function fetchOperationalStore() {
       supabaseRequest('deleted_records?select=*&order=deleted_at.desc&limit=100', { method: 'GET' }),
     ])
 
-    const firstError = [documents, movements, photos, notes, activities, deletedRecords].find((result) => result.error)
+    const firstError = [cantieri, documents, movements, photos, notes, activities, deletedRecords].find((result) => result.error)
     if (firstError?.error) return { data: null, error: firstError.error, source: 'supabase-operational' }
 
     const documentRows = Array.isArray(documents.data) ? documents.data.map(fromDocumentRow) : []
     const movementRows = Array.isArray(movements.data) ? movements.data.map(fromAccountingMovementRow) : []
+    const officialSource = buildOfficialSourceFromCantieri(cantieri.data)
 
     const store = {
       ...EMPTY_OPERATIONAL_STORE,
@@ -37,6 +39,7 @@ export async function fetchOperationalStore() {
       notes: Array.isArray(notes.data) ? notes.data.map(fromNoteRow) : [],
       activities: Array.isArray(activities.data) ? activities.data.map(fromActivityRow) : [],
       deletedRecords: Array.isArray(deletedRecords.data) ? deletedRecords.data.map(fromDeletedRecordRow) : [],
+      source: officialSource,
     }
 
     return {
@@ -133,12 +136,39 @@ function buildCantieriRows(store) {
         indirizzo: null,
         stato: 'attivo',
         avanzamento: 0,
-        metadata: {},
+        metadata: buildCantiereMetadata(store, id),
         updated_at: new Date().toISOString(),
       })
     }
   })
   return [...map.values()]
+}
+
+function buildCantiereMetadata(store, cantiereId) {
+  const officialMaster = store?.source?.officialMaster ?? store?.source?.masterSummary ?? null
+  const source = store?.source ?? null
+
+  return {
+    ...(source ? { source } : {}),
+    ...(officialMaster ? { officialMaster } : {}),
+    cantiereId,
+    lastHubImportAt: new Date().toISOString(),
+  }
+}
+
+function buildOfficialSourceFromCantieri(rows) {
+  const row = Array.isArray(rows) ? rows.find((item) => item.metadata?.officialMaster || item.metadata?.source) : null
+  if (!row) return null
+  const metadata = row.metadata ?? {}
+  const source = metadata.source ?? null
+  const officialMaster = metadata.officialMaster ?? source?.officialMaster ?? source?.masterSummary ?? null
+
+  if (!source && !officialMaster) return null
+
+  return {
+    ...(source ?? {}),
+    ...(officialMaster ? { officialMaster } : {}),
+  }
 }
 
 function fromDocumentRow(row) {
