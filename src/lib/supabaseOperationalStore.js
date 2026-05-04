@@ -2,6 +2,7 @@ import { isSupabaseConfigured, supabaseRequest } from './supabaseClient'
 
 const EMPTY_OPERATIONAL_STORE = {
   documents: [],
+  movements: [],
   photos: [],
   estimates: [],
   notes: [],
@@ -12,19 +13,24 @@ export async function fetchOperationalStore() {
   if (!isSupabaseConfigured) return { data: null, error: null, source: 'local' }
 
   try {
-    const [documents, photos, notes, activities] = await Promise.all([
+    const [documents, movements, photos, notes, activities] = await Promise.all([
       supabaseRequest('documents?select=*,cantieri(nome)&order=data_documento.desc.nullslast,created_at.desc', { method: 'GET' }),
+      supabaseRequest('accounting_movements?select=*,cantieri(nome),documents(file_name,storage_path,tipo_documento,numero_documento)&order=data.desc.nullslast,created_at.desc', { method: 'GET' }),
       supabaseRequest('photos?select=*,cantieri(nome)&order=created_at.desc', { method: 'GET' }),
       supabaseRequest('notes?select=*&order=created_at.desc', { method: 'GET' }),
       supabaseRequest('activity_logs?select=*&order=created_at.desc&limit=100', { method: 'GET' }),
     ])
 
-    const firstError = [documents, photos, notes, activities].find((result) => result.error)
+    const firstError = [documents, movements, photos, notes, activities].find((result) => result.error)
     if (firstError?.error) return { data: null, error: firstError.error, source: 'supabase-operational' }
+
+    const documentRows = Array.isArray(documents.data) ? documents.data.map(fromDocumentRow) : []
+    const movementRows = Array.isArray(movements.data) ? movements.data.map(fromAccountingMovementRow) : []
 
     const store = {
       ...EMPTY_OPERATIONAL_STORE,
-      documents: Array.isArray(documents.data) ? documents.data.map(fromDocumentRow) : [],
+      documents: documentRows,
+      movements: movementRows.length ? movementRows : documentRows.map(documentToAccountingMovement),
       photos: Array.isArray(photos.data) ? photos.data.map(fromPhotoRow) : [],
       notes: Array.isArray(notes.data) ? notes.data.map(fromNoteRow) : [],
       activities: Array.isArray(activities.data) ? activities.data.map(fromActivityRow) : [],
@@ -47,10 +53,13 @@ export async function saveOperationalStore(store, session) {
   try {
     const cantieri = buildCantieriRows(store)
     const documents = store.documents.map((document) => toDocumentRow(document, session))
+    const movementsSource = Array.isArray(store.movements) && store.movements.length
+      ? store.movements
+      : store.documents.map(documentToAccountingMovement)
+    const movements = movementsSource.map((movement) => toAccountingMovementRow(movement, session))
     const photos = store.photos.map((photo) => toPhotoRow(photo, session))
     const notes = store.notes.map((note) => toNoteRow(note, session))
     const activities = store.activities.slice(0, 250).map((activity) => toActivityRow(activity, session))
-    const movements = store.documents.map((document) => toAccountingMovementRow(document, session))
 
     const orderedWrites = [
       ['cantieri', cantieri],
@@ -86,6 +95,7 @@ function upsertRows(table, rows) {
 function hasOperationalData(store) {
   return Boolean(
     store.documents.length
+      || store.movements.length
       || store.photos.length
       || store.notes.length
       || store.activities.length,
@@ -106,7 +116,7 @@ function isValidStoreShape(store) {
 
 function buildCantieriRows(store) {
   const map = new Map()
-  ;[...store.documents, ...store.photos].forEach((item) => {
+  ;[...store.documents, ...(store.movements ?? []), ...store.photos].forEach((item) => {
     const id = item.cantiereId ?? 'barcelo-roma'
     const nome = item.cantiere ?? 'Barcelò Roma'
     if (!id) return
@@ -184,6 +194,78 @@ function toDocumentRow(document, session) {
     source: document.source ?? 'hub-ui',
     uploaded_by: session?.authMode === 'supabase' ? session.id : null,
     updated_at: new Date().toISOString(),
+  }
+}
+
+function fromAccountingMovementRow(row) {
+  const linkedDocument = row.documents ?? {}
+  return {
+    id: row.id,
+    cantiereId: row.cantiere_id,
+    cantiere: row.cantieri?.nome ?? row.cantiere_id ?? 'Cantiere',
+    documentId: row.document_id,
+    data: row.data,
+    descrizione: row.descrizione,
+    fornitore: row.fornitore ?? 'Non indicato',
+    categoria: row.categoria ?? 'Extra / Altro',
+    tipoDocumento: linkedDocument.tipo_documento ?? 'Movimento',
+    numeroDocumento: linkedDocument.numero_documento ?? row.document_id ?? row.id,
+    imponibile: Number(row.imponibile || 0),
+    iva: Number(row.iva || 0),
+    totale: Number(row.totale || 0),
+    pagamento: row.pagamento ?? 'Non indicato',
+    statoVerifica: row.stato_verifica ?? 'Da verificare',
+    documentoCollegato: linkedDocument.file_name ?? linkedDocument.numero_documento ?? '',
+    fileName: linkedDocument.file_name,
+    storagePath: linkedDocument.storage_path,
+    storageBucket: linkedDocument.storage_path ? 'documents' : null,
+    note: row.note ?? '',
+    updatedAt: row.updated_at,
+  }
+}
+
+function toAccountingMovementRow(movement, session) {
+  return {
+    id: movement.id,
+    cantiere_id: movement.cantiereId ?? 'barcelo-roma',
+    document_id: movement.documentId || null,
+    data: movement.data || null,
+    descrizione: movement.descrizione ?? 'Movimento contabile',
+    fornitore: movement.fornitore ?? null,
+    categoria: movement.categoria ?? 'Extra / Altro',
+    imponibile: Number(movement.imponibile || 0),
+    iva: Number(movement.iva || 0),
+    totale: Number(movement.totale || 0),
+    pagamento: movement.pagamento ?? 'Non indicato',
+    stato_verifica: movement.statoVerifica ?? 'Da verificare',
+    note: movement.note ?? null,
+    created_by: session?.authMode === 'supabase' ? session.id : null,
+    updated_at: new Date().toISOString(),
+  }
+}
+
+function documentToAccountingMovement(document) {
+  return {
+    id: `movement-${document.id}`,
+    cantiereId: document.cantiereId ?? 'barcelo-roma',
+    cantiere: document.cantiere ?? 'Barcelò Roma',
+    documentId: document.id,
+    data: document.dataDocumento || null,
+    descrizione: document.descrizione ?? document.tipoDocumento ?? 'Documento',
+    fornitore: document.fornitore ?? 'Non indicato',
+    categoria: document.categoria ?? 'Extra / Altro',
+    tipoDocumento: document.tipoDocumento ?? 'Altro',
+    numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id,
+    imponibile: Number(document.imponibile || 0),
+    iva: Number(document.iva || 0),
+    totale: Number(document.totale || document.importoTotale || 0),
+    pagamento: document.pagamento ?? 'Non indicato',
+    statoVerifica: document.statoVerifica ?? titleStatus(document.stato) ?? 'Da verificare',
+    documentoCollegato: document.fileName ?? document.numeroDocumento ?? '',
+    fileName: document.fileName,
+    storagePath: document.storagePath,
+    storageBucket: document.storageBucket ?? 'documents',
+    note: document.notes ?? document.note ?? document.nota ?? '',
   }
 }
 
@@ -272,26 +354,6 @@ function toActivityRow(activity, session) {
     description: activity.description ?? activity.title ?? 'Azione hub',
     actor_id: session?.authMode === 'supabase' ? session.id : null,
     actor_name: activity.author ?? session?.name ?? 'Sistema',
-  }
-}
-
-function toAccountingMovementRow(document, session) {
-  return {
-    id: `movement-${document.id}`,
-    cantiere_id: document.cantiereId ?? 'barcelo-roma',
-    document_id: document.id,
-    data: document.dataDocumento || null,
-    descrizione: document.descrizione ?? document.tipoDocumento ?? 'Documento',
-    fornitore: document.fornitore ?? null,
-    categoria: document.categoria ?? 'Extra / Altro',
-    imponibile: Number(document.imponibile || 0),
-    iva: Number(document.iva || 0),
-    totale: Number(document.totale || document.importoTotale || 0),
-    pagamento: document.pagamento ?? 'Non indicato',
-    stato_verifica: document.statoVerifica ?? titleStatus(document.stato) ?? 'Da verificare',
-    note: document.notes ?? document.note ?? document.nota ?? null,
-    created_by: session?.authMode === 'supabase' ? session.id : null,
-    updated_at: new Date().toISOString(),
   }
 }
 
