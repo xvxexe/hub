@@ -43,6 +43,7 @@ import './styles/dashboard-typography.css'
 import './styles/dashboard-cost-summary.css'
 import './styles/dashboard-internal-unified.css'
 import './styles/dashboard-cantieri-redesign.css'
+import './styles/dashboard-cantiere-detail-redesign.css'
 
 function useHashPath() {
   const [path, setPath] = useState(() => normalizePath(window.location.hash))
