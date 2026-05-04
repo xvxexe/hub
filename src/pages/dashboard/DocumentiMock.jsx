@@ -1,7 +1,16 @@
 import { useMemo, useState } from 'react'
 import { EmptyState } from '../../components/EmptyState'
-import { AlertPanel, DashboardHeader, DataModeBadge, MockActionModal, StatCard } from '../../components/InternalComponents'
-import { InternalIcon } from '../../components/InternalIcons'
+import { DashboardHeader, DataModeBadge, MockActionModal } from '../../components/InternalComponents'
+import {
+  ActionList,
+  DataCardRow,
+  FilterGrid,
+  KpiCard,
+  KpiStrip,
+  MobileActionMenu,
+  SideContextPanel,
+  WorkspaceLayout,
+} from '../../components/InternalLayout'
 import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
 
@@ -53,6 +62,7 @@ export function DocumentiMock({ session, store }) {
   const verified = rows.filter((row) => ['Verificato', 'Confermato'].includes(row.statoVerifica))
   const incomplete = rows.filter((row) => row.statoVerifica === 'Incompleto')
   const duplicates = rows.filter((row) => row.statoVerifica === 'Possibile duplicato')
+  const mathWarnings = filteredRows.filter(hasAmountWarning).length
   const totalAmount = filteredRows.reduce((sum, row) => sum + Number(row.totale || 0), 0)
   const canEdit = session.role === 'admin' || session.role === 'accounting'
   const selectedDocument = filteredRows.find((row) => row.id === selectedId) ?? filteredRows[0] ?? rows[0]
@@ -61,6 +71,7 @@ export function DocumentiMock({ session, store }) {
   const currentPage = Math.min(page, totalPages)
   const pageStart = (currentPage - 1) * pageSize
   const paginatedRows = filteredRows.slice(pageStart, pageStart + pageSize)
+  const priorityRows = [...toCheck, ...incomplete, ...duplicates].slice(0, 8)
 
   function updateFilter(field, value) {
     setPage(1)
@@ -72,13 +83,13 @@ export function DocumentiMock({ session, store }) {
       <DashboardHeader
         eyebrow="Documenti reali"
         title="Centro documenti"
-        description="Dati letti da Supabase, importati da BARCELO_ROMA_master."
+        description="Dati letti da Supabase, importati da BARCELO_ROMA_master: verifica, duplicati e collegamento contabile nello stesso flusso."
       >
         <DataModeBadge>Dati reali Supabase</DataModeBadge>
-        <a className="button button-primary" href="#/dashboard/upload">Carica documento</a>
+        <a className="button button-primary button-small" href="#/dashboard/upload">Carica documento</a>
       </DashboardHeader>
 
-      <section className="cantieri-tools document-filters" aria-label="Filtri documenti">
+      <FilterGrid ariaLabel="Filtri documenti">
         <label className="accounting-search">
           Cerca
           <input
@@ -118,71 +129,65 @@ export function DocumentiMock({ session, store }) {
             <option value="incompleti">Incompleti</option>
           </select>
         </label>
-      </section>
+      </FilterGrid>
 
-      <section className="stats-grid hub-kpi-grid">
-        <StatCard icon="file" tone="amber" label="Da controllare" value={toCheck.length} hint="Dati reali" />
-        <StatCard icon="check" tone="green" label="Confermati" value={verified.length} hint="Dati reali" />
-        <StatCard icon="inbox" label="In attesa" value={incomplete.length} hint="Dati reali" />
-        <StatCard icon="warning" tone="red" label="Duplicati" value={duplicates.length} hint="Dati reali" />
-      </section>
+      <KpiStrip ariaLabel="Indicatori documenti">
+        <KpiCard icon="file" label="Documenti filtrati" value={filteredRows.length} hint={`${rows.length} totali`} />
+        <KpiCard icon="warning" tone="amber" label="Da controllare" value={toCheck.length} hint="Verifica aperta" />
+        <KpiCard icon="check" tone="green" label="Confermati" value={verified.length} hint="Dati reali" />
+        <KpiCard icon="warning" tone="red" label="Duplicati" value={duplicates.length} hint={`${incomplete.length} incompleti`} />
+      </KpiStrip>
+      <KpiStrip className="document-operational-kpis" ariaLabel="Indicatori economici documenti">
+        <KpiCard icon="wallet" tone="green" label="Totale filtrato" value={<MoneyValue value={totalAmount} />} hint="Somma documenti" />
+        <KpiCard icon="report" label="Tipi documento" value={tipiDocumento.length} hint="Classificazione" />
+        <KpiCard icon="building" tone="purple" label="Cantieri" value={cantieri.length} hint="Collegamenti" />
+        <KpiCard icon="warning" tone={mathWarnings ? 'amber' : 'green'} label="Controllo importi" value={mathWarnings} hint={mathWarnings ? 'Warning matematici' : 'Nessun errore'} />
+      </KpiStrip>
 
-      <AlertPanel
-        title="Documenti da controllare"
-        alerts={[...toCheck, ...incomplete, ...duplicates].slice(0, 8).map((row) => ({
-          id: row.id,
-          title: `${row.tipoDocumento}: ${row.descrizione}`,
-          meta: `${row.cantiere} · ${row.fornitore}`,
-          status: displayStatus(row.statoVerifica),
-          href: `#/dashboard/documenti/${row.id}`,
-        }))}
-      />
+      <DocumentPriorityPanel rows={priorityRows} />
 
-      <div className="document-center-layout document-page-fixed">
+      <WorkspaceLayout
+        className="documents-workspace"
+        sidebar={selectedDocument ? (
+          <DocumentPreviewPanel document={selectedDocument} canEdit={canEdit} store={store} />
+        ) : (
+          <SideContextPanel title="Anteprima documento" description="Seleziona un documento dalla lista per vedere dettagli e azioni." />
+        )}
+      >
         <section className="accounting-section document-table-panel document-list-panel">
           <div className="section-heading panel-title-row">
-            <h2>Tutti i documenti ({filteredRows.length})</h2>
+            <div>
+              <h2>Tutti i documenti ({filteredRows.length})</h2>
+              <p>Lista operativa compatta: documento, fornitore, cantiere, importo e stato sempre visibili.</p>
+            </div>
             <span className="data-mode-badge"><MoneyValue value={totalAmount} /></span>
           </div>
           {filteredRows.length > 0 ? (
             <>
               <div className="document-card-list">
                 {paginatedRows.map((row) => (
-                  <article
-                    className={`document-card-row ${selectedDocument?.id === row.id ? 'selected' : ''} ${hasAmountWarning(row) ? 'validation-warning-row' : ''}`}
+                  <DataCardRow
                     key={row.id}
-                  >
-                    <button className="document-card-main" type="button" onClick={() => setSelectedId(row.id)}>
-                      <div className="document-card-titleline">
-                        <strong>{row.numeroDocumento ?? row.fileName}</strong>
-                        <StatusBadge>{displayStatus(row.statoVerifica)}</StatusBadge>
-                      </div>
-                      <p>{row.descrizione}</p>
-                      <div className="document-card-meta">
-                        <span><b>Tipo</b>{row.tipoDocumento}</span>
-                        <span><b>Fornitore</b>{row.fornitore}</span>
-                        <span><b>Cantiere</b>{row.cantiere}</span>
-                        <span><b>Data</b>{formatDate(row.dataDocumento)}</span>
-                        <span><b>Importo</b><MoneyValue value={row.totale} /></span>
-                      </div>
-                    </button>
-                    <button
-                      className="row-menu document-card-menu"
-                      type="button"
-                      aria-label={`Azioni per ${row.numeroDocumento ?? row.fileName}`}
-                      onClick={() => {
-                        setSelectedId(row.id)
-                        setModalAction({
-                          icon: 'more',
-                          title: 'Azioni documento',
-                          text: `${row.numeroDocumento ?? row.fileName}: scegli un'azione rapida dal pannello laterale o apri il dettaglio completo.`,
-                          confirmLabel: 'Ok',
-                        })
-                      }}
-                    >
-                      <InternalIcon name="more" size={17} />
-                    </button>
-                  </article>
+                    icon={getDocumentIcon(row.tipoDocumento)}
+                    selected={selectedDocument?.id === row.id}
+                    warning={hasAmountWarning(row)}
+                    title={row.numeroDocumento ?? row.fileName}
+                    description={row.descrizione}
+                    status={hasAmountWarning(row) ? 'Totale da verificare' : displayStatus(row.statoVerifica)}
+                    meta={[
+                      { label: 'Tipo', value: row.tipoDocumento ?? '-' },
+                      { label: 'Fornitore', value: row.fornitore ?? '-' },
+                      { label: 'Cantiere', value: row.cantiere ?? '-' },
+                      { label: 'Data', value: formatDate(row.dataDocumento) },
+                      { label: 'Importo', value: <MoneyValue value={row.totale} /> },
+                    ]}
+                    action={(
+                      <ActionList>
+                        <button className="button button-secondary button-small" type="button" onClick={() => setSelectedId(row.id)}>Anteprima</button>
+                        <a className="button button-secondary button-small" href={`#/dashboard/documenti/${row.id}`}>Apri</a>
+                      </ActionList>
+                    )}
+                  />
                 ))}
               </div>
               <div className="pagination-bar">
@@ -209,20 +214,18 @@ export function DocumentiMock({ session, store }) {
             </EmptyState>
           )}
         </section>
-
-        {selectedDocument ? <DocumentPreviewPanel document={selectedDocument} canEdit={canEdit} store={store} /> : null}
-      </div>
+      </WorkspaceLayout>
 
       <div className="internal-two-column">
         <section className="internal-panel">
           <div className="section-heading panel-title-row"><h2>Righe Google Sheets importate</h2><a className="button button-secondary button-small" href="#/dashboard/contabilita">Vedi contabilità</a></div>
           <div className="compact-upload-list">
             {rows.slice(0, 5).map((row) => (
-              <article className="compact-upload-row" key={`recent-${row.id}`}>
+              <a className="compact-upload-row" href={`#/dashboard/documenti/${row.id}`} key={`recent-${row.id}`}>
                 <span className="file-chip file-pdf">TAB</span>
                 <div><strong>{row.numeroDocumento ?? row.descrizione}</strong><small>{row.cantiere}</small></div>
                 <StatusBadge>{displayStatus(row.statoVerifica)}</StatusBadge>
-              </article>
+              </a>
             ))}
           </div>
         </section>
@@ -246,17 +249,54 @@ export function DocumentiMock({ session, store }) {
   )
 }
 
+function DocumentPriorityPanel({ rows }) {
+  return (
+    <section className="accounting-section real-accounting-section">
+      <div className="section-heading panel-title-row">
+        <div>
+          <h2>Documenti da controllare</h2>
+          <p>Priorità generate dagli stati da verificare, incompleti o possibili duplicati.</p>
+        </div>
+        <StatusBadge>{rows.length ? `${rows.length} priorità` : 'Tutto ok'}</StatusBadge>
+      </div>
+      <div className="document-card-list">
+        {rows.length > 0 ? rows.map((row) => (
+          <DataCardRow
+            key={row.id}
+            icon="warning"
+            title={`${row.tipoDocumento}: ${row.descrizione}`}
+            description={`${row.cantiere} · ${row.fornitore}`}
+            status={displayStatus(row.statoVerifica)}
+            href={`#/dashboard/documenti/${row.id}`}
+            warning={row.statoVerifica !== 'Da verificare'}
+            meta={[
+              { label: 'Documento', value: row.numeroDocumento ?? row.fileName ?? '-' },
+              { label: 'Categoria', value: row.categoria ?? '-' },
+              { label: 'Totale', value: <MoneyValue value={row.totale} /> },
+            ]}
+          />
+        )) : <article className="accounting-alert"><strong>Nessuna priorità aperta</strong><small>I documenti filtrati non richiedono controlli immediati.</small></article>}
+      </div>
+    </section>
+  )
+}
+
 function DocumentPreviewPanel({ document, canEdit, store }) {
   const [modalAction, setModalAction] = useState(null)
+  const warning = hasAmountWarning(document)
 
   return (
-    <aside className="document-preview-panel">
-      <div className="section-heading panel-title-row">
-        <h2>Anteprima documento</h2>
-        <a className="text-link" href={`#/dashboard/documenti/${document.id}`}>Apri</a>
-      </div>
+    <SideContextPanel
+      className="document-preview-panel"
+      title="Anteprima documento"
+      description="Dati estratti e azioni rapide collegate al documento selezionato."
+      action={<a className="button button-secondary button-small" href={`#/dashboard/documenti/${document.id}`}>Apri</a>}
+    >
       <div className="document-preview-sheet">
-        <strong>{document.tipoDocumento}</strong>
+        <div className="recent-upload-title">
+          <strong>{document.tipoDocumento}</strong>
+          <StatusBadge>{warning ? 'Totale da verificare' : displayStatus(document.statoVerifica)}</StatusBadge>
+        </div>
         <span>n. {document.numeroDocumento ?? document.id} del {formatDate(document.dataDocumento)}</span>
         <div className="invoice-lines">
           <span>Descrizione</span><span>Q.ta</span><span>Importo</span>
@@ -270,8 +310,10 @@ function DocumentPreviewPanel({ document, canEdit, store }) {
           <div><dt>Cantiere</dt><dd>{document.cantiere}</dd></div>
           <div><dt>Data documento</dt><dd>{formatDate(document.dataDocumento)}</dd></div>
           <div><dt>Numero</dt><dd>{document.numeroDocumento ?? '-'}</dd></div>
-          <div><dt>Importo totale</dt><dd><MoneyValue value={document.totale} /></dd></div>
+          <div><dt>Imponibile</dt><dd><MoneyValue value={document.imponibile} /></dd></div>
           <div><dt>IVA</dt><dd><MoneyValue value={document.iva} /></dd></div>
+          <div><dt>Totale</dt><dd><MoneyValue value={document.totale} /></dd></div>
+          <div><dt>Categoria</dt><dd>{document.categoria ?? '-'}</dd></div>
         </dl>
       </section>
       <section className="document-actions-panel">
@@ -292,9 +334,12 @@ function DocumentPreviewPanel({ document, canEdit, store }) {
         >
           Assegna tab
         </button>
+        <MobileActionMenu label="Altre azioni">
+          <a className="button button-secondary" href={`#/dashboard/documenti/${document.id}`}>Apri dettaglio completo</a>
+        </MobileActionMenu>
       </section>
       <MockActionModal action={modalAction} onClose={() => setModalAction(null)} />
-    </aside>
+    </SideContextPanel>
   )
 }
 
@@ -317,6 +362,13 @@ function displayStatus(status) {
   if (status === 'Da verificare') return 'Da controllare'
   if (status === 'Incompleto') return 'In attesa'
   return status
+}
+
+function getDocumentIcon(tipoDocumento) {
+  if (tipoDocumento === 'Bonifico') return 'wallet'
+  if (tipoDocumento === 'Preventivo') return 'estimate'
+  if (tipoDocumento === 'FIR') return 'warning'
+  return 'file'
 }
 
 function hasAmountWarning(row) {
