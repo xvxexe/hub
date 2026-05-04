@@ -1,0 +1,220 @@
+/* Documenti dashboard redesign: CSS-only safe layer. */
+.dashboard-main > .document-filters,
+.dashboard-main > .document-center-layout,
+.dashboard-main > .internal-two-column {
+  width: var(--internal-page-width, min(100% - 2rem, 1180px));
+  margin-inline: auto;
+}
+
+.dashboard-main > .document-filters {
+  grid-template-columns: minmax(18rem, 1.1fr) repeat(4, minmax(10rem, .7fr));
+  align-items: end;
+  gap: .58rem;
+  margin-top: var(--internal-gap, 1rem);
+  background:
+    radial-gradient(circle at 4% 0%, rgba(37, 99, 235, .08), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(249,252,255,.94));
+}
+
+.dashboard-main > .document-filters::before {
+  content: 'Centro comando documenti';
+  align-self: center;
+  color: var(--dash-title, #17212b);
+  font-size: 1.02rem;
+  font-weight: 780;
+  letter-spacing: -.035em;
+}
+
+.dashboard-main > .document-filters .accounting-search {
+  grid-column: span 2;
+}
+
+.dashboard-main .document-page-fixed {
+  grid-template-columns: minmax(0, 1.15fr) minmax(20rem, .62fr);
+  gap: var(--internal-gap, 1rem);
+  align-items: start;
+}
+
+.dashboard-main .document-list-panel,
+.dashboard-main .document-preview-panel,
+.dashboard-main .document-table-panel,
+.dashboard-main > .internal-two-column > .internal-panel {
+  border: 1px solid var(--internal-border, rgba(214, 224, 232, .92));
+  border-radius: var(--internal-radius, 1rem);
+  background: var(--internal-card-bg, rgba(255,255,255,.94));
+  box-shadow: var(--internal-shadow, 0 14px 36px rgba(15,23,42,.055));
+  padding: var(--internal-panel-pad, 1rem);
+}
+
+.dashboard-main .document-preview-panel {
+  position: sticky;
+  top: 5.75rem;
+  display: grid;
+  gap: .65rem;
+}
+
+.dashboard-main .document-card-list {
+  display: grid;
+  gap: .48rem;
+}
+
+.dashboard-main .document-card-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .6rem;
+  min-height: 4.6rem;
+  padding: .58rem;
+  border-radius: .86rem;
+}
+
+.dashboard-main .document-card-row:hover,
+.dashboard-main .document-card-row.selected {
+  border-color: rgba(37, 99, 235, .32);
+  background: rgba(239, 246, 255, .78);
+  box-shadow: var(--internal-shadow-hover, 0 18px 42px rgba(37,99,235,.085));
+  transform: translateY(-1px);
+}
+
+.dashboard-main .document-card-row.validation-warning-row {
+  border-color: rgba(245, 158, 11, .45);
+  background: rgba(255, 251, 235, .88);
+}
+
+.dashboard-main .document-card-main {
+  display: grid;
+  gap: .36rem;
+}
+
+.dashboard-main .document-card-titleline strong {
+  color: var(--dash-title, #17212b);
+  font-size: .92rem;
+  font-weight: 740;
+  letter-spacing: -.018em;
+}
+
+.dashboard-main .document-card-main p {
+  overflow: hidden;
+  color: var(--dash-muted, #6f7b85);
+  font-size: .78rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-main .document-card-meta {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .35rem;
+}
+
+.dashboard-main .document-card-meta span {
+  display: grid;
+  gap: .08rem;
+  min-width: 0;
+  padding: .36rem .42rem;
+  border-radius: .62rem;
+  background: #fff;
+  color: var(--dash-title, #17212b);
+  font-size: .78rem;
+  font-weight: 680;
+}
+
+.dashboard-main .document-card-meta b {
+  color: var(--dash-subtle, #94a0a8);
+  font-size: .61rem;
+  font-weight: 760;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+
+.dashboard-main .document-card-menu {
+  width: 2.3rem;
+  height: 2.3rem;
+}
+
+.dashboard-main .document-preview-sheet,
+.dashboard-main .extracted-data,
+.dashboard-main .document-actions-panel {
+  border: 1px solid rgba(224, 231, 235, .92);
+  border-radius: .86rem;
+  background: #fff;
+  padding: .72rem;
+}
+
+.dashboard-main .document-preview-sheet > strong {
+  color: var(--dash-title, #17212b);
+  font-size: 1rem;
+  font-weight: 780;
+}
+
+.dashboard-main .document-preview-sheet > span {
+  color: var(--dash-muted, #6f7b85);
+  font-size: .76rem;
+}
+
+.dashboard-main .invoice-lines {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: .42rem .65rem;
+  background: rgba(248, 250, 252, .86);
+}
+
+.dashboard-main .document-actions-panel .button {
+  width: 100%;
+  min-height: 2.35rem;
+}
+
+.dashboard-main .compact-upload-row,
+.dashboard-main .activity-item {
+  min-height: 2.85rem;
+  border-radius: .78rem;
+  background: rgba(248,250,252,.82);
+}
+
+@media (max-width: 1180px) {
+  .dashboard-main > .document-filters,
+  .dashboard-main .document-page-fixed,
+  .dashboard-main > .internal-two-column {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-main .document-preview-panel {
+    position: static;
+  }
+  .dashboard-main > .document-filters .accounting-search {
+    grid-column: auto;
+  }
+  .dashboard-main > .document-filters::before {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard-main > .document-filters,
+  .dashboard-main > .document-center-layout,
+  .dashboard-main > .internal-two-column {
+    width: 100%;
+    padding-inline: .72rem;
+  }
+  .dashboard-main .document-list-panel,
+  .dashboard-main .document-preview-panel,
+  .dashboard-main .document-table-panel,
+  .dashboard-main > .internal-two-column > .internal-panel {
+    border-radius: .95rem;
+    padding: .72rem;
+  }
+  .dashboard-main .document-card-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-main .document-card-menu {
+    justify-self: start;
+  }
+  .dashboard-main .document-card-meta,
+  .dashboard-main .invoice-lines {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-main .document-card-meta,
+  .dashboard-main .invoice-lines {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
