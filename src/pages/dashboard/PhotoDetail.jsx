@@ -8,10 +8,13 @@ import { formatDate } from '../../data/mockCantieri'
 export function PhotoDetail({ photoId, session, store }) {
   const photo = store.photos.find((item) => item.id === photoId)
   const canPublish = session.role === 'admin'
+  const canDelete = canPublish || (session.role === 'employee' && photo?.caricatoDa === session.name)
   const canEditOwnNote = session.role === 'employee' && photo?.caricatoDa === session.name && photo?.stato === 'Da revisionare'
   const canAddNote = canPublish || canEditOwnNote
   const backHref = session.role === 'employee' ? '#/dashboard/caricamenti' : '#/dashboard/foto'
   const [form, setForm] = useState(photo ?? {})
+  const [deleteStatus, setDeleteStatus] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   if (!photo || (session.role === 'employee' && photo.caricatoDa !== session.name)) {
     return (
@@ -35,6 +38,23 @@ export function PhotoDetail({ photoId, session, store }) {
     store.updatePhotoData(photo.id, form)
   }
 
+  async function deletePhoto() {
+    setDeleteStatus(null)
+    const confirmed = window.confirm('Eliminare definitivamente questa foto, il file allegato, note e log collegati?')
+    if (!confirmed) return
+
+    setIsDeleting(true)
+    const result = await store.deletePhoto(photo.id)
+    setIsDeleting(false)
+
+    if (!result.ok) {
+      setDeleteStatus({ type: 'error', message: result.error })
+      return
+    }
+
+    window.location.hash = backHref
+  }
+
   return (
     <>
       <DashboardHeader eyebrow="Dettaglio foto" title={`${photo.cantiere} · ${photo.zona}`} description="Revisione foto, file reale, pubblicabilità e note operative.">
@@ -53,7 +73,12 @@ export function PhotoDetail({ photoId, session, store }) {
             <button className="button button-secondary" type="button" onClick={() => store.updatePhotoStatus(photo.id, 'Pubblicata')}>Pubblica</button>
           </>
         ) : null}
+        {canDelete ? <button className="button button-danger" type="button" disabled={isDeleting} onClick={deletePhoto}>{isDeleting ? 'Elimino...' : 'Elimina'}</button> : null}
       </section>
+
+      {deleteStatus?.type === 'error' ? (
+        <section className="validation-alert-block"><strong>Eliminazione non riuscita</strong><p>{deleteStatus.message}</p></section>
+      ) : null}
 
       <section className="detail-layout internal-padded">
         <article className="info-card">
