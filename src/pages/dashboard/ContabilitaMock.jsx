@@ -9,6 +9,7 @@ import {
 } from '../../components/InternalLayout'
 import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
+import { findDuplicateMovements, hasAmountWarning } from '../../lib/accountingChecks'
 
 const defaultCategories = ['Materiali', 'Manodopera', 'Non materiali', 'Extra / Altro', 'Vitto', 'Alloggi', 'FIR / Rifiuti', 'Bonifici / Pagamenti', 'Noleggi / Servizi']
 const defaultStatuses = ['Da verificare', 'Confermato', 'Incompleto', 'Possibile duplicato', 'Scartato']
@@ -28,6 +29,7 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
     const movements = Array.isArray(store?.movements) ? store.movements : []
     return movements.length ? movements.map(normalizeAccountingRow) : documents.map(documentToAccountingRow)
   }, [documents, store?.movements])
+  const duplicateIds = useMemo(() => buildDuplicateIdSet(sourceRows), [sourceRows])
   const sites = useMemo(() => buildSiteOptions(sourceRows), [sourceRows])
   const categories = useMemo(() => buildUniqueOptions(sourceRows, 'categoria', defaultCategories), [sourceRows])
   const statuses = useMemo(() => buildUniqueOptions(sourceRows, 'statoVerifica', defaultStatuses), [sourceRows])
@@ -51,10 +53,10 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
     })
   }, [filters, sourceRows])
 
-  const totals = getAccountingTotals(filteredRows)
-  const siteSummaries = getSiteAccountingSummaries(filteredRows)
+  const totals = getAccountingTotals(filteredRows, duplicateIds)
+  const siteSummaries = getSiteAccountingSummaries(filteredRows, duplicateIds)
   const categoryTotals = getCategoryTotals(filteredRows)
-  const alerts = getAccountingAlerts(filteredRows)
+  const alerts = getAccountingAlerts(filteredRows, duplicateIds)
   const mathWarnings = filteredRows.filter(hasAmountWarning).length
 
   function updateFilter(field, value) {
@@ -79,7 +81,7 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
       <AccountingFilters filters={filters} onChange={updateFilter} sites={sites} categories={categories} statuses={statuses} docTypes={docTypes} />
       <AccountingSummaryCards totals={totals} rowsCount={filteredRows.length} mathWarnings={mathWarnings} />
       <AccountingAlerts alerts={alerts} />
-      <AccountingTable rows={filteredRows} />
+      <AccountingTable rows={filteredRows} duplicateIds={duplicateIds} />
       <CantiereAccountingSummary summaries={siteSummaries} />
       <CategoryBreakdown rows={categoryTotals} total={totals.totale} />
     </>
@@ -220,6 +222,8 @@ function normalizeAccountingRow(row) {
     pagamento: row.pagamento ?? 'Non indicato',
     statoVerifica: row.statoVerifica ?? 'Da verificare',
     documentoCollegato: row.documentoCollegato ?? row.fileName ?? '',
+    fileName: row.fileName,
+    storagePath: row.storagePath,
     note: row.notes ?? row.note ?? '',
   }
 }
@@ -242,6 +246,8 @@ function documentToAccountingRow(document) {
     pagamento: document.pagamento ?? 'Non indicato',
     statoVerifica: document.statoVerifica ?? 'Da verificare',
     documentoCollegato: document.fileName,
+    fileName: document.fileName,
+    storagePath: document.storagePath,
     note: document.notes ?? document.note ?? '',
   })
 }
@@ -282,29 +288,29 @@ function AccountingAlerts({ alerts }) {
     <section className="accounting-section real-accounting-section">
       <div className="section-heading panel-title-row"><div><h2>Controlli contabili</h2><p>Alert calcolati sui dati reali filtrati.</p></div><StatusBadge>{alerts.length ? `${alerts.length} alert` : 'Tutto ok'}</StatusBadge></div>
       <div className="document-card-list">
-        {alerts.length > 0 ? alerts.map((alert) => <DataCardRow key={alert.id} icon={alert.message === 'Duplicato' ? 'warning' : 'file'} title={alert.movimento.descrizione} description={`${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`} status={alert.message} href={`#/dashboard/contabilita/${alert.movimento.id}`} warning={alert.message !== 'Da controllare'} meta={[{ label: 'Categoria', value: alert.movimento.categoria }, { label: 'Totale', value: <MoneyValue value={alert.movimento.totale} /> }, { label: 'Pagamento', value: alert.movimento.pagamento }]} />) : <article className="accounting-alert"><strong>Nessun alert sui filtri attuali</strong><small>I movimenti selezionati non hanno controlli aperti.</small></article>}
+        {alerts.length > 0 ? alerts.map((alert) => <DataCardRow key={alert.id} icon={alert.message === 'Duplicato reale' || alert.message === 'Duplicato' ? 'warning' : 'file'} title={alert.movimento.descrizione} description={`${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`} status={alert.message} href={`#/dashboard/contabilita/${alert.movimento.id}`} warning={alert.message !== 'Da controllare'} meta={[{ label: 'Categoria', value: alert.movimento.categoria }, { label: 'Totale', value: <MoneyValue value={alert.movimento.totale} /> }, { label: 'Pagamento', value: alert.movimento.pagamento }]} />) : <article className="accounting-alert"><strong>Nessun alert sui filtri attuali</strong><small>I movimenti selezionati non hanno controlli aperti.</small></article>}
       </div>
     </section>
   )
 }
 
-function AccountingTable({ rows }) {
+function AccountingTable({ rows, duplicateIds }) {
   return (
     <section className="accounting-section real-accounting-section">
       <div className="section-heading panel-title-row"><div><h2>Movimenti</h2><p>Tabella desktop con importi, IVA, documento collegato e stato verifica. Su mobile diventa card.</p></div><StatusBadge>{rows.length} righe</StatusBadge></div>
       {rows.length > 0 ? (
         <>
-          <div className="accounting-table-wrap"><table className="accounting-table real-accounting-table"><thead><tr><th>Data</th><th>Descrizione</th><th>Fornitore</th><th>Categoria</th><th>Imponibile</th><th>IVA</th><th>Totale</th><th>Pagamento</th><th>Documento collegato</th><th>Stato</th><th>Note</th><th>Azione</th></tr></thead><tbody>{rows.map((row) => { const warning = hasAmountWarning(row); return <tr className={warning ? 'accounting-warning-row' : undefined} key={row.id}><td>{formatDate(row.data)}</td><td>{row.descrizione}</td><td>{row.fornitore}</td><td>{row.categoria}</td><td><MoneyValue value={row.imponibile} /></td><td><MoneyValue value={row.iva} /></td><td><MoneyValue value={row.totale} /></td><td>{row.pagamento}</td><td>{row.documentoCollegato || 'Da collegare'}</td><td><StatusBadge>{warning ? 'Totale da verificare' : row.statoVerifica}</StatusBadge></td><td>{row.note}</td><td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td></tr> })}</tbody></table></div>
-          <div className="accounting-mobile-list">{rows.map((row) => <AccountingMobileCard key={row.id} row={row} />)}</div>
+          <div className="accounting-table-wrap"><table className="accounting-table real-accounting-table"><thead><tr><th>Data</th><th>Descrizione</th><th>Fornitore</th><th>Categoria</th><th>Imponibile</th><th>IVA</th><th>Totale</th><th>Pagamento</th><th>Documento collegato</th><th>Stato</th><th>Note</th><th>Azione</th></tr></thead><tbody>{rows.map((row) => { const warning = hasAmountWarning(row); const duplicate = duplicateIds.has(row.id); return <tr className={warning || duplicate ? 'accounting-warning-row' : undefined} key={row.id}><td>{formatDate(row.data)}</td><td>{row.descrizione}</td><td>{row.fornitore}</td><td>{row.categoria}</td><td><MoneyValue value={row.imponibile} /></td><td><MoneyValue value={row.iva} /></td><td><MoneyValue value={row.totale} /></td><td>{row.pagamento}</td><td>{row.documentoCollegato || 'Da collegare'}</td><td><StatusBadge>{warning ? 'Totale da verificare' : duplicate ? 'Possibile duplicato' : row.statoVerifica}</StatusBadge></td><td>{row.note}</td><td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td></tr> })}</tbody></table></div>
+          <div className="accounting-mobile-list">{rows.map((row) => <AccountingMobileCard key={row.id} row={row} duplicate={duplicateIds.has(row.id)} />)}</div>
         </>
       ) : <EmptyState title="Nessun movimento trovato">Modifica filtri, cantiere o ricerca per visualizzare altri movimenti contabili.</EmptyState>}
     </section>
   )
 }
 
-function AccountingMobileCard({ row }) {
+function AccountingMobileCard({ row, duplicate }) {
   const warning = hasAmountWarning(row)
-  return <DataCardRow className="accounting-mobile-card" icon={warning ? 'warning' : 'wallet'} title={row.descrizione} description={`${row.fornitore} · ${row.categoria}`} status={warning ? 'Totale da verificare' : row.statoVerifica} href={`#/dashboard/contabilita/${row.id}`} warning={warning} meta={[{ label: 'Data', value: formatDate(row.data) }, { label: 'Imponibile', value: <MoneyValue value={row.imponibile} /> }, { label: 'IVA', value: <MoneyValue value={row.iva} /> }, { label: 'Totale', value: <MoneyValue value={row.totale} /> }, { label: 'Pagamento', value: row.pagamento }, { label: 'Documento', value: row.documentoCollegato || 'Da collegare' }]}><small>{row.numeroDocumento} · {row.note}</small></DataCardRow>
+  return <DataCardRow className="accounting-mobile-card" icon={warning || duplicate ? 'warning' : 'wallet'} title={row.descrizione} description={`${row.fornitore} · ${row.categoria}`} status={warning ? 'Totale da verificare' : duplicate ? 'Possibile duplicato' : row.statoVerifica} href={`#/dashboard/contabilita/${row.id}`} warning={warning || duplicate} meta={[{ label: 'Data', value: formatDate(row.data) }, { label: 'Imponibile', value: <MoneyValue value={row.imponibile} /> }, { label: 'IVA', value: <MoneyValue value={row.iva} /> }, { label: 'Totale', value: <MoneyValue value={row.totale} /> }, { label: 'Pagamento', value: row.pagamento }, { label: 'Documento', value: row.documentoCollegato || 'Da collegare' }]}><small>{row.numeroDocumento} · {row.note}</small></DataCardRow>
 }
 
 function CantiereAccountingSummary({ summaries }) {
@@ -317,12 +323,12 @@ function CategoryBreakdown({ rows, total, compact = false }) {
   return <section className={compact ? 'category-breakdown compact-breakdown compact-category-card' : 'accounting-section real-accounting-section compact-category-card'}>{!compact ? <div className="section-heading panel-title-row"><div><h2>Spese per categoria</h2><p>Distribuzione dei costi per categoria contabile standard.</p></div><StatusBadge>{visibleRows.length} categorie</StatusBadge></div> : null}<div className="compact-category-grid">{visibleRows.map((row) => { const percent = total > 0 ? Math.round((row.totale / total) * 100) : 0; const width = Math.max(6, Math.round((row.totale / max) * 100)); return <article className="compact-category-item" key={row.categoria}><div className="compact-category-top"><strong>{row.categoria}</strong><span><MoneyValue value={row.totale} /></span></div><div className="compact-category-bar"><span style={{ width: `${width}%` }} /></div><small>{percent}% del totale</small></article> })}</div></section>
 }
 
-function getAccountingTotals(rows) {
-  return rows.reduce((acc, row) => ({ imponibile: acc.imponibile + row.imponibile, iva: acc.iva + row.iva, totale: acc.totale + row.totale, daVerificare: acc.daVerificare + (row.statoVerifica === 'Da verificare' ? 1 : 0), duplicati: acc.duplicati + (row.statoVerifica === 'Possibile duplicato' ? 1 : 0), pagamenti: acc.pagamenti + (row.categoria === 'Bonifici / Pagamenti' || String(row.pagamento).toLowerCase().includes('bonifico') ? row.totale : 0) }), { imponibile: 0, iva: 0, totale: 0, daVerificare: 0, duplicati: 0, pagamenti: 0 })
+function getAccountingTotals(rows, duplicateIds) {
+  return rows.reduce((acc, row) => ({ imponibile: acc.imponibile + row.imponibile, iva: acc.iva + row.iva, totale: acc.totale + row.totale, daVerificare: acc.daVerificare + (row.statoVerifica === 'Da verificare' ? 1 : 0), duplicati: acc.duplicati + ((row.statoVerifica === 'Possibile duplicato' || duplicateIds.has(row.id)) ? 1 : 0), pagamenti: acc.pagamenti + (row.categoria === 'Bonifici / Pagamenti' || String(row.pagamento).toLowerCase().includes('bonifico') ? row.totale : 0) }), { imponibile: 0, iva: 0, totale: 0, daVerificare: 0, duplicati: 0, pagamenti: 0 })
 }
 
-function getSiteAccountingSummaries(rows) {
-  return buildSiteOptions(rows).map((cantiere) => { const movimenti = rows.filter((row) => row.cantiereId === cantiere.id); const totals = getAccountingTotals(movimenti); const categories = getCategoryTotals(movimenti); return { cantiere, movimenti, totals, categories } })
+function getSiteAccountingSummaries(rows, duplicateIds) {
+  return buildSiteOptions(rows).map((cantiere) => { const movimenti = rows.filter((row) => row.cantiereId === cantiere.id); const totals = getAccountingTotals(movimenti, duplicateIds); const categories = getCategoryTotals(movimenti); return { cantiere, movimenti, totals, categories } })
 }
 
 function getCategoryTotals(rows) {
@@ -330,14 +336,17 @@ function getCategoryTotals(rows) {
   return Object.entries(grouped).map(([categoria, totale]) => ({ categoria, totale })).sort((a, b) => b.totale - a.totale)
 }
 
-function getAccountingAlerts(rows) {
-  return rows.flatMap((row) => { const alerts = []; if (row.statoVerifica === 'Da verificare') alerts.push({ id: `${row.id}-check`, message: 'Da controllare', movimento: row }); if (row.statoVerifica === 'Possibile duplicato') alerts.push({ id: `${row.id}-duplicate`, message: 'Duplicato', movimento: row }); if (row.statoVerifica === 'Incompleto') alerts.push({ id: `${row.id}-incomplete`, message: 'Incompleto', movimento: row }); if (!row.documentId && !row.documentoCollegato) alerts.push({ id: `${row.id}-link`, message: 'Documento da collegare', movimento: row }); if (hasAmountWarning(row)) alerts.push({ id: `${row.id}-math`, message: 'Totale da verificare', movimento: row }); return alerts })
+function getAccountingAlerts(rows, duplicateIds) {
+  return rows.flatMap((row) => { const alerts = []; if (row.statoVerifica === 'Da verificare') alerts.push({ id: `${row.id}-check`, message: 'Da controllare', movimento: row }); if (row.statoVerifica === 'Possibile duplicato') alerts.push({ id: `${row.id}-duplicate`, message: 'Duplicato', movimento: row }); if (duplicateIds.has(row.id)) alerts.push({ id: `${row.id}-auto-duplicate`, message: 'Duplicato reale', movimento: row }); if (row.statoVerifica === 'Incompleto') alerts.push({ id: `${row.id}-incomplete`, message: 'Incompleto', movimento: row }); if (!row.documentId && !row.documentoCollegato) alerts.push({ id: `${row.id}-link`, message: 'Documento da collegare', movimento: row }); if (hasAmountWarning(row)) alerts.push({ id: `${row.id}-math`, message: 'Totale da verificare', movimento: row }); return alerts })
 }
 
-function hasAmountWarning(row) {
-  if (row.tipoDocumento === 'Bonifico') return false
-  if (!row.imponibile && !row.iva) return false
-  return Math.abs((row.imponibile + row.iva) - row.totale) > 0.01
+function buildDuplicateIdSet(rows) {
+  const duplicates = new Set()
+  rows.forEach((row) => {
+    const matches = findDuplicateMovements(row, rows)
+    if (matches.length) duplicates.add(row.id)
+  })
+  return duplicates
 }
 
 function buildSiteOptions(rows) {
