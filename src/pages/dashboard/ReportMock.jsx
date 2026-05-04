@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react'
-import { DashboardHeader, DataModeBadge, MockActionModal, StatCard } from '../../components/InternalComponents'
+import { DashboardHeader, DataModeBadge, MockActionModal } from '../../components/InternalComponents'
+import {
+  DataCardRow,
+  KpiCard,
+  KpiStrip,
+  SideContextPanel,
+  WorkspaceLayout,
+} from '../../components/InternalLayout'
 import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
 import { StatusBadge } from '../../components/StatusBadge'
@@ -16,17 +23,18 @@ export function ReportMock({ documents = [] }) {
   }), { imponibile: 0, iva: 0, totale: 0 })
   const pending = rows.filter((row) => ['Da verificare', 'Incompleto', 'Possibile duplicato'].includes(row.statoVerifica))
   const payments = rows.filter((row) => row.pagamento?.toLowerCase().includes('bonifico') || row.categoria?.toLowerCase().includes('bonifici'))
+  const summary = buildBossSummary({ rows, sites, totals, pending, payments, categoryTotals })
 
   return (
     <>
       <DashboardHeader
         eyebrow="Report reale"
         title="Report"
-        description="Riepilogo generato dai dati Supabase importati da BARCELO_ROMA_master."
+        description="Riepilogo direzionale dai dati Supabase importati da BARCELO_ROMA_master: costi, criticità, pagamenti e categorie."
       >
         <DataModeBadge>Dati reali Supabase</DataModeBadge>
         <button
-          className="button button-primary"
+          className="button button-primary button-small"
           type="button"
           onClick={() => setModalAction({
             icon: 'report',
@@ -39,68 +47,186 @@ export function ReportMock({ documents = [] }) {
         </button>
       </DashboardHeader>
 
-      <section className="stats-grid hub-kpi-grid">
-        <StatCard icon="building" label="Cantieri" value={sites.length} />
-        <StatCard icon="report" label="Righe importate" value={rows.length} />
-        <StatCard icon="wallet" tone="green" label="Imponibile" value={<MoneyValue value={totals.imponibile} />} />
-        <StatCard icon="file" tone="amber" label="Totale spese" value={<MoneyValue value={totals.totale} />} />
+      <KpiStrip ariaLabel="Indicatori report">
+        <KpiCard icon="building" label="Cantieri" value={sites.length} hint="Nel master" />
+        <KpiCard icon="report" label="Righe importate" value={rows.length} hint="Movimenti" />
+        <KpiCard icon="wallet" tone="green" label="Imponibile" value={<MoneyValue value={totals.imponibile} />} hint="Totale netto" />
+        <KpiCard icon="file" tone="amber" label="Totale spese" value={<MoneyValue value={totals.totale} />} hint="IVA inclusa" />
+      </KpiStrip>
+
+      <section className="internal-panel">
+        <div className="section-heading panel-title-row">
+          <div>
+            <h2>Sintesi capo</h2>
+            <p>Le informazioni più importanti prima dei dettagli: totale, problemi aperti e pagamenti da collegare.</p>
+          </div>
+          <StatusBadge>{pending.length ? `${pending.length} verifiche` : 'Tutto ok'}</StatusBadge>
+        </div>
+        <div className="document-card-list">
+          {summary.map((item) => (
+            <DataCardRow
+              key={item.title}
+              icon={item.icon}
+              title={item.title}
+              description={item.description}
+              status={item.status}
+              meta={item.meta}
+              href={item.href}
+              warning={item.warning}
+            />
+          ))}
+        </div>
       </section>
 
-      <div className="internal-two-column">
+      <WorkspaceLayout
+        className="report-workspace"
+        sidebar={(
+          <>
+            <CategoryPanel categoryTotals={categoryTotals} />
+            <PaymentsPanel rows={payments.length ? payments : rows} />
+          </>
+        )}
+      >
         <section className="internal-panel">
-          <div className="section-heading panel-title-row"><h2>Andamento cantieri</h2></div>
+          <div className="section-heading panel-title-row">
+            <div>
+              <h2>Andamento cantieri</h2>
+              <p>Confronto rapido tra cantieri in base al totale registrato.</p>
+            </div>
+            <StatusBadge>{sites.length} cantieri</StatusBadge>
+          </div>
           <div className="site-progress-list">
-            {sites.map((cantiere) => (
+            {sites.length > 0 ? sites.map((cantiere) => (
               <article className="site-progress-row" key={cantiere.id}>
-                <div><strong>{cantiere.nome}</strong><small>{cantiere.localita}</small></div>
+                <div>
+                  <strong>{cantiere.nome}</strong>
+                  <small>{cantiere.localita} · <MoneyValue value={cantiere.totale} /></small>
+                </div>
                 <ProgressBar value={cantiere.avanzamento} />
                 <StatusBadge>In corso</StatusBadge>
               </article>
-            ))}
+            )) : <p>Nessun cantiere nei dati importati.</p>}
           </div>
         </section>
 
         <section className="internal-panel">
-          <div className="section-heading panel-title-row"><h2>Riepilogo costi</h2></div>
-          <div className="cost-legend report-cost-list">
-            {categoryTotals.map((item) => (
-              <div key={item.categoria}>
-                <span />
-                <strong>{item.categoria}</strong>
-                <small><MoneyValue value={item.totale} /> · {item.percent}%</small>
-              </div>
-            ))}
+          <div className="section-heading panel-title-row">
+            <div>
+              <h2>Verifiche in attesa</h2>
+              <p>Documenti che richiedono controllo prima del riepilogo definitivo.</p>
+            </div>
+            <a className="button button-secondary button-small" href="#/dashboard/documenti">Documenti</a>
           </div>
-        </section>
-      </div>
-
-      <div className="internal-two-column">
-        <section className="internal-panel">
-          <div className="section-heading panel-title-row"><h2>Verifiche in attesa</h2></div>
-          <div className="activity-feed">
+          <div className="document-card-list">
             {pending.length > 0 ? pending.slice(0, 6).map((item) => (
-              <article className="activity-item" key={item.id}>
-                <span />
-                <div><strong>{item.descrizione}</strong><small>{item.fornitore} · {formatDate(item.data)}</small></div>
-                <StatusBadge>{item.statoVerifica}</StatusBadge>
-              </article>
+              <DataCardRow
+                key={item.id}
+                icon="warning"
+                title={item.descrizione}
+                description={`${item.fornitore} · ${formatDate(item.data)}`}
+                status={displayStatus(item.statoVerifica)}
+                href={`#/dashboard/documenti/${item.id}`}
+                warning
+                meta={[
+                  { label: 'Documento', value: item.numeroDocumento },
+                  { label: 'Categoria', value: item.categoria },
+                  { label: 'Totale', value: <MoneyValue value={item.totale} /> },
+                ]}
+              />
             )) : <p>Nessuna verifica aperta nei dati importati.</p>}
           </div>
         </section>
-        <section className="internal-panel">
-          <div className="section-heading panel-title-row"><h2>Pagamenti / bonifici</h2></div>
-          <div className="hub-table">
-            {(payments.length ? payments : rows).slice(0, 6).map((payment) => (
-              <article className="hub-table-row payment-row" key={payment.id}>
-                <span>{formatDate(payment.data)}</span><strong>{payment.fornitore}</strong><span>{payment.numeroDocumento}</span><span><MoneyValue value={payment.totale} /></span><StatusBadge>{payment.statoVerifica}</StatusBadge>
-              </article>
-            ))}
-          </div>
-        </section>
-      </div>
+      </WorkspaceLayout>
+
       <MockActionModal action={modalAction} onClose={() => setModalAction(null)} />
     </>
   )
+}
+
+function CategoryPanel({ categoryTotals }) {
+  return (
+    <SideContextPanel
+      title="Riepilogo costi"
+      description="Categorie ordinate per peso economico sul totale."
+      action={<a className="button button-secondary button-small" href="#/dashboard/contabilita">Dettaglio</a>}
+    >
+      <div className="cost-legend report-cost-list">
+        {categoryTotals.length > 0 ? categoryTotals.map((item) => (
+          <div key={item.categoria}>
+            <span />
+            <strong>{item.categoria}</strong>
+            <small><MoneyValue value={item.totale} /> · {item.percent}%</small>
+          </div>
+        )) : <p>Nessuna categoria nei dati importati.</p>}
+      </div>
+    </SideContextPanel>
+  )
+}
+
+function PaymentsPanel({ rows }) {
+  return (
+    <SideContextPanel
+      title="Pagamenti / bonifici"
+      description="Ultimi pagamenti o movimenti economici da controllare."
+      action={<a className="button button-secondary button-small" href="#/dashboard/contabilita">Contabilità</a>}
+    >
+      <div className="compact-upload-list">
+        {rows.slice(0, 6).map((payment) => (
+          <a className="compact-upload-row" href={`#/dashboard/contabilita/${payment.id}`} key={payment.id}>
+            <span className="file-chip file-pdf">€</span>
+            <div>
+              <strong>{payment.fornitore}</strong>
+              <small>{formatDate(payment.data)} · {payment.numeroDocumento}</small>
+            </div>
+            <StatusBadge><MoneyValue value={payment.totale} /></StatusBadge>
+          </a>
+        ))}
+      </div>
+    </SideContextPanel>
+  )
+}
+
+function buildBossSummary({ rows, sites, totals, pending, payments, categoryTotals }) {
+  const biggestCategory = categoryTotals[0]
+  return [
+    {
+      icon: 'wallet',
+      title: 'Totale spese registrate',
+      description: 'Valore complessivo importato dal master, IVA inclusa.',
+      status: 'Totale',
+      href: '#/dashboard/contabilita',
+      meta: [
+        { label: 'Totale', value: <MoneyValue value={totals.totale} /> },
+        { label: 'Imponibile', value: <MoneyValue value={totals.imponibile} /> },
+        { label: 'IVA', value: <MoneyValue value={totals.iva} /> },
+      ],
+    },
+    {
+      icon: pending.length ? 'warning' : 'check',
+      title: pending.length ? 'Controlli ancora aperti' : 'Nessun controllo aperto',
+      description: pending.length ? 'Documenti da verificare prima di chiudere il riepilogo.' : 'I movimenti importati non hanno criticità aperte nei dati attuali.',
+      status: pending.length ? 'Da controllare' : 'Ok',
+      href: '#/dashboard/documenti',
+      warning: pending.length > 0,
+      meta: [
+        { label: 'Documenti', value: pending.length },
+        { label: 'Righe importate', value: rows.length },
+        { label: 'Cantieri', value: sites.length },
+      ],
+    },
+    {
+      icon: 'report',
+      title: 'Categoria più pesante',
+      description: biggestCategory ? 'Categoria che pesa di più sul totale filtrato.' : 'Nessuna categoria disponibile nei dati importati.',
+      status: biggestCategory ? `${biggestCategory.percent}%` : 'N/D',
+      href: '#/dashboard/report',
+      meta: [
+        { label: 'Categoria', value: biggestCategory?.categoria ?? '-' },
+        { label: 'Importo', value: biggestCategory ? <MoneyValue value={biggestCategory.totale} /> : '-' },
+        { label: 'Pagamenti', value: payments.length },
+      ],
+    },
+  ]
 }
 
 function toAccountingRow(document) {
@@ -141,6 +267,13 @@ function buildCategoryTotals(rows) {
   return Object.entries(grouped)
     .map(([categoria, value]) => ({ categoria, totale: value, percent: Math.round((value / total) * 1000) / 10 }))
     .sort((a, b) => b.totale - a.totale)
+}
+
+function displayStatus(status) {
+  if (status === 'Possibile duplicato') return 'Duplicato'
+  if (status === 'Da verificare') return 'Da controllare'
+  if (status === 'Incompleto') return 'In attesa'
+  return status
 }
 
 function formatDate(date) {
