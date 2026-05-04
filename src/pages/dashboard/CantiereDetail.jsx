@@ -15,7 +15,7 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
 
   if (!cantiere) {
     return (
-      <section className="dashboard-header">
+      <section className="dashboard-header internal-header">
         <p className="eyebrow">Cantiere non trovato</p>
         <h1>Il cantiere richiesto non esiste nei dati Supabase</h1>
         <p>Controlla la lista cantieri reali importati dal master Google Sheets.</p>
@@ -34,231 +34,306 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
   const categoryTotals = getCategoryTotals(accountingRows)
   const lavorazioni = getWorkPackages(siteDocuments)
   const pendingRows = accountingRows.filter((row) => ['Da verificare', 'Incompleto', 'Possibile duplicato'].includes(row.statoVerifica))
+  const lastDocuments = [...siteDocuments].sort((a, b) => new Date(b.dataDocumento || 0) - new Date(a.dataDocumento || 0)).slice(0, 5)
+  const lastUploads = [...linkedDocumentUploads, ...linkedFotoUploads]
+    .sort((a, b) => new Date(b.dataCaricamento || 0) - new Date(a.dataCaricamento || 0))
+    .slice(0, 5)
 
   return (
     <>
       <DashboardHeader
         eyebrow="Dettaglio cantiere reale"
-        title={`Cantiere - ${cantiere.nome}`}
-        description="Vista operativa coerente con la dashboard: costi, controlli e documenti principali nello stesso flusso."
+        title={cantiere.nome}
+        description="Vista operativa compatta: stato, costi, lavorazioni, documenti e azioni sono ordinati per frequenza d'uso."
       >
         <DataModeBadge>Dati reali Supabase</DataModeBadge>
-        <a className="button button-secondary" href="#/dashboard/cantieri">Lista cantieri</a>
-        <button className="button button-primary" type="button" onClick={() => setModalAction(reportAction(cantiere))}>Report PDF</button>
+        <a className="button button-secondary button-small" href="#/dashboard/cantieri">Lista cantieri</a>
+        <button className="button button-primary button-small" type="button" onClick={() => setModalAction(reportAction(cantiere))}>Report PDF</button>
       </DashboardHeader>
 
-      <div className="hub-priority-grid">
-        <CostSplitPanel accountingTotals={accountingTotals} categoryTotals={categoryTotals} />
-        <section className="internal-panel hub-command-panel">
-          <div className="hub-command-head">
+      <section className="cantiere-detail-hero" aria-label="Panoramica cantiere">
+        <div className="cantiere-identity-card">
+          <div className="cantiere-identity-top">
+            <span className="site-avatar">ES</span>
             <div>
               <span className="eyebrow">Centro cantiere</span>
               <h2>{cantiere.cliente}</h2>
               <p>{cantiere.indirizzo} · {cantiere.localita}</p>
             </div>
+            <StatusBadge>{pendingRows.length ? 'Da controllare' : 'In corso'}</StatusBadge>
           </div>
-          <div className="hub-command-actions">
-            <a href="#/dashboard/upload"><InternalIcon name="upload" size={17} /><span><b>Carica documento</b><small>Foto, fatture e ricevute</small></span></a>
-            <a href="#/dashboard/documenti"><InternalIcon name="file" size={17} /><span><b>Documenti cantiere</b><small>{siteDocuments.length} righe importate</small></span></a>
-            <a href="#/dashboard/contabilita"><InternalIcon name="wallet" size={17} /><span><b>Contabilità</b><small><MoneyValue value={accountingTotals.totale} /></small></span></a>
+          <ProgressBar value={cantiere.avanzamento} />
+          <div className="cantiere-hero-meta">
+            <div><span>Responsabile</span><strong>{cantiere.responsabile}</strong></div>
+            <div><span>Ultimo movimento</span><strong>{formatDate(cantiere.lastDate)}</strong></div>
+            <div><span>Righe</span><strong>{siteDocuments.length}</strong></div>
+            <div><span>Criticità</span><strong>{pendingRows.length}</strong></div>
           </div>
-        </section>
+        </div>
+
+        {canViewEconomics ? (
+          <div className="cantiere-money-card">
+            <span className="eyebrow">Economia</span>
+            <div className="cantiere-money-total">
+              <span>Totale spese</span>
+              <strong><MoneyValue value={accountingTotals.totale} /></strong>
+              <small>Imponibile <MoneyValue value={accountingTotals.imponibile} /> · IVA <MoneyValue value={accountingTotals.iva} /></small>
+            </div>
+            <div className="cantiere-money-split">
+              {categoryTotals.slice(0, 4).map((item) => (
+                <div key={item.categoria}>
+                  <span>{item.categoria}</span>
+                  <strong><MoneyValue value={item.totale} /></strong>
+                  <small>{item.percent}%</small>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="cantiere-action-rail">
+          <span className="eyebrow">Azioni rapide</span>
+          <a href="#/dashboard/upload"><InternalIcon name="upload" size={17} /><span><b>Carica</b><small>Foto o documento</small></span></a>
+          <a href="#/dashboard/documenti"><InternalIcon name="file" size={17} /><span><b>Documenti</b><small>{siteDocuments.length} righe</small></span></a>
+          {canViewEconomics ? <a href="#/dashboard/contabilita"><InternalIcon name="wallet" size={17} /><span><b>Contabilità</b><small><MoneyValue value={accountingTotals.totale} /></small></span></a> : null}
+          <button type="button" onClick={() => setModalAction(noteAction(cantiere))}><InternalIcon name="plus" size={17} /><span><b>Nota</b><small>Promemoria cantiere</small></span></button>
+        </div>
+      </section>
+
+      <section className="cantiere-detail-kpis" aria-label="Indicatori cantiere">
+        <DetailKpi icon="file" label="Documenti" value={siteDocuments.length} hint="Righe importate" />
+        <DetailKpi icon="building" tone="amber" label="Lavorazioni" value={lavorazioni.length} hint="Tab / gruppi" />
+        <DetailKpi icon="warning" tone="red" label="Da controllare" value={pendingRows.length} hint="Alert aperti" />
+        {canViewEconomics ? <DetailKpi icon="wallet" tone="green" label="Totale" value={<MoneyValue value={accountingTotals.totale} />} hint="Spese cantiere" /> : null}
+      </section>
+
+      <div className="cantiere-detail-layout">
+        <main className="cantiere-detail-main">
+          <section className="cantiere-tabs-card" aria-label="Sezioni dettaglio cantiere">
+            <div className="cantiere-tabs-head">
+              <div>
+                <h2>Area di lavoro</h2>
+                <p>Le tab cambiano solo il blocco centrale: il contesto e le azioni restano sempre visibili.</p>
+              </div>
+              <div className="detail-tabs cantiere-detail-tabs">
+                {availableTabs.map((tab) => (
+                  <button aria-pressed={currentTab === tab} key={tab} type="button" onClick={() => setActiveTab(tab)}>{tab}</button>
+                ))}
+              </div>
+            </div>
+            <TabContent
+              currentTab={currentTab}
+              documents={siteDocuments}
+              lavorazioni={lavorazioni}
+              pendingRows={pendingRows}
+              categoryTotals={categoryTotals}
+              accountingRows={accountingRows}
+              accountingTotals={accountingTotals}
+              cantiere={cantiere}
+            />
+          </section>
+        </main>
+
+        <aside className="cantiere-context-panel">
+          <OpenControls pendingRows={pendingRows} documents={siteDocuments} />
+          <RecentDocumentsPanel documents={lastDocuments} />
+          <RecentActivityPanel documents={lastDocuments} uploads={lastUploads} />
+        </aside>
       </div>
-
-      <section className="hub-kpi-strip" aria-label="Indicatori cantiere">
-        <MiniKpi icon="building" label="Responsabile" value={cantiere.responsabile} hint="Cantiere attivo" />
-        <MiniKpi icon="file" label="Righe" value={siteDocuments.length} hint="Importate" tone="amber" />
-        <MiniKpi icon="calendar" label="Movimenti" value={String(siteDocuments.reduce((sum, doc) => sum + Number(doc.movimentiCount || 1), 0))} hint="Totali" tone="purple" />
-        {canViewEconomics ? <MiniKpi icon="wallet" label="Totale spese" value={<MoneyValue value={accountingTotals.totale} />} hint="Master" tone="green" /> : null}
-      </section>
-
-      <section className="detail-tabs" aria-label="Sezioni dettaglio cantiere">
-        {availableTabs.map((tab) => (
-          <button aria-pressed={currentTab === tab} key={tab} type="button" onClick={() => setActiveTab(tab)}>{tab}</button>
-        ))}
-      </section>
-
-      {currentTab === 'Panoramica' ? (
-        <OverviewTab
-          documents={siteDocuments}
-          lavorazioni={lavorazioni}
-          pendingRows={pendingRows}
-          linkedDocumentUploads={linkedDocumentUploads}
-          linkedFotoUploads={linkedFotoUploads}
-          categoryTotals={categoryTotals}
-          accountingTotals={accountingTotals}
-        />
-      ) : null}
-      {currentTab === 'Lavorazioni' ? <div className="hub-workspace-grid"><WorkPackages lavorazioni={lavorazioni} /></div> : null}
-      {currentTab === 'Documenti' ? <div className="hub-workspace-grid"><DocumentsTab documents={siteDocuments} /></div> : null}
-      {currentTab === 'Contabilità' ? <AccountingTab accountingRows={accountingRows} accountingTotals={accountingTotals} /> : null}
-      {currentTab === 'Report' ? <ReportTab cantiere={cantiere} accountingTotals={accountingTotals} categoryTotals={categoryTotals} pendingRows={pendingRows} /> : null}
 
       <MockActionModal action={modalAction} onClose={() => setModalAction(null)} />
     </>
   )
 }
 
-function MiniKpi({ icon, label, value, hint, tone = 'blue' }) {
+function DetailKpi({ icon, label, value, hint, tone = 'blue' }) {
   return (
-    <article className={`hub-mini-kpi hub-mini-kpi-${tone}`}>
-      <span className="hub-mini-kpi-icon"><InternalIcon name={icon} size={17} /></span>
-      <div><span>{label}</span><strong>{value}</strong><small>{hint}</small></div>
+    <article className={`detail-kpi detail-kpi-${tone}`}>
+      <span><InternalIcon name={icon} size={17} /></span>
+      <div><small>{label}</small><strong>{value}</strong><em>{hint}</em></div>
     </article>
   )
 }
 
-function OverviewTab({ documents, lavorazioni, pendingRows, linkedDocumentUploads, linkedFotoUploads, categoryTotals, accountingTotals }) {
-  return (
-    <>
-      <div className="hub-workspace-grid">
-        <WorkPackages lavorazioni={lavorazioni} />
-        <div className="hub-side-stack">
-          <MaterialsPanel categoryTotals={categoryTotals} total={accountingTotals.totale} />
-          <SideOperationalPanels pendingRows={pendingRows} documents={documents} />
-        </div>
-      </div>
-      <div className="hub-workspace-grid">
-        <RecentDocuments documents={documents} />
-        <div className="hub-side-stack">
-          <RecentPayments documents={documents} />
-          <ActivityFeed
-            title="Timeline attività"
-            items={[
-              ...documents.slice(0, 4).map((item) => ({ title: `${item.numeroDocumento ?? item.descrizione}`, meta: `${item.categoria ?? 'Categoria'} · ${formatDate(item.dataDocumento)}`, status: item.statoVerifica })),
-              ...linkedDocumentUploads.slice(0, 2).map((item) => ({ title: `Caricato ${item.tipoDocumento}`, meta: `${item.fornitore} · ${formatDate(item.dataCaricamento)}`, status: item.stato })),
-              ...linkedFotoUploads.slice(0, 2).map((item) => ({ title: 'Foto caricata', meta: `${item.zona ?? item.cantiere} · ${formatDate(item.dataCaricamento)}`, status: item.stato })),
-            ]}
-          />
-        </div>
-      </div>
-    </>
-  )
-}
+function TabContent({ currentTab, documents, lavorazioni, pendingRows, categoryTotals, accountingRows, accountingTotals, cantiere }) {
+  if (currentTab === 'Lavorazioni') return <WorkPackages lavorazioni={lavorazioni} />
+  if (currentTab === 'Documenti') return <DocumentsTab documents={documents} />
+  if (currentTab === 'Contabilità') return <AccountingTab accountingRows={accountingRows} accountingTotals={accountingTotals} />
+  if (currentTab === 'Report') return <ReportTab cantiere={cantiere} accountingTotals={accountingTotals} categoryTotals={categoryTotals} pendingRows={pendingRows} />
 
-function CostSplitPanel({ accountingTotals, categoryTotals }) {
   return (
-    <section className="internal-panel cost-card-redesign">
-      <div className="cost-card-head">
-        <div><span className="eyebrow">Spese</span><h2>Riepilogo costi per categoria</h2><p>Totale e categorie principali del cantiere.</p></div>
-      </div>
-      <div className="cost-summary cost-summary-redesign">
-        <div className="cost-total-block"><span>Totale spese</span><strong><MoneyValue value={accountingTotals.totale} /></strong><small className="positive-trend">Da BARCELO_ROMA_master</small></div>
-        <div className="donut-chart"><span>Totale<br /><MoneyValue value={accountingTotals.totale} /></span></div>
-      </div>
-      <div className="cost-legend cost-legend-redesign">
-        {categoryTotals.slice(0, 6).map((item) => <div key={item.categoria}><span /><strong>{item.categoria}</strong><small><MoneyValue value={item.totale} /></small></div>)}
-      </div>
-    </section>
+    <div className="cantiere-overview-grid">
+      <WorkPackages lavorazioni={lavorazioni.slice(0, 6)} compact />
+      <MaterialsPanel categoryTotals={categoryTotals} total={accountingTotals.totale} />
+      <DocumentsTab documents={documents.slice(0, 5)} compact />
+      <AccountingSnapshot accountingTotals={accountingTotals} pendingRows={pendingRows} />
+    </div>
   )
 }
 
 function MaterialsPanel({ categoryTotals, total }) {
   const materialCategories = ['Materiali', 'FIR / Rifiuti', 'Noleggi / Servizi']
-  const materials = categoryTotals.filter((item) => materialCategories.includes(item.categoria) || item.categoria?.toLowerCase().includes('material')).reduce((sum, item) => sum + item.totale, 0)
+  const materials = categoryTotals
+    .filter((item) => materialCategories.includes(item.categoria) || item.categoria?.toLowerCase().includes('material'))
+    .reduce((sum, item) => sum + item.totale, 0)
   const nonMaterials = Math.max(0, total - materials)
   const percent = total > 0 ? Math.round((materials / total) * 1000) / 10 : 0
+
   return (
-    <section className="internal-panel">
-      <div className="section-heading panel-title-row"><h2>Materiali vs non materiali</h2></div>
-      <div className="compact-upload-list">
-        <article className="compact-upload-row"><span className="file-chip file-pdf">MAT</span><div><strong><MoneyValue value={materials} /></strong><small>{percent}% del totale</small></div></article>
-        <article className="compact-upload-row"><span className="file-chip file-pdf">NON</span><div><strong><MoneyValue value={nonMaterials} /></strong><small>{Math.round((100 - percent) * 10) / 10}% del totale</small></div></article>
+    <section className="detail-section-card">
+      <div className="section-heading panel-title-row"><h2>Materiali / non materiali</h2></div>
+      <div className="detail-split-list">
+        <article><span>Materiali</span><strong><MoneyValue value={materials} /></strong><small>{percent}% del totale</small></article>
+        <article><span>Non materiali</span><strong><MoneyValue value={nonMaterials} /></strong><small>{Math.round((100 - percent) * 10) / 10}% del totale</small></article>
+      </div>
+      <div className="detail-category-list">
+        {categoryTotals.slice(0, 5).map((item) => <div key={item.categoria}><span>{item.categoria}</span><strong><MoneyValue value={item.totale} /></strong></div>)}
       </div>
     </section>
   )
 }
 
-function SideOperationalPanels({ pendingRows, documents }) {
-  const missingFiles = documents.filter((item) => String(item.note ?? '').toLowerCase().includes('manca') || item.statoVerifica === 'Incompleto')
-  const toClassify = documents.filter((item) => String(item.categoria ?? '').toLowerCase().includes('classificare'))
-  const alerts = [
-    ...missingFiles.map((item) => ({ id: `missing-${item.id}`, title: item.numeroDocumento ?? item.descrizione, detail: item.note ?? 'Documento da verificare', status: 'Da controllare' })),
-    ...toClassify.map((item) => ({ id: `classify-${item.id}`, title: item.numeroDocumento ?? item.descrizione, detail: item.categoria, status: 'Da classificare' })),
-    ...pendingRows.map((item) => ({ id: `pending-${item.id}`, title: item.descrizione, detail: item.fornitore, status: item.statoVerifica })),
-  ]
+function OpenControls({ pendingRows, documents }) {
+  const mathWarnings = documents.filter((item) => {
+    const imponibile = Number(item.imponibile || 0)
+    const iva = Number(item.iva || 0)
+    const totale = Number(item.totale || item.importoTotale || 0)
+    return imponibile || iva ? Math.abs((imponibile + iva) - totale) > 0.01 : false
+  })
+  const alerts = [...pendingRows, ...mathWarnings].slice(0, 6)
+
   return (
-    <section className="internal-panel">
-      <div className="section-heading panel-title-row"><h2>Controlli aperti</h2></div>
-      <div className="activity-feed">
-        {alerts.slice(0, 5).map((item) => <article className="activity-item" key={item.id}><span /><div><strong>{item.title}</strong><small>{item.detail}</small></div><StatusBadge>{item.status}</StatusBadge></article>)}
-        {alerts.length === 0 ? <p>Nessun controllo aperto nei dati importati.</p> : null}
+    <section className="detail-side-card detail-alert-card">
+      <div className="section-heading panel-title-row">
+        <div><h2>Controlli aperti</h2><p>In alto a destra perché sono le prime cose da sistemare.</p></div>
+        <a className="button button-secondary button-small" href="#/dashboard/documenti">Apri</a>
+      </div>
+      <div className="detail-alert-list">
+        {alerts.map((item) => <a href={`#/dashboard/documenti/${item.id}`} key={`${item.id}-${item.statoVerifica}`}><span className="file-chip file-pdf">!</span><div><strong>{item.numeroDocumento ?? item.descrizione}</strong><small>{item.fornitore} · {item.categoria}</small></div><StatusBadge>{normalizeDocumentStatus(item.statoVerifica ?? 'Totale da verificare')}</StatusBadge></a>)}
+        {alerts.length === 0 ? <article><span className="file-chip">OK</span><div><strong>Nessun controllo urgente</strong><small>Documento e contabilità risultano ordinati.</small></div></article> : null}
       </div>
     </section>
   )
 }
 
-function WorkPackages({ lavorazioni }) {
+function WorkPackages({ lavorazioni, compact = false }) {
   return (
-    <section className="internal-panel hub-panel-wide hub-documents-panel">
-      <div className="section-heading panel-title-row"><h2>Lavorazioni principali</h2><a className="button button-secondary button-small" href="#/dashboard/contabilita">Vedi contabilità</a></div>
-      <div className="hub-table">
-        <div className="hub-table-head hub-doc-row"><span>Lavorazione</span><span>Stato</span><span>Incidenza</span><span>Movimenti</span><span>Speso</span></div>
-        {lavorazioni.map((item) => <article className="hub-table-row hub-doc-row" key={item.name}><strong>{item.name}</strong><span><StatusBadge>{item.status}</StatusBadge></span><span><ProgressBar value={item.progress} /></span><span>{item.movimenti}</span><span><MoneyValue value={item.spent} /></span></article>)}
+    <section className={compact ? 'detail-section-card compact-work-card' : 'detail-section-card'}>
+      <div className="section-heading panel-title-row">
+        <div><h2>Lavorazioni</h2><p>Gruppi vicini ai costi perché sono il modo più rapido per capire dove sta andando il budget.</p></div>
+        <a className="button button-secondary button-small" href="#/dashboard/contabilita">Contabilità</a>
+      </div>
+      <div className="detail-work-list">
+        {lavorazioni.map((item) => <article key={item.name}><div><strong>{item.name}</strong><small>{item.movimenti} movimenti · <MoneyValue value={item.spent} /></small></div><StatusBadge>{item.status}</StatusBadge><ProgressBar value={item.progress} /></article>)}
       </div>
     </section>
   )
 }
 
-function RecentDocuments({ documents }) {
+function DocumentsTab({ documents, compact = false }) {
   return (
-    <section className="internal-panel hub-panel-wide hub-documents-panel">
-      <div className="section-heading panel-title-row"><h2>Ultimi documenti</h2><a className="button button-secondary button-small" href="#/dashboard/documenti">Vedi tutti</a></div>
-      <div className="hub-table">
-        {documents.slice(0, 5).map((doc) => <a className="hub-table-row hub-doc-row" href={`#/dashboard/documenti/${doc.id}`} key={doc.id}><strong>{doc.tipoDocumento}</strong><span>{doc.numeroDocumento ?? doc.fornitore}</span><span>{doc.categoria}</span><span><MoneyValue value={doc.totale ?? doc.importoTotale ?? 0} /></span><span><StatusBadge>{doc.statoVerifica}</StatusBadge></span></a>)}
+    <section className={compact ? 'detail-section-card compact-doc-card' : 'detail-section-card'}>
+      <div className="section-heading panel-title-row">
+        <div><h2>Documenti</h2><p>Documenti accanto ai controlli: apri subito la riga che crea dubbi o costi.</p></div>
+        <a className="button button-secondary button-small" href="#/dashboard/documenti">Tutti</a>
+      </div>
+      <div className="detail-document-list">
+        {documents.map((doc) => <a href={`#/dashboard/documenti/${doc.id}`} key={doc.id}><span className="file-chip file-pdf">DOC</span><div><strong>{doc.tipoDocumento} {doc.numeroDocumento ?? ''}</strong><small>{doc.fornitore} · {doc.categoria}</small></div><strong><MoneyValue value={doc.totale ?? doc.importoTotale ?? 0} /></strong><StatusBadge>{normalizeDocumentStatus(doc.statoVerifica)}</StatusBadge></a>)}
       </div>
     </section>
   )
 }
 
-function RecentPayments({ documents }) {
-  const payments = documents.filter((document) => String(document.pagamento ?? '').toLowerCase().includes('bonifico') || String(document.categoria ?? '').toLowerCase().includes('bonifici'))
-  const rows = payments.length ? payments : documents
+function AccountingSnapshot({ accountingTotals, pendingRows }) {
   return (
-    <section className="internal-panel">
-      <div className="section-heading panel-title-row"><h2>Pagamenti / Bonifici</h2><a className="button button-secondary button-small" href="#/dashboard/contabilita">Vedi tutti</a></div>
-      <div className="compact-upload-list">
-        {rows.slice(0, 5).map((payment) => <article className="compact-upload-row" key={payment.id}><span className="file-chip file-pdf">€</span><div><strong>{payment.fornitore}</strong><small>{formatDate(payment.dataDocumento)} · {payment.numeroDocumento}</small></div><span><MoneyValue value={payment.totale ?? payment.importoTotale ?? 0} /></span></article>)}
+    <section className="detail-section-card">
+      <div className="section-heading panel-title-row"><h2>Snapshot contabile</h2></div>
+      <div className="detail-accounting-grid">
+        <div><span>Imponibile</span><strong><MoneyValue value={accountingTotals.imponibile} /></strong></div>
+        <div><span>IVA</span><strong><MoneyValue value={accountingTotals.iva} /></strong></div>
+        <div><span>Totale</span><strong><MoneyValue value={accountingTotals.totale} /></strong></div>
+        <div><span>Da verificare</span><strong>{pendingRows.length}</strong></div>
       </div>
     </section>
   )
-}
-
-function DocumentsTab({ documents }) {
-  return <RecentDocuments documents={documents} />
 }
 
 function AccountingTab({ accountingRows, accountingTotals }) {
   return (
-    <>
-      <section className="hub-kpi-strip">
-        <MiniKpi icon="wallet" label="Imponibile" value={<MoneyValue value={accountingTotals.imponibile} />} hint="Totale" />
-        <MiniKpi icon="wallet" label="IVA" value={<MoneyValue value={accountingTotals.iva} />} hint="Totale" tone="amber" />
-        <MiniKpi icon="wallet" label="Complessivo" value={<MoneyValue value={accountingTotals.totale} />} hint="Totale" tone="green" />
-        <MiniKpi icon="file" label="Da verificare" value={accountingTotals.daVerificare} hint="Documenti" tone="purple" />
-      </section>
-      <div className="hub-workspace-grid"><section className="internal-panel hub-panel-wide hub-documents-panel"><div className="hub-table">{accountingRows.map((movimento) => <div className="hub-table-row hub-doc-row" key={movimento.id}><strong>{movimento.descrizione}</strong><span>{movimento.fornitore}</span><span>{movimento.categoria}</span><span><MoneyValue value={movimento.totale} /></span><span><StatusBadge>{movimento.statoVerifica}</StatusBadge></span></div>)}</div></section></div>
-    </>
+    <section className="detail-section-card">
+      <div className="section-heading panel-title-row"><h2>Contabilità cantiere</h2><span className="data-mode-badge"><MoneyValue value={accountingTotals.totale} /></span></div>
+      <div className="detail-accounting-table">
+        {accountingRows.map((movimento) => <a href={`#/dashboard/contabilita/${movimento.id}`} key={movimento.id}><div><strong>{movimento.descrizione}</strong><small>{movimento.fornitore} · {movimento.categoria}</small></div><span><MoneyValue value={movimento.imponibile} /></span><span><MoneyValue value={movimento.iva} /></span><strong><MoneyValue value={movimento.totale} /></strong><StatusBadge>{normalizeDocumentStatus(movimento.statoVerifica)}</StatusBadge></a>)}
+      </div>
+    </section>
   )
 }
 
 function ReportTab({ cantiere, accountingTotals, categoryTotals, pendingRows }) {
   return (
-    <div className="hub-workspace-grid">
-      <section className="internal-panel"><div className="section-heading panel-title-row"><h2>Report cantiere reale</h2></div><p>Anteprima basata su Supabase / BARCELO_ROMA_master.</p><div className="compact-upload-list"><article className="compact-upload-row"><span className="file-chip file-pdf">€</span><div><strong><MoneyValue value={accountingTotals.totale} /></strong><small>Totale spese</small></div></article><article className="compact-upload-row"><span className="file-chip file-pdf">!</span><div><strong>{pendingRows.length}</strong><small>Righe da verificare</small></div></article></div></section>
+    <div className="cantiere-report-grid">
+      <section className="detail-section-card">
+        <div className="section-heading panel-title-row"><h2>Report pronto</h2></div>
+        <p>Qui ha senso tenere il report dopo contabilità e controlli: prima verifichi i dati, poi esporti.</p>
+        <div className="detail-split-list">
+          <article><span>Totale spese</span><strong><MoneyValue value={accountingTotals.totale} /></strong><small>{cantiere.nome}</small></article>
+          <article><span>Alert aperti</span><strong>{pendingRows.length}</strong><small>Da risolvere prima del PDF</small></article>
+        </div>
+      </section>
       <ActivityFeed title="Categorie principali" items={categoryTotals.slice(0, 6).map((item) => ({ title: item.categoria, meta: `${formatCurrency(item.totale)} · ${item.percent}%`, status: 'Reale' }))} />
     </div>
   )
 }
 
+function RecentDocumentsPanel({ documents }) {
+  return (
+    <section className="detail-side-card">
+      <div className="section-heading panel-title-row"><h2>Ultimi documenti</h2><a className="button button-secondary button-small" href="#/dashboard/documenti">Tutti</a></div>
+      <div className="detail-mini-list">
+        {documents.map((doc) => <a href={`#/dashboard/documenti/${doc.id}`} key={doc.id}><div><strong>{doc.numeroDocumento ?? doc.tipoDocumento}</strong><small>{doc.fornitore} · {formatDate(doc.dataDocumento)}</small></div><span><MoneyValue value={doc.totale ?? doc.importoTotale ?? 0} /></span></a>)}
+      </div>
+    </section>
+  )
+}
+
+function RecentActivityPanel({ documents, uploads }) {
+  const activities = [
+    ...documents.map((item) => ({ id: `doc-${item.id}`, title: item.numeroDocumento ?? item.descrizione, meta: `${item.categoria} · ${formatDate(item.dataDocumento)}`, status: item.statoVerifica, href: `#/dashboard/documenti/${item.id}` })),
+    ...uploads.map((item) => ({ id: `upload-${item.id}`, title: item.fileName ?? item.tipoDocumento ?? 'Caricamento', meta: `${item.caricatoDa ?? 'Utente'} · ${formatDate(item.dataCaricamento)}`, status: item.stato, href: '#/dashboard/caricamenti' })),
+  ].slice(0, 6)
+
+  return <ActivityFeed title="Timeline" items={activities} />
+}
+
 function buildCantiere(cantiereId, documents) {
   if (!documents.length) return null
   const total = documents.reduce((sum, doc) => sum + Number(doc.totale || doc.importoTotale || 0), 0)
-  return { id: cantiereId, nome: documents[0]?.cantiere ?? 'Barcelò Roma', cliente: documents[0]?.cantiere ?? 'Barcelò Roma', indirizzo: 'Fonte: BARCELO_ROMA_master Google Sheets', localita: cantiereId === 'barcelo-roma' ? 'Roma, zona Eur' : 'Da Google Sheets', responsabile: 'Gianni Europa', avanzamento: total > 0 ? 100 : 0 }
+  const lastDate = documents.reduce((latest, doc) => doc.dataDocumento && new Date(doc.dataDocumento) > new Date(latest || 0) ? doc.dataDocumento : latest, documents[0]?.dataDocumento)
+  return {
+    id: cantiereId,
+    nome: documents[0]?.cantiere ?? 'Barcelò Roma',
+    cliente: documents[0]?.cantiere ?? 'Barcelò Roma',
+    indirizzo: 'Fonte: BARCELO_ROMA_master Google Sheets',
+    localita: cantiereId === 'barcelo-roma' ? 'Roma, zona Eur' : 'Da Google Sheets',
+    responsabile: 'Gianni Europa',
+    avanzamento: total > 0 ? 100 : 0,
+    lastDate,
+  }
 }
 
 function toAccountingRow(document) {
-  return { id: document.id, data: document.dataDocumento, descrizione: document.descrizione ?? document.tipoDocumento, fornitore: document.fornitore ?? 'Non indicato', categoria: document.categoria ?? 'Extra / Altro', numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id, imponibile: Number(document.imponibile || 0), iva: Number(document.iva || 0), totale: Number(document.totale || document.importoTotale || 0), statoVerifica: document.statoVerifica ?? 'Da verificare' }
+  return {
+    id: document.id,
+    data: document.dataDocumento,
+    descrizione: document.descrizione ?? document.tipoDocumento,
+    fornitore: document.fornitore ?? 'Non indicato',
+    categoria: document.categoria ?? 'Extra / Altro',
+    numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id,
+    imponibile: Number(document.imponibile || 0),
+    iva: Number(document.iva || 0),
+    totale: Number(document.totale || document.importoTotale || 0),
+    statoVerifica: document.statoVerifica ?? 'Da verificare',
+  }
 }
 
 function getTotals(rows) {
@@ -272,7 +347,13 @@ function getCategoryTotals(rows) {
 }
 
 function getWorkPackages(documents) {
-  const grouped = documents.reduce((acc, doc) => { const name = doc.sheetTab ?? doc.numeroDocumento ?? doc.categoria ?? 'Senza tab'; if (!acc[name]) acc[name] = { name, spent: 0, movimenti: 0 }; acc[name].spent += Number(doc.totale || doc.importoTotale || 0); acc[name].movimenti += Number(doc.movimentiCount || 1); return acc }, {})
+  const grouped = documents.reduce((acc, doc) => {
+    const name = doc.sheetTab ?? doc.numeroDocumento ?? doc.categoria ?? 'Senza tab'
+    if (!acc[name]) acc[name] = { name, spent: 0, movimenti: 0 }
+    acc[name].spent += Number(doc.totale || doc.importoTotale || 0)
+    acc[name].movimenti += Number(doc.movimentiCount || 1)
+    return acc
+  }, {})
   const rows = Object.values(grouped).sort((a, b) => b.spent - a.spent)
   const max = Math.max(...rows.map((row) => row.spent), 1)
   return rows.map((row) => ({ ...row, progress: Math.max(5, Math.round((row.spent / max) * 100)), status: 'Importata' }))
@@ -280,6 +361,17 @@ function getWorkPackages(documents) {
 
 function reportAction(cantiere) {
   return { icon: 'report', title: `Report PDF - ${cantiere.nome}`, text: 'Export PDF non ancora collegato. I dati mostrati sono già reali da Supabase.', confirmLabel: 'Ok' }
+}
+
+function noteAction(cantiere) {
+  return { icon: 'plus', title: `Nota cantiere - ${cantiere.nome}`, text: 'Aggiungi un promemoria operativo collegato al cantiere.', confirmLabel: 'Salva nota', fields: [{ label: 'Nota', placeholder: 'Es. verificare fattura materiali...' }] }
+}
+
+function normalizeDocumentStatus(status) {
+  if (status === 'Possibile duplicato') return 'Duplicato'
+  if (status === 'Da verificare') return 'Da controllare'
+  if (status === 'Incompleto') return 'In attesa'
+  return status
 }
 
 function formatCurrency(value) {
