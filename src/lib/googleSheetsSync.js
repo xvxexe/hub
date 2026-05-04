@@ -1,6 +1,7 @@
 import { fetchRemoteStore, saveRemoteStore } from './supabaseStore'
 
-const syncUrl = import.meta.env.VITE_GOOGLE_SHEETS_SYNC_URL
+const fallbackSyncUrl = 'https://script.google.com/macros/s/AKfycbw-QeSDBIIShY3CaI4Ra10NdBA1XWcl9LBhupHkHVITCgBt3XcqsIh8xNSj3Ox3vM7y4w/exec'
+const syncUrl = import.meta.env.VITE_GOOGLE_SHEETS_SYNC_URL || fallbackSyncUrl
 
 export const isGoogleSheetsSyncConfigured = Boolean(syncUrl)
 
