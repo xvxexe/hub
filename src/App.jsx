@@ -180,7 +180,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
     return <ContabilitaMock documents={mockStore.documents} store={mockStore} session={session} />
   }
   if (path === '/dashboard/report') {
-    return <ReportMock documents={mockStore.documents} />
+    return <ReportMock documents={mockStore.documents} store={mockStore} />
   }
   if (path === '/dashboard/dipendenti') {
     return (
