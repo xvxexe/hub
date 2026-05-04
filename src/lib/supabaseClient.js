@@ -2,14 +2,14 @@ const fallbackProjectRef = 'qmdwfdfmhhhghykfahfo'
 const fallbackSupabaseUrl = `https://${fallbackProjectRef}.supabase.co`
 const fallbackSupabaseAnonKey = 'sb_publishable_raEK7djY88sSILLUQ821Aw_LasJfO6x'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || fallbackSupabaseUrl
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? fallbackSupabaseAnonKey
+export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || fallbackSupabaseUrl
+export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? fallbackSupabaseAnonKey
 
 const AUTH_STORAGE_KEY = 'europaservice-auth-session-v001'
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
 
-function authHeaders(accessToken) {
+export function authHeaders(accessToken) {
   const token = accessToken || getStoredAuthSession()?.access_token || supabaseAnonKey
 
   return {
