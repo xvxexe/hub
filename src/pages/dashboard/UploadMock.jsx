@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
+import { InternalIcon } from '../../components/InternalIcons'
 import { RecentUploadList } from '../../components/RecentUploadList'
-import { UploadCard } from '../../components/UploadCard'
+import { StatusBadge } from '../../components/StatusBadge'
 import { mockCantieri } from '../../data/mockCantieri'
 import {
   createDocumentUpload,
@@ -35,16 +37,18 @@ const defaultDocumentForm = {
 }
 
 export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, onAddDocument }) {
-  const [fotoForm, setFotoForm] = useState({ ...defaultFotoForm, caricatoDa: session.name })
-  const [documentForm, setDocumentForm] = useState({ ...defaultDocumentForm, caricatoDa: session.name })
   const isAccounting = session.role === 'accounting'
   const isEmployee = session.role === 'employee'
-  const visibleFotoUploads = isEmployee
-    ? fotoUploads.filter((upload) => upload.caricatoDa === session.name)
-    : fotoUploads
-  const visibleDocumentUploads = isEmployee
-    ? documentUploads.filter((upload) => upload.caricatoDa === session.name)
-    : documentUploads
+  const [activeType, setActiveType] = useState(isAccounting ? 'documento' : 'foto')
+  const [fotoForm, setFotoForm] = useState({ ...defaultFotoForm, caricatoDa: session.name })
+  const [documentForm, setDocumentForm] = useState({ ...defaultDocumentForm, caricatoDa: session.name })
+
+  const visibleFotoUploads = isEmployee ? fotoUploads.filter((upload) => upload.caricatoDa === session.name) : fotoUploads
+  const visibleDocumentUploads = isEmployee ? documentUploads.filter((upload) => upload.caricatoDa === session.name) : documentUploads
+  const stats = useMemo(() => buildUploadStats(visibleFotoUploads, visibleDocumentUploads), [visibleFotoUploads, visibleDocumentUploads])
+  const activeForm = activeType === 'foto' ? fotoForm : documentForm
+  const selectedSite = mockCantieri.find((cantiere) => cantiere.id === activeForm.cantiereId) ?? mockCantieri[0]
+  const canUploadFoto = !isAccounting
 
   function updateFoto(field, value) {
     setFotoForm((current) => ({ ...current, [field]: value }))
@@ -68,213 +72,220 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
 
   return (
     <>
-      <section className="dashboard-header">
-        <p className="eyebrow">Upload mock</p>
-        <h1>{isEmployee ? 'Carica materiale cantiere' : 'Upload foto e documenti'}</h1>
-        <p>
-          Flusso locale per simulare caricamenti da cantiere. I file non vengono inviati a cloud,
-          backend o Supabase.
-        </p>
+      <DashboardHeader
+        eyebrow="Upload operativo"
+        title={isEmployee ? 'Carica materiale cantiere' : 'Upload foto e documenti'}
+        description="Flusso compatto: scegli cosa caricare, compila i dati utili, controlla destinazione e ultimi caricamenti senza cambiare pagina."
+      >
+        <DataModeBadge>Flusso mock locale</DataModeBadge>
+      </DashboardHeader>
+
+      <section className="upload-command-center" aria-label="Scelta caricamento">
+        <div className="upload-type-switch">
+          {canUploadFoto ? (
+            <button type="button" aria-pressed={activeType === 'foto'} onClick={() => setActiveType('foto')}>
+              <InternalIcon name="image" size={18} />
+              <span><b>Foto cantiere</b><small>Zona, lavorazione, pubblicabilità</small></span>
+            </button>
+          ) : null}
+          <button type="button" aria-pressed={activeType === 'documento'} onClick={() => setActiveType('documento')}>
+            <InternalIcon name="file" size={18} />
+            <span><b>Documento</b><small>Fatture, bonifici, ricevute, FIR</small></span>
+          </button>
+        </div>
+        <div className="upload-command-summary">
+          <span className="eyebrow">Percorso</span>
+          <strong>{activeType === 'foto' ? 'Foto → revisione' : 'Documento → verifica contabile'}</strong>
+          <small>La scelta del tipo cambia form, checklist e destinazione del caricamento.</small>
+        </div>
       </section>
 
-      <section className={isEmployee ? 'employee-upload-layout' : 'upload-layout'}>
-        {!isAccounting ? (
-          <UploadCard
-            title="Carica foto cantiere"
-            description="Foto mock con stato iniziale da revisionare."
-          >
-            <FotoForm form={fotoForm} onChange={updateFoto} onSubmit={submitFoto} compact={isEmployee} />
-          </UploadCard>
-        ) : null}
-
-        <UploadCard
-          title="Carica documento"
-          description="Documento mock con stato iniziale da verificare."
-        >
-          <DocumentForm
-            form={documentForm}
-            onChange={updateDocument}
-            onSubmit={submitDocument}
-            compact={isEmployee}
-          />
-        </UploadCard>
+      <section className="upload-kpi-strip" aria-label="Indicatori upload">
+        <UploadMetric icon="image" label="Foto" value={visibleFotoUploads.length} hint={isAccounting ? 'Nascoste per contabilità' : 'Da revisionare'} muted={isAccounting} />
+        <UploadMetric icon="file" label="Documenti" value={visibleDocumentUploads.length} hint="Da verificare" />
+        <UploadMetric icon="warning" tone="amber" label="Aperti" value={stats.toReview} hint="Stati da lavorare" />
+        <UploadMetric icon="check" tone="green" label="Recenti" value={stats.recentCount} hint="Ultimi 7 giorni" />
       </section>
 
-      <section className="upload-recent-layout">
-        {!isAccounting ? (
-          <RecentUploadList title="Foto caricate di recente" type="foto" uploads={visibleFotoUploads} />
-        ) : null}
-        {!isEmployee ? (
-          <RecentUploadList
-            title="Documenti caricati di recente"
-            type="documento"
-            uploads={visibleDocumentUploads}
-          />
-        ) : (
-          <RecentUploadList
-            title="Documenti caricati di recente"
-            type="documento"
-            uploads={visibleDocumentUploads}
-            showAmount={false}
-          />
-        )}
+      <div className="upload-workspace-layout">
+        <main className="upload-main-column">
+          <section className="upload-form-panel">
+            <div className="upload-form-head">
+              <div>
+                <span className="eyebrow">Step principale</span>
+                <h2>{activeType === 'foto' ? 'Carica foto cantiere' : 'Carica documento'}</h2>
+                <p>{activeType === 'foto'
+                  ? 'I campi principali sono cantiere, zona e lavorazione perché servono per ritrovare la foto dopo.'
+                  : 'I campi principali sono cantiere, tipo, fornitore e importo perché servono per il controllo contabile.'}</p>
+              </div>
+              <StatusBadge>{activeType === 'foto' ? 'Da revisionare' : 'Da verificare'}</StatusBadge>
+            </div>
+            {activeType === 'foto' ? (
+              <FotoForm form={fotoForm} onChange={updateFoto} onSubmit={submitFoto} compact={isEmployee} />
+            ) : (
+              <DocumentForm form={documentForm} onChange={updateDocument} onSubmit={submitDocument} compact={isEmployee} />
+            )}
+          </section>
+        </main>
+
+        <aside className="upload-context-column">
+          <UploadDestinationCard activeType={activeType} selectedSite={selectedSite} activeForm={activeForm} isEmployee={isEmployee} />
+          <UploadChecklist activeType={activeType} isEmployee={isEmployee} />
+          <RecentCompactPanel activeType={activeType} fotoUploads={visibleFotoUploads} documentUploads={visibleDocumentUploads} />
+        </aside>
+      </div>
+
+      <section className="upload-recent-redesign">
+        {canUploadFoto ? <RecentUploadList title="Foto caricate di recente" type="foto" uploads={visibleFotoUploads} /> : null}
+        <RecentUploadList title="Documenti caricati di recente" type="documento" uploads={visibleDocumentUploads} showAmount={!isEmployee} />
       </section>
     </>
   )
 }
 
+function UploadMetric({ icon, label, value, hint, tone = 'blue', muted = false }) {
+  return (
+    <article className={`upload-metric upload-metric-${tone} ${muted ? 'is-muted' : ''}`}>
+      <span><InternalIcon name={icon} size={17} /></span>
+      <div><small>{label}</small><strong>{value}</strong><em>{hint}</em></div>
+    </article>
+  )
+}
+
+function UploadDestinationCard({ activeType, selectedSite, activeForm, isEmployee }) {
+  return (
+    <section className="upload-side-card upload-destination-card">
+      <div className="section-heading panel-title-row">
+        <div><h2>Dove finisce</h2><p>Sta accanto al form perché conferma subito destinazione e stato iniziale.</p></div>
+      </div>
+      <div className="upload-destination-flow">
+        <article><span>1</span><div><strong>{selectedSite?.nome ?? 'Cantiere'}</strong><small>Cantiere selezionato</small></div></article>
+        <article><span>2</span><div><strong>{activeType === 'foto' ? activeForm.zona || 'Zona' : activeForm.tipoDocumento}</strong><small>{activeType === 'foto' ? 'Zona / lavorazione' : 'Tipo documento'}</small></div></article>
+        <article><span>3</span><div><strong>{activeType === 'foto' ? 'Revisione foto' : 'Controllo contabile'}</strong><small>{isEmployee ? 'Visibile nei tuoi caricamenti' : 'Visibile ad admin e contabilità'}</small></div></article>
+      </div>
+    </section>
+  )
+}
+
+function UploadChecklist({ activeType, isEmployee }) {
+  const checks = activeType === 'foto'
+    ? ['Cantiere corretto', 'Zona chiara', 'Foto leggibile', isEmployee ? 'Nota breve' : 'Pubblicabilità indicata']
+    : ['Cantiere corretto', 'Tipo documento corretto', isEmployee ? 'PDF/foto leggibile' : 'Fornitore e importo', 'Nota se ci sono dubbi']
+
+  return (
+    <section className="upload-side-card upload-checklist-card">
+      <div className="section-heading panel-title-row"><h2>Checklist</h2></div>
+      <div className="upload-checklist">
+        {checks.map((check) => <article key={check}><InternalIcon name="check" size={15} /><span>{check}</span></article>)}
+      </div>
+    </section>
+  )
+}
+
+function RecentCompactPanel({ activeType, fotoUploads, documentUploads }) {
+  const uploads = activeType === 'foto' ? fotoUploads : documentUploads
+  const typeLabel = activeType === 'foto' ? 'foto' : 'documenti'
+
+  return (
+    <section className="upload-side-card upload-mini-recent-card">
+      <div className="section-heading panel-title-row">
+        <div><h2>Ultimi {typeLabel}</h2><p>Qui controlli subito se stai duplicando qualcosa.</p></div>
+        <a className="button button-secondary button-small" href="#/dashboard/caricamenti">Tutti</a>
+      </div>
+      <div className="upload-mini-list">
+        {uploads.slice(0, 4).map((upload) => (
+          <a href={activeType === 'foto' ? `#/dashboard/foto/${upload.id}` : `#/dashboard/documenti/${upload.id}`} key={upload.id}>
+            <span className="file-chip file-pdf">{activeType === 'foto' ? 'IMG' : 'DOC'}</span>
+            <div><strong>{activeType === 'foto' ? upload.lavorazione : upload.descrizione}</strong><small>{upload.cantiere} · {upload.fileName || 'file mock'}</small></div>
+            <StatusBadge>{upload.stato}</StatusBadge>
+          </a>
+        ))}
+        {uploads.length === 0 ? <article><span className="file-chip">0</span><div><strong>Nessun caricamento</strong><small>Gli ultimi elementi appariranno qui.</small></div></article> : null}
+      </div>
+    </section>
+  )
+}
+
 function FotoForm({ form, onChange, onSubmit, compact }) {
   return (
-    <form className="upload-form" onSubmit={onSubmit}>
-      <label>
-        Cantiere
-        <select value={form.cantiereId} onChange={(event) => onChange('cantiereId', event.target.value)}>
-          {mockCantieri.map((cantiere) => (
-            <option key={cantiere.id} value={cantiere.id}>
-              {cantiere.nome}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Zona
-        <input value={form.zona} onChange={(event) => onChange('zona', event.target.value)} />
-      </label>
-      <label>
-        Lavorazione
-        <input value={form.lavorazione} onChange={(event) => onChange('lavorazione', event.target.value)} />
-      </label>
-      {!compact ? (
-        <label>
-          Stato avanzamento
-          <select value={form.avanzamento} onChange={(event) => onChange('avanzamento', event.target.value)}>
-            <option value="da avviare">da avviare</option>
-            <option value="in corso">in corso</option>
-            <option value="avanzato">avanzato</option>
-            <option value="completato">completato</option>
-          </select>
-        </label>
-      ) : null}
-      <label>
-        File immagine
-        <input
-          accept="image/*"
-          type="file"
-          onChange={(event) => onChange('fileName', event.target.files?.[0]?.name ?? '')}
-        />
-      </label>
-      <FilePreviewMock fileName={form.fileName} type="image" />
-      {!compact ? (
-        <label>
-          Pubblicabile sul sito
-          <select value={form.pubblicabile} onChange={(event) => onChange('pubblicabile', event.target.value)}>
-            {pubblicazioneFoto.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
-      <label>
-        Nota
-        <textarea rows="4" value={form.nota} onChange={(event) => onChange('nota', event.target.value)} />
-      </label>
-      {!compact ? (
-        <label>
-          Caricata da
-          <input value={form.caricatoDa} onChange={(event) => onChange('caricatoDa', event.target.value)} />
-        </label>
-      ) : null}
-      <div className="upload-static-fields">
-        <span>Data caricamento: automatica</span>
-        <span>Stato revisione: da revisionare</span>
+    <form className="upload-redesign-form" onSubmit={onSubmit}>
+      <div className="upload-form-grid">
+        <FieldSelect label="Cantiere" value={form.cantiereId} onChange={(value) => onChange('cantiereId', value)} options={mockCantieri.map((cantiere) => ({ value: cantiere.id, label: cantiere.nome }))} />
+        <FieldInput label="Zona" value={form.zona} onChange={(value) => onChange('zona', value)} placeholder="Es. Piscina" />
+        <FieldInput label="Lavorazione" value={form.lavorazione} onChange={(value) => onChange('lavorazione', value)} placeholder="Es. controsoffitto" />
+        {!compact ? <FieldSelect label="Stato avanzamento" value={form.avanzamento} onChange={(value) => onChange('avanzamento', value)} options={['da avviare', 'in corso', 'avanzato', 'completato'].map((item) => ({ value: item, label: item }))} /> : null}
       </div>
-      <button className="button button-primary" type="submit">
-        Invia foto mock
-      </button>
+      <FileZone title="Seleziona immagine" text="Foto cantiere da controllare e collegare alla lavorazione." accept="image/*" type="image" fileName={form.fileName} onChange={(fileName) => onChange('fileName', fileName)} />
+      <div className="upload-form-grid upload-form-grid-secondary">
+        {!compact ? <FieldSelect label="Pubblicabile sul sito" value={form.pubblicabile} onChange={(value) => onChange('pubblicabile', value)} options={pubblicazioneFoto.map((item) => ({ value: item, label: item }))} /> : null}
+        {!compact ? <FieldInput label="Caricata da" value={form.caricatoDa} onChange={(value) => onChange('caricatoDa', value)} /> : null}
+      </div>
+      <NoteField value={form.nota} onChange={(value) => onChange('nota', value)} placeholder="Es. foto lato piscina, da controllare prima della pubblicazione..." />
+      <SubmitRow status="Stato iniziale: da revisionare" label="Invia foto mock" />
     </form>
   )
 }
 
 function DocumentForm({ form, onChange, onSubmit, compact }) {
   return (
-    <form className="upload-form" onSubmit={onSubmit}>
-      <label>
-        Cantiere
-        <select value={form.cantiereId} onChange={(event) => onChange('cantiereId', event.target.value)}>
-          {mockCantieri.map((cantiere) => (
-            <option key={cantiere.id} value={cantiere.id}>
-              {cantiere.nome}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Tipo documento
-        <select
-          value={form.tipoDocumento}
-          onChange={(event) => onChange('tipoDocumento', event.target.value)}
-        >
-          {tipiDocumento.map((tipo) => (
-            <option key={tipo} value={tipo}>
-              {tipo}
-            </option>
-          ))}
-        </select>
-      </label>
-      {!compact ? (
-        <>
-          <label>
-            Fornitore
-            <input value={form.fornitore} onChange={(event) => onChange('fornitore', event.target.value)} />
-          </label>
-          <label>
-            Data documento
-            <input
-              type="date"
-              value={form.dataDocumento}
-              onChange={(event) => onChange('dataDocumento', event.target.value)}
-            />
-          </label>
-          <label>
-            Importo totale
-            <input
-              min="0"
-              step="0.01"
-              type="number"
-              value={form.importoTotale}
-              onChange={(event) => onChange('importoTotale', event.target.value)}
-            />
-          </label>
-        </>
-      ) : null}
-      <label>
-        File documento
-        <input
-          accept=".pdf,image/*"
-          type="file"
-          onChange={(event) => onChange('fileName', event.target.files?.[0]?.name ?? '')}
-        />
-      </label>
-      <FilePreviewMock fileName={form.fileName} />
-      <label>
-        Nota
-        <textarea rows="4" value={form.nota} onChange={(event) => onChange('nota', event.target.value)} />
-      </label>
-      {!compact ? (
-        <label>
-          Caricato da
-          <input value={form.caricatoDa} onChange={(event) => onChange('caricatoDa', event.target.value)} />
-        </label>
-      ) : null}
-      <div className="upload-static-fields">
-        <span>Data caricamento: automatica</span>
-        <span>Stato verifica: da verificare</span>
+    <form className="upload-redesign-form" onSubmit={onSubmit}>
+      <div className="upload-form-grid">
+        <FieldSelect label="Cantiere" value={form.cantiereId} onChange={(value) => onChange('cantiereId', value)} options={mockCantieri.map((cantiere) => ({ value: cantiere.id, label: cantiere.nome }))} />
+        <FieldSelect label="Tipo documento" value={form.tipoDocumento} onChange={(value) => onChange('tipoDocumento', value)} options={tipiDocumento.map((tipo) => ({ value: tipo, label: tipo }))} />
+        {!compact ? <FieldInput label="Fornitore" value={form.fornitore} onChange={(value) => onChange('fornitore', value)} placeholder="Es. Falea" /> : null}
+        {!compact ? <FieldInput label="Data documento" type="date" value={form.dataDocumento} onChange={(value) => onChange('dataDocumento', value)} /> : null}
+        {!compact ? <FieldInput label="Importo totale" type="number" min="0" step="0.01" value={form.importoTotale} onChange={(value) => onChange('importoTotale', value)} placeholder="0,00" /> : null}
       </div>
-      <button className="button button-primary" type="submit">
-        Invia documento mock
-      </button>
+      <FileZone title="Seleziona documento" text="PDF o immagine da mandare in verifica contabile." accept=".pdf,image/*" fileName={form.fileName} onChange={(fileName) => onChange('fileName', fileName)} />
+      <div className="upload-form-grid upload-form-grid-secondary">
+        {!compact ? <FieldInput label="Caricato da" value={form.caricatoDa} onChange={(value) => onChange('caricatoDa', value)} /> : null}
+      </div>
+      <NoteField value={form.nota} onChange={(value) => onChange('nota', value)} placeholder="Es. collegare a bonifico, importo da verificare, possibile duplicato..." />
+      <SubmitRow status="Stato iniziale: da verificare" label="Invia documento mock" />
     </form>
   )
+}
+
+function FieldInput({ label, value, onChange, type = 'text', ...props }) {
+  return <label>{label}<input type={type} value={value} onChange={(event) => onChange(event.target.value)} {...props} /></label>
+}
+
+function FieldSelect({ label, value, onChange, options }) {
+  return <label>{label}<select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+}
+
+function FileZone({ title, text, accept, fileName, onChange, type = 'file' }) {
+  return (
+    <div className="upload-file-zone">
+      <label>
+        <span><InternalIcon name="upload" size={20} /></span>
+        <strong>{title}</strong>
+        <small>{text}</small>
+        <input accept={accept} type="file" onChange={(event) => onChange(event.target.files?.[0]?.name ?? '')} />
+      </label>
+      <FilePreviewMock fileName={fileName} type={type} />
+    </div>
+  )
+}
+
+function NoteField({ value, onChange, placeholder }) {
+  return <label className="upload-note-field">Nota<textarea rows="3" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} /></label>
+}
+
+function SubmitRow({ status, label }) {
+  return (
+    <div className="upload-submit-row">
+      <div className="upload-static-fields"><span>Data caricamento automatica</span><span>{status}</span></div>
+      <button className="button button-primary" type="submit">{label}</button>
+    </div>
+  )
+}
+
+function buildUploadStats(fotoUploads, documentUploads) {
+  const allUploads = [...fotoUploads, ...documentUploads]
+  const toReview = allUploads.filter((upload) => ['da revisionare', 'da verificare', 'Da verificare', 'Incompleto', 'possibile duplicato'].includes(upload.stato)).length
+  const recentLimit = new Date()
+  recentLimit.setDate(recentLimit.getDate() - 7)
+  const recentCount = allUploads.filter((upload) => upload.dataCaricamento && new Date(upload.dataCaricamento) >= recentLimit).length
+  return { toReview, recentCount }
 }
