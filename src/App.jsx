@@ -40,6 +40,7 @@ import './styles/dashboard-polish.css'
 import './styles/dashboard-mobile-compact.css'
 import './styles/dashboard-real-data.css'
 import './styles/dashboard-typography.css'
+import './styles/dashboard-cost-summary.css'
 
 function useHashPath() {
   const [path, setPath] = useState(() => normalizePath(window.location.hash))
