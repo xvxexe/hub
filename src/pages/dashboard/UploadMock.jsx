@@ -19,6 +19,7 @@ import {
   tipiDocumento,
   todayIso,
 } from '../../data/mockUploads'
+import { uploadOperationalFile } from '../../lib/supabaseStorage'
 
 const defaultFotoForm = {
   cantiereId: 'barcelo-roma',
@@ -49,6 +50,10 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
   const [activeType, setActiveType] = useState(isAccounting ? 'documento' : 'foto')
   const [fotoForm, setFotoForm] = useState({ ...defaultFotoForm, caricatoDa: session.name })
   const [documentForm, setDocumentForm] = useState({ ...defaultDocumentForm, caricatoDa: session.name })
+  const [fotoFile, setFotoFile] = useState(null)
+  const [documentFile, setDocumentFile] = useState(null)
+  const [uploadStatus, setUploadStatus] = useState(null)
+  const [isUploading, setIsUploading] = useState(false)
 
   const visibleFotoUploads = isEmployee ? fotoUploads.filter((upload) => upload.caricatoDa === session.name) : fotoUploads
   const visibleDocumentUploads = isEmployee ? documentUploads.filter((upload) => upload.caricatoDa === session.name) : documentUploads
@@ -65,16 +70,88 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
     setDocumentForm((current) => ({ ...current, [field]: value }))
   }
 
-  function submitFoto(event) {
-    event.preventDefault()
-    onAddFoto(createFotoUpload(fotoForm, mockCantieri, session))
-    setFotoForm({ ...defaultFotoForm, caricatoDa: session.name })
+  function selectFotoFile(file) {
+    setFotoFile(file)
+    updateFoto('fileName', file?.name ?? '')
   }
 
-  function submitDocument(event) {
+  function selectDocumentFile(file) {
+    setDocumentFile(file)
+    updateDocument('fileName', file?.name ?? '')
+  }
+
+  async function submitFoto(event) {
     event.preventDefault()
-    onAddDocument(createDocumentUpload(documentForm, mockCantieri, session))
+    setUploadStatus(null)
+
+    if (!fotoFile) {
+      setUploadStatus({ type: 'error', message: 'Seleziona una foto reale prima di inviare.' })
+      return
+    }
+
+    setIsUploading(true)
+    const localUpload = createFotoUpload(fotoForm, mockCantieri, session)
+    const uploaded = await uploadOperationalFile({
+      file: fotoFile,
+      type: 'photo',
+      cantiereId: fotoForm.cantiereId,
+      entityId: localUpload.id,
+    })
+    setIsUploading(false)
+
+    if (uploaded.error) {
+      setUploadStatus({ type: 'error', message: uploaded.error.message })
+      return
+    }
+
+    onAddFoto({
+      ...localUpload,
+      fileName: uploaded.data.fileName,
+      storagePath: uploaded.data.storagePath,
+      storageBucket: uploaded.data.bucket,
+      mimeType: uploaded.data.mimeType,
+      fileSize: uploaded.data.size,
+    })
+    setFotoFile(null)
+    setFotoForm({ ...defaultFotoForm, caricatoDa: session.name })
+    setUploadStatus({ type: 'success', message: 'Foto caricata realmente su Supabase Storage.' })
+  }
+
+  async function submitDocument(event) {
+    event.preventDefault()
+    setUploadStatus(null)
+
+    if (!documentFile) {
+      setUploadStatus({ type: 'error', message: 'Seleziona un PDF o una foto documento reale prima di inviare.' })
+      return
+    }
+
+    setIsUploading(true)
+    const localUpload = createDocumentUpload(documentForm, mockCantieri, session)
+    const uploaded = await uploadOperationalFile({
+      file: documentFile,
+      type: 'document',
+      cantiereId: documentForm.cantiereId,
+      entityId: localUpload.id,
+    })
+    setIsUploading(false)
+
+    if (uploaded.error) {
+      setUploadStatus({ type: 'error', message: uploaded.error.message })
+      return
+    }
+
+    onAddDocument({
+      ...localUpload,
+      fileName: uploaded.data.fileName,
+      storagePath: uploaded.data.storagePath,
+      storageBucket: uploaded.data.bucket,
+      mimeType: uploaded.data.mimeType,
+      fileSize: uploaded.data.size,
+    })
+    setDocumentFile(null)
     setDocumentForm({ ...defaultDocumentForm, caricatoDa: session.name })
+    setUploadStatus({ type: 'success', message: 'Documento caricato realmente su Supabase Storage.' })
   }
 
   return (
@@ -84,7 +161,7 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
         title={isEmployee ? 'Carica materiale cantiere' : 'Upload foto e documenti'}
         description="Flusso compatto: scegli cosa caricare, compila i dati utili, controlla destinazione e ultimi caricamenti senza cambiare pagina."
       >
-        <DataModeBadge>Flusso mock locale</DataModeBadge>
+        <DataModeBadge>Upload reale Storage</DataModeBadge>
         <a className="button button-secondary button-small" href="#/dashboard/caricamenti">Caricamenti</a>
       </DashboardHeader>
 
@@ -107,6 +184,13 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
           </button>
         </div>
       </CommandPanel>
+
+      {uploadStatus ? (
+        <section className={uploadStatus.type === 'error' ? 'validation-alert-block' : 'accounting-alert success-alert'}>
+          <strong>{uploadStatus.type === 'error' ? 'Upload non completato' : 'Upload completato'}</strong>
+          <p>{uploadStatus.message}</p>
+        </section>
+      ) : null}
 
       <KpiStrip ariaLabel="Indicatori upload">
         <KpiCard icon="image" label="Foto" value={visibleFotoUploads.length} hint={isAccounting ? 'Nascoste per contabilità' : 'Da revisionare'} muted={isAccounting} />
@@ -134,12 +218,12 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
                 ? 'Cantiere, zona e lavorazione servono per ritrovare subito la foto dopo.'
                 : 'Cantiere, tipo, fornitore e importo servono per il controllo contabile.'}</p>
             </div>
-            <StatusBadge>{activeType === 'foto' ? 'Da revisionare' : 'Da verificare'}</StatusBadge>
+            <StatusBadge>{isUploading ? 'Caricamento...' : activeType === 'foto' ? 'Da revisionare' : 'Da verificare'}</StatusBadge>
           </div>
           {activeType === 'foto' ? (
-            <FotoForm form={fotoForm} onChange={updateFoto} onSubmit={submitFoto} compact={isEmployee} />
+            <FotoForm form={fotoForm} onChange={updateFoto} onFileChange={selectFotoFile} onSubmit={submitFoto} compact={isEmployee} disabled={isUploading} />
           ) : (
-            <DocumentForm form={documentForm} onChange={updateDocument} onSubmit={submitDocument} compact={isEmployee} />
+            <DocumentForm form={documentForm} onChange={updateDocument} onFileChange={selectDocumentFile} onSubmit={submitDocument} compact={isEmployee} disabled={isUploading} />
           )}
         </section>
       </WorkspaceLayout>
@@ -192,7 +276,7 @@ function RecentCompactPanel({ activeType, fotoUploads, documentUploads }) {
         {uploads.slice(0, 4).map((upload) => (
           <a className="compact-upload-row" href={activeType === 'foto' ? `#/dashboard/foto/${upload.id}` : `#/dashboard/documenti/${upload.id}`} key={upload.id}>
             <span className="file-chip file-pdf">{activeType === 'foto' ? 'IMG' : 'DOC'}</span>
-            <div><strong>{activeType === 'foto' ? upload.lavorazione : upload.descrizione}</strong><small>{upload.cantiere} · {upload.fileName || 'file mock'}</small></div>
+            <div><strong>{activeType === 'foto' ? upload.lavorazione : upload.descrizione}</strong><small>{upload.cantiere} · {upload.fileName || 'file'}</small></div>
             <StatusBadge>{upload.stato}</StatusBadge>
           </a>
         ))}
@@ -202,7 +286,7 @@ function RecentCompactPanel({ activeType, fotoUploads, documentUploads }) {
   )
 }
 
-function FotoForm({ form, onChange, onSubmit, compact }) {
+function FotoForm({ form, onChange, onFileChange, onSubmit, compact, disabled }) {
   return (
     <form className="upload-redesign-form" onSubmit={onSubmit}>
       <div className="upload-form-grid">
@@ -211,18 +295,18 @@ function FotoForm({ form, onChange, onSubmit, compact }) {
         <FieldInput label="Lavorazione" value={form.lavorazione} onChange={(value) => onChange('lavorazione', value)} placeholder="Es. controsoffitto" />
         {!compact ? <FieldSelect label="Stato avanzamento" value={form.avanzamento} onChange={(value) => onChange('avanzamento', value)} options={['da avviare', 'in corso', 'avanzato', 'completato'].map((item) => ({ value: item, label: item }))} /> : null}
       </div>
-      <FileZone title="Seleziona immagine" text="Foto cantiere da controllare e collegare alla lavorazione." accept="image/*" type="image" fileName={form.fileName} onChange={(fileName) => onChange('fileName', fileName)} />
+      <FileZone title="Seleziona immagine" text="Foto cantiere da controllare e collegare alla lavorazione." accept="image/*" type="image" fileName={form.fileName} onChange={onFileChange} />
       <div className="upload-form-grid upload-form-grid-secondary">
         {!compact ? <FieldSelect label="Pubblicabile sul sito" value={form.pubblicabile} onChange={(value) => onChange('pubblicabile', value)} options={pubblicazioneFoto.map((item) => ({ value: item, label: item }))} /> : null}
         {!compact ? <FieldInput label="Caricata da" value={form.caricatoDa} onChange={(value) => onChange('caricatoDa', value)} /> : null}
       </div>
       <NoteField value={form.nota} onChange={(value) => onChange('nota', value)} placeholder="Es. foto lato piscina, da controllare prima della pubblicazione..." />
-      <SubmitRow status="Stato iniziale: da revisionare" label="Invia foto mock" />
+      <SubmitRow status="Stato iniziale: da revisionare" label={disabled ? 'Caricamento foto...' : 'Carica foto reale'} disabled={disabled} />
     </form>
   )
 }
 
-function DocumentForm({ form, onChange, onSubmit, compact }) {
+function DocumentForm({ form, onChange, onFileChange, onSubmit, compact, disabled }) {
   return (
     <form className="upload-redesign-form" onSubmit={onSubmit}>
       <div className="upload-form-grid">
@@ -232,12 +316,12 @@ function DocumentForm({ form, onChange, onSubmit, compact }) {
         {!compact ? <FieldInput label="Data documento" type="date" value={form.dataDocumento} onChange={(value) => onChange('dataDocumento', value)} /> : null}
         {!compact ? <FieldInput label="Importo totale" type="number" min="0" step="0.01" value={form.importoTotale} onChange={(value) => onChange('importoTotale', value)} placeholder="0,00" /> : null}
       </div>
-      <FileZone title="Seleziona documento" text="PDF o immagine da mandare in verifica contabile." accept=".pdf,image/*" fileName={form.fileName} onChange={(fileName) => onChange('fileName', fileName)} />
+      <FileZone title="Seleziona documento" text="PDF o immagine da mandare in verifica contabile." accept=".pdf,image/*" fileName={form.fileName} onChange={onFileChange} />
       <div className="upload-form-grid upload-form-grid-secondary">
         {!compact ? <FieldInput label="Caricato da" value={form.caricatoDa} onChange={(value) => onChange('caricatoDa', value)} /> : null}
       </div>
       <NoteField value={form.nota} onChange={(value) => onChange('nota', value)} placeholder="Es. collegare a bonifico, importo da verificare, possibile duplicato..." />
-      <SubmitRow status="Stato iniziale: da verificare" label="Invia documento mock" />
+      <SubmitRow status="Stato iniziale: da verificare" label={disabled ? 'Caricamento documento...' : 'Carica documento reale'} disabled={disabled} />
     </form>
   )
 }
@@ -256,8 +340,8 @@ function FileZone({ title, text, accept, fileName, onChange, type = 'file' }) {
       <label>
         <span><InternalIcon name="upload" size={20} /></span>
         <strong>{title}</strong>
-        <small>{text}</small>
-        <input accept={accept} type="file" onChange={(event) => onChange(event.target.files?.[0]?.name ?? '')} />
+        <small>{fileName ? `File selezionato: ${fileName}` : text}</small>
+        <input accept={accept} type="file" onChange={(event) => onChange(event.target.files?.[0] ?? null)} />
       </label>
       <FilePreviewMock fileName={fileName} type={type} />
     </div>
@@ -268,11 +352,11 @@ function NoteField({ value, onChange, placeholder }) {
   return <label className="upload-note-field">Nota<textarea rows="3" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} /></label>
 }
 
-function SubmitRow({ status, label }) {
+function SubmitRow({ status, label, disabled }) {
   return (
     <div className="upload-submit-row">
       <div className="upload-static-fields"><span>Data caricamento automatica</span><span>{status}</span></div>
-      <button className="button button-primary" type="submit">{label}</button>
+      <button className="button button-primary" type="submit" disabled={disabled}>{label}</button>
     </div>
   )
 }
