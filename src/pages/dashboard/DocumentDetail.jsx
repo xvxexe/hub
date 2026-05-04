@@ -17,7 +17,7 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
 
   if (!document || (session.role === 'employee' && document.caricatoDa !== session.name)) {
     return (
-      <DashboardHeader eyebrow="Documento non disponibile" title="Documento mock non accessibile" description="Il ruolo corrente può vedere solo documenti consentiti.">
+      <DashboardHeader eyebrow="Documento non disponibile" title="Documento non accessibile" description="Il ruolo corrente può vedere solo documenti consentiti.">
         <a className="button button-secondary" href={resolvedBackHref}>Torna indietro</a>
       </DashboardHeader>
     )
@@ -44,10 +44,10 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
       <DashboardHeader
         eyebrow="Dettaglio documento"
         title={`${document.tipoDocumento} · ${document.fornitore}`}
-        description="Dettaglio mock modificabile per verifica amministrativa e collegamento al cantiere."
+        description="Dettaglio modificabile per verifica amministrativa, file reale e collegamento al cantiere."
       >
         <StatusBadge>{document.statoVerifica}</StatusBadge>
-        <DataModeBadge />
+        <DataModeBadge>{document.storagePath ? 'File reale Storage' : 'Dato importato'}</DataModeBadge>
       </DashboardHeader>
 
       <section className="detail-action-bar">
@@ -66,7 +66,7 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
       {amountWarning ? (
         <section className="validation-alert-block">
           <strong>Importi da controllare</strong>
-          <p>Imponibile + IVA non coincide con il totale. Il dato resta modificabile perché siamo in modalità mock.</p>
+          <p>Imponibile + IVA non coincide con il totale. Correggi prima di confermare il documento.</p>
         </section>
       ) : null}
 
@@ -86,7 +86,7 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
             </>
           ) : null}
           <label className="form-wide">Note<textarea rows="4" value={form.note ?? ''} onChange={(event) => update('note', event.target.value)} disabled={!canEdit} /></label>
-          <button className="button button-primary" type="submit" disabled={!canEdit}>Salva modifiche mock</button>
+          <button className="button button-primary" type="submit" disabled={!canEdit}>Salva modifiche</button>
         </form>
 
         <aside className="info-card">
@@ -98,7 +98,7 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
             {canViewEconomics ? <div><dt>Totale</dt><dd><MoneyValue value={document.totale} /></dd></div> : null}
             <div><dt>Stato</dt><dd><StatusBadge>{document.statoVerifica}</StatusBadge></dd></div>
           </dl>
-          <FilePreviewMock fileName={document.fileName} />
+          <FilePreviewMock fileName={document.fileName} storagePath={document.storagePath} storageBucket={document.storageBucket ?? 'documents'} />
         </aside>
       </section>
 
