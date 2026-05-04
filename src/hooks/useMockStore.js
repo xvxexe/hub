@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { exportSupabaseToGoogleSheets, isGoogleSheetsSyncConfigured } from '../lib/googleSheetsSync'
+import { exportSupabaseToGoogleSheets, isGoogleSheetsSyncConfigured, STORE_SYNC_EVENT } from '../lib/googleSheetsSync'
 import { isSupabaseConfigured } from '../lib/supabaseClient'
 import { fetchRemoteStore, saveRemoteStore } from '../lib/supabaseStore'
 
@@ -58,6 +58,19 @@ export function useMockStore(session) {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    function handleStoreSync(event) {
+      const nextStore = event.detail?.store
+      if (!isValidStore(nextStore)) return
+      setStore(nextStore)
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStore))
+      setSyncState({ status: 'supabase', error: null })
+    }
+
+    window.addEventListener(STORE_SYNC_EVENT, handleStoreSync)
+    return () => window.removeEventListener(STORE_SYNC_EVENT, handleStoreSync)
   }, [])
 
   async function persist(nextStore) {
