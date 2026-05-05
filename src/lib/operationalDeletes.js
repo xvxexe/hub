@@ -2,6 +2,13 @@ import { supabaseRequest } from './supabaseClient'
 import { deleteOperationalFile } from './supabaseStorage'
 
 const ENTITY_CONFIG = {
+  cantieri: {
+    table: 'cantieri',
+    dependentDeletes: [
+      { table: 'notes', filterColumn: 'entity_id', extraFilter: 'entity_type=eq.cantieri' },
+      { table: 'activity_logs', filterColumn: 'entity_id', extraFilter: 'entity_type=eq.cantieri' },
+    ],
+  },
   documents: {
     table: 'documents',
     storageBucket: 'documents',
@@ -69,6 +76,9 @@ export function filterDeletedFromStore(store, deletedRecords) {
 
   return {
     ...store,
+    cantieri: Array.isArray(store.cantieri)
+      ? store.cantieri.filter((cantiere) => !deleted.has(`cantieri:${cantiere.id}`))
+      : [],
     documents: Array.isArray(store.documents)
       ? store.documents.filter((document) => !deleted.has(`documents:${document.id}`))
       : [],
@@ -100,15 +110,16 @@ async function recordDeletedEntity({ entityType, entity, session, reason, storag
       deleted_at: new Date().toISOString(),
       metadata: {
         fileName: entity.fileName ?? null,
-        cantiereId: entity.cantiereId ?? null,
-        cantiere: entity.cantiere ?? null,
-        label: entity.descrizione ?? entity.lavorazione ?? entity.fornitore ?? entity.fileName ?? null,
+        cantiereId: entity.cantiereId ?? entity.id ?? null,
+        cantiere: entity.cantiere ?? entity.nome ?? entity.cliente ?? null,
+        label: entity.descrizione ?? entity.lavorazione ?? entity.fornitore ?? entity.fileName ?? entity.nome ?? entity.cliente ?? null,
       },
     }),
   })
 }
 
 function canDeleteEntity({ entityType, entity, session }) {
+  if (entityType === 'cantieri') return session?.role === 'admin'
   if (session?.role === 'admin') return true
   if (entityType === 'documents' && session?.role === 'accounting') return true
   if (session?.role !== 'employee') return false
