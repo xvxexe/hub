@@ -467,6 +467,69 @@
   grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.7fr);
 }
 
+/* Stability fixes: keep document rows readable even with long supplier/file names and large amounts. */
+.detail-document-list a,
+.compact-doc-card .detail-document-list a {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'chip text'
+    'chip meta';
+  align-items: start;
+  gap: 0.34rem 0.55rem;
+  min-height: auto;
+  padding: 0.58rem 0.62rem;
+}
+
+.detail-document-list a .file-chip {
+  grid-area: chip;
+  margin-top: 0.05rem;
+}
+
+.detail-document-list a > div {
+  grid-area: text;
+  min-width: 0;
+}
+
+.detail-document-list a > strong {
+  grid-area: meta;
+  justify-self: start;
+  max-width: 100%;
+  font-size: 0.8rem;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.detail-document-list a > .status-badge {
+  grid-area: meta;
+  justify-self: end;
+  align-self: center;
+  max-width: 11rem;
+  line-height: 1.12;
+  white-space: normal;
+  text-align: center;
+}
+
+.detail-document-list a > div strong,
+.detail-document-list a > div small {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.detail-document-list a > div strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.detail-document-list a > div small {
+  margin-top: 0.12rem;
+  color: var(--dash-muted, #6f7b85);
+  font-size: 0.71rem;
+  line-height: 1.22;
+}
+
 @media (max-width: 1180px) {
   .cantiere-detail-hero,
   .cantiere-detail-layout,
@@ -577,6 +640,17 @@
   .detail-accounting-table a > .status-badge {
     grid-column: 2;
     justify-self: start;
+  }
+
+  .detail-document-list a > strong,
+  .detail-document-list a > .status-badge {
+    grid-area: auto;
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .detail-document-list a > .status-badge {
+    margin-top: 0.18rem;
   }
 }
 
