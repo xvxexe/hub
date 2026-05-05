@@ -1,6 +1,7 @@
 import { isSupabaseConfigured, supabaseRequest } from './supabaseClient'
 
 const EMPTY_OPERATIONAL_STORE = {
+  cantieri: [],
   documents: [],
   movements: [],
   photos: [],
@@ -15,7 +16,7 @@ export async function fetchOperationalStore() {
 
   try {
     const [cantieri, documents, movements, photos, estimates, notes, activities, deletedRecords] = await Promise.all([
-      supabaseRequest('cantieri?select=id,nome,metadata&order=created_at.asc', { method: 'GET' }),
+      supabaseRequest('cantieri?select=*&order=created_at.asc', { method: 'GET' }),
       supabaseRequest('documents?select=*,cantieri(nome)&order=data_documento.desc.nullslast,created_at.desc', { method: 'GET' }),
       supabaseRequest('accounting_movements?select=*,cantieri(nome),documents(file_name,storage_path,tipo_documento,numero_documento,sheet_tab)&order=data.desc.nullslast,created_at.desc', { method: 'GET' }),
       supabaseRequest('photos?select=*,cantieri(nome)&order=created_at.desc', { method: 'GET' }),
@@ -30,10 +31,12 @@ export async function fetchOperationalStore() {
 
     const documentRows = Array.isArray(documents.data) ? documents.data.map(fromDocumentRow) : []
     const movementRows = Array.isArray(movements.data) ? movements.data.map(fromAccountingMovementRow) : []
+    const cantiereRows = Array.isArray(cantieri.data) ? cantieri.data.map(fromCantiereRow) : []
     const officialSource = buildOfficialSourceFromCantieri(cantieri.data)
 
     const store = {
       ...EMPTY_OPERATIONAL_STORE,
+      cantieri: cantiereRows,
       documents: documentRows,
       movements: movementRows.length ? movementRows : documentRows.map(documentToAccountingMovement),
       photos: Array.isArray(photos.data) ? photos.data.map(fromPhotoRow) : [],
@@ -59,7 +62,7 @@ export async function saveOperationalStore(store, session) {
   if (!isValidStoreShape(store)) return { error: new Error('Store operativo non valido'), source: 'supabase-operational' }
 
   try {
-    const cantieri = buildCantieriRows(store)
+    const cantieri = buildCantieriRows(store).map((cantiere) => toCantiereRow(cantiere, store))
     const documents = store.documents.map((document) => toDocumentRow(document, session))
     const movementsSource = Array.isArray(store.movements) && store.movements.length
       ? store.movements
@@ -104,7 +107,8 @@ function upsertRows(table, rows) {
 
 function hasOperationalData(store) {
   return Boolean(
-    store.documents.length
+    store.cantieri.length
+      || store.documents.length
       || store.movements.length
       || store.photos.length
       || store.estimates.length
@@ -128,6 +132,19 @@ function isValidStoreShape(store) {
 
 function buildCantieriRows(store) {
   const map = new Map()
+
+  ;(store.cantieri ?? []).forEach((cantiere) => {
+    if (!cantiere?.id) return
+    map.set(cantiere.id, {
+      ...cantiere,
+      nome: cantiere.nome ?? cantiere.cliente ?? cantiere.id,
+      cliente: cantiere.cliente ?? cantiere.nome ?? cantiere.id,
+      localita: cantiere.localita ?? 'Da hub',
+      stato: cantiere.stato ?? 'attivo',
+      avanzamento: Number(cantiere.avanzamento || 0),
+    })
+  })
+
   ;[...store.documents, ...(store.movements ?? []), ...store.photos].forEach((item) => {
     const id = item.cantiereId ?? 'barcelo-roma'
     const nome = item.cantiere ?? 'Barcelò Roma'
@@ -142,7 +159,7 @@ function buildCantieriRows(store) {
         stato: 'attivo',
         avanzamento: 0,
         metadata: buildCantiereMetadata(store, id),
-        updated_at: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
     }
   })
@@ -158,6 +175,41 @@ function buildCantiereMetadata(store, cantiereId) {
     ...(officialMaster ? { officialMaster } : {}),
     cantiereId,
     lastHubImportAt: new Date().toISOString(),
+  }
+}
+
+function fromCantiereRow(row) {
+  return {
+    id: row.id,
+    nome: row.nome,
+    cliente: row.cliente ?? row.nome,
+    localita: row.localita ?? '',
+    indirizzo: row.indirizzo ?? '',
+    stato: row.stato ?? 'attivo',
+    avanzamento: Number(row.avanzamento || 0),
+    responsabileId: row.responsabile_id,
+    metadata: row.metadata ?? {},
+    source: row.metadata?.source?.kind ?? row.metadata?.source ?? 'supabase-operational',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function toCantiereRow(cantiere, store) {
+  return {
+    id: cantiere.id,
+    nome: cantiere.nome ?? cantiere.cliente ?? 'Cantiere',
+    cliente: cantiere.cliente ?? cantiere.nome ?? null,
+    localita: cantiere.localita ?? null,
+    indirizzo: cantiere.indirizzo ?? null,
+    stato: cantiere.stato ?? 'attivo',
+    avanzamento: Number(cantiere.avanzamento || 0),
+    metadata: {
+      ...(cantiere.metadata ?? {}),
+      ...(buildCantiereMetadata(store, cantiere.id) ?? {}),
+      convertedFromEstimateId: cantiere.convertedFromEstimateId ?? cantiere.metadata?.convertedFromEstimateId ?? null,
+    },
+    updated_at: new Date().toISOString(),
   }
 }
 
