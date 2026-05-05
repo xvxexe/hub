@@ -14,17 +14,18 @@ export async function fetchOperationalStore() {
   if (!isSupabaseConfigured) return { data: null, error: null, source: 'local' }
 
   try {
-    const [cantieri, documents, movements, photos, notes, activities, deletedRecords] = await Promise.all([
+    const [cantieri, documents, movements, photos, estimates, notes, activities, deletedRecords] = await Promise.all([
       supabaseRequest('cantieri?select=id,nome,metadata&order=created_at.asc', { method: 'GET' }),
       supabaseRequest('documents?select=*,cantieri(nome)&order=data_documento.desc.nullslast,created_at.desc', { method: 'GET' }),
       supabaseRequest('accounting_movements?select=*,cantieri(nome),documents(file_name,storage_path,tipo_documento,numero_documento,sheet_tab)&order=data.desc.nullslast,created_at.desc', { method: 'GET' }),
       supabaseRequest('photos?select=*,cantieri(nome)&order=created_at.desc', { method: 'GET' }),
+      supabaseRequest('estimates?select=*&order=created_at.desc', { method: 'GET' }),
       supabaseRequest('notes?select=*&order=created_at.desc', { method: 'GET' }),
       supabaseRequest('activity_logs?select=*&order=created_at.desc&limit=100', { method: 'GET' }),
       supabaseRequest('deleted_records?select=*&order=deleted_at.desc&limit=100', { method: 'GET' }),
     ])
 
-    const firstError = [cantieri, documents, movements, photos, notes, activities, deletedRecords].find((result) => result.error)
+    const firstError = [cantieri, documents, movements, photos, estimates, notes, activities, deletedRecords].find((result) => result.error)
     if (firstError?.error) return { data: null, error: firstError.error, source: 'supabase-operational' }
 
     const documentRows = Array.isArray(documents.data) ? documents.data.map(fromDocumentRow) : []
@@ -36,6 +37,7 @@ export async function fetchOperationalStore() {
       documents: documentRows,
       movements: movementRows.length ? movementRows : documentRows.map(documentToAccountingMovement),
       photos: Array.isArray(photos.data) ? photos.data.map(fromPhotoRow) : [],
+      estimates: Array.isArray(estimates.data) ? estimates.data.map(fromEstimateRow) : [],
       notes: Array.isArray(notes.data) ? notes.data.map(fromNoteRow) : [],
       activities: Array.isArray(activities.data) ? activities.data.map(fromActivityRow) : [],
       deletedRecords: Array.isArray(deletedRecords.data) ? deletedRecords.data.map(fromDeletedRecordRow) : [],
@@ -64,6 +66,7 @@ export async function saveOperationalStore(store, session) {
       : store.documents.map(documentToAccountingMovement)
     const movements = movementsSource.map((movement) => toAccountingMovementRow(movement, session))
     const photos = store.photos.map((photo) => toPhotoRow(photo, session))
+    const estimates = store.estimates.map((estimate) => toEstimateRow(estimate, session))
     const notes = store.notes.map((note) => toNoteRow(note, session))
     const activities = store.activities.slice(0, 250).map((activity) => toActivityRow(activity, session))
 
@@ -71,6 +74,7 @@ export async function saveOperationalStore(store, session) {
       ['cantieri', cantieri],
       ['documents', documents],
       ['photos', photos],
+      ['estimates', estimates],
       ['accounting_movements', movements],
       ['notes', notes],
       ['activity_logs', activities],
@@ -103,6 +107,7 @@ function hasOperationalData(store) {
     store.documents.length
       || store.movements.length
       || store.photos.length
+      || store.estimates.length
       || store.notes.length
       || store.activities.length
       || store.deletedRecords.length,
@@ -343,6 +348,54 @@ function toPhotoRow(photo, session) {
     stato: titleStatus(photo.stato) || 'Da revisionare',
     descrizione_pubblica: photo.descrizionePubblica ?? null,
     caricato_da: session?.authMode === 'supabase' ? session.id : null,
+    updated_at: new Date().toISOString(),
+  }
+}
+
+function fromEstimateRow(row) {
+  return {
+    id: row.id,
+    client: row.client,
+    phone: row.phone,
+    email: row.email,
+    city: row.city,
+    customerType: row.customer_type,
+    workType: row.work_type,
+    urgency: row.urgency,
+    budget: row.budget,
+    contactPreference: row.contact_preference,
+    priority: row.priority ?? 'Media',
+    status: row.status ?? 'Nuovo',
+    description: row.description,
+    internalNotes: row.internal_notes,
+    cantiereId: row.cantiere_id,
+    source: row.source ?? 'supabase-operational',
+    requestDate: row.request_date,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function toEstimateRow(estimate, session) {
+  return {
+    id: estimate.id,
+    client: estimate.client ?? 'Cliente da verificare',
+    phone: estimate.phone ?? null,
+    email: estimate.email ?? null,
+    city: estimate.city ?? null,
+    customer_type: estimate.customerType ?? null,
+    work_type: estimate.workType ?? null,
+    urgency: estimate.urgency ?? null,
+    budget: estimate.budget ?? null,
+    contact_preference: estimate.contactPreference ?? null,
+    priority: estimate.priority ?? 'Media',
+    status: estimate.status ?? 'Nuovo',
+    description: estimate.description ?? null,
+    internal_notes: estimate.internalNotes ?? null,
+    cantiere_id: estimate.cantiereId ?? null,
+    source: estimate.source ?? 'hub-ui',
+    created_by: session?.authMode === 'supabase' ? session.id : null,
+    request_date: estimate.requestDate || null,
     updated_at: new Date().toISOString(),
   }
 }
