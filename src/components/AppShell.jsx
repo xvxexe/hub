@@ -22,7 +22,6 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
   const activeRole = session ? getRole(session.role) : null
   const [activeTopbarPanel, setActiveTopbarPanel] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [isSidebarCompact, setIsSidebarCompact] = useState(false)
   const searchResults = getInternalSearchResults(searchQuery, visibleDashboardNav, dataStore)
   const notifications = useMemo(() => buildNotifications(dataStore), [dataStore])
 
@@ -35,18 +34,9 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
       {!isDashboard ? <PublicHeader currentPath={currentPath} /> : null}
 
       {isDashboard ? (
-        <div className={isSidebarCompact ? 'dashboard-shell dashboard-shell-compact' : 'dashboard-shell'}>
+        <div className="dashboard-shell">
           <aside className="dashboard-sidebar" aria-label="Menu area interna">
             <div className="sidebar-brand-block">
-              <button
-                className="icon-button sidebar-menu-button"
-                type="button"
-                aria-label={isSidebarCompact ? 'Espandi menu' : 'Riduci menu'}
-                aria-pressed={isSidebarCompact}
-                onClick={() => setIsSidebarCompact((current) => !current)}
-              >
-                <InternalIcon name="menu" size={18} />
-              </button>
               <a className="dashboard-brand" href="#/dashboard">
                 <span className="brand-mark">ES</span>
                 <span>
@@ -71,18 +61,7 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
                   ))}
                 </nav>
                 <div className="dev-role-panel">
-                  <label htmlFor="dev-role">Ruolo</label>
-                  <select
-                    id="dev-role"
-                    value={session.role}
-                    onChange={(event) => onRoleChange(event.target.value)}
-                  >
-                    {roles.map((role) => (
-                      <option key={role.id} value={role.id}>
-                        {role.label}
-                      </option>
-                    ))}
-                  </select>
+                  <span className="role-managed-label">Ruolo gestito da Supabase</span>
                   <button className="sidebar-button" type="button" onClick={onLogout}>
                     Esci
                   </button>
@@ -96,14 +75,6 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
           </aside>
           <main className="dashboard-main">
             <div className="internal-topbar">
-              <button
-                className="icon-button mobile-sidebar-trigger"
-                type="button"
-                aria-label="Menu"
-                onClick={() => setIsSidebarCompact((current) => !current)}
-              >
-                <InternalIcon name="menu" size={18} />
-              </button>
               <label className="global-search">
                 <InternalIcon name="search" size={18} />
                 <span>Cerca</span>
@@ -217,7 +188,7 @@ export function AppShell({ children, currentPath, session, onLogout, onRoleChang
             </div>
             {session ? (
               <label className="mobile-dashboard-nav">
-                Vai a
+                Vai a una sezione
                 <select
                   value={visibleDashboardNav.find((item) => isActive(currentPath, item.path))?.path ?? '/dashboard'}
                   onChange={(event) => {
@@ -394,15 +365,9 @@ function getInternalSearchResults(query, navItems, dataStore) {
 }
 
 function BottomDashboardNav({ items, currentPath }) {
-  const preferred = ['Dashboard', 'Cantieri', 'Documenti', 'Contabilita', 'Upload']
-  const visibleItems = preferred
-    .map((label) => items.find((item) => item.label === label || item.label.startsWith(label)))
-    .filter(Boolean)
-    .slice(0, 5)
-
   return (
     <nav className="dashboard-bottom-nav" aria-label="Navigazione area interna mobile">
-      {visibleItems.map((item) => (
+      {items.map((item) => (
         <a
           aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
           href={`#${item.path}`}
