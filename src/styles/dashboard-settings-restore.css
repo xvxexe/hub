@@ -1,0 +1,229 @@
+/* Settings restore: keep the page compact and readable without touching other dashboard sections. */
+
+.settings-page-restored {
+  width: min(100% - 2rem, 980px);
+  margin: 0 auto;
+  display: grid;
+  gap: 0.95rem;
+}
+
+.settings-header-restored {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+.settings-card-restored {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  border-radius: 1rem !important;
+}
+
+.settings-invite-form-restored {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 0.8rem !important;
+  align-items: end !important;
+}
+
+.settings-invite-form-restored label:nth-child(3) {
+  grid-column: 1 / 2;
+}
+
+.settings-invite-form-restored .form-actions {
+  grid-column: 2 / 3;
+  align-self: end;
+}
+
+.settings-invite-form-restored .form-actions .button {
+  min-height: 2.65rem;
+}
+
+.settings-feedback-restored {
+  margin-top: 0.8rem !important;
+}
+
+.settings-invite-list-restored {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.settings-invite-row-restored {
+  display: grid;
+  grid-template-columns: 2.45rem minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 5.1rem;
+  padding: 0.78rem 0.85rem;
+  border: 1px solid rgba(214, 224, 232, 0.86);
+  border-radius: 0.86rem;
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.settings-invite-avatar-restored {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.settings-invite-main-restored {
+  min-width: 0;
+  display: grid;
+  gap: 0.16rem;
+}
+
+.settings-invite-main-restored strong {
+  color: var(--dash-title, #17212b);
+  font-size: 0.92rem;
+  font-weight: 760;
+  line-height: 1.15;
+}
+
+.settings-invite-main-restored > span {
+  overflow: hidden;
+  color: var(--dash-muted, #6f7b85);
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-invite-main-restored dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin: 0.2rem 0 0;
+}
+
+.settings-invite-main-restored dl div {
+  display: grid;
+  gap: 0.02rem;
+}
+
+.settings-invite-main-restored dt {
+  color: var(--dash-muted, #6f7b85);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.settings-invite-main-restored dd {
+  margin: 0;
+  color: var(--dash-title, #17212b);
+  font-size: 0.72rem;
+  font-weight: 720;
+}
+
+.settings-invite-actions-restored {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.38rem;
+}
+
+.settings-invite-actions-restored .button-small {
+  min-height: 2rem !important;
+  padding: 0.42rem 0.58rem !important;
+  border-radius: 0.62rem !important;
+  font-size: 0.72rem !important;
+}
+
+.button-danger {
+  border: 1px solid rgba(220, 38, 38, 0.24) !important;
+  background: rgba(254, 242, 242, 0.92) !important;
+  color: #b91c1c !important;
+}
+
+.button-danger:hover {
+  background: rgba(254, 226, 226, 0.98) !important;
+  border-color: rgba(220, 38, 38, 0.42) !important;
+}
+
+.settings-empty-restored {
+  padding: 1rem !important;
+  border-radius: 0.86rem !important;
+}
+
+.settings-sync-grid-restored {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.settings-sync-card-restored {
+  position: relative;
+  display: grid;
+  gap: 0.7rem;
+  min-height: 11rem;
+  padding: 1rem;
+  border: 1px solid rgba(214, 224, 232, 0.86);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.settings-sync-card-restored .data-mode-badge {
+  justify-self: end;
+}
+
+.settings-sync-card-restored h3 {
+  margin: 0;
+  color: var(--dash-title, #17212b);
+  font-size: 1.18rem;
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+}
+
+.settings-sync-card-restored p {
+  margin: 0;
+  color: var(--dash-muted, #6f7b85);
+  font-size: 0.84rem;
+  line-height: 1.42;
+}
+
+@media (max-width: 767px) {
+  .settings-page-restored {
+    width: 100%;
+    gap: 0.82rem;
+  }
+
+  .settings-invite-form-restored,
+  .settings-sync-grid-restored {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .settings-invite-form-restored label:nth-child(3),
+  .settings-invite-form-restored .form-actions {
+    grid-column: auto;
+  }
+
+  .settings-invite-form-restored .form-actions .button {
+    width: 100%;
+  }
+
+  .settings-invite-row-restored {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.58rem;
+    padding: 0.76rem;
+  }
+
+  .settings-status-restored,
+  .settings-invite-actions-restored {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .settings-invite-actions-restored {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .settings-invite-actions-restored .button-small {
+    width: 100%;
+  }
+}
