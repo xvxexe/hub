@@ -278,7 +278,7 @@ function AccountingSummaryCards({ totals, rowsCount, mathWarnings, officialMaste
   return (
     <>
       {officialMaster ? (
-        <section className="accounting-alert success-alert">
+        <section className="accounting-alert success-alert master-source-alert">
           <strong>Totali ufficiali dal master Google Sheets</strong>
           <p>I numeri economici qui sotto vengono dal tab Riepilogo. Le righe operative non vengono usate per ricalcolare il totale.</p>
         </section>
@@ -301,10 +301,10 @@ function AccountingSummaryCards({ totals, rowsCount, mathWarnings, officialMaste
 
 function AccountingAlerts({ alerts }) {
   return (
-    <section className="accounting-section real-accounting-section">
+    <section className="accounting-section real-accounting-section accounting-alerts-section">
       <div className="section-heading panel-title-row"><div><h2>Controlli contabili</h2><p>Alert calcolati sulle righe operative, non sui totali ufficiali del master.</p></div><StatusBadge>{alerts.length ? `${alerts.length} alert` : 'Tutto ok'}</StatusBadge></div>
-      <div className="document-card-list">
-        {alerts.length > 0 ? alerts.map((alert) => <DataCardRow key={alert.id} icon={alert.message === 'Duplicato reale' || alert.message === 'Duplicato' ? 'warning' : 'file'} title={alert.movimento.descrizione} description={`${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`} status={alert.message} href={`#/dashboard/contabilita/${alert.movimento.id}`} warning={alert.message !== 'Da controllare'} meta={[{ label: 'Tab', value: alert.movimento.sheetTab }, { label: 'Categoria', value: alert.movimento.categoria }, { label: 'Totale', value: <MoneyValue value={alert.movimento.totale} /> }, { label: 'Pagamento', value: alert.movimento.pagamento }]} />) : <article className="accounting-alert"><strong>Nessun alert sui filtri attuali</strong><small>I movimenti selezionati non hanno controlli aperti.</small></article>}
+      <div className="document-card-list accounting-alert-list">
+        {alerts.length > 0 ? alerts.slice(0, 8).map((alert) => <DataCardRow key={alert.id} icon={alert.message === 'Duplicato reale' || alert.message === 'Duplicato' ? 'warning' : 'file'} title={alert.movimento.descrizione} description={`${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`} status={alert.message} href={`#/dashboard/contabilita/${alert.movimento.id}`} warning={alert.message !== 'Da controllare'} meta={[{ label: 'Tab', value: alert.movimento.sheetTab }, { label: 'Categoria', value: alert.movimento.categoria }, { label: 'Totale', value: <MoneyValue value={alert.movimento.totale} /> }, { label: 'Pagamento', value: alert.movimento.pagamento }]} />) : <article className="accounting-alert"><strong>Nessun alert sui filtri attuali</strong><small>I movimenti selezionati non hanno controlli aperti.</small></article>}
       </div>
     </section>
   )
@@ -312,7 +312,7 @@ function AccountingAlerts({ alerts }) {
 
 function AccountingTable({ rows, duplicateIds }) {
   return (
-    <section className="accounting-section real-accounting-section">
+    <section className="accounting-section real-accounting-section accounting-movements-section">
       <div className="section-heading panel-title-row"><div><h2>Movimenti</h2><p>Righe operative importate dai tab del master: servono per leggere fornitore, documento, pagamento e note.</p></div><StatusBadge>{rows.length} righe</StatusBadge></div>
       {rows.length > 0 ? (
         <>
@@ -330,13 +330,42 @@ function AccountingMobileCard({ row, duplicate }) {
 }
 
 function CantiereAccountingSummary({ summaries }) {
-  return <section className="accounting-section real-accounting-section"><div className="section-heading panel-title-row"><div><h2>Riepilogo per cantiere</h2><p>Se il master ha totali ufficiali, questi valori vengono dal tab Riepilogo.</p></div><StatusBadge>{summaries.length} cantieri</StatusBadge></div><div className="accounting-site-grid real-site-grid">{summaries.map((summary) => <article className="accounting-site-card" key={summary.cantiere.id}><h3>{summary.cantiere.nome}</h3><dl className="detail-list"><div><dt>Imponibile</dt><dd><MoneyValue value={summary.totals.imponibile} /></dd></div><div><dt>IVA</dt><dd><MoneyValue value={summary.totals.iva} /></dd></div><div><dt>Totale spese</dt><dd><MoneyValue value={summary.totals.totale} /></dd></div><div><dt>Movimenti</dt><dd>{summary.movimenti.length}</dd></div><div><dt>Da verificare</dt><dd>{summary.totals.daVerificare ?? 0}</dd></div></dl><CategoryBreakdown rows={summary.categories} total={summary.totals.totale} compact /></article>)}</div></section>
+  return (
+    <section className="accounting-section real-accounting-section accounting-site-summary-section">
+      <div className="section-heading panel-title-row">
+        <div>
+          <h2>Riepilogo per cantiere</h2>
+          <p>Vista sintetica: i dettagli per tab sono nella sezione dedicata sotto.</p>
+        </div>
+        <StatusBadge>{summaries.length} cantieri</StatusBadge>
+      </div>
+      <div className="accounting-site-grid real-site-grid">
+        {summaries.map((summary) => (
+          <article className="accounting-site-card" key={summary.cantiere.id}>
+            <div className="accounting-site-card-head">
+              <div>
+                <span>Cantiere</span>
+                <h3>{summary.cantiere.nome}</h3>
+              </div>
+              <StatusBadge>{summary.movimenti.length} righe</StatusBadge>
+            </div>
+            <dl className="detail-list">
+              <div><dt>Totale ufficiale</dt><dd><MoneyValue value={summary.totals.totale} /></dd></div>
+              <div><dt>Imponibile</dt><dd><MoneyValue value={summary.totals.imponibile} /></dd></div>
+              <div><dt>IVA</dt><dd><MoneyValue value={summary.totals.iva} /></dd></div>
+              <div><dt>Da verificare</dt><dd>{summary.totals.daVerificare ?? 0}</dd></div>
+            </dl>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
 }
 
 function CategoryBreakdown({ rows, total, compact = false, official = false }) {
   const visibleRows = rows.filter((row) => Number(row.totale || 0) > 0)
   const max = Math.max(...visibleRows.map((row) => row.totale), 1)
-  return <section className={compact ? 'category-breakdown compact-breakdown compact-category-card' : 'accounting-section real-accounting-section compact-category-card'}>{!compact ? <div className="section-heading panel-title-row"><div><h2>Spese per tab / categoria</h2><p>{official ? 'Valori ufficiali letti dal tab Riepilogo del master.' : 'Distribuzione calcolata dalle righe operative.'}</p></div><StatusBadge>{visibleRows.length} voci</StatusBadge></div> : null}<div className="compact-category-grid">{visibleRows.map((row) => { const percent = total > 0 ? Math.round((row.totale / total) * 100) : 0; const width = Math.max(6, Math.round((row.totale / max) * 100)); return <article className="compact-category-item" key={row.categoria}><div className="compact-category-top"><strong>{row.categoria}</strong><span><MoneyValue value={row.totale} /></span></div><div className="compact-category-bar"><span style={{ width: `${width}%` }} /></div><small>{percent}% del totale</small></article> })}</div></section>
+  return <section className={compact ? 'category-breakdown compact-breakdown compact-category-card' : 'accounting-section real-accounting-section compact-category-card accounting-category-section'}>{!compact ? <div className="section-heading panel-title-row"><div><h2>Spese per tab / categoria</h2><p>{official ? 'Valori ufficiali letti dal tab Riepilogo del master.' : 'Distribuzione calcolata dalle righe operative.'}</p></div><StatusBadge>{visibleRows.length} voci</StatusBadge></div> : null}<div className="compact-category-grid">{visibleRows.map((row) => { const percent = total > 0 ? Math.round((row.totale / total) * 100) : 0; const width = Math.max(6, Math.round((row.totale / max) * 100)); return <article className="compact-category-item" key={row.categoria}><div className="compact-category-top"><strong>{formatCategoryLabel(row.categoria)}</strong><span><MoneyValue value={row.totale} /></span></div><div className="compact-category-bar"><span style={{ width: `${width}%` }} /></div><small>{percent}% del totale</small></article> })}</div></section>
 }
 
 function getAccountingTotals(rows, duplicateIds) {
@@ -374,6 +403,13 @@ function buildSiteOptions(rows) {
 function buildUniqueOptions(rows, field, fallback) {
   const values = [...new Set(rows.map((row) => row[field]).filter(Boolean))]
   return values.length ? values : fallback
+}
+
+function formatCategoryLabel(value) {
+  return String(value ?? '')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function formatDate(date) {
