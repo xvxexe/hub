@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ActivityFeed, DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { InternalIcon } from '../../components/InternalIcons'
 import { MoneyValue } from '../../components/MoneyValue'
@@ -7,11 +7,21 @@ import { StatusBadge } from '../../components/StatusBadge'
 import { getOfficialMasterTotals, preferOfficialCategoryTotals, preferOfficialTotals } from '../../lib/masterTotals'
 
 const tabs = ['Panoramica', 'Lavorazioni', 'Documenti', 'Contabilità', 'Foto', 'Note']
+const EMPTY_CANTIERE_FORM = {
+  nome: '',
+  cliente: '',
+  localita: '',
+  indirizzo: '',
+  stato: 'attivo',
+  avanzamento: 0,
+}
 
 export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], documentUploads = [], session, notes = [], onAddNote, store = null }) {
   const [activeTab, setActiveTab] = useState('Panoramica')
   const [noteText, setNoteText] = useState('')
   const [noteStatus, setNoteStatus] = useState(null)
+  const [editForm, setEditForm] = useState(EMPTY_CANTIERE_FORM)
+  const [editStatus, setEditStatus] = useState(null)
   const storeDocuments = Array.isArray(store?.documents) && store.documents.length ? store.documents : documents
   const storeMovements = Array.isArray(store?.movements) ? store.movements : []
   const storeNotes = Array.isArray(store?.notes) ? store.notes : notes
@@ -25,6 +35,19 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
   const cantiereRecord = useMemo(() => storeCantieri.find((item) => item.id === cantiereId), [storeCantieri, cantiereId])
   const cantiere = useMemo(() => buildCantiere(cantiereId, siteDocuments, accountingRows, cantiereRecord), [cantiereId, siteDocuments, accountingRows, cantiereRecord])
 
+  useEffect(() => {
+    if (!cantiere) return
+    setEditForm({
+      nome: cantiere.nome ?? '',
+      cliente: cantiere.cliente ?? '',
+      localita: cantiere.localita ?? '',
+      indirizzo: cantiere.indirizzo ?? '',
+      stato: cantiereRecord?.stato ?? 'attivo',
+      avanzamento: Number(cantiere.avanzamento || 0),
+    })
+    setEditStatus(null)
+  }, [cantiere?.id, cantiere?.nome, cantiereRecord?.updatedAt])
+
   if (!cantiere) {
     return (
       <section className="dashboard-header internal-header">
@@ -36,6 +59,7 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
     )
   }
 
+  const canEditCantiere = session?.role === 'admin' || session?.role === 'accounting'
   const canViewEconomics = session?.role !== 'employee'
   const availableTabs = canViewEconomics ? tabs : tabs.filter((tab) => tab !== 'Contabilità')
   const currentTab = availableTabs.includes(activeTab) ? activeTab : 'Panoramica'
@@ -54,6 +78,36 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
     .sort((a, b) => new Date(b.dataCaricamento || 0) - new Date(a.dataCaricamento || 0))
     .slice(0, 5)
   const isEmptyOperationalCantiere = cantiere.source === 'supabase-operational' && !siteDocuments.length && !accountingRows.length && !linkedFotoUploads.length
+
+  function updateEditField(field, value) {
+    setEditForm((current) => ({ ...current, [field]: value }))
+  }
+
+  function saveCantiere(event) {
+    event.preventDefault()
+    setEditStatus(null)
+
+    if (!canEditCantiere || !store?.updateCantiereData) {
+      setEditStatus({ type: 'error', message: 'Non hai i permessi o lo store non supporta la modifica cantiere.' })
+      return
+    }
+
+    if (!editForm.nome.trim()) {
+      setEditStatus({ type: 'error', message: 'Il nome cantiere è obbligatorio.' })
+      return
+    }
+
+    store.updateCantiereData(cantiere.id, {
+      nome: editForm.nome.trim(),
+      cliente: editForm.cliente.trim() || editForm.nome.trim(),
+      localita: editForm.localita.trim() || 'Da hub',
+      indirizzo: editForm.indirizzo.trim(),
+      stato: editForm.stato,
+      avanzamento: Math.max(0, Math.min(100, Number(editForm.avanzamento || 0))),
+      updatedAt: new Date().toISOString(),
+    })
+    setEditStatus({ type: 'success', message: 'Dati cantiere aggiornati.' })
+  }
 
   function submitNote(event) {
     event.preventDefault()
@@ -91,6 +145,28 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
         </section>
       ) : null}
 
+      {canEditCantiere ? (
+        <section className="internal-panel internal-padded">
+          <div className="section-heading panel-title-row">
+            <div>
+              <h2>Dati cantiere</h2>
+              <p>Correggi i dati base della bozza o del cantiere reale. Le spese non vengono modificate.</p>
+            </div>
+            <StatusBadge>Modifica reale</StatusBadge>
+          </div>
+          <form className="mock-form detail-edit-form" onSubmit={saveCantiere}>
+            <label>Nome cantiere<input value={editForm.nome} onChange={(event) => updateEditField('nome', event.target.value)} /></label>
+            <label>Cliente<input value={editForm.cliente} onChange={(event) => updateEditField('cliente', event.target.value)} /></label>
+            <label>Località<input value={editForm.localita} onChange={(event) => updateEditField('localita', event.target.value)} /></label>
+            <label>Indirizzo<input value={editForm.indirizzo} onChange={(event) => updateEditField('indirizzo', event.target.value)} /></label>
+            <label>Stato<select value={editForm.stato} onChange={(event) => updateEditField('stato', event.target.value)}><option value="attivo">Attivo</option><option value="sospeso">Sospeso</option><option value="chiuso">Chiuso</option></select></label>
+            <label>Avanzamento %<input type="number" min="0" max="100" value={editForm.avanzamento} onChange={(event) => updateEditField('avanzamento', event.target.value)} /></label>
+            <div className="form-wide"><button className="button button-primary" type="submit">Salva dati cantiere</button></div>
+          </form>
+          {editStatus ? <p className={editStatus.type === 'error' ? 'form-error-text' : 'form-success-text'}>{editStatus.message}</p> : null}
+        </section>
+      ) : null}
+
       <section className="cantiere-detail-hero" aria-label="Panoramica cantiere">
         <div className="cantiere-identity-card">
           <div className="cantiere-identity-top">
@@ -100,7 +176,7 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
               <h2>{cantiere.cliente}</h2>
               <p>{cantiere.indirizzo} · {cantiere.localita}</p>
             </div>
-            <StatusBadge>{isEmptyOperationalCantiere ? 'Bozza operativa' : pendingRows.length ? 'Da controllare' : 'In corso'}</StatusBadge>
+            <StatusBadge>{isEmptyOperationalCantiere ? 'Bozza operativa' : pendingRows.length ? 'Da controllare' : displayCantiereStatus(cantiereRecord?.stato)}</StatusBadge>
           </div>
           <ProgressBar value={cantiere.avanzamento} />
           <div className="cantiere-hero-meta">
@@ -458,6 +534,12 @@ function normalizeDocumentStatus(status) {
   if (status === 'Da verificare') return 'Da controllare'
   if (status === 'Incompleto') return 'In attesa'
   return status ?? 'Da verificare'
+}
+
+function displayCantiereStatus(status) {
+  if (status === 'sospeso') return 'Sospeso'
+  if (status === 'chiuso') return 'Chiuso'
+  return 'In corso'
 }
 
 function formatLabel(value) {
