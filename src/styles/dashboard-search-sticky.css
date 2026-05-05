@@ -104,32 +104,57 @@
 }
 
 @media (max-width: 767px) {
+  .dashboard-main {
+    padding-top: 3.15rem !important;
+  }
+
   .internal-topbar {
-    top: 0 !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 0.55rem !important;
-    padding: 0.62rem 0.72rem !important;
-    margin-inline: -0.75rem;
-    border-radius: 0;
-    background: rgba(248, 251, 255, 0.96);
+    position: fixed !important;
+    top: 0.45rem !important;
+    right: 0.65rem !important;
+    left: 0.65rem !important;
+    z-index: 45 !important;
+    display: block !important;
+    width: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 999px;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
   }
 
   .global-search {
-    grid-column: 1 / -1 !important;
-    grid-row: auto !important;
     width: 100%;
     max-width: none;
-    min-height: 2.85rem;
-    border-radius: 0.95rem;
-    padding-inline: 0.78rem;
+    min-height: 2.45rem;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.45rem;
+    border-radius: 999px;
+    border-color: rgba(188, 202, 216, 0.78);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding-inline: 0.72rem;
+  }
+
+  .global-search > svg,
+  .global-search .lucide {
+    width: 16px;
+    height: 16px;
   }
 
   .global-search input {
-    font-size: 0.94rem;
+    font-size: 0.88rem;
+    font-weight: 610;
   }
 
   .global-search input::placeholder {
-    color: rgba(82, 94, 105, 0.92);
+    color: rgba(82, 94, 105, 0.82);
+    font-weight: 580;
   }
 
   .global-search kbd {
@@ -137,35 +162,22 @@
   }
 
   .internal-topbar-actions {
-    grid-column: 1 / -1 !important;
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    gap: 0.45rem;
-  }
-
-  .internal-topbar-actions .button,
-  .internal-topbar-actions .user-menu {
     display: none !important;
-  }
-
-  .internal-topbar-actions .icon-button {
-    width: 2.35rem;
-    height: 2.35rem;
-    min-width: 2.35rem;
   }
 
   .global-search .topbar-popover {
     position: fixed;
-    top: 4.1rem;
-    right: 0.75rem;
-    left: 0.75rem;
+    top: 3.25rem;
+    right: 0.65rem;
+    left: 0.65rem;
     width: auto;
-    max-height: min(58vh, 28rem);
+    max-height: min(54vh, 26rem);
     overflow: auto;
+    border-radius: 0.95rem;
   }
 
   .breadcrumb {
+    margin-top: 0 !important;
     padding-top: 0.55rem !important;
   }
 }
