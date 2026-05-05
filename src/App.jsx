@@ -200,7 +200,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
     )
   }
   if (path === '/dashboard/impostazioni') {
-    return <SettingsMock session={session} />
+    return <SettingsMock session={session} store={mockStore} />
   }
 
   return <Home />
