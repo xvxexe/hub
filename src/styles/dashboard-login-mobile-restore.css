@@ -1,10 +1,188 @@
-/* Mobile login restore: keep the real login usable and spacious after global mobile refinements. */
+/* Login restore: keep the private access screen usable across desktop and mobile. */
+
+.dashboard-shell-locked {
+  display: block !important;
+  min-height: 100vh !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(37, 99, 235, 0.12), transparent 24rem),
+    radial-gradient(circle at 100% 18%, rgba(168, 95, 50, 0.10), transparent 22rem),
+    linear-gradient(180deg, #f7fafc 0%, #eef3f7 100%) !important;
+}
+
+.dashboard-login-main {
+  min-height: 100vh !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: clamp(1.5rem, 4vw, 3rem) !important;
+  overflow-x: hidden !important;
+}
+
+.dashboard-login-main .login-page {
+  width: min(100%, 72rem) !important;
+  min-height: auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(18rem, 0.82fr) minmax(22rem, 1fr) !important;
+  align-items: center !important;
+  gap: clamp(2rem, 5vw, 4rem) !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.dashboard-login-main .login-page::after {
+  content: '';
+  display: block;
+  min-height: clamp(24rem, 48vh, 34rem);
+  border: 1px solid rgba(214, 224, 232, 0.72);
+  border-radius: 2rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.42)),
+    radial-gradient(circle at 22% 22%, rgba(37, 99, 235, 0.16), transparent 15rem),
+    radial-gradient(circle at 82% 70%, rgba(168, 95, 50, 0.14), transparent 14rem);
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.10);
+}
+
+.dashboard-login-main .login-card {
+  width: min(100%, 30rem) !important;
+  display: grid !important;
+  gap: 1.1rem !important;
+  margin: 0 !important;
+  padding: 1.45rem !important;
+  border: 1px solid rgba(214, 224, 232, 0.92) !important;
+  border-radius: 1.45rem !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.14) !important;
+}
+
+.dashboard-login-main .login-card > .eyebrow {
+  margin: 0 !important;
+  font-size: 0.76rem !important;
+  letter-spacing: 0.11em !important;
+  line-height: 1.2 !important;
+}
+
+.dashboard-login-main .login-card h1 {
+  margin: 0 !important;
+  color: var(--dash-title, #17212b) !important;
+  font-size: clamp(2.45rem, 4.2vw, 4.2rem) !important;
+  font-weight: 780 !important;
+  letter-spacing: -0.065em !important;
+  line-height: 0.96 !important;
+}
+
+.dashboard-login-main .login-card > p:not(.eyebrow) {
+  margin: 0 !important;
+  color: var(--dash-muted, #6f7b85) !important;
+  font-size: 1rem !important;
+  line-height: 1.62 !important;
+}
+
+.dashboard-login-main .login-card .mock-form.login-form,
+.dashboard-login-main .login-card .login-form,
+.dashboard-login-main .login-card .login-fallback-panel {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0.88rem !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 1rem !important;
+  border: 1px solid rgba(214, 224, 232, 0.9) !important;
+  border-radius: 1.05rem !important;
+  background: rgba(248, 250, 252, 0.78) !important;
+  box-shadow: none !important;
+}
+
+.dashboard-login-main .login-card .login-fallback-panel {
+  gap: 0.8rem !important;
+  background: rgba(255, 255, 255, 0.74) !important;
+}
+
+.dashboard-login-main .login-card .mock-form.login-form label,
+.dashboard-login-main .login-card .login-form label {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0.44rem !important;
+  color: var(--dash-title, #17212b) !important;
+  font-size: 0.76rem !important;
+  font-weight: 760 !important;
+  letter-spacing: 0.055em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+}
+
+.dashboard-login-main .login-card .mock-form.login-form input,
+.dashboard-login-main .login-card .mock-form.login-form select,
+.dashboard-login-main .login-card .login-form input,
+.dashboard-login-main .login-card .login-form select {
+  width: 100% !important;
+  min-height: 3rem !important;
+  border-radius: 0.88rem !important;
+  border: 1px solid rgba(188, 202, 216, 0.92) !important;
+  background: #ffffff !important;
+  color: var(--dash-title, #17212b) !important;
+  font-size: 16px !important;
+  font-weight: 560 !important;
+  line-height: 1.2 !important;
+  padding: 0.72rem 0.86rem !important;
+  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.025) !important;
+}
+
+.dashboard-login-main .login-card .mock-form.login-form input:focus,
+.dashboard-login-main .login-card .mock-form.login-form select:focus,
+.dashboard-login-main .login-card .login-form input:focus,
+.dashboard-login-main .login-card .login-form select:focus {
+  outline: none !important;
+  border-color: rgba(37, 99, 235, 0.62) !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10) !important;
+}
+
+.dashboard-login-main .login-card .button,
+.dashboard-login-main .login-card .button-primary,
+.dashboard-login-main .login-card .button-secondary {
+  min-height: 3rem !important;
+  justify-content: center !important;
+  border-radius: 0.9rem !important;
+  font-size: 16px !important;
+  font-weight: 720 !important;
+  line-height: 1.15 !important;
+  padding: 0.78rem 1rem !important;
+}
+
+.dashboard-login-main .login-card .role-description,
+.dashboard-login-main .login-card .login-error {
+  margin: 0 !important;
+  font-size: 0.86rem !important;
+  line-height: 1.45 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+@media (max-width: 920px) {
+  .dashboard-login-main .login-page {
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: min(100%, 30rem) !important;
+  }
+
+  .dashboard-login-main .login-page::after {
+    display: none;
+  }
+
+  .dashboard-login-main .login-card {
+    width: 100% !important;
+  }
+}
 
 @media (max-width: 767px) {
-  .login-page {
+  .dashboard-login-main {
+    padding: 0 !important;
+  }
+
+  .login-page,
+  .dashboard-login-main .login-page {
     min-height: 100dvh !important;
     display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     place-items: center !important;
+    width: 100% !important;
     padding: max(1.25rem, env(safe-area-inset-top)) 1rem max(1.4rem, env(safe-area-inset-bottom)) !important;
     background:
       radial-gradient(circle at 18% 0%, rgba(37, 99, 235, 0.12), transparent 18rem),
@@ -12,7 +190,12 @@
       linear-gradient(180deg, #f7fafc 0%, #eef3f7 100%) !important;
   }
 
-  .login-card {
+  .dashboard-login-main .login-page::after {
+    display: none !important;
+  }
+
+  .login-card,
+  .dashboard-login-main .login-card {
     width: min(100%, 26rem) !important;
     display: grid !important;
     gap: 1rem !important;
@@ -24,14 +207,16 @@
     box-shadow: 0 24px 70px rgba(15, 23, 42, 0.14) !important;
   }
 
-  .login-card > .eyebrow {
+  .login-card > .eyebrow,
+  .dashboard-login-main .login-card > .eyebrow {
     margin: 0 !important;
     font-size: 0.72rem !important;
     letter-spacing: 0.11em !important;
     line-height: 1.2 !important;
   }
 
-  .login-card h1 {
+  .login-card h1,
+  .dashboard-login-main .login-card h1 {
     margin: 0 !important;
     color: var(--dash-title, #17212b) !important;
     font-size: clamp(1.8rem, 8vw, 2.35rem) !important;
@@ -40,7 +225,8 @@
     line-height: 1.04 !important;
   }
 
-  .login-card > p:not(.eyebrow) {
+  .login-card > p:not(.eyebrow),
+  .dashboard-login-main .login-card > p:not(.eyebrow) {
     margin: 0 !important;
     color: var(--dash-muted, #6f7b85) !important;
     font-size: 0.95rem !important;
@@ -49,7 +235,10 @@
 
   .login-card .mock-form.login-form,
   .login-card .login-form,
-  .login-card .login-fallback-panel {
+  .login-card .login-fallback-panel,
+  .dashboard-login-main .login-card .mock-form.login-form,
+  .dashboard-login-main .login-card .login-form,
+  .dashboard-login-main .login-card .login-fallback-panel {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) !important;
     gap: 0.88rem !important;
@@ -62,13 +251,16 @@
     box-shadow: none !important;
   }
 
-  .login-card .login-fallback-panel {
+  .login-card .login-fallback-panel,
+  .dashboard-login-main .login-card .login-fallback-panel {
     gap: 0.8rem !important;
     background: rgba(255, 255, 255, 0.74) !important;
   }
 
   .login-card .mock-form.login-form label,
-  .login-card .login-form label {
+  .login-card .login-form label,
+  .dashboard-login-main .login-card .mock-form.login-form label,
+  .dashboard-login-main .login-card .login-form label {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) !important;
     gap: 0.44rem !important;
@@ -83,7 +275,11 @@
   .login-card .mock-form.login-form input,
   .login-card .mock-form.login-form select,
   .login-card .login-form input,
-  .login-card .login-form select {
+  .login-card .login-form select,
+  .dashboard-login-main .login-card .mock-form.login-form input,
+  .dashboard-login-main .login-card .mock-form.login-form select,
+  .dashboard-login-main .login-card .login-form input,
+  .dashboard-login-main .login-card .login-form select {
     width: 100% !important;
     min-height: 3rem !important;
     border-radius: 0.88rem !important;
@@ -100,7 +296,11 @@
   .login-card .mock-form.login-form input:focus,
   .login-card .mock-form.login-form select:focus,
   .login-card .login-form input:focus,
-  .login-card .login-form select:focus {
+  .login-card .login-form select:focus,
+  .dashboard-login-main .login-card .mock-form.login-form input:focus,
+  .dashboard-login-main .login-card .mock-form.login-form select:focus,
+  .dashboard-login-main .login-card .login-form input:focus,
+  .dashboard-login-main .login-card .login-form select:focus {
     outline: none !important;
     border-color: rgba(37, 99, 235, 0.62) !important;
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10) !important;
@@ -108,7 +308,10 @@
 
   .login-card .button,
   .login-card .button-primary,
-  .login-card .button-secondary {
+  .login-card .button-secondary,
+  .dashboard-login-main .login-card .button,
+  .dashboard-login-main .login-card .button-primary,
+  .dashboard-login-main .login-card .button-secondary {
     width: 100% !important;
     min-height: 3rem !important;
     justify-content: center !important;
@@ -120,7 +323,9 @@
   }
 
   .login-card .role-description,
-  .login-card .login-error {
+  .login-card .login-error,
+  .dashboard-login-main .login-card .role-description,
+  .dashboard-login-main .login-card .login-error {
     margin: 0 !important;
     font-size: 0.86rem !important;
     line-height: 1.45 !important;
@@ -239,18 +444,23 @@
 }
 
 @media (max-width: 374px) {
-  .login-page {
+  .login-page,
+  .dashboard-login-main .login-page {
     padding-inline: 0.78rem !important;
   }
 
-  .login-card {
+  .login-card,
+  .dashboard-login-main .login-card {
     padding: 1rem !important;
     border-radius: 1.15rem !important;
   }
 
   .login-card .mock-form.login-form,
   .login-card .login-form,
-  .login-card .login-fallback-panel {
+  .login-card .login-fallback-panel,
+  .dashboard-login-main .login-card .mock-form.login-form,
+  .dashboard-login-main .login-card .login-form,
+  .dashboard-login-main .login-card .login-fallback-panel {
     padding: 0.86rem !important;
   }
 
