@@ -144,6 +144,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
         documentUploads={mockStore.documentUploads}
         onAddFoto={mockStore.addFotoUpload}
         onAddDocument={mockStore.addDocumentUpload}
+        store={mockStore}
       />
     )
   }
