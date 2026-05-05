@@ -1,48 +1,97 @@
-/* Mobile UI balanced refinement: più pulita, più ariosa, senza comprimere troppo. */
+/* Mobile UI balanced refinement: pulita, leggibile e ariosa senza comprimere troppo. */
 
 @media (max-width: 767px) {
   :root {
-    --m-page: 0.85rem;
+    --m-page: 0.9rem;
     --m-card: 0.95rem;
-    --m-gap: 0.85rem;
-    --m-radius: 1rem;
+    --m-card-tight: 0.82rem;
+    --m-gap: 0.9rem;
+    --m-gap-tight: 0.68rem;
+    --m-radius: 1.05rem;
+    --m-radius-tight: 0.86rem;
+    --m-hairline: rgba(214, 224, 232, 0.86);
+    --m-soft: rgba(248, 250, 252, 0.78);
+    --m-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
   }
 
   .dashboard-main {
     gap: var(--m-gap) !important;
     padding-inline: var(--m-page) !important;
-    padding-top: 2.45rem !important;
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom)) !important;
+    padding-top: 2.6rem !important;
+    padding-bottom: calc(5.25rem + env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+  }
+
+  .dashboard-main > .dashboard-header.internal-header,
+  .dashboard-main > .breadcrumb,
+  .dashboard-main > .cantieri-tools,
+  .dashboard-main > .accounting-filters,
+  .dashboard-main > .stats-grid,
+  .dashboard-main > .accounting-summary-grid,
+  .dashboard-main > .accounting-section,
+  .dashboard-main > .internal-panel,
+  .dashboard-main > .internal-two-column,
+  .dashboard-main > .internal-three-column,
+  .dashboard-main > .detail-layout,
+  .dashboard-main > .cantieri-page-layout,
+  .dashboard-main > .document-center-layout,
+  .dashboard-main > .dashboard-card-grid,
+  .dashboard-main > .employee-action-panel,
+  .dashboard-main > .mock-form,
+  .dashboard-main > .section:not(.dashboard-header),
+  .dashboard-main > .internal-command-panel,
+  .dashboard-main > .internal-filter-grid,
+  .dashboard-main > .internal-kpi-strip,
+  .dashboard-main > .internal-workspace-layout {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-inline: 0 !important;
   }
 
   .breadcrumb {
     margin: 0 !important;
-    padding: 0.48rem 0.72rem !important;
-    border-radius: 0.85rem !important;
+    padding: 0.5rem 0.72rem !important;
+    border-radius: 0.88rem !important;
     font-size: 0.72rem !important;
+    line-height: 1.25 !important;
   }
 
   .dashboard-header,
-  .internal-header {
-    gap: 0.58rem !important;
-    padding: 1rem var(--m-card) 0.9rem !important;
+  .internal-header,
+  .dashboard-main > .dashboard-header.internal-header {
+    gap: 0.64rem !important;
+    padding: 1.05rem var(--m-card) 0.98rem !important;
     border-radius: var(--m-radius) !important;
+    box-shadow: var(--m-shadow) !important;
   }
 
   .dashboard-header h1,
   .internal-header h1 {
-    font-size: clamp(1.42rem, 6vw, 1.85rem) !important;
+    font-size: clamp(1.46rem, 6vw, 1.9rem) !important;
     line-height: 1.08 !important;
-    letter-spacing: -0.04em !important;
+    letter-spacing: -0.045em !important;
     margin: 0 !important;
+    text-wrap: balance;
   }
 
   .dashboard-header p,
   .internal-header p {
     font-size: 0.88rem !important;
-    line-height: 1.45 !important;
+    line-height: 1.46 !important;
     margin: 0 !important;
+    max-width: 100% !important;
     -webkit-line-clamp: 3 !important;
+  }
+
+  .dashboard-header > div:last-child,
+  .internal-header > div:last-child,
+  .internal-page-actions,
+  .employee-actions,
+  .row-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    justify-content: flex-start !important;
   }
 
   .eyebrow,
@@ -50,28 +99,40 @@
   .dashboard-main .eyebrow {
     font-size: 0.66rem !important;
     letter-spacing: 0.1em !important;
+    line-height: 1.2 !important;
   }
 
   .button,
   .button-small,
-  .sidebar-button {
-    min-height: 2.28rem !important;
-    border-radius: 0.72rem !important;
+  .sidebar-button,
+  .dashboard-main .button,
+  .dashboard-main .button-small {
+    min-height: 2.34rem !important;
+    border-radius: 0.76rem !important;
     font-size: 0.78rem !important;
-    padding: 0.5rem 0.72rem !important;
+    line-height: 1.15 !important;
+    padding: 0.54rem 0.74rem !important;
   }
 
   .data-mode-badge,
   .role-pill,
-  .status-badge {
+  .role-pill-light,
+  .status-badge,
+  .dashboard-main .data-mode-badge {
     font-size: 0.64rem !important;
-    line-height: 1.05 !important;
-    padding: 0.25rem 0.5rem !important;
+    line-height: 1.1 !important;
+    padding: 0.28rem 0.52rem !important;
+    border-radius: 999px !important;
+    white-space: normal !important;
   }
 
+  .dashboard-main .stats-grid.hub-kpi-grid,
+  .dashboard-main .stats-grid,
+  .dashboard-main .accounting-summary-grid.real-summary-grid,
+  .dashboard-main .accounting-summary-grid,
+  .dashboard-main .internal-kpi-strip,
   .kpi-strip,
-  .stats-grid,
-  .hub-kpi-grid,
+  .hub-kpi-strip,
   .cantiere-detail-kpis,
   .document-operational-kpis,
   .accounting-operational-kpis {
@@ -79,31 +140,45 @@
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 0.72rem !important;
     padding: 0 !important;
+    margin-top: var(--m-gap) !important;
   }
 
+  .dashboard-main .stat-card,
+  .dashboard-main .internal-stat-card,
+  .dashboard-main .internal-kpi-card,
   .kpi-card,
-  .stat-card,
-  .detail-kpi {
-    min-height: 6.1rem !important;
+  .detail-kpi,
+  .hub-mini-kpi {
+    min-height: 5.25rem !important;
     border-radius: var(--m-radius) !important;
-    gap: 0.55rem !important;
-    padding: 0.9rem !important;
+    gap: 0.5rem !important;
+    padding: 0.86rem !important;
+    box-shadow: var(--m-shadow) !important;
   }
 
+  .dashboard-main .stat-card strong,
+  .dashboard-main .internal-kpi-card strong,
   .kpi-card strong,
-  .stat-card strong,
-  .detail-kpi strong {
-    font-size: clamp(1.22rem, 5.4vw, 1.58rem) !important;
+  .detail-kpi strong,
+  .hub-mini-kpi strong {
+    font-size: clamp(1.18rem, 5.2vw, 1.52rem) !important;
     line-height: 1.06 !important;
+    letter-spacing: -0.045em !important;
+    white-space: normal !important;
   }
 
+  .dashboard-main .stat-card span:not(.stat-icon),
+  .dashboard-main .internal-kpi-card small,
   .kpi-card small,
   .stat-card small,
   .detail-kpi small,
   .kpi-card em,
-  .detail-kpi em {
+  .detail-kpi em,
+  .hub-mini-kpi span,
+  .hub-mini-kpi small {
     font-size: 0.72rem !important;
     line-height: 1.3 !important;
+    white-space: normal !important;
   }
 
   .internal-panel,
@@ -118,9 +193,17 @@
   .upload-form-panel,
   .cantieri-master-panel,
   .document-table-panel,
-  .public-card {
+  .document-preview-panel,
+  .public-card,
+  .cost-card-redesign,
+  .employee-action-panel,
+  .mock-form,
+  .category-breakdown,
+  .compact-category-card,
+  .accounting-site-card {
     border-radius: var(--m-radius) !important;
     padding: var(--m-card) !important;
+    box-shadow: var(--m-shadow) !important;
   }
 
   .internal-padded {
@@ -128,18 +211,29 @@
   }
 
   .section-heading,
-  .panel-title-row {
-    gap: 0.7rem !important;
-    margin-bottom: 0.72rem !important;
+  .panel-title-row,
+  .dashboard-main .panel-title-row {
+    gap: 0.62rem !important;
+    margin-bottom: 0.74rem !important;
+    align-items: flex-start !important;
+  }
+
+  .panel-title-row .button,
+  .section-heading .button,
+  .panel-title-row .data-mode-badge,
+  .section-heading .data-mode-badge {
+    align-self: flex-start !important;
   }
 
   .section-heading h2,
   .panel-title-row h2,
   .internal-panel > h2,
   .detail-section-card h2 {
-    font-size: clamp(1.08rem, 4.8vw, 1.3rem) !important;
-    line-height: 1.15 !important;
+    font-size: clamp(1.08rem, 4.8vw, 1.32rem) !important;
+    line-height: 1.16 !important;
+    letter-spacing: -0.035em !important;
     margin: 0 !important;
+    text-wrap: balance;
   }
 
   .section-heading p,
@@ -147,8 +241,8 @@
   .internal-panel > p,
   .detail-section-card p {
     font-size: 0.82rem !important;
-    line-height: 1.42 !important;
-    margin: 0.16rem 0 0 !important;
+    line-height: 1.44 !important;
+    margin: 0.18rem 0 0 !important;
   }
 
   .filter-grid,
@@ -158,13 +252,20 @@
   .upload-form-grid,
   .admin-invite-form,
   .mock-form,
-  .detail-edit-form {
+  .detail-edit-form,
+  .dashboard-main > .cantieri-tools,
+  .dashboard-main > .accounting-filters,
+  .dashboard-main .document-filters,
+  .dashboard-main .internal-filter-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 0.72rem !important;
+    padding: var(--m-card) !important;
+    border-radius: var(--m-radius) !important;
   }
 
   .filter-grid .accounting-search,
+  .real-accounting-filters .accounting-search,
   .mock-form .form-wide,
   .detail-edit-form .form-wide,
   .upload-note-field,
@@ -176,10 +277,14 @@
   .mock-form label,
   .detail-edit-form label,
   .upload-redesign-form label,
-  .admin-invite-form label {
-    gap: 0.34rem !important;
-    font-size: 0.7rem !important;
+  .admin-invite-form label,
+  .real-accounting-filters label,
+  .cantieri-tools label,
+  .document-filters label {
+    gap: 0.35rem !important;
+    font-size: 0.68rem !important;
     line-height: 1.2 !important;
+    letter-spacing: 0.045em !important;
   }
 
   input,
@@ -196,15 +301,15 @@
   .upload-redesign-form input,
   .upload-redesign-form select,
   .upload-redesign-form textarea {
-    min-height: 2.45rem !important;
-    border-radius: 0.72rem !important;
+    min-height: 2.48rem !important;
+    border-radius: 0.76rem !important;
     font-size: 0.86rem !important;
     line-height: 1.25 !important;
-    padding: 0.54rem 0.68rem !important;
+    padding: 0.56rem 0.68rem !important;
   }
 
   textarea {
-    min-height: 5.6rem !important;
+    min-height: 5.8rem !important;
   }
 
   .workspace-layout,
@@ -215,11 +320,107 @@
   .detail-layout,
   .internal-two-column,
   .internal-three-column,
+  .hub-priority-grid,
+  .hub-workspace-grid,
   .hub-dashboard-grid,
-  .hub-lower-grid {
+  .hub-lower-grid,
+  .document-center-layout,
+  .cantieri-page-layout,
+  .accounting-site-grid,
+  .real-site-grid {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) !important;
     gap: var(--m-gap) !important;
+  }
+
+  .hub-summary-first,
+  .hub-side-stack,
+  .cantieri-side-stack,
+  .internal-workspace-sidebar {
+    min-width: 0 !important;
+  }
+
+  .cost-card-head,
+  .hub-command-head,
+  .accounting-site-card-head,
+  .recent-upload-title,
+  .compact-category-top,
+  .document-card-titleline,
+  .internal-data-card-titleline {
+    align-items: flex-start !important;
+    gap: 0.58rem !important;
+  }
+
+  .cost-card-head,
+  .hub-command-head,
+  .accounting-site-card-head {
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+
+  .cost-summary,
+  .cost-summary-redesign {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.86rem !important;
+  }
+
+  .cost-total-block strong,
+  .cost-summary > div:first-child strong,
+  .cantiere-money-total strong {
+    font-size: clamp(1.55rem, 7vw, 2.05rem) !important;
+    line-height: 1.04 !important;
+    letter-spacing: -0.055em !important;
+  }
+
+  .donut-chart {
+    width: clamp(7.3rem, 32vw, 9rem) !important;
+    height: clamp(7.3rem, 32vw, 9rem) !important;
+    margin-inline: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  .donut-chart span {
+    font-size: 0.68rem !important;
+    line-height: 1.18 !important;
+  }
+
+  .cost-legend,
+  .cost-legend-redesign,
+  .compact-category-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.62rem !important;
+  }
+
+  .cost-legend div,
+  .compact-category-item {
+    border-radius: var(--m-radius-tight) !important;
+    padding: 0.68rem !important;
+    background: var(--m-soft) !important;
+  }
+
+  .hub-command-actions,
+  .quick-actions-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.68rem !important;
+  }
+
+  .hub-command-actions a:first-child,
+  .quick-actions-grid a:first-child,
+  .quick-actions-grid button:first-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  .quick-action-card,
+  .quick-actions-grid a,
+  .quick-actions-grid button,
+  .hub-command-actions a {
+    min-height: 4.6rem !important;
+    border-radius: 0.98rem !important;
+    padding: 0.84rem !important;
   }
 
   .document-card-list,
@@ -231,24 +432,27 @@
   .activity-feed,
   .accounting-mobile-list,
   .selected-category-list,
-  .compact-category-grid {
+  .site-progress-list {
     gap: 0.68rem !important;
   }
 
   .data-card-row,
   .compact-upload-row,
   .activity-item,
+  .site-progress-row,
   .detail-document-list a,
   .detail-alert-list a,
   .detail-mini-list a,
   .detail-mini-list article,
   .accounting-mobile-card,
   .selected-category-list div,
-  .compact-category-item,
-  .detail-work-list article {
-    border-radius: 0.9rem !important;
-    gap: 0.58rem !important;
-    padding: 0.78rem 0.82rem !important;
+  .detail-work-list article,
+  .hub-table-row,
+  .internal-data-card-row,
+  .document-card-row {
+    border-radius: 0.94rem !important;
+    gap: 0.6rem !important;
+    padding: 0.8rem 0.84rem !important;
   }
 
   .data-card-row strong,
@@ -256,9 +460,13 @@
   .activity-item strong,
   .detail-document-list strong,
   .detail-mini-list strong,
-  .detail-work-list strong {
+  .detail-work-list strong,
+  .hub-table-row strong,
+  .site-progress-row strong,
+  .internal-data-card-row strong,
+  .document-card-row strong {
     font-size: 0.92rem !important;
-    line-height: 1.22 !important;
+    line-height: 1.24 !important;
   }
 
   .data-card-row small,
@@ -266,31 +474,80 @@
   .activity-item small,
   .detail-document-list small,
   .detail-mini-list small,
-  .detail-work-list small {
+  .detail-work-list small,
+  .hub-table-row span,
+  .site-progress-row small,
+  .internal-data-card-meta dd,
+  .document-card-meta dd {
     font-size: 0.76rem !important;
     line-height: 1.34 !important;
   }
 
-  .quick-actions-grid {
+  .dashboard-main .document-card-meta,
+  .dashboard-main .internal-data-card-meta,
+  .compact-meta,
+  .detail-accounting-grid,
+  .selected-site-meta,
+  .cantiere-money-split,
+  .cantiere-hero-meta {
+    display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.68rem !important;
-  }
-
-  .quick-action-card,
-  .quick-actions-grid a,
-  .quick-actions-grid button {
-    min-height: 4.6rem !important;
-    border-radius: 0.95rem !important;
-    padding: 0.82rem !important;
-  }
-
-  .detail-list {
     gap: 0.48rem !important;
   }
 
+  .dashboard-main .document-card-action,
+  .dashboard-main .internal-data-card-action,
+  .dashboard-main .document-card-menu,
+  .dashboard-main .row-menu {
+    align-self: start !important;
+  }
+
+  .document-preview-panel {
+    order: -1 !important;
+  }
+
+  .document-preview-sheet,
+  .invoice-lines,
+  .extracted-data,
+  .document-actions-panel {
+    border-radius: 0.9rem !important;
+    padding: 0.76rem !important;
+  }
+
+  .invoice-lines {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .invoice-lines span:nth-child(2),
+  .invoice-lines span:nth-child(5) {
+    display: none !important;
+  }
+
+  .accounting-table-wrap {
+    display: none !important;
+  }
+
+  .accounting-mobile-list {
+    display: grid !important;
+  }
+
+  .accounting-mobile-card .internal-data-card-meta,
+  .accounting-mobile-card .document-card-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .accounting-site-grid,
+  .real-site-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .detail-list {
+    gap: 0.5rem !important;
+  }
+
   .detail-list div {
-    gap: 0.6rem !important;
-    padding-block: 0.48rem !important;
+    gap: 0.62rem !important;
+    padding-block: 0.5rem !important;
   }
 
   .detail-list dt,
@@ -309,40 +566,24 @@
     padding: var(--m-card) !important;
   }
 
-  .cantiere-hero-meta,
-  .detail-accounting-grid,
-  .selected-site-meta,
-  .cantiere-money-split {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.68rem !important;
-  }
-
-  .donut-chart {
-    width: 9rem !important;
-    height: 9rem !important;
-    margin-inline: auto !important;
-  }
-
-  .cost-summary {
-    gap: 0.9rem !important;
-  }
-
-  .cost-summary > div:first-child strong,
-  .cantiere-money-total strong {
-    font-size: 1.58rem !important;
-    line-height: 1.08 !important;
-  }
-
-  .accounting-table-wrap {
-    margin-inline: calc(var(--m-card) * -1) !important;
-    padding-inline: var(--m-card) !important;
+  .cantiere-tabs-card {
     overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
-  .accounting-table,
-  .real-accounting-table {
-    min-width: 48rem !important;
+  .cantiere-tabs-card > div,
+  .cantiere-tabs-card nav {
+    display: flex !important;
+    gap: 0.48rem !important;
+    min-width: max-content !important;
+  }
+
+  .master-source-alert,
+  .success-alert,
+  .validation-alert-block,
+  .accounting-alert {
+    border-radius: 0.95rem !important;
+    padding: 0.84rem !important;
   }
 
   .pagination-bar {
@@ -350,30 +591,61 @@
     padding-top: 0.72rem !important;
   }
 
+  .pagination-bar > div {
+    width: 100% !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 0.1rem !important;
+  }
+
   .dashboard-bottom-nav {
     left: 0.68rem !important;
     right: 0.68rem !important;
     bottom: 0.45rem !important;
-    min-height: 3.85rem !important;
-    border-radius: 1.08rem !important;
+    min-height: 3.9rem !important;
+    border-radius: 1.1rem !important;
     padding: 0.36rem 0.42rem max(0.36rem, env(safe-area-inset-bottom)) !important;
   }
 
   .dashboard-bottom-nav a,
   .dashboard-bottom-more-button {
     min-height: 3rem !important;
-    border-radius: 0.85rem !important;
+    border-radius: 0.86rem !important;
     font-size: 0.65rem !important;
   }
 
   .floating-actions-trigger {
-    width: 3.12rem !important;
-    height: 3.12rem !important;
-    bottom: calc(4.95rem + env(safe-area-inset-bottom)) !important;
+    width: 3.16rem !important;
+    height: 3.16rem !important;
+    bottom: calc(5.05rem + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .cost-summary,
+  .cost-summary-redesign {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .donut-chart {
+    width: min(9rem, 58vw) !important;
+    height: min(9rem, 58vw) !important;
+  }
+
+  .cost-legend,
+  .cost-legend-redesign,
+  .compact-category-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 }
 
 @media (max-width: 374px) {
+  :root {
+    --m-page: 0.78rem;
+    --m-card: 0.82rem;
+    --m-gap: 0.78rem;
+  }
+
   .filter-grid,
   .real-accounting-filters,
   .cantieri-tools,
@@ -384,10 +656,20 @@
   .detail-edit-form,
   .kpi-strip,
   .stats-grid,
-  .hub-kpi-grid,
+  .hub-kpi-strip,
   .cantiere-detail-kpis,
   .document-operational-kpis,
-  .accounting-operational-kpis {
+  .accounting-operational-kpis,
+  .dashboard-main .stats-grid.hub-kpi-grid,
+  .dashboard-main .stats-grid,
+  .dashboard-main .accounting-summary-grid.real-summary-grid,
+  .dashboard-main .accounting-summary-grid,
+  .dashboard-main .internal-kpi-strip,
+  .hub-command-actions,
+  .quick-actions-grid,
+  .dashboard-main .document-card-meta,
+  .dashboard-main .internal-data-card-meta,
+  .compact-meta {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
