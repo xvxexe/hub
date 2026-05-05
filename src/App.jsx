@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AppShell } from './components/AppShell'
 import { CantiereDeleteGuard } from './components/CantiereDeleteGuard'
+import { OperationalCantieriPanel } from './components/OperationalCantieriPanel'
 import {
   employees,
   mockUsers,
@@ -107,16 +108,19 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
 
   if (path === '/dashboard') {
     return (
-      <DashboardHome
-        session={session}
-        documentUploads={mockStore.documentUploads}
-        documents={mockStore.documents}
-        fotoUploads={mockStore.fotoUploads}
-        activities={mockStore.activities}
-        estimates={mockStore.estimates}
-        syncState={mockStore.syncState}
-        store={mockStore}
-      />
+      <>
+        <DashboardHome
+          session={session}
+          documentUploads={mockStore.documentUploads}
+          documents={mockStore.documents}
+          fotoUploads={mockStore.fotoUploads}
+          activities={mockStore.activities}
+          estimates={mockStore.estimates}
+          syncState={mockStore.syncState}
+          store={mockStore}
+        />
+        <OperationalCantieriPanel store={mockStore} title="Cantieri operativi reali" compact />
+      </>
     )
   }
   if (path.startsWith('/dashboard/cantieri/')) {
@@ -188,7 +192,12 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
     return <ContabilitaMock documents={mockStore.documents} store={mockStore} session={session} />
   }
   if (path === '/dashboard/report') {
-    return <ReportMock documents={mockStore.documents} store={mockStore} />
+    return (
+      <>
+        <ReportMock documents={mockStore.documents} store={mockStore} />
+        <OperationalCantieriPanel store={mockStore} title="Cantieri inclusi nello store operativo" compact />
+      </>
+    )
   }
   if (path === '/dashboard/dipendenti') {
     return (
