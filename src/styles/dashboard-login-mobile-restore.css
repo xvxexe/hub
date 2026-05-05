@@ -90,7 +90,7 @@
     border: 1px solid rgba(188, 202, 216, 0.92) !important;
     background: #ffffff !important;
     color: var(--dash-title, #17212b) !important;
-    font-size: 0.96rem !important;
+    font-size: 16px !important;
     font-weight: 560 !important;
     line-height: 1.2 !important;
     padding: 0.72rem 0.86rem !important;
@@ -113,7 +113,7 @@
     min-height: 3rem !important;
     justify-content: center !important;
     border-radius: 0.9rem !important;
-    font-size: 0.94rem !important;
+    font-size: 16px !important;
     font-weight: 720 !important;
     line-height: 1.15 !important;
     padding: 0.78rem 1rem !important;
