@@ -1,4 +1,4 @@
-/* Login restore: private access screen optimized for desktop and mobile. */
+/* Login restore: private access screen with only the login card, centered on desktop and mobile. */
 
 .dashboard-shell-locked {
   display: block !important;
@@ -13,57 +13,36 @@
   min-height: 100vh !important;
   display: grid !important;
   place-items: center !important;
-  padding: clamp(2rem, 4.2vw, 4rem) !important;
+  padding: clamp(1.25rem, 4vw, 3rem) !important;
   overflow-x: hidden !important;
 }
 
 .dashboard-login-main .login-page {
-  position: relative !important;
-  width: min(100%, 66rem) !important;
+  width: min(100%, 29rem) !important;
   min-height: auto !important;
   display: grid !important;
-  grid-template-columns: minmax(23rem, 29rem) minmax(20rem, 1fr) !important;
-  align-items: stretch !important;
-  gap: 1.2rem !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  place-items: center !important;
   padding: 0 !important;
   background: transparent !important;
 }
 
+.dashboard-login-main .login-page::after {
+  display: none !important;
+  content: none !important;
+}
+
 .dashboard-login-main .login-card {
-  position: relative !important;
-  z-index: 1 !important;
   width: 100% !important;
   display: grid !important;
   align-content: start !important;
   gap: 0.95rem !important;
-  margin: 0 !important;
-  padding: clamp(1.25rem, 2vw, 1.65rem) !important;
+  margin: 0 auto !important;
+  padding: clamp(1.2rem, 2vw, 1.55rem) !important;
   border: 1px solid rgba(214, 224, 232, 0.94) !important;
-  border-radius: 1.55rem !important;
+  border-radius: 1.45rem !important;
   background: rgba(255, 255, 255, 0.97) !important;
-  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.14) !important;
-}
-
-.dashboard-login-main .login-page::after {
-  content: 'EuropaService Hub\A\A Documenti, cantieri, foto e contabilità sono disponibili solo dopo l’accesso.\A\A ✓ Login reale Supabase\A ✓ Permessi per ruolo\A ✓ Dati interni non caricati prima della sessione';
-  white-space: pre-line;
-  display: grid;
-  align-content: end;
-  min-height: 100%;
-  border: 1px solid rgba(214, 224, 232, 0.78);
-  border-radius: 1.65rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.78)),
-    radial-gradient(circle at 18% 18%, rgba(37, 99, 235, 0.24), transparent 14rem),
-    radial-gradient(circle at 78% 72%, rgba(168, 95, 50, 0.18), transparent 15rem),
-    linear-gradient(135deg, #ffffff, #edf4fb);
-  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.09);
-  color: #17212b;
-  font-size: clamp(1rem, 1.35vw, 1.18rem);
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  line-height: 1.48;
-  padding: clamp(1.5rem, 2.4vw, 2.2rem);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.14) !important;
 }
 
 .dashboard-login-main .login-card > .eyebrow {
@@ -77,21 +56,19 @@
 }
 
 .dashboard-login-main .login-card h1 {
-  max-width: 10ch !important;
   margin: 0 !important;
   color: var(--dash-title, #17212b) !important;
-  font-size: clamp(2.25rem, 3.45vw, 3.55rem) !important;
+  font-size: clamp(2.1rem, 4vw, 3.1rem) !important;
   font-weight: 780 !important;
   letter-spacing: -0.07em !important;
-  line-height: 0.96 !important;
+  line-height: 0.98 !important;
 }
 
 .dashboard-login-main .login-card > p:not(.eyebrow) {
-  max-width: 34rem !important;
   margin: 0 !important;
   color: var(--dash-muted, #6f7b85) !important;
-  font-size: 0.94rem !important;
-  line-height: 1.56 !important;
+  font-size: 0.93rem !important;
+  line-height: 1.54 !important;
 }
 
 .dashboard-login-main .login-card .mock-form.login-form,
@@ -189,22 +166,6 @@
   letter-spacing: 0 !important;
 }
 
-@media (max-width: 1040px) {
-  .dashboard-login-main .login-page {
-    grid-template-columns: minmax(0, 30rem) !important;
-    justify-content: center !important;
-    width: min(100%, 30rem) !important;
-  }
-
-  .dashboard-login-main .login-page::after {
-    display: none !important;
-  }
-
-  .dashboard-login-main .login-card {
-    width: 100% !important;
-  }
-}
-
 @media (max-width: 767px) {
   .dashboard-login-main {
     padding: 0 !important;
@@ -213,10 +174,10 @@
   .login-page,
   .dashboard-login-main .login-page {
     min-height: 100dvh !important;
+    width: 100% !important;
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) !important;
     place-items: center !important;
-    width: 100% !important;
     padding: max(1.25rem, env(safe-area-inset-top)) 1rem max(1.4rem, env(safe-area-inset-bottom)) !important;
     background:
       radial-gradient(circle at 18% 0%, rgba(37, 99, 235, 0.12), transparent 18rem),
@@ -226,24 +187,20 @@
 
   .dashboard-login-main .login-page::after {
     display: none !important;
+    content: none !important;
   }
 
   .login-card,
   .dashboard-login-main .login-card {
     width: min(100%, 26rem) !important;
-    display: grid !important;
     gap: 1rem !important;
-    margin: 0 auto !important;
     padding: 1.25rem !important;
-    border: 1px solid rgba(214, 224, 232, 0.92) !important;
     border-radius: 1.35rem !important;
-    background: rgba(255, 255, 255, 0.96) !important;
     box-shadow: 0 24px 70px rgba(15, 23, 42, 0.14) !important;
   }
 
   .login-card h1,
   .dashboard-login-main .login-card h1 {
-    max-width: none !important;
     font-size: clamp(1.8rem, 8vw, 2.35rem) !important;
     line-height: 1.04 !important;
   }
