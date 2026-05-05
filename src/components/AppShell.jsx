@@ -323,13 +323,16 @@ function getInternalSearchResults(query, navItems, dataStore) {
 
 function BottomDashboardNav({ items, currentPath }) {
   const [isMoreOpen, setIsMoreOpen] = useState(false)
+  const shouldShowAllItems = items.length <= 5
   const primaryLabels = ['Dashboard', 'Cantieri', 'Documenti', 'Contabilita']
-  const primaryItems = primaryLabels
+  const preferredItems = primaryLabels
     .map((label) => items.find((item) => item.label === label || item.label.startsWith(label)))
     .filter(Boolean)
-  const fallbackItems = primaryItems.length ? primaryItems : items.slice(0, 4)
+  const fallbackItems = shouldShowAllItems
+    ? items
+    : (preferredItems.length ? preferredItems : items.slice(0, 4))
   const primaryPaths = new Set(fallbackItems.map((item) => item.path))
-  const moreItems = items.filter((item) => !primaryPaths.has(item.path))
+  const moreItems = shouldShowAllItems ? [] : items.filter((item) => !primaryPaths.has(item.path))
   const isMoreActive = moreItems.some((item) => isActive(currentPath, item.path))
 
   function closeMore() {
@@ -354,13 +357,13 @@ function BottomDashboardNav({ items, currentPath }) {
                 onClick={closeMore}
               >
                 <span aria-hidden="true">{getNavIcon(item.label)}</span>
-                <span>{item.label.replace('Contabilita', 'Conti')}</span>
+                <span>{getCompactNavLabel(item.label)}</span>
               </a>
             ))}
           </nav>
         </section>
       ) : null}
-      <nav className="dashboard-bottom-nav" aria-label="Navigazione area interna mobile">
+      <nav className={shouldShowAllItems ? 'dashboard-bottom-nav dashboard-bottom-nav-direct' : 'dashboard-bottom-nav'} aria-label="Navigazione area interna mobile">
         {fallbackItems.map((item) => (
           <a
             aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
@@ -369,7 +372,7 @@ function BottomDashboardNav({ items, currentPath }) {
             onClick={closeMore}
           >
             <span aria-hidden="true">{getNavIcon(item.label)}</span>
-            {item.label.replace('Contabilita', 'Conti')}
+            {getCompactNavLabel(item.label)}
           </a>
         ))}
         {moreItems.length ? (
@@ -387,6 +390,16 @@ function BottomDashboardNav({ items, currentPath }) {
       </nav>
     </>
   )
+}
+
+function getCompactNavLabel(label) {
+  const labels = {
+    Contabilita: 'Conti',
+    Caricamenti: 'Carichi',
+    Impostazioni: 'Impost.',
+  }
+
+  return labels[label] ?? label
 }
 
 function getPublicLabel(item) {
