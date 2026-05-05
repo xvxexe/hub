@@ -105,17 +105,18 @@
 
 @media (max-width: 767px) {
   .dashboard-main {
-    padding-top: 2.55rem !important;
+    padding-top: 2.35rem !important;
   }
 
   .internal-topbar {
     position: fixed !important;
-    top: 0.38rem !important;
-    right: 0.86rem !important;
-    left: 0.86rem !important;
+    top: 0.42rem !important;
+    right: 0.62rem !important;
+    left: auto !important;
     z-index: 45 !important;
     display: block !important;
-    width: auto !important;
+    width: min(13.6rem, 58vw) !important;
+    max-width: 13.6rem !important;
     padding: 0 !important;
     margin: 0 !important;
     border: 0 !important;
@@ -127,43 +128,58 @@
   }
 
   .global-search {
-    width: 100%;
-    max-width: none;
-    min-height: 2.02rem;
-    display: flex !important;
+    position: relative;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 1.9rem;
+    display: grid !important;
+    grid-template-columns: 0.82rem minmax(0, 1fr) !important;
     align-items: center;
-    gap: 0.36rem;
+    column-gap: 0.38rem;
     border-radius: 999px;
-    border-color: rgba(188, 202, 216, 0.58);
-    background: rgba(255, 255, 255, 0.88);
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10);
+    border-color: rgba(188, 202, 216, 0.54);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.10);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    padding: 0 0.58rem;
+    padding: 0 0.58rem !important;
   }
 
   .global-search > svg,
   .global-search .lucide {
-    width: 13px !important;
-    height: 13px !important;
-    min-width: 13px !important;
-    flex: 0 0 13px !important;
-    color: rgba(37, 99, 235, 0.78);
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    display: block !important;
+    width: 12px !important;
+    height: 12px !important;
+    min-width: 12px !important;
+    max-width: 12px !important;
+    flex: 0 0 12px !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    color: rgba(37, 99, 235, 0.72);
+    pointer-events: none;
   }
 
   .global-search input {
-    flex: 1 1 auto;
-    min-width: 0;
-    height: 1.7rem;
-    font-size: 0.78rem;
-    font-weight: 590;
+    position: static !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 1.55rem;
+    font-size: 0.75rem;
+    font-weight: 580;
     line-height: 1;
-    padding: 0 0.1rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    text-indent: 0 !important;
   }
 
   .global-search input::placeholder {
-    color: rgba(82, 94, 105, 0.78);
-    font-weight: 560;
+    color: rgba(82, 94, 105, 0.74);
+    font-weight: 540;
   }
 
   .global-search kbd {
@@ -176,9 +192,9 @@
 
   .global-search .topbar-popover {
     position: fixed;
-    top: 2.75rem;
-    right: 0.78rem;
-    left: 0.78rem;
+    top: 2.65rem;
+    right: 0.62rem;
+    left: 0.62rem;
     width: auto;
     max-height: min(54vh, 26rem);
     overflow: auto;
@@ -187,7 +203,7 @@
 
   .breadcrumb {
     margin-top: 0 !important;
-    padding-top: 0.35rem !important;
+    padding-top: 0.25rem !important;
   }
 }
 
