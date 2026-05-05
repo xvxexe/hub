@@ -13,6 +13,7 @@ const estimateStatuses = ['Nuovo', 'Da valutare', 'Contattato', 'In attesa clien
 const priorities = ['Bassa', 'Media', 'Alta']
 
 const EMPTY_STORE = {
+  cantieri: [],
   documents: [],
   movements: [],
   photos: [],
@@ -161,6 +162,29 @@ export function useMockStore(session) {
     persist(nextStore)
   }
 
+  function addCantiere(cantiere) {
+    const nextCantiere = normalizeCantiere({
+      ...cantiere,
+      id: cantiere.id ?? `cantiere-${slugify(cantiere.nome ?? cantiere.cliente)}-${Date.now()}`,
+      stato: cantiere.stato ?? 'attivo',
+      avanzamento: cantiere.avanzamento ?? 0,
+      source: cantiere.source ?? 'hub-ui',
+    })
+
+    persist({
+      ...store,
+      cantieri: [nextCantiere, ...store.cantieri.filter((item) => item.id !== nextCantiere.id)],
+      activities: [createActivity({
+        type: 'cantieri',
+        entityType: 'cantieri',
+        entityId: nextCantiere.id,
+        description: `Cantiere ${nextCantiere.nome} creato`,
+      }, actor()), ...store.activities],
+    })
+
+    return nextCantiere
+  }
+
   function addEstimate(estimate) {
     const nextEstimate = normalizeEstimate({
       ...estimate,
@@ -303,6 +327,8 @@ export function useMockStore(session) {
     photoStatuses,
     estimateStatuses,
     priorities,
+    addCantiere,
+    updateCantiereData: (id, data) => updateEntity('cantieri', id, data, 'Cantiere modificato'),
     updateDocumentStatus: (id, status) => updateEntity('documents', id, { statoVerifica: status, stato: status.toLowerCase() }, `Documento segnato come ${status}`),
     updateDocumentData: (id, data) => updateEntity('documents', id, data, 'Documento modificato'),
     deleteDocument: (id) => deleteEntity('documents', id),
@@ -359,6 +385,7 @@ function normalizeStore(data) {
   return {
     ...EMPTY_STORE,
     ...(data ?? {}),
+    cantieri: Array.isArray(data?.cantieri) ? data.cantieri.map(normalizeCantiere) : [],
     documents: Array.isArray(data?.documents) ? data.documents : [],
     movements: Array.isArray(data?.movements) ? data.movements.map(normalizeMovement) : [],
     photos: Array.isArray(data?.photos) ? data.photos : [],
@@ -457,6 +484,20 @@ function normalizeMovement(movement) {
     statoVerifica: movement.statoVerifica ?? 'Da verificare',
     documentoCollegato: movement.documentoCollegato ?? movement.fileName ?? '',
     note: movement.note ?? movement.nota ?? '',
+  }
+}
+
+function normalizeCantiere(cantiere) {
+  return {
+    ...cantiere,
+    id: cantiere.id,
+    nome: cantiere.nome ?? cantiere.cliente ?? 'Cantiere da verificare',
+    cliente: cantiere.cliente ?? cantiere.nome ?? 'Cantiere da verificare',
+    localita: cantiere.localita ?? '',
+    indirizzo: cantiere.indirizzo ?? '',
+    stato: cantiere.stato ?? 'attivo',
+    avanzamento: Number(cantiere.avanzamento || 0),
+    updatedAt: cantiere.updatedAt ?? new Date().toISOString(),
   }
 }
 
@@ -562,11 +603,22 @@ function createActivity(activity, author) {
 }
 
 function entityLabel(collection, entity) {
+  if (collection === 'cantieri') return `Cantiere ${entity.nome || entity.cliente}`
   if (collection === 'documents') return `Documento ${entity.tipoDocumento} ${entity.fornitore || entity.descrizione}`
   if (collection === 'movements') return `Movimento ${entity.fornitore || entity.descrizione}`
   if (collection === 'photos') return `Foto ${entity.cantiere}`
   if (collection === 'estimates') return `Preventivo ${entity.client}`
   return 'Elemento'
+}
+
+function slugify(value) {
+  return String(value ?? 'nuovo')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'nuovo'
 }
 
 function todayIso() {
