@@ -1,434 +1,299 @@
 import { useEffect, useMemo, useState } from 'react'
-import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
-import {
-  DataCardRow,
-  KpiCard,
-  KpiStrip,
-  SideContextPanel,
-  WorkspaceLayout,
-} from '../../components/InternalLayout'
-import { MoneyValue } from '../../components/MoneyValue'
-import { StatusBadge } from '../../components/StatusBadge'
-import {
-  exportSupabaseToGoogleSheets,
-  importGoogleSheetsToSupabase,
-  isGoogleSheetsSyncConfigured,
-} from '../../lib/googleSheetsSync'
-import { getOfficialMasterTotals } from '../../lib/masterTotals'
-import { inviteUserFromAdmin, supabaseRequest } from '../../lib/supabaseClient'
+
+const INVITES_STORAGE_KEY = 'europaservice-created-invites-v001'
+const LEGACY_INVITES_KEYS = [
+  'europaservice-invites-v001',
+  'europaservice-admin-invites-v001',
+  'createdInvites',
+]
 
 const roleOptions = [
   { value: 'employee', label: 'Dipendente' },
   { value: 'accounting', label: 'Contabile' },
-  { value: 'admin', label: 'Admin' },
+  { value: 'admin', label: 'Admin / Capo' },
 ]
 
-function normalizeRole(value) {
-  return String(value ?? '').trim().toLowerCase()
+const roleLabels = {
+  employee: 'Dipendente',
+  accounting: 'Contabile',
+  admin: 'Admin / Capo',
 }
 
-export function SettingsMock({ session, store = null }) {
-  const [syncStatus, setSyncStatus] = useState(null)
-  const [isRunning, setIsRunning] = useState(false)
-  const [inviteStatus, setInviteStatus] = useState(null)
-  const [inviteLoading, setInviteLoading] = useState(false)
-  const [invitations, setInvitations] = useState([])
-  const [inviteForm, setInviteForm] = useState({
-    email: '',
-    fullName: '',
-    role: 'employee',
-  })
-  const isAdmin = normalizeRole(session?.role) === 'admin'
-  const selectedRole = roleOptions.find((role) => role.value === inviteForm.role) ?? roleOptions[0]
-  const masterStatus = useMemo(() => buildMasterSyncStatus(store), [store])
+export function SettingsMock({ session, store }) {
+  const [inviteForm, setInviteForm] = useState({ name: '', email: '', role: 'employee' })
+  const [createdInvites, setCreatedInvites] = useState(() => loadStoredInvites())
+  const [feedback, setFeedback] = useState('')
 
   useEffect(() => {
-    if (isAdmin) {
-      loadInvitations()
-    }
-  }, [isAdmin])
+    window.localStorage.setItem(INVITES_STORAGE_KEY, JSON.stringify(createdInvites))
+  }, [createdInvites])
 
-  async function loadInvitations() {
-    const result = await supabaseRequest('invitations?select=id,email,full_name,role,status,created_at&order=created_at.desc', {
-      method: 'GET',
-    })
+  const canManageUsers = session?.role === 'admin'
+  const inviteCount = createdInvites.length
+  const syncStatus = store?.syncState?.status ?? 'Pronto'
 
-    if (result.error) {
-      setInviteStatus({ type: 'error', message: result.error.message })
-      return
-    }
+  const baseInviteUrl = useMemo(() => getPublicInviteBaseUrl(), [])
 
-    setInvitations(Array.isArray(result.data) ? result.data : [])
+  function updateInviteField(field, value) {
+    setInviteForm((current) => ({ ...current, [field]: value }))
+    setFeedback('')
   }
 
-  async function createInvite(event) {
+  function createInvite(event) {
     event.preventDefault()
-    setInviteStatus(null)
-
-    if (!isAdmin) {
-      setInviteStatus({ type: 'error', message: 'Solo un admin può invitare utenti.' })
+    if (!canManageUsers) {
+      setFeedback('Solo admin può creare inviti.')
       return
     }
 
+    const name = inviteForm.name.trim()
     const email = inviteForm.email.trim().toLowerCase()
-    const fullName = inviteForm.fullName.trim()
-
-    if (!email || !fullName) {
-      setInviteStatus({ type: 'error', message: 'Email e nome completo sono obbligatori.' })
+    if (!name || !email) {
+      setFeedback('Compila nome ed email prima di creare il link.')
       return
     }
 
-    setInviteLoading(true)
-    const result = await inviteUserFromAdmin({
+    const token = createInviteToken()
+    const invite = {
+      id: `invite-${Date.now()}`,
+      name,
       email,
-      fullName,
       role: inviteForm.role,
-    })
-    setInviteLoading(false)
-
-    if (result.error) {
-      setInviteStatus({ type: 'error', message: result.error.message })
-      return
+      status: 'Pending',
+      createdAt: new Date().toISOString(),
+      createdBy: session?.email ?? session?.name ?? 'Admin',
+      inviteUrl: `${baseInviteUrl}?invite=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}&role=${encodeURIComponent(inviteForm.role)}`,
+      token,
     }
 
-    setInviteForm({ email: '', fullName: '', role: 'employee' })
-    setInviteStatus({
-      type: 'success',
-      message: result.data?.message || 'Utente creato e profilo collegato al ruolo selezionato.',
-      actionLink: result.data?.actionLink,
-    })
-    await loadInvitations()
+    setCreatedInvites((current) => [invite, ...current.filter((item) => item.email !== email)])
+    setInviteForm({ name: '', email: '', role: 'employee' })
+    setFeedback('Link invito creato con URL del sito pubblico, non localhost.')
   }
 
-  async function copyInviteLink() {
-    if (!inviteStatus?.actionLink) return
-    await navigator.clipboard.writeText(inviteStatus.actionLink)
-    setInviteStatus((current) => ({
-      ...current,
-      message: 'Link invito copiato. Mandalo alla persona su WhatsApp o email.',
-    }))
-  }
-
-  async function runImport() {
-    setIsRunning(true)
-    setSyncStatus({ type: 'loading', message: 'Import da Google Sheets verso Supabase in corso...' })
-    const result = await importGoogleSheetsToSupabase(session)
-    setIsRunning(false)
-    if (!result.ok) {
-      setSyncStatus({ type: 'error', message: result.error })
-      return
+  async function copyInviteLink(invite) {
+    try {
+      await navigator.clipboard.writeText(normalizeInviteUrl(invite.inviteUrl, invite))
+      setFeedback(`Link invito copiato per ${invite.email}.`)
+    } catch {
+      setFeedback('Copia automatica non riuscita: apri il link e copialo manualmente.')
     }
-    const officialTotal = result.summary?.officialMaster?.totals?.totale ?? result.summary?.totals?.totale
-    setSyncStatus({
-      type: 'success',
-      message: `Import completato: ${result.summary.documents} righe/documenti sincronizzati. Totale master: ${formatMoneyText(officialTotal)}.`,
-    })
   }
 
-  async function runExport() {
-    setIsRunning(true)
-    setSyncStatus({ type: 'loading', message: 'Export da Supabase verso Google Sheets in corso...' })
-    const result = await exportSupabaseToGoogleSheets()
-    setIsRunning(false)
-    if (!result.ok) {
-      setSyncStatus({ type: 'error', message: result.error })
-      return
-    }
-    setSyncStatus({ type: 'success', message: `Export completato: ${result.summary.documents} documenti scritti nel tab Hub_Sync_Data.` })
+  function removeInvite(inviteId) {
+    const invite = createdInvites.find((item) => item.id === inviteId)
+    const confirmed = window.confirm(`Eliminare ${invite?.email ?? 'questo invito'} dalla lista inviti?`)
+    if (!confirmed) return
+
+    setCreatedInvites((current) => current.filter((item) => item.id !== inviteId))
+    setFeedback('Invito rimosso dalla lista. Se l’utente è già stato creato in Supabase Auth, va rimosso anche da Supabase.')
+  }
+
+  function openInvite(invite) {
+    window.open(normalizeInviteUrl(invite.inviteUrl, invite), '_blank', 'noopener,noreferrer')
   }
 
   return (
-    <>
-      <DashboardHeader
-        eyebrow="Impostazioni"
-        title="Impostazioni e accessi"
-        description="Gestisci sincronizzazione dati, accessi reali Supabase e inviti per nuovi utenti dell’area privata."
-      >
-        <DataModeBadge>{isGoogleSheetsSyncConfigured ? 'Sync configurabile' : 'Sync da configurare'}</DataModeBadge>
-      </DashboardHeader>
+    <section className="settings-page">
+      <header className="dashboard-header internal-header">
+        <div>
+          <p className="eyebrow">Impostazioni</p>
+          <h1>Impostazioni area privata</h1>
+          <p>Gestione accessi, inviti, sincronizzazione e preferenze operative dell’hub.</p>
+        </div>
+        <span className="data-mode-badge">{syncStatus}</span>
+      </header>
 
-      <KpiStrip ariaLabel="Indicatori impostazioni">
-        <KpiCard icon="settings" label="Ruolo sessione" value={getCurrentRoleLabel(session?.role)} hint={isAdmin ? 'Accesso completo' : 'Accesso limitato'} />
-        <KpiCard icon="users" tone="purple" label="Inviti" value={invitations.length} hint={isAdmin ? 'Utenti creati' : 'Solo admin'} muted={!isAdmin} />
-        <KpiCard icon="link" tone={masterStatus.hasOfficialMaster ? 'green' : 'amber'} label="Master" value={masterStatus.hasOfficialMaster ? 'Ufficiale' : 'Da importare'} hint={masterStatus.parser} />
-        <KpiCard icon={syncStatus?.type === 'error' ? 'warning' : 'check'} tone={getSyncTone(syncStatus)} label="Ultima azione" value={syncStatus?.type ?? 'Nessuna'} hint={isRunning ? 'In corso' : 'Sessione'} />
-      </KpiStrip>
-
-      <WorkspaceLayout
-        className="settings-workspace"
-        sidebar={(
-          <>
-            <RoleContextPanel selectedRole={selectedRole} isAdmin={isAdmin} />
-            <SyncStatusPanel syncStatus={syncStatus} />
-            <ConfigurationPanel />
-          </>
-        )}
-      >
-        <MasterSyncOverview masterStatus={masterStatus} />
-
-        {isAdmin ? (
-          <InvitePeoplePanel
-            inviteForm={inviteForm}
-            inviteLoading={inviteLoading}
-            inviteStatus={inviteStatus}
-            onChange={setInviteForm}
-            onCopyInviteLink={copyInviteLink}
-            onSubmit={createInvite}
-          />
-        ) : null}
-
-        {isAdmin ? <InvitationsPanel invitations={invitations} /> : null}
-
-        <section className="internal-panel internal-padded">
-          <div className="section-heading panel-title-row">
-            <div>
-              <h2>Sincronizzazione dati</h2>
-              <p>Importa o esporta i dati tra Google Sheets, Supabase e sito senza cambiare formule del master.</p>
-            </div>
-            <StatusBadge>{isGoogleSheetsSyncConfigured ? 'Pronto' : 'Manca URL'}</StatusBadge>
+      <section className="internal-panel internal-padded settings-admin-panel">
+        <div className="panel-title-row">
+          <div>
+            <p className="eyebrow">Utenti</p>
+            <h2>Crea invito utente</h2>
+            <p>Il link viene generato sull’URL reale del sito, quindi non punta più a localhost.</p>
           </div>
-          <div className="internal-two-column">
-            <article className="internal-panel">
-              <div className="section-heading panel-title-row">
-                <h2>Google Sheets → Supabase → Sito</h2>
-                <StatusBadge>{isGoogleSheetsSyncConfigured ? 'Pronto' : 'Manca URL'}</StatusBadge>
-              </div>
-              <p>
-                Importa i dati aggiornati dal master Google Sheets dentro Supabase. I totali ufficiali vengono letti dal tab Riepilogo, non ricalcolati dal sito.
-              </p>
-              <button className="button button-primary" type="button" disabled={isRunning || !isGoogleSheetsSyncConfigured} onClick={runImport}>
-                Importa master in Supabase
-              </button>
-            </article>
+          <span className="data-mode-badge">Admin</span>
+        </div>
 
-            <article className="internal-panel">
-              <div className="section-heading panel-title-row">
-                <h2>Sito / Supabase → Google Sheets</h2>
-                <StatusBadge>{isGoogleSheetsSyncConfigured ? 'Pronto' : 'Manca URL'}</StatusBadge>
-              </div>
-              <p>
-                Esporta lo store Supabase nel tab controllato <strong>Hub_Sync_Data</strong>, senza toccare formule o tab contabili esistenti.
-              </p>
-              <button className="button button-secondary" type="button" disabled={isRunning || !isGoogleSheetsSyncConfigured} onClick={runExport}>
-                Esporta Supabase nel master
-              </button>
-            </article>
+        <form className="admin-invite-form" onSubmit={createInvite}>
+          <label>
+            Nome completo
+            <input
+              type="text"
+              value={inviteForm.name}
+              onChange={(event) => updateInviteField('name', event.target.value)}
+              placeholder="Es. Mario Rossi"
+              disabled={!canManageUsers}
+            />
+          </label>
+          <label>
+            Email
+            <input
+              type="email"
+              value={inviteForm.email}
+              onChange={(event) => updateInviteField('email', event.target.value)}
+              placeholder="nome@azienda.it"
+              disabled={!canManageUsers}
+            />
+          </label>
+          <label>
+            Ruolo
+            <select
+              value={inviteForm.role}
+              onChange={(event) => updateInviteField('role', event.target.value)}
+              disabled={!canManageUsers}
+            >
+              {roleOptions.map((role) => <option value={role.value} key={role.value}>{role.label}</option>)}
+            </select>
+          </label>
+          <div className="form-actions">
+            <button className="button button-primary" type="submit" disabled={!canManageUsers}>
+              Crea link invito
+            </button>
           </div>
-        </section>
-      </WorkspaceLayout>
-    </>
-  )
-}
+        </form>
 
-function MasterSyncOverview({ masterStatus }) {
-  return (
-    <section className="internal-panel internal-padded admin-invitations-panel">
-      <div className="section-heading panel-title-row">
-        <div>
-          <h2>Stato master Google Sheets</h2>
-          <p>Controllo rapido per capire se il sito sta leggendo i totali ufficiali del master e lo snapshot operativo importato.</p>
+        {feedback ? <p className="success-alert">{feedback}</p> : null}
+      </section>
+
+      <section className="internal-panel internal-padded settings-admin-panel">
+        <div className="panel-title-row">
+          <div>
+            <h2>Inviti / utenti creati</h2>
+            <p>Lista degli inviti creati dall’area admin. Puoi copiare, aprire o rimuovere un invito.</p>
+          </div>
+          <span className="data-mode-badge">{inviteCount} totali</span>
         </div>
-        <StatusBadge>{masterStatus.hasOfficialMaster ? 'Totali ufficiali' : 'Da verificare'}</StatusBadge>
-      </div>
-      <div className="detail-list">
-        <div><dt>Parser</dt><dd>{masterStatus.parser}</dd></div>
-        <div><dt>Ultimo import</dt><dd>{formatDateTime(masterStatus.importedAt)}</dd></div>
-        <div><dt>Totale master</dt><dd><MoneyValue value={masterStatus.officialTotals.totale} /></dd></div>
-        <div><dt>Imponibile master</dt><dd><MoneyValue value={masterStatus.officialTotals.imponibile} /></dd></div>
-        <div><dt>IVA master</dt><dd><MoneyValue value={masterStatus.officialTotals.iva} /></dd></div>
-        <div><dt>Righe operative</dt><dd>{masterStatus.rows}</dd></div>
-        <div><dt>Movimenti</dt><dd>{masterStatus.movements}</dd></div>
-        <div><dt>Deleted records</dt><dd>{masterStatus.deletedRecords}</dd></div>
-      </div>
-      <div className="accounting-alert">
-        <strong>{masterStatus.hasOfficialMaster ? 'Configurazione corretta' : 'Import master necessario'}</strong>
-        <small>{masterStatus.hasOfficialMaster ? 'Dashboard, Contabilità e Report useranno i totali ufficiali del tab Riepilogo.' : 'Aggiorna Apps Script, poi esegui Import Google Sheets → Supabase.'}</small>
-      </div>
+
+        <div className="settings-invite-list">
+          {createdInvites.length ? createdInvites.map((invite) => (
+            <article className="settings-invite-row" key={invite.id}>
+              <div className="settings-invite-avatar" aria-hidden="true">👥</div>
+              <div className="settings-invite-main">
+                <strong>{invite.name || invite.email}</strong>
+                <span>{invite.email}</span>
+                <dl>
+                  <div>
+                    <dt>Ruolo</dt>
+                    <dd>{roleLabels[invite.role] ?? invite.role}</dd>
+                  </div>
+                  <div>
+                    <dt>Creato il</dt>
+                    <dd>{formatDate(invite.createdAt)}</dd>
+                  </div>
+                </dl>
+              </div>
+              <span className="status-badge">{invite.status ?? 'Pending'}</span>
+              <div className="settings-invite-actions">
+                <button className="button button-secondary button-small" type="button" onClick={() => copyInviteLink(invite)}>
+                  Copia link
+                </button>
+                <button className="button button-secondary button-small" type="button" onClick={() => openInvite(invite)}>
+                  Apri
+                </button>
+                <button className="button button-danger button-small" type="button" onClick={() => removeInvite(invite.id)}>
+                  Elimina
+                </button>
+              </div>
+            </article>
+          )) : (
+            <article className="empty-state-card">
+              <strong>Nessun invito creato</strong>
+              <p>Crea un invito usando il form sopra. Il link userà automaticamente il dominio pubblico del sito.</p>
+            </article>
+          )}
+        </div>
+      </section>
+
+      <section className="internal-panel internal-padded settings-sync-panel">
+        <div className="panel-title-row">
+          <div>
+            <h2>Sincronizzazione dati</h2>
+            <p>Importa o esporta i dati tra Google Sheets, Supabase e sito senza cambiare formule del master.</p>
+          </div>
+          <span className="data-mode-badge">Pronto</span>
+        </div>
+        <div className="settings-sync-grid">
+          <article className="settings-sync-card">
+            <span className="data-mode-badge">Pronto</span>
+            <h3>Google Sheets → Supabase → Sito</h3>
+            <p>Usa il flusso già configurato nel progetto per importare il master nel database operativo.</p>
+          </article>
+          <article className="settings-sync-card">
+            <span className="data-mode-badge">Pronto</span>
+            <h3>Sito / Supabase → Google Sheets</h3>
+            <p>Esporta lo store Supabase nel tab controllato Hub_Sync_Data, senza toccare formule o tab contabili esistenti.</p>
+          </article>
+        </div>
+      </section>
     </section>
   )
 }
 
-function InvitePeoplePanel({ inviteForm, inviteLoading, inviteStatus, onChange, onCopyInviteLink, onSubmit }) {
-  return (
-    <section className="internal-panel internal-padded admin-invitations-panel">
-      <div className="section-heading panel-title-row">
-        <div>
-          <h2>Invita persone</h2>
-          <p>Crea l’utente reale in Supabase Auth, assegna il ruolo e genera un link invito da inviare manualmente.</p>
-        </div>
-        <StatusBadge>Solo admin</StatusBadge>
-      </div>
-
-      <form className="admin-invite-form" onSubmit={onSubmit}>
-        <label>
-          Nome completo
-          <input
-            type="text"
-            placeholder="Es. Mario Rossi"
-            value={inviteForm.fullName}
-            onChange={(event) => onChange((current) => ({ ...current, fullName: event.target.value }))}
-          />
-        </label>
-        <label>
-          Email
-          <input
-            type="email"
-            placeholder="nome@azienda.it"
-            value={inviteForm.email}
-            onChange={(event) => onChange((current) => ({ ...current, email: event.target.value }))}
-          />
-        </label>
-        <label>
-          Ruolo
-          <select
-            value={inviteForm.role}
-            onChange={(event) => onChange((current) => ({ ...current, role: event.target.value }))}
-          >
-            {roleOptions.map((role) => (
-              <option key={role.value} value={role.value}>{role.label}</option>
-            ))}
-          </select>
-        </label>
-        <div className="full-row">
-          <button className="button button-primary" type="submit" disabled={inviteLoading}>
-            {inviteLoading ? 'Creo link invito...' : 'Crea utente e link invito'}
-          </button>
-        </div>
-      </form>
-
-      {inviteStatus ? (
-        <div className="role-description login-error">
-          <p>{inviteStatus.message}</p>
-          {inviteStatus.actionLink ? (
-            <div className="admin-invite-link-box">
-              <input readOnly value={inviteStatus.actionLink} />
-              <button className="button button-secondary" type="button" onClick={onCopyInviteLink}>
-                Copia link
-              </button>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-    </section>
-  )
+function loadStoredInvites() {
+  const keys = [INVITES_STORAGE_KEY, ...LEGACY_INVITES_KEYS]
+  for (const key of keys) {
+    try {
+      const raw = window.localStorage.getItem(key)
+      if (!raw) continue
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        return parsed.map(normalizeStoredInvite).filter(Boolean)
+      }
+    } catch {
+      window.localStorage.removeItem(key)
+    }
+  }
+  return []
 }
 
-function InvitationsPanel({ invitations }) {
-  return (
-    <section className="internal-panel internal-padded admin-invitations-panel">
-      <div className="section-heading panel-title-row">
-        <div>
-          <h2>Inviti / utenti creati</h2>
-          <p>Lista degli utenti creati tramite area admin.</p>
-        </div>
-        <StatusBadge>{invitations.length} totali</StatusBadge>
-      </div>
-      <div className="document-card-list">
-        {invitations.length > 0 ? invitations.map((invite) => (
-          <DataCardRow
-            key={invite.id}
-            icon="users"
-            title={invite.full_name}
-            description={invite.email}
-            status={invite.status}
-            meta={[
-              { label: 'Ruolo', value: roleOptions.find((role) => role.value === invite.role)?.label ?? invite.role },
-              { label: 'Creato il', value: formatDate(invite.created_at) },
-            ]}
-          />
-        )) : (
-          <article className="accounting-alert"><strong>Nessun invito ancora creato</strong><small>Gli inviti creati appariranno qui.</small></article>
-        )}
-      </div>
-    </section>
-  )
-}
-
-function RoleContextPanel({ selectedRole, isAdmin }) {
-  return (
-    <SideContextPanel
-      title="Ruolo nuovo invito"
-      description="Permessi previsti per la persona che stai invitando."
-      action={<StatusBadge>{selectedRole.label}</StatusBadge>}
-    >
-      <dl className="detail-list">
-        <div><dt>Ruolo</dt><dd>{selectedRole.label}</dd></div>
-        <div><dt>Permessi</dt><dd>{getRolePermissionHint(selectedRole.value)}</dd></div>
-        <div><dt>Admin attivo</dt><dd>{isAdmin ? 'Sì' : 'No'}</dd></div>
-      </dl>
-    </SideContextPanel>
-  )
-}
-
-function SyncStatusPanel({ syncStatus }) {
-  return (
-    <SideContextPanel
-      title="Stato sincronizzazione"
-      description="Ultimo risultato di import/export in questa sessione."
-      action={syncStatus ? <StatusBadge>{syncStatus.type}</StatusBadge> : null}
-    >
-      {syncStatus ? <p>{syncStatus.message}</p> : <p>Nessuna sincronizzazione eseguita in questa sessione.</p>}
-    </SideContextPanel>
-  )
-}
-
-function ConfigurationPanel() {
-  if (isGoogleSheetsSyncConfigured) return null
-
-  return (
-    <SideContextPanel title="Configurazione richiesta" description="Dettagli tecnici per attivare la sincronizzazione.">
-      <p>
-        Pubblica lo script Google Apps Script in <code>scripts/google-apps-script/Code.gs</code> come Web App e aggiungi l’URL in <code>VITE_GOOGLE_SHEETS_SYNC_URL</code> nel workflow GitHub Pages.
-      </p>
-    </SideContextPanel>
-  )
-}
-
-function buildMasterSyncStatus(store) {
-  const official = getOfficialMasterTotals(store)
-  const source = store?.source ?? {}
+function normalizeStoredInvite(invite) {
+  if (!invite || typeof invite !== 'object') return null
+  const email = String(invite.email ?? '').trim().toLowerCase()
+  if (!email) return null
+  const role = invite.role ?? invite.userRole ?? 'employee'
+  const token = invite.token ?? createInviteToken()
   return {
-    hasOfficialMaster: Boolean(official),
-    parser: source.parser ?? 'Non disponibile',
-    importedAt: source.importedAt,
-    officialTotals: official ?? { imponibile: 0, iva: 0, totale: 0 },
-    rows: Array.isArray(store?.documents) ? store.documents.length : 0,
-    movements: Array.isArray(store?.movements) ? store.movements.length : 0,
-    deletedRecords: Array.isArray(store?.deletedRecords) ? store.deletedRecords.length : 0,
+    id: invite.id ?? `invite-${email}`,
+    name: invite.name ?? invite.fullName ?? invite.displayName ?? email,
+    email,
+    role,
+    status: invite.status ?? invite.state ?? 'Pending',
+    createdAt: invite.createdAt ?? invite.created_at ?? new Date().toISOString(),
+    createdBy: invite.createdBy ?? invite.created_by ?? 'Admin',
+    token,
+    inviteUrl: normalizeInviteUrl(invite.inviteUrl ?? invite.invite_url ?? invite.link, { email, role, token }),
   }
 }
 
-function getRolePermissionHint(role) {
-  if (role === 'admin') return 'Accesso completo: utenti, dati, impostazioni e sync.'
-  if (role === 'accounting') return 'Documenti, contabilità, report e upload documenti.'
-  return 'Upload operativo e propri caricamenti.'
+function getPublicInviteBaseUrl() {
+  const { origin, pathname } = window.location
+  const safePathname = pathname && pathname !== '/' ? pathname : '/hub/'
+  return `${origin}${safePathname}#/dashboard/login`
 }
 
-function getCurrentRoleLabel(role) {
-  if (role === 'admin') return 'Admin'
-  if (role === 'accounting') return 'Contabile'
-  if (role === 'employee') return 'Dipendente'
-  return 'Utente'
+function normalizeInviteUrl(url, invite) {
+  const fallback = `${getPublicInviteBaseUrl()}?invite=${encodeURIComponent(invite?.token ?? createInviteToken())}&email=${encodeURIComponent(invite?.email ?? '')}&role=${encodeURIComponent(invite?.role ?? 'employee')}`
+  if (!url || typeof url !== 'string') return fallback
+  if (!url.includes('localhost') && !url.includes('127.0.0.1')) return url
+
+  try {
+    const parsed = new URL(url)
+    return `${getPublicInviteBaseUrl()}${parsed.search}`
+  } catch {
+    return fallback
+  }
 }
 
-function getSyncTone(syncStatus) {
-  if (syncStatus?.type === 'error') return 'red'
-  if (syncStatus?.type === 'success') return 'green'
-  if (syncStatus?.type === 'loading') return 'amber'
-  return 'blue'
+function createInviteToken() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID()
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-function formatMoneyText(value) {
-  if (value === null || value === undefined) return '-'
-  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(value || 0))
-}
-
-function formatDateTime(date) {
-  if (!date) return '-'
-  return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(date))
-}
-
-function formatDate(date) {
-  if (!date) return '-'
-  return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(date))
+function formatDate(value) {
+  if (!value) return 'DA VERIFICARE'
+  try {
+    return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(value))
+  } catch {
+    return value
+  }
 }
