@@ -23,6 +23,7 @@ export function SettingsMock({ session, store }) {
   const [inviteForm, setInviteForm] = useState({ name: '', email: '', role: 'employee' })
   const [createdInvites, setCreatedInvites] = useState(() => loadStoredInvites())
   const [feedback, setFeedback] = useState('')
+  const [busyInviteId, setBusyInviteId] = useState('')
 
   useEffect(() => {
     window.localStorage.setItem(INVITES_STORAGE_KEY, JSON.stringify(createdInvites))
@@ -31,7 +32,6 @@ export function SettingsMock({ session, store }) {
   const canManageUsers = session?.role === 'admin'
   const inviteCount = createdInvites.length
   const syncStatus = store?.syncState?.status ?? 'Pronto'
-
   const baseInviteUrl = useMemo(() => getPublicInviteBaseUrl(), [])
 
   function updateInviteField(field, value) {
@@ -68,7 +68,7 @@ export function SettingsMock({ session, store }) {
 
     setCreatedInvites((current) => [invite, ...current.filter((item) => item.email !== email)])
     setInviteForm({ name: '', email: '', role: 'employee' })
-    setFeedback('Link invito creato con URL del sito pubblico, non localhost.')
+    setFeedback('Link invito creato con URL pubblico del sito.')
   }
 
   async function copyInviteLink(invite) {
@@ -80,13 +80,31 @@ export function SettingsMock({ session, store }) {
     }
   }
 
-  function removeInvite(inviteId) {
+  async function removeInvite(inviteId) {
     const invite = createdInvites.find((item) => item.id === inviteId)
-    const confirmed = window.confirm(`Eliminare ${invite?.email ?? 'questo invito'} dalla lista inviti?`)
+    if (!invite) return
+
+    const confirmed = window.confirm(`Eliminare ${invite.email} dalla lista inviti e, se presente, da Supabase Auth?`)
     if (!confirmed) return
 
-    setCreatedInvites((current) => current.filter((item) => item.id !== inviteId))
-    setFeedback('Invito rimosso dalla lista. Se l’utente è già stato creato in Supabase Auth, va rimosso anche da Supabase.')
+    setBusyInviteId(inviteId)
+
+    try {
+      const result = await deleteSupabaseUser(invite.email)
+      setCreatedInvites((current) => current.filter((item) => item.id !== inviteId))
+
+      if (result?.deleted) {
+        setFeedback(`${invite.email} eliminato dalla lista e da Supabase Auth.`)
+      } else if (result?.notFound) {
+        setFeedback(`${invite.email} rimosso dalla lista. Non risultava presente in Supabase Auth.`)
+      } else {
+        setFeedback(`${invite.email} rimosso dalla lista. Eliminazione Supabase non confermata.`)
+      }
+    } catch (error) {
+      setFeedback(`Errore Supabase: ${error.message}. L’invito non è stato rimosso.`)
+    } finally {
+      setBusyInviteId('')
+    }
   }
 
   function openInvite(invite) {
@@ -94,8 +112,8 @@ export function SettingsMock({ session, store }) {
   }
 
   return (
-    <section className="settings-page">
-      <header className="dashboard-header internal-header">
+    <section className="settings-page settings-page-restored">
+      <header className="dashboard-header internal-header settings-header-restored">
         <div>
           <p className="eyebrow">Impostazioni</p>
           <h1>Impostazioni area privata</h1>
@@ -104,7 +122,7 @@ export function SettingsMock({ session, store }) {
         <span className="data-mode-badge">{syncStatus}</span>
       </header>
 
-      <section className="internal-panel internal-padded settings-admin-panel">
+      <section className="internal-panel internal-padded settings-admin-panel settings-card-restored">
         <div className="panel-title-row">
           <div>
             <p className="eyebrow">Utenti</p>
@@ -114,7 +132,7 @@ export function SettingsMock({ session, store }) {
           <span className="data-mode-badge">Admin</span>
         </div>
 
-        <form className="admin-invite-form" onSubmit={createInvite}>
+        <form className="admin-invite-form settings-invite-form-restored" onSubmit={createInvite}>
           <label>
             Nome completo
             <input
@@ -152,23 +170,23 @@ export function SettingsMock({ session, store }) {
           </div>
         </form>
 
-        {feedback ? <p className="success-alert">{feedback}</p> : null}
+        {feedback ? <p className="success-alert settings-feedback-restored">{feedback}</p> : null}
       </section>
 
-      <section className="internal-panel internal-padded settings-admin-panel">
+      <section className="internal-panel internal-padded settings-admin-panel settings-card-restored">
         <div className="panel-title-row">
           <div>
             <h2>Inviti / utenti creati</h2>
-            <p>Lista degli inviti creati dall’area admin. Puoi copiare, aprire o rimuovere un invito.</p>
+            <p>Puoi copiare, aprire o eliminare un invito. Elimina prova anche a rimuovere l’utente da Supabase Auth.</p>
           </div>
           <span className="data-mode-badge">{inviteCount} totali</span>
         </div>
 
-        <div className="settings-invite-list">
+        <div className="settings-invite-list-restored">
           {createdInvites.length ? createdInvites.map((invite) => (
-            <article className="settings-invite-row" key={invite.id}>
-              <div className="settings-invite-avatar" aria-hidden="true">👥</div>
-              <div className="settings-invite-main">
+            <article className="settings-invite-row-restored" key={invite.id}>
+              <div className="settings-invite-avatar-restored" aria-hidden="true">👥</div>
+              <div className="settings-invite-main-restored">
                 <strong>{invite.name || invite.email}</strong>
                 <span>{invite.email}</span>
                 <dl>
@@ -182,21 +200,26 @@ export function SettingsMock({ session, store }) {
                   </div>
                 </dl>
               </div>
-              <span className="status-badge">{invite.status ?? 'Pending'}</span>
-              <div className="settings-invite-actions">
+              <span className="status-badge settings-status-restored">{invite.status ?? 'Pending'}</span>
+              <div className="settings-invite-actions-restored">
                 <button className="button button-secondary button-small" type="button" onClick={() => copyInviteLink(invite)}>
-                  Copia link
+                  Copia
                 </button>
                 <button className="button button-secondary button-small" type="button" onClick={() => openInvite(invite)}>
                   Apri
                 </button>
-                <button className="button button-danger button-small" type="button" onClick={() => removeInvite(invite.id)}>
-                  Elimina
+                <button
+                  className="button button-danger button-small"
+                  type="button"
+                  onClick={() => removeInvite(invite.id)}
+                  disabled={busyInviteId === invite.id}
+                >
+                  {busyInviteId === invite.id ? 'Elimino…' : 'Elimina'}
                 </button>
               </div>
             </article>
           )) : (
-            <article className="empty-state-card">
+            <article className="empty-state-card settings-empty-restored">
               <strong>Nessun invito creato</strong>
               <p>Crea un invito usando il form sopra. Il link userà automaticamente il dominio pubblico del sito.</p>
             </article>
@@ -204,7 +227,7 @@ export function SettingsMock({ session, store }) {
         </div>
       </section>
 
-      <section className="internal-panel internal-padded settings-sync-panel">
+      <section className="internal-panel internal-padded settings-sync-panel settings-card-restored">
         <div className="panel-title-row">
           <div>
             <h2>Sincronizzazione dati</h2>
@@ -212,13 +235,13 @@ export function SettingsMock({ session, store }) {
           </div>
           <span className="data-mode-badge">Pronto</span>
         </div>
-        <div className="settings-sync-grid">
-          <article className="settings-sync-card">
+        <div className="settings-sync-grid-restored">
+          <article className="settings-sync-card-restored">
             <span className="data-mode-badge">Pronto</span>
             <h3>Google Sheets → Supabase → Sito</h3>
             <p>Usa il flusso già configurato nel progetto per importare il master nel database operativo.</p>
           </article>
-          <article className="settings-sync-card">
+          <article className="settings-sync-card-restored">
             <span className="data-mode-badge">Pronto</span>
             <h3>Sito / Supabase → Google Sheets</h3>
             <p>Esporta lo store Supabase nel tab controllato Hub_Sync_Data, senza toccare formule o tab contabili esistenti.</p>
@@ -281,6 +304,45 @@ function normalizeInviteUrl(url, invite) {
     return `${getPublicInviteBaseUrl()}${parsed.search}`
   } catch {
     return fallback
+  }
+}
+
+async function deleteSupabaseUser(email) {
+  const functionUrl = getSupabaseFunctionUrl('delete-user')
+  if (!functionUrl) return { deleted: false, notConfigured: true }
+
+  const accessToken = await getSupabaseAccessToken()
+  if (!accessToken) throw new Error('sessione Supabase non disponibile')
+
+  const response = await fetch(functionUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  })
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(data.error ?? 'delete-user non riuscita')
+  return data
+}
+
+function getSupabaseFunctionUrl(functionName) {
+  const envUrl = import.meta.env.VITE_SUPABASE_URL
+  if (!envUrl) return ''
+  return `${envUrl.replace(/\/$/, '')}/functions/v1/${functionName}`
+}
+
+async function getSupabaseAccessToken() {
+  try {
+    const raw = Object.entries(window.localStorage)
+      .find(([key]) => key.startsWith('sb-') && key.endsWith('-auth-token'))?.[1]
+    if (!raw) return ''
+    const parsed = JSON.parse(raw)
+    return parsed?.access_token ?? parsed?.currentSession?.access_token ?? ''
+  } catch {
+    return ''
   }
 }
 
