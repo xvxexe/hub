@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AppShell } from './components/AppShell'
+import { CantiereDeleteGuard } from './components/CantiereDeleteGuard'
 import {
   employees,
   mockUsers,
@@ -119,18 +120,22 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
     )
   }
   if (path.startsWith('/dashboard/cantieri/')) {
+    const cantiereId = path.split('/').at(-1)
     return (
-      <CantiereDetail
-        cantiereId={path.split('/').at(-1)}
-        documents={mockStore.documents}
-        documentUploads={mockStore.documentUploads}
-        fotoUploads={mockStore.fotoUploads}
-        session={session}
-        activities={mockStore.activities}
-        notes={mockStore.notes}
-        onAddNote={mockStore.addInternalNote}
-        store={mockStore}
-      />
+      <>
+        <CantiereDetail
+          cantiereId={cantiereId}
+          documents={mockStore.documents}
+          documentUploads={mockStore.documentUploads}
+          fotoUploads={mockStore.fotoUploads}
+          session={session}
+          activities={mockStore.activities}
+          notes={mockStore.notes}
+          onAddNote={mockStore.addInternalNote}
+          store={mockStore}
+        />
+        <CantiereDeleteGuard cantiereId={cantiereId} session={session} store={mockStore} />
+      </>
     )
   }
   if (path === '/dashboard/cantieri') {
