@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { DashboardHeader, DataModeBadge, MockActionModal } from '../../components/InternalComponents'
+import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import {
   ActionList,
   DataCardRow,
@@ -14,13 +14,22 @@ import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
 import { StatusBadge } from '../../components/StatusBadge'
 
+const EMPTY_NEW_CANTIERE = {
+  nome: '',
+  cliente: '',
+  localita: '',
+  indirizzo: '',
+}
+
 export function CantieriList({ documents = [], store = null }) {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('tutti')
   const [sort, setSort] = useState('spese-desc')
   const [page, setPage] = useState(1)
   const [selectedCantiereId, setSelectedCantiereId] = useState(null)
-  const [modalAction, setModalAction] = useState(null)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [createStatus, setCreateStatus] = useState(null)
+  const [newCantiere, setNewCantiere] = useState(EMPTY_NEW_CANTIERE)
   const operationalCantieri = Array.isArray(store?.cantieri) ? store.cantieri : []
   const cantieri = useMemo(() => buildCantieri({ documents, operationalCantieri }), [documents, operationalCantieri])
 
@@ -78,8 +87,42 @@ export function CantieriList({ documents = [], store = null }) {
     setPage(1)
   }
 
+  function updateNewCantiere(field, value) {
+    setNewCantiere((current) => ({ ...current, [field]: value }))
+  }
+
   function selectCantiere(id) {
     setSelectedCantiereId(id)
+  }
+
+  function createCantiere(event) {
+    event.preventDefault()
+    setCreateStatus(null)
+
+    if (!store?.addCantiere) {
+      setCreateStatus({ type: 'error', message: 'Creazione cantiere non disponibile nello store operativo.' })
+      return
+    }
+
+    if (!newCantiere.nome.trim()) {
+      setCreateStatus({ type: 'error', message: 'Il nome cantiere è obbligatorio.' })
+      return
+    }
+
+    const cantiere = store.addCantiere({
+      nome: newCantiere.nome.trim(),
+      cliente: newCantiere.cliente.trim() || newCantiere.nome.trim(),
+      localita: newCantiere.localita.trim() || 'Da hub',
+      indirizzo: newCantiere.indirizzo.trim(),
+      stato: 'attivo',
+      avanzamento: 0,
+      source: 'hub-manual-cantiere',
+    })
+
+    setSelectedCantiereId(cantiere.id)
+    setNewCantiere(EMPTY_NEW_CANTIERE)
+    setIsCreateOpen(false)
+    setCreateStatus({ type: 'success', message: `Cantiere ${cantiere.nome} creato e salvato.` })
   }
 
   return (
@@ -93,12 +136,38 @@ export function CantieriList({ documents = [], store = null }) {
         <button
           className="button button-secondary button-small"
           type="button"
-          onClick={() => setModalAction(mockActions.newSite)}
+          onClick={() => setIsCreateOpen((current) => !current)}
         >
           <InternalIcon name="plus" size={16} />
-          Nuovo cantiere
+          {isCreateOpen ? 'Chiudi' : 'Nuovo cantiere'}
         </button>
       </DashboardHeader>
+
+      {isCreateOpen ? (
+        <section className="internal-panel internal-padded admin-invitations-panel">
+          <div className="section-heading panel-title-row">
+            <div>
+              <h2>Nuovo cantiere</h2>
+              <p>Crea una bozza operativa reale da collegare poi a documenti, foto, movimenti e note.</p>
+            </div>
+            <StatusBadge>Salvataggio reale</StatusBadge>
+          </div>
+          <form className="admin-invite-form" onSubmit={createCantiere}>
+            <label>Nome cantiere<input value={newCantiere.nome} onChange={(event) => updateNewCantiere('nome', event.target.value)} placeholder="Es. Barcelò Roma - Fase 2" /></label>
+            <label>Cliente<input value={newCantiere.cliente} onChange={(event) => updateNewCantiere('cliente', event.target.value)} placeholder="Cliente / struttura" /></label>
+            <label>Località<input value={newCantiere.localita} onChange={(event) => updateNewCantiere('localita', event.target.value)} placeholder="Comune / zona" /></label>
+            <label>Indirizzo<input value={newCantiere.indirizzo} onChange={(event) => updateNewCantiere('indirizzo', event.target.value)} placeholder="Indirizzo cantiere" /></label>
+            <div className="full-row"><button className="button button-primary" type="submit">Crea cantiere</button></div>
+          </form>
+        </section>
+      ) : null}
+
+      {createStatus ? (
+        <div className={createStatus.type === 'error' ? 'validation-alert-block' : 'accounting-alert success-alert'}>
+          <strong>{createStatus.type === 'error' ? 'Attenzione' : 'Creato'}</strong>
+          <p>{createStatus.message}</p>
+        </div>
+      ) : null}
 
       <FilterGrid ariaLabel="Filtri cantieri">
         <label>
@@ -200,23 +269,8 @@ export function CantieriList({ documents = [], store = null }) {
           )}
         </section>
       </WorkspaceLayout>
-
-      <MockActionModal action={modalAction} onClose={() => setModalAction(null)} />
     </>
   )
-}
-
-const mockActions = {
-  newSite: {
-    icon: 'building',
-    title: 'Nuovo cantiere',
-    text: 'Prepara un nuovo cantiere da collegare a documenti, contabilità e report.',
-    confirmLabel: 'Crea bozza',
-    fields: [
-      { label: 'Nome cantiere', placeholder: 'Es. Barcelò Roma - Fase 2' },
-      { label: 'Località', placeholder: 'Es. Roma' },
-    ],
-  },
 }
 
 function CantiereRow({ cantiere, isSelected, onSelect }) {
