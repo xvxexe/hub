@@ -46,7 +46,7 @@ export function DashboardHome({ session, fotoUploads, documentUploads, documents
       ) : null}
       {session.role === 'accounting' ? <AccountingDashboard documentUploads={documentUploads} documents={documents} store={store} /> : null}
       {session.role === 'employee' ? (
-        <EmployeeDashboard session={session} fotoUploads={fotoUploads} documentUploads={documentUploads} documents={documents} />
+        <EmployeeDashboard session={session} fotoUploads={fotoUploads} documentUploads={documentUploads} documents={documents} store={store} />
       ) : null}
     </>
   )
@@ -378,18 +378,44 @@ function documentToAccountingRow(document) {
   }
 }
 
-function EmployeeDashboard({ session, fotoUploads, documentUploads, documents }) {
+function EmployeeDashboard({ session, fotoUploads, documentUploads, documents, store }) {
   const sites = buildSitesFromDocuments(documents)
+  const siteOptions = sites.length ? sites : [{ id: 'barcelo-roma', nome: 'Barcelò Roma', localita: 'Roma, zona Eur' }]
+  const [selectedSiteId, setSelectedSiteId] = useState(siteOptions[0]?.id ?? 'barcelo-roma')
+  const [noteText, setNoteText] = useState('')
+  const [noteStatus, setNoteStatus] = useState(null)
   const myPhotos = fotoUploads.filter((upload) => upload.caricatoDa === session.name)
   const myDocuments = documentUploads.filter((upload) => upload.caricatoDa === session.name)
+  const selectedSite = siteOptions.find((site) => site.id === selectedSiteId) ?? siteOptions[0]
+  const siteNotes = (store?.notes ?? [])
+    .filter((note) => note.entityType === 'cantieri' && note.entityId === selectedSiteId)
+    .slice(0, 4)
+
+  function submitQuickNote(event) {
+    event.preventDefault()
+    const text = noteText.trim()
+    if (!text) {
+      setNoteStatus({ type: 'error', message: 'Scrivi una nota prima di salvarla.' })
+      return
+    }
+
+    if (!store?.addInternalNote) {
+      setNoteStatus({ type: 'error', message: 'Salvataggio note non disponibile.' })
+      return
+    }
+
+    store.addInternalNote('cantieri', selectedSiteId, text)
+    setNoteText('')
+    setNoteStatus({ type: 'success', message: `Nota salvata su ${selectedSite?.nome ?? 'cantiere'}.` })
+  }
 
   return (
     <>
       <section className="employee-action-panel employee-action-panel-strong">
         <label>
           Scegli cantiere
-          <select defaultValue={sites[0]?.id ?? 'barcelo-roma'}>
-            {sites.map((cantiere) => (
+          <select value={selectedSiteId} onChange={(event) => setSelectedSiteId(event.target.value)}>
+            {siteOptions.map((cantiere) => (
               <option key={cantiere.id} value={cantiere.id}>{cantiere.nome}</option>
             ))}
           </select>
@@ -399,16 +425,45 @@ function EmployeeDashboard({ session, fotoUploads, documentUploads, documents })
           <a className="button button-secondary" href="#/dashboard/upload">Carica documento</a>
           <a className="button button-secondary" href="#/dashboard/caricamenti">I miei caricamenti</a>
         </div>
-        <label>
-          Nota rapida
-          <textarea rows="4" placeholder="Scrivi una nota operativa" />
-        </label>
+        <form className="employee-quick-note" onSubmit={submitQuickNote}>
+          <label>
+            Nota rapida reale
+            <textarea rows="4" value={noteText} onChange={(event) => setNoteText(event.target.value)} placeholder="Scrivi una nota operativa per il cantiere selezionato" />
+          </label>
+          <div className="employee-note-actions">
+            <button className="button button-primary" type="submit">Salva nota</button>
+            <small>{selectedSite?.nome ?? 'Cantiere'} · nota persistente</small>
+          </div>
+          {noteStatus ? <p className={noteStatus.type === 'error' ? 'form-error-text' : 'form-success-text'}>{noteStatus.message}</p> : null}
+        </form>
       </section>
 
       <div className="internal-two-column">
         <RecentUploadList title="Le mie foto recenti" type="foto" uploads={myPhotos} />
         <RecentUploadList title="I miei documenti recenti" type="documento" uploads={myDocuments} showAmount={false} />
       </div>
+
+      <section className="internal-panel employee-notes-panel">
+        <div className="section-heading panel-title-row">
+          <div>
+            <h2>Note recenti del cantiere</h2>
+            <p>Ultime note salvate su {selectedSite?.nome ?? 'questo cantiere'}.</p>
+          </div>
+          <StatusBadge>{siteNotes.length} note</StatusBadge>
+        </div>
+        <div className="compact-upload-list">
+          {siteNotes.length ? siteNotes.map((note) => (
+            <article className="compact-upload-row" key={note.id}>
+              <span className="file-chip file-pdf">N</span>
+              <div>
+                <strong>{note.text}</strong>
+                <small>{note.author} · {note.date}</small>
+              </div>
+            </article>
+          )) : <p>Nessuna nota salvata per questo cantiere.</p>}
+        </div>
+      </section>
+
       <WorkflowStepper title="Flusso foto" steps={photoFlow} />
     </>
   )
