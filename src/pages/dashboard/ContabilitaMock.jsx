@@ -20,6 +20,7 @@ const defaultPayments = ['Non indicato', 'Bonifico', 'Carta', 'Contanti', 'Da co
 export function ContabilitaMock({ documents = [], store = null, session = null }) {
   const [filters, setFilters] = useState({
     cantiereId: 'tutti',
+    sheetTab: 'tutti',
     categoria: 'tutte',
     statoVerifica: 'tutti',
     tipoDocumento: 'tutti',
@@ -33,6 +34,7 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
   const officialMaster = getOfficialMasterTotals(store)
   const duplicateIds = useMemo(() => buildDuplicateIdSet(sourceRows), [sourceRows])
   const sites = useMemo(() => buildSiteOptions(sourceRows), [sourceRows])
+  const tabs = useMemo(() => buildUniqueOptions(sourceRows, 'sheetTab', []), [sourceRows])
   const categories = useMemo(() => buildUniqueOptions(sourceRows, 'categoria', defaultCategories), [sourceRows])
   const statuses = useMemo(() => buildUniqueOptions(sourceRows, 'statoVerifica', defaultStatuses), [sourceRows])
   const docTypes = useMemo(() => buildUniqueOptions(sourceRows, 'tipoDocumento', defaultDocTypes), [sourceRows])
@@ -42,16 +44,17 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
 
     return sourceRows.filter((row) => {
       const matchesCantiere = filters.cantiereId === 'tutti' || row.cantiereId === filters.cantiereId
+      const matchesTab = filters.sheetTab === 'tutti' || row.sheetTab === filters.sheetTab
       const matchesCategoria = filters.categoria === 'tutte' || row.categoria === filters.categoria
       const matchesStato = filters.statoVerifica === 'tutti' || row.statoVerifica === filters.statoVerifica
       const matchesTipo = filters.tipoDocumento === 'tutti' || row.tipoDocumento === filters.tipoDocumento
-      const matchesSearch = search === '' || [row.descrizione, row.fornitore, row.numeroDocumento, row.note, row.cantiere]
+      const matchesSearch = search === '' || [row.descrizione, row.fornitore, row.numeroDocumento, row.note, row.cantiere, row.sheetTab]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
         .includes(search)
 
-      return matchesCantiere && matchesCategoria && matchesStato && matchesTipo && matchesSearch
+      return matchesCantiere && matchesTab && matchesCategoria && matchesStato && matchesTipo && matchesSearch
     })
   }, [filters, sourceRows])
 
@@ -72,7 +75,7 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
       <DashboardHeader
         eyebrow="Contabilità reale"
         title="Contabilità"
-        description="Numeri ufficiali letti dal master Google Sheets. Le righe sotto servono per dettaglio operativo, ricerca e controlli."
+        description="Numeri ufficiali letti dal master Google Sheets. Le righe sotto sono dettagli operativi filtrabili per tab/lavorazione."
       >
         <DataModeBadge>{officialMaster ? 'Totali ufficiali master' : 'Dati reali Supabase'}</DataModeBadge>
         <a className="button button-secondary button-small" href="#/dashboard/report">Report</a>
@@ -82,7 +85,7 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
         <ManualExpenseForm store={store} session={session} sites={sites} categories={categories} />
       ) : null}
 
-      <AccountingFilters filters={filters} onChange={updateFilter} sites={sites} categories={categories} statuses={statuses} docTypes={docTypes} />
+      <AccountingFilters filters={filters} onChange={updateFilter} sites={sites} tabs={tabs} categories={categories} statuses={statuses} docTypes={docTypes} />
       <AccountingSummaryCards totals={totals} rowsCount={filteredRows.length} mathWarnings={mathWarnings} officialMaster={officialMaster} />
       <AccountingAlerts alerts={alerts} />
       <AccountingTable rows={filteredRows} duplicateIds={duplicateIds} />
@@ -220,6 +223,7 @@ function normalizeAccountingRow(row) {
     categoria: row.categoria ?? 'Extra / Altro',
     tipoDocumento: row.tipoDocumento ?? 'Altro',
     numeroDocumento: row.numeroDocumento ?? row.fileName ?? row.documentId ?? row.id,
+    sheetTab: row.sheetTab ?? 'Senza tab',
     imponibile: Number(row.imponibile || 0),
     iva: Number(row.iva || 0),
     totale: Number(row.totale || row.importoTotale || 0),
@@ -244,6 +248,7 @@ function documentToAccountingRow(document) {
     categoria: document.categoria ?? 'Extra / Altro',
     tipoDocumento: document.tipoDocumento ?? 'Altro',
     numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id,
+    sheetTab: document.sheetTab ?? 'Senza tab',
     imponibile: document.imponibile,
     iva: document.iva,
     totale: document.totale ?? document.importoTotale,
@@ -256,14 +261,15 @@ function documentToAccountingRow(document) {
   })
 }
 
-function AccountingFilters({ filters, onChange, sites, categories, statuses, docTypes }) {
+function AccountingFilters({ filters, onChange, sites, tabs, categories, statuses, docTypes }) {
   return (
     <FilterGrid className="real-accounting-filters" ariaLabel="Filtri contabilità">
       <label>Cantiere<select value={filters.cantiereId} onChange={(event) => onChange('cantiereId', event.target.value)}><option value="tutti">Tutti</option>{sites.map((cantiere) => <option key={cantiere.id} value={cantiere.id}>{cantiere.nome}</option>)}</select></label>
+      <label>Lavorazione / tab<select value={filters.sheetTab} onChange={(event) => onChange('sheetTab', event.target.value)}><option value="tutti">Tutte</option>{tabs.map((tab) => <option key={tab} value={tab}>{tab}</option>)}</select></label>
       <label>Categoria<select value={filters.categoria} onChange={(event) => onChange('categoria', event.target.value)}><option value="tutte">Tutte</option>{categories.map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}</select></label>
       <label>Stato verifica<select value={filters.statoVerifica} onChange={(event) => onChange('statoVerifica', event.target.value)}><option value="tutti">Tutti</option>{statuses.map((stato) => <option key={stato} value={stato}>{stato}</option>)}</select></label>
       <label>Tipo documento<select value={filters.tipoDocumento} onChange={(event) => onChange('tipoDocumento', event.target.value)}><option value="tutti">Tutti</option>{docTypes.map((tipo) => <option key={tipo} value={tipo}>{tipo}</option>)}</select></label>
-      <label className="accounting-search">Ricerca<input type="search" value={filters.search} onChange={(event) => onChange('search', event.target.value)} placeholder="Descrizione, fornitore, documento..." /></label>
+      <label className="accounting-search">Ricerca<input type="search" value={filters.search} onChange={(event) => onChange('search', event.target.value)} placeholder="Descrizione, fornitore, documento, tab..." /></label>
     </FilterGrid>
   )
 }
@@ -298,7 +304,7 @@ function AccountingAlerts({ alerts }) {
     <section className="accounting-section real-accounting-section">
       <div className="section-heading panel-title-row"><div><h2>Controlli contabili</h2><p>Alert calcolati sulle righe operative, non sui totali ufficiali del master.</p></div><StatusBadge>{alerts.length ? `${alerts.length} alert` : 'Tutto ok'}</StatusBadge></div>
       <div className="document-card-list">
-        {alerts.length > 0 ? alerts.map((alert) => <DataCardRow key={alert.id} icon={alert.message === 'Duplicato reale' || alert.message === 'Duplicato' ? 'warning' : 'file'} title={alert.movimento.descrizione} description={`${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`} status={alert.message} href={`#/dashboard/contabilita/${alert.movimento.id}`} warning={alert.message !== 'Da controllare'} meta={[{ label: 'Categoria', value: alert.movimento.categoria }, { label: 'Totale', value: <MoneyValue value={alert.movimento.totale} /> }, { label: 'Pagamento', value: alert.movimento.pagamento }]} />) : <article className="accounting-alert"><strong>Nessun alert sui filtri attuali</strong><small>I movimenti selezionati non hanno controlli aperti.</small></article>}
+        {alerts.length > 0 ? alerts.map((alert) => <DataCardRow key={alert.id} icon={alert.message === 'Duplicato reale' || alert.message === 'Duplicato' ? 'warning' : 'file'} title={alert.movimento.descrizione} description={`${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`} status={alert.message} href={`#/dashboard/contabilita/${alert.movimento.id}`} warning={alert.message !== 'Da controllare'} meta={[{ label: 'Tab', value: alert.movimento.sheetTab }, { label: 'Categoria', value: alert.movimento.categoria }, { label: 'Totale', value: <MoneyValue value={alert.movimento.totale} /> }, { label: 'Pagamento', value: alert.movimento.pagamento }]} />) : <article className="accounting-alert"><strong>Nessun alert sui filtri attuali</strong><small>I movimenti selezionati non hanno controlli aperti.</small></article>}
       </div>
     </section>
   )
@@ -310,7 +316,7 @@ function AccountingTable({ rows, duplicateIds }) {
       <div className="section-heading panel-title-row"><div><h2>Movimenti</h2><p>Righe operative importate dai tab del master: servono per leggere fornitore, documento, pagamento e note.</p></div><StatusBadge>{rows.length} righe</StatusBadge></div>
       {rows.length > 0 ? (
         <>
-          <div className="accounting-table-wrap"><table className="accounting-table real-accounting-table"><thead><tr><th>Data</th><th>Descrizione</th><th>Fornitore</th><th>Categoria</th><th>Imponibile</th><th>IVA</th><th>Totale</th><th>Pagamento</th><th>Documento collegato</th><th>Stato</th><th>Note</th><th>Azione</th></tr></thead><tbody>{rows.map((row) => { const warning = hasAmountWarning(row); const duplicate = duplicateIds.has(row.id); return <tr className={warning || duplicate ? 'accounting-warning-row' : undefined} key={row.id}><td>{formatDate(row.data)}</td><td>{row.descrizione}</td><td>{row.fornitore}</td><td>{row.categoria}</td><td><MoneyValue value={row.imponibile} /></td><td><MoneyValue value={row.iva} /></td><td><MoneyValue value={row.totale} /></td><td>{row.pagamento}</td><td>{row.documentoCollegato || 'Da collegare'}</td><td><StatusBadge>{warning ? 'Totale da verificare' : duplicate ? 'Possibile duplicato' : row.statoVerifica}</StatusBadge></td><td>{row.note}</td><td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td></tr> })}</tbody></table></div>
+          <div className="accounting-table-wrap"><table className="accounting-table real-accounting-table"><thead><tr><th>Data</th><th>Lavorazione</th><th>Descrizione</th><th>Fornitore</th><th>Categoria</th><th>Imponibile</th><th>IVA</th><th>Totale</th><th>Pagamento</th><th>Documento</th><th>Stato</th><th>Note</th><th>Azione</th></tr></thead><tbody>{rows.map((row) => { const warning = hasAmountWarning(row); const duplicate = duplicateIds.has(row.id); return <tr className={warning || duplicate ? 'accounting-warning-row' : undefined} key={row.id}><td>{formatDate(row.data)}</td><td>{row.sheetTab}</td><td>{row.descrizione}</td><td>{row.fornitore}</td><td>{row.categoria}</td><td><MoneyValue value={row.imponibile} /></td><td><MoneyValue value={row.iva} /></td><td><MoneyValue value={row.totale} /></td><td>{row.pagamento}</td><td>{row.documentoCollegato || row.numeroDocumento || 'Da collegare'}</td><td><StatusBadge>{warning ? 'Totale da verificare' : duplicate ? 'Possibile duplicato' : row.statoVerifica}</StatusBadge></td><td>{row.note}</td><td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td></tr> })}</tbody></table></div>
           <div className="accounting-mobile-list">{rows.map((row) => <AccountingMobileCard key={row.id} row={row} duplicate={duplicateIds.has(row.id)} />)}</div>
         </>
       ) : <EmptyState title="Nessun movimento trovato">Modifica filtri, cantiere o ricerca per visualizzare altri movimenti contabili.</EmptyState>}
@@ -320,7 +326,7 @@ function AccountingTable({ rows, duplicateIds }) {
 
 function AccountingMobileCard({ row, duplicate }) {
   const warning = hasAmountWarning(row)
-  return <DataCardRow className="accounting-mobile-card" icon={warning || duplicate ? 'warning' : 'wallet'} title={row.descrizione} description={`${row.fornitore} · ${row.categoria}`} status={warning ? 'Totale da verificare' : duplicate ? 'Possibile duplicato' : row.statoVerifica} href={`#/dashboard/contabilita/${row.id}`} warning={warning || duplicate} meta={[{ label: 'Data', value: formatDate(row.data) }, { label: 'Imponibile', value: <MoneyValue value={row.imponibile} /> }, { label: 'IVA', value: <MoneyValue value={row.iva} /> }, { label: 'Totale', value: <MoneyValue value={row.totale} /> }, { label: 'Pagamento', value: row.pagamento }, { label: 'Documento', value: row.documentoCollegato || 'Da collegare' }]}><small>{row.numeroDocumento} · {row.note}</small></DataCardRow>
+  return <DataCardRow className="accounting-mobile-card" icon={warning || duplicate ? 'warning' : 'wallet'} title={row.descrizione} description={`${row.fornitore} · ${row.sheetTab}`} status={warning ? 'Totale da verificare' : duplicate ? 'Possibile duplicato' : row.statoVerifica} href={`#/dashboard/contabilita/${row.id}`} warning={warning || duplicate} meta={[{ label: 'Data', value: formatDate(row.data) }, { label: 'Lavorazione', value: row.sheetTab }, { label: 'Categoria', value: row.categoria }, { label: 'Imponibile', value: <MoneyValue value={row.imponibile} /> }, { label: 'IVA', value: <MoneyValue value={row.iva} /> }, { label: 'Totale riga', value: <MoneyValue value={row.totale} /> }, { label: 'Pagamento', value: row.pagamento }, { label: 'Documento', value: row.documentoCollegato || 'Da collegare' }]}><small>{row.numeroDocumento} · {row.note}</small></DataCardRow>
 }
 
 function CantiereAccountingSummary({ summaries }) {
