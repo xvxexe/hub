@@ -3,6 +3,7 @@ import { EditableField, EntityTimeline, NotesPanel } from '../../components/Enti
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { StatusBadge } from '../../components/StatusBadge'
 import { formatDate } from '../../data/mockCantieri'
+import { convertEstimateToCantiere } from '../../lib/estimateConversion'
 
 const CUSTOMER_TYPES = ['Privato', 'Azienda', 'Hotel', 'Negozio', 'Studio tecnico', 'Altro']
 const URGENCY_OPTIONS = ['Da programmare', 'Entro 2 settimane', 'Urgente']
@@ -15,6 +16,7 @@ export function EstimateDetail({ estimateId, session, store }) {
   const [form, setForm] = useState(estimate ?? {})
   const [statusMessage, setStatusMessage] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isConverting, setIsConverting] = useState(false)
 
   useEffect(() => {
     setForm(estimate ?? {})
@@ -65,6 +67,29 @@ export function EstimateDetail({ estimateId, session, store }) {
     setStatusMessage({ type: 'success', message: 'Preventivo aggiornato nello store operativo.' })
   }
 
+  async function convertToCantiere() {
+    if (!canEdit) return
+    if (estimate.cantiereId) {
+      window.location.assign(`#/dashboard/cantieri/${estimate.cantiereId}`)
+      return
+    }
+
+    const confirmed = window.confirm(`Creare un cantiere reale dal preventivo di ${estimate.client}?`)
+    if (!confirmed) return
+
+    setIsConverting(true)
+    const result = await convertEstimateToCantiere({ estimate, session })
+    setIsConverting(false)
+
+    if (!result.ok) {
+      setStatusMessage({ type: 'error', message: result.error ?? 'Conversione non riuscita.' })
+      return
+    }
+
+    setStatusMessage({ type: 'success', message: `Cantiere creato: ${result.cantiereName}.` })
+    setTimeout(() => window.location.assign(`#/dashboard/cantieri/${result.cantiereId}`), 250)
+  }
+
   async function deleteEstimate() {
     if (!canDelete || !store.deleteEstimate) return
     const confirmed = window.confirm(`Eliminare definitivamente il preventivo di ${estimate.client}?`)
@@ -108,6 +133,9 @@ export function EstimateDetail({ estimateId, session, store }) {
                 {status}
               </button>
             ))}
+            <button className="button button-primary" type="button" onClick={convertToCantiere} disabled={isConverting}>
+              {estimate.cantiereId ? 'Apri cantiere' : isConverting ? 'Creo cantiere…' : 'Converti in cantiere'}
+            </button>
             {canDelete ? (
               <button className="button button-secondary warning-action" type="button" onClick={deleteEstimate} disabled={isDeleting}>
                 {isDeleting ? 'Elimino…' : 'Elimina'}
@@ -149,11 +177,12 @@ export function EstimateDetail({ estimateId, session, store }) {
             <div><dt>Data richiesta</dt><dd>{formatDate(estimate.requestDate)}</dd></div>
             <div><dt>Contatto</dt><dd>{estimate.contactPreference}</dd></div>
             <div><dt>Budget</dt><dd>{estimate.budget}</dd></div>
+            <div><dt>Cantiere collegato</dt><dd>{estimate.cantiereId ? <a href={`#/dashboard/cantieri/${estimate.cantiereId}`}>Apri cantiere</a> : 'Non ancora convertito'}</dd></div>
             <div><dt>Origine</dt><dd>{estimate.source ?? 'hub-ui'}</dd></div>
           </dl>
           <div className="document-actions-panel">
             <h3>Prossima azione</h3>
-            <p>Usa gli stati per seguire il cliente. La conversione preventivo → cantiere sarà il prossimo modulo operativo da completare.</p>
+            <p>Quando il preventivo viene accettato, convertilo in cantiere reale e poi collega documenti, foto, note e movimenti contabili.</p>
           </div>
         </aside>
       </section>
