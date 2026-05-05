@@ -11,7 +11,6 @@ import {
 import { InternalIcon } from '../../components/InternalIcons'
 import { RecentUploadList } from '../../components/RecentUploadList'
 import { StatusBadge } from '../../components/StatusBadge'
-import { mockCantieri } from '../../data/mockCantieri'
 import {
   createDocumentUpload,
   createFotoUpload,
@@ -44,7 +43,7 @@ const defaultDocumentForm = {
   caricatoDa: '',
 }
 
-export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, onAddDocument }) {
+export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, onAddDocument, store = null }) {
   const isAccounting = session.role === 'accounting'
   const isEmployee = session.role === 'employee'
   const [activeType, setActiveType] = useState(isAccounting ? 'documento' : 'foto')
@@ -55,11 +54,12 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
   const [uploadStatus, setUploadStatus] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
 
+  const uploadCantieri = useMemo(() => buildUploadCantieri(store, documentUploads, fotoUploads), [store?.cantieri, documentUploads, fotoUploads])
   const visibleFotoUploads = isEmployee ? fotoUploads.filter((upload) => upload.caricatoDa === session.name) : fotoUploads
   const visibleDocumentUploads = isEmployee ? documentUploads.filter((upload) => upload.caricatoDa === session.name) : documentUploads
   const stats = useMemo(() => buildUploadStats(visibleFotoUploads, visibleDocumentUploads), [visibleFotoUploads, visibleDocumentUploads])
   const activeForm = activeType === 'foto' ? fotoForm : documentForm
-  const selectedSite = mockCantieri.find((cantiere) => cantiere.id === activeForm.cantiereId) ?? mockCantieri[0]
+  const selectedSite = uploadCantieri.find((cantiere) => cantiere.id === activeForm.cantiereId) ?? uploadCantieri[0]
   const canUploadFoto = !isAccounting
 
   function updateFoto(field, value) {
@@ -90,7 +90,7 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
     }
 
     setIsUploading(true)
-    const localUpload = createFotoUpload(fotoForm, mockCantieri, session)
+    const localUpload = createFotoUpload(fotoForm, uploadCantieri, session)
     const uploaded = await uploadOperationalFile({
       file: fotoFile,
       type: 'photo',
@@ -113,7 +113,7 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
       fileSize: uploaded.data.size,
     })
     setFotoFile(null)
-    setFotoForm({ ...defaultFotoForm, caricatoDa: session.name })
+    setFotoForm({ ...defaultFotoForm, cantiereId: selectedSite?.id ?? 'barcelo-roma', caricatoDa: session.name })
     setUploadStatus({ type: 'success', message: 'Foto caricata realmente su Supabase Storage.' })
   }
 
@@ -127,7 +127,7 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
     }
 
     setIsUploading(true)
-    const localUpload = createDocumentUpload(documentForm, mockCantieri, session)
+    const localUpload = createDocumentUpload(documentForm, uploadCantieri, session)
     const uploaded = await uploadOperationalFile({
       file: documentFile,
       type: 'document',
@@ -150,7 +150,7 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
       fileSize: uploaded.data.size,
     })
     setDocumentFile(null)
-    setDocumentForm({ ...defaultDocumentForm, caricatoDa: session.name })
+    setDocumentForm({ ...defaultDocumentForm, cantiereId: selectedSite?.id ?? 'barcelo-roma', caricatoDa: session.name })
     setUploadStatus({ type: 'success', message: 'Documento caricato realmente su Supabase Storage.' })
   }
 
@@ -221,9 +221,9 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
             <StatusBadge>{isUploading ? 'Caricamento...' : activeType === 'foto' ? 'Da revisionare' : 'Da verificare'}</StatusBadge>
           </div>
           {activeType === 'foto' ? (
-            <FotoForm form={fotoForm} onChange={updateFoto} onFileChange={selectFotoFile} onSubmit={submitFoto} compact={isEmployee} disabled={isUploading} />
+            <FotoForm form={fotoForm} cantieri={uploadCantieri} onChange={updateFoto} onFileChange={selectFotoFile} onSubmit={submitFoto} compact={isEmployee} disabled={isUploading} />
           ) : (
-            <DocumentForm form={documentForm} onChange={updateDocument} onFileChange={selectDocumentFile} onSubmit={submitDocument} compact={isEmployee} disabled={isUploading} />
+            <DocumentForm form={documentForm} cantieri={uploadCantieri} onChange={updateDocument} onFileChange={selectDocumentFile} onSubmit={submitDocument} compact={isEmployee} disabled={isUploading} />
           )}
         </section>
       </WorkspaceLayout>
@@ -286,11 +286,11 @@ function RecentCompactPanel({ activeType, fotoUploads, documentUploads }) {
   )
 }
 
-function FotoForm({ form, onChange, onFileChange, onSubmit, compact, disabled }) {
+function FotoForm({ form, cantieri, onChange, onFileChange, onSubmit, compact, disabled }) {
   return (
     <form className="upload-redesign-form" onSubmit={onSubmit}>
       <div className="upload-form-grid">
-        <FieldSelect label="Cantiere" value={form.cantiereId} onChange={(value) => onChange('cantiereId', value)} options={mockCantieri.map((cantiere) => ({ value: cantiere.id, label: cantiere.nome }))} />
+        <FieldSelect label="Cantiere" value={form.cantiereId} onChange={(value) => onChange('cantiereId', value)} options={cantieri.map((cantiere) => ({ value: cantiere.id, label: cantiere.nome }))} />
         <FieldInput label="Zona" value={form.zona} onChange={(value) => onChange('zona', value)} placeholder="Es. Piscina" />
         <FieldInput label="Lavorazione" value={form.lavorazione} onChange={(value) => onChange('lavorazione', value)} placeholder="Es. controsoffitto" />
         {!compact ? <FieldSelect label="Stato avanzamento" value={form.avanzamento} onChange={(value) => onChange('avanzamento', value)} options={['da avviare', 'in corso', 'avanzato', 'completato'].map((item) => ({ value: item, label: item }))} /> : null}
@@ -306,11 +306,11 @@ function FotoForm({ form, onChange, onFileChange, onSubmit, compact, disabled })
   )
 }
 
-function DocumentForm({ form, onChange, onFileChange, onSubmit, compact, disabled }) {
+function DocumentForm({ form, cantieri, onChange, onFileChange, onSubmit, compact, disabled }) {
   return (
     <form className="upload-redesign-form" onSubmit={onSubmit}>
       <div className="upload-form-grid">
-        <FieldSelect label="Cantiere" value={form.cantiereId} onChange={(value) => onChange('cantiereId', value)} options={mockCantieri.map((cantiere) => ({ value: cantiere.id, label: cantiere.nome }))} />
+        <FieldSelect label="Cantiere" value={form.cantiereId} onChange={(value) => onChange('cantiereId', value)} options={cantieri.map((cantiere) => ({ value: cantiere.id, label: cantiere.nome }))} />
         <FieldSelect label="Tipo documento" value={form.tipoDocumento} onChange={(value) => onChange('tipoDocumento', value)} options={tipiDocumento.map((tipo) => ({ value: tipo, label: tipo }))} />
         {!compact ? <FieldInput label="Fornitore" value={form.fornitore} onChange={(value) => onChange('fornitore', value)} placeholder="Es. Falea" /> : null}
         {!compact ? <FieldInput label="Data documento" type="date" value={form.dataDocumento} onChange={(value) => onChange('dataDocumento', value)} /> : null}
@@ -359,6 +359,27 @@ function SubmitRow({ status, label, disabled }) {
       <button className="button button-primary" type="submit" disabled={disabled}>{label}</button>
     </div>
   )
+}
+
+function buildUploadCantieri(store, documentUploads, fotoUploads) {
+  const map = new Map()
+  ;(store?.cantieri ?? []).forEach((cantiere) => {
+    if (!cantiere?.id) return
+    map.set(cantiere.id, {
+      id: cantiere.id,
+      nome: cantiere.nome ?? cantiere.cliente ?? cantiere.id,
+    })
+  })
+
+  ;[...(store?.documents ?? []), ...(store?.movements ?? []), ...documentUploads, ...fotoUploads].forEach((item) => {
+    const id = item.cantiereId ?? 'barcelo-roma'
+    const nome = item.cantiere ?? (id === 'barcelo-roma' ? 'Barcelò Roma' : id)
+    if (!map.has(id)) map.set(id, { id, nome })
+  })
+
+  if (!map.has('barcelo-roma')) map.set('barcelo-roma', { id: 'barcelo-roma', nome: 'Barcelò Roma' })
+
+  return [...map.values()].sort((a, b) => a.nome.localeCompare(b.nome))
 }
 
 function buildUploadStats(fotoUploads, documentUploads) {
