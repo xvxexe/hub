@@ -105,14 +105,14 @@
 
 @media (max-width: 767px) {
   .dashboard-main {
-    padding-top: 3.15rem !important;
+    padding-top: 2.55rem !important;
   }
 
   .internal-topbar {
     position: fixed !important;
-    top: 0.45rem !important;
-    right: 0.65rem !important;
-    left: 0.65rem !important;
+    top: 0.38rem !important;
+    right: 0.86rem !important;
+    left: 0.86rem !important;
     z-index: 45 !important;
     display: block !important;
     width: auto !important;
@@ -129,32 +129,41 @@
   .global-search {
     width: 100%;
     max-width: none;
-    min-height: 2.45rem;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.45rem;
+    min-height: 2.02rem;
+    display: flex !important;
+    align-items: center;
+    gap: 0.36rem;
     border-radius: 999px;
-    border-color: rgba(188, 202, 216, 0.78);
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    padding-inline: 0.72rem;
+    border-color: rgba(188, 202, 216, 0.58);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 0 0.58rem;
   }
 
   .global-search > svg,
   .global-search .lucide {
-    width: 16px;
-    height: 16px;
+    width: 13px !important;
+    height: 13px !important;
+    min-width: 13px !important;
+    flex: 0 0 13px !important;
+    color: rgba(37, 99, 235, 0.78);
   }
 
   .global-search input {
-    font-size: 0.88rem;
-    font-weight: 610;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 1.7rem;
+    font-size: 0.78rem;
+    font-weight: 590;
+    line-height: 1;
+    padding: 0 0.1rem !important;
   }
 
   .global-search input::placeholder {
-    color: rgba(82, 94, 105, 0.82);
-    font-weight: 580;
+    color: rgba(82, 94, 105, 0.78);
+    font-weight: 560;
   }
 
   .global-search kbd {
@@ -167,9 +176,9 @@
 
   .global-search .topbar-popover {
     position: fixed;
-    top: 3.25rem;
-    right: 0.65rem;
-    left: 0.65rem;
+    top: 2.75rem;
+    right: 0.78rem;
+    left: 0.78rem;
     width: auto;
     max-height: min(54vh, 26rem);
     overflow: auto;
@@ -178,7 +187,7 @@
 
   .breadcrumb {
     margin-top: 0 !important;
-    padding-top: 0.55rem !important;
+    padding-top: 0.35rem !important;
   }
 }
 
