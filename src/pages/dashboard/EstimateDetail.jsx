@@ -86,6 +86,26 @@ export function EstimateDetail({ estimateId, session, store }) {
       return
     }
 
+    if (store.addCantiere) {
+      store.addCantiere({
+        id: result.cantiereId,
+        nome: result.cantiereName,
+        cliente: estimate.client,
+        localita: estimate.city || 'Da preventivo',
+        indirizzo: '',
+        stato: 'attivo',
+        avanzamento: 0,
+        source: 'estimate-conversion',
+        convertedFromEstimateId: estimate.id,
+      })
+    }
+    if (store.updateEstimateData) {
+      store.updateEstimateData(estimate.id, {
+        status: 'Accettato',
+        cantiereId: result.cantiereId,
+      })
+    }
+
     setStatusMessage({ type: 'success', message: `Cantiere creato: ${result.cantiereName}.` })
     setTimeout(() => window.location.assign(`#/dashboard/cantieri/${result.cantiereId}`), 250)
   }
