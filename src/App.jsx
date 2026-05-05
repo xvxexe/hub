@@ -134,7 +134,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
     )
   }
   if (path === '/dashboard/cantieri') {
-    return <CantieriList documents={mockStore.documents} />
+    return <CantieriList documents={mockStore.documents} store={mockStore} />
   }
   if (path === '/dashboard/upload') {
     return (
