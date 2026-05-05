@@ -21,9 +21,25 @@ export function EstimatesMock({ session, store }) {
     search: '',
   })
   const [selectedId, setSelectedId] = useState(store.estimates[0]?.id ?? null)
-  const canEdit = session.role === 'admin'
-  const urgencyOptions = [...new Set(store.estimates.map((estimate) => estimate.urgency).filter(Boolean))]
-  const customerTypes = [...new Set(store.estimates.map((estimate) => estimate.customerType).filter(Boolean))]
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [createStatus, setCreateStatus] = useState(null)
+  const [newEstimate, setNewEstimate] = useState({
+    client: '',
+    phone: '',
+    email: '',
+    city: '',
+    customerType: 'Privato',
+    workType: '',
+    urgency: 'Da programmare',
+    budget: '',
+    contactPreference: 'Telefono',
+    priority: 'Media',
+    description: '',
+    internalNotes: '',
+  })
+  const canEdit = session.role === 'admin' || session.role === 'accounting'
+  const urgencyOptions = [...new Set([...store.estimates.map((estimate) => estimate.urgency).filter(Boolean), 'Da programmare', 'Entro 2 settimane', 'Urgente'])]
+  const customerTypes = [...new Set([...store.estimates.map((estimate) => estimate.customerType).filter(Boolean), 'Privato', 'Azienda', 'Hotel', 'Negozio', 'Studio tecnico', 'Altro'])]
 
   const rows = useMemo(() => store.estimates.filter((estimate) => {
     const search = filters.search.trim().toLowerCase()
@@ -54,20 +70,104 @@ export function EstimatesMock({ session, store }) {
     setFilters((current) => ({ ...current, [field]: value }))
   }
 
+  function updateNewEstimate(field, value) {
+    setNewEstimate((current) => ({ ...current, [field]: value }))
+  }
+
   function selectEstimate(estimateId) {
     setSelectedId(estimateId)
+  }
+
+  function createEstimate(event) {
+    event.preventDefault()
+    setCreateStatus(null)
+
+    if (!canEdit || !store.addEstimate) {
+      setCreateStatus({ type: 'error', message: 'Creazione preventivo non disponibile per questo ruolo.' })
+      return
+    }
+
+    if (!newEstimate.client.trim() || !newEstimate.workType.trim()) {
+      setCreateStatus({ type: 'error', message: 'Cliente e tipo lavoro sono obbligatori.' })
+      return
+    }
+
+    const id = `estimate-${Date.now()}`
+    const estimate = {
+      id,
+      ...newEstimate,
+      client: newEstimate.client.trim(),
+      workType: newEstimate.workType.trim(),
+      city: newEstimate.city.trim(),
+      phone: newEstimate.phone.trim(),
+      email: newEstimate.email.trim(),
+      budget: newEstimate.budget.trim() || 'Da definire',
+      description: newEstimate.description.trim(),
+      internalNotes: newEstimate.internalNotes.trim(),
+      requestDate: todayIso(),
+      status: 'Nuovo',
+      source: 'hub-manual-estimate',
+    }
+
+    store.addEstimate(estimate)
+    setSelectedId(id)
+    setCreateStatus({ type: 'success', message: 'Preventivo creato e salvato nello store operativo.' })
+    setNewEstimate({
+      client: '',
+      phone: '',
+      email: '',
+      city: '',
+      customerType: 'Privato',
+      workType: '',
+      urgency: 'Da programmare',
+      budget: '',
+      contactPreference: 'Telefono',
+      priority: 'Media',
+      description: '',
+      internalNotes: '',
+    })
   }
 
   return (
     <>
       <DashboardHeader
-        eyebrow="Preventivi"
+        eyebrow="Preventivi reali"
         title="Richieste preventivo"
-        description="Pipeline commerciale collegata allo store Supabase, con filtri, priorità e azioni nello stesso stile della dashboard."
+        description="Pipeline commerciale collegata allo store operativo Supabase, con creazione, modifica, priorità e note."
       >
         <DataModeBadge>Dati reali Supabase</DataModeBadge>
-        <a className="button button-primary button-small" href="#/preventivo">Modulo pubblico</a>
+        <button className="button button-primary button-small" type="button" onClick={() => setIsCreateOpen((current) => !current)}>
+          {isCreateOpen ? 'Chiudi' : 'Nuovo preventivo'}
+        </button>
       </DashboardHeader>
+
+      {isCreateOpen ? (
+        <section className="internal-panel internal-padded admin-invitations-panel">
+          <div className="section-heading panel-title-row">
+            <div>
+              <h2>Nuovo preventivo</h2>
+              <p>Inserisci una richiesta arrivata da telefono, WhatsApp, email o sopralluogo.</p>
+            </div>
+            <StatusBadge>{canEdit ? 'Salvataggio reale' : 'Solo lettura'}</StatusBadge>
+          </div>
+          <form className="admin-invite-form" onSubmit={createEstimate}>
+            <label>Cliente<input value={newEstimate.client} onChange={(event) => updateNewEstimate('client', event.target.value)} placeholder="Nome cliente / azienda" /></label>
+            <label>Telefono<input value={newEstimate.phone} onChange={(event) => updateNewEstimate('phone', event.target.value)} placeholder="Numero telefono" /></label>
+            <label>Email<input type="email" value={newEstimate.email} onChange={(event) => updateNewEstimate('email', event.target.value)} placeholder="email@cliente.it" /></label>
+            <label>Città<input value={newEstimate.city} onChange={(event) => updateNewEstimate('city', event.target.value)} placeholder="Comune / zona" /></label>
+            <label>Tipo cliente<select value={newEstimate.customerType} onChange={(event) => updateNewEstimate('customerType', event.target.value)}>{customerTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
+            <label>Tipo lavoro<input value={newEstimate.workType} onChange={(event) => updateNewEstimate('workType', event.target.value)} placeholder="Es. cartongesso, controsoffitto, tinteggiatura..." /></label>
+            <label>Urgenza<select value={newEstimate.urgency} onChange={(event) => updateNewEstimate('urgency', event.target.value)}>{urgencyOptions.map((urgency) => <option key={urgency} value={urgency}>{urgency}</option>)}</select></label>
+            <label>Budget<input value={newEstimate.budget} onChange={(event) => updateNewEstimate('budget', event.target.value)} placeholder="Es. Da definire / 5.000€" /></label>
+            <label>Contatto<select value={newEstimate.contactPreference} onChange={(event) => updateNewEstimate('contactPreference', event.target.value)}><option>Telefono</option><option>WhatsApp</option><option>Email</option></select></label>
+            <label>Priorità<select value={newEstimate.priority} onChange={(event) => updateNewEstimate('priority', event.target.value)}>{store.priorities.map((priority) => <option key={priority} value={priority}>{priority}</option>)}</select></label>
+            <label className="full-row">Descrizione<textarea rows="3" value={newEstimate.description} onChange={(event) => updateNewEstimate('description', event.target.value)} placeholder="Descrizione lavori, misure, note sopralluogo..." /></label>
+            <label className="full-row">Note interne<textarea rows="3" value={newEstimate.internalNotes} onChange={(event) => updateNewEstimate('internalNotes', event.target.value)} placeholder="Cosa fare dopo, chi deve chiamare, dubbi..." /></label>
+            <div className="full-row"><button className="button button-primary" type="submit" disabled={!canEdit}>Crea preventivo</button></div>
+          </form>
+          {createStatus ? <div className={createStatus.type === 'error' ? 'validation-alert-block' : 'accounting-alert success-alert'}><strong>{createStatus.type === 'error' ? 'Errore' : 'Creato'}</strong><p>{createStatus.message}</p></div> : null}
+        </section>
+      ) : null}
 
       <FilterGrid ariaLabel="Filtri preventivi">
         <label>
@@ -160,7 +260,7 @@ export function EstimatesMock({ session, store }) {
               ))}
             </div>
           ) : (
-            <EmptyState title="Nessun preventivo reale trovato">Quando arriveranno richieste preventivo reali, verranno mostrate qui da Supabase.</EmptyState>
+            <EmptyState title="Nessun preventivo reale trovato">Crea una nuova richiesta oppure aspetta che arrivino preventivi dal modulo pubblico.</EmptyState>
           )}
         </section>
       </WorkspaceLayout>
@@ -247,4 +347,8 @@ function buildPipeline(estimates, statuses) {
       hint: count === 1 ? '1 richiesta' : `${count} richieste`,
     }
   })
+}
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10)
 }
