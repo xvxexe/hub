@@ -114,6 +114,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
         activities={mockStore.activities}
         estimates={mockStore.estimates}
         syncState={mockStore.syncState}
+        store={mockStore}
       />
     )
   }
