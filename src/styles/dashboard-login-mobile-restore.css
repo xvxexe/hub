@@ -1,79 +1,97 @@
-/* Login restore: keep the private access screen usable across desktop and mobile. */
+/* Login restore: private access screen optimized for desktop and mobile. */
 
 .dashboard-shell-locked {
   display: block !important;
   min-height: 100vh !important;
   background:
-    radial-gradient(circle at 18% 0%, rgba(37, 99, 235, 0.12), transparent 24rem),
-    radial-gradient(circle at 100% 18%, rgba(168, 95, 50, 0.10), transparent 22rem),
-    linear-gradient(180deg, #f7fafc 0%, #eef3f7 100%) !important;
+    radial-gradient(circle at 18% 8%, rgba(37, 99, 235, 0.13), transparent 26rem),
+    radial-gradient(circle at 92% 20%, rgba(168, 95, 50, 0.10), transparent 24rem),
+    linear-gradient(135deg, #f7fafc 0%, #eef3f7 54%, #f8fafc 100%) !important;
 }
 
 .dashboard-login-main {
   min-height: 100vh !important;
   display: grid !important;
   place-items: center !important;
-  padding: clamp(1.5rem, 4vw, 3rem) !important;
+  padding: clamp(2rem, 4.2vw, 4rem) !important;
   overflow-x: hidden !important;
 }
 
 .dashboard-login-main .login-page {
-  width: min(100%, 72rem) !important;
+  position: relative !important;
+  width: min(100%, 66rem) !important;
   min-height: auto !important;
   display: grid !important;
-  grid-template-columns: minmax(18rem, 0.82fr) minmax(22rem, 1fr) !important;
-  align-items: center !important;
-  gap: clamp(2rem, 5vw, 4rem) !important;
+  grid-template-columns: minmax(23rem, 29rem) minmax(20rem, 1fr) !important;
+  align-items: stretch !important;
+  gap: 1.2rem !important;
   padding: 0 !important;
   background: transparent !important;
 }
 
-.dashboard-login-main .login-page::after {
-  content: '';
-  display: block;
-  min-height: clamp(24rem, 48vh, 34rem);
-  border: 1px solid rgba(214, 224, 232, 0.72);
-  border-radius: 2rem;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.42)),
-    radial-gradient(circle at 22% 22%, rgba(37, 99, 235, 0.16), transparent 15rem),
-    radial-gradient(circle at 82% 70%, rgba(168, 95, 50, 0.14), transparent 14rem);
-  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.10);
+.dashboard-login-main .login-card {
+  position: relative !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  display: grid !important;
+  align-content: start !important;
+  gap: 0.95rem !important;
+  margin: 0 !important;
+  padding: clamp(1.25rem, 2vw, 1.65rem) !important;
+  border: 1px solid rgba(214, 224, 232, 0.94) !important;
+  border-radius: 1.55rem !important;
+  background: rgba(255, 255, 255, 0.97) !important;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.14) !important;
 }
 
-.dashboard-login-main .login-card {
-  width: min(100%, 30rem) !important;
-  display: grid !important;
-  gap: 1.1rem !important;
-  margin: 0 !important;
-  padding: 1.45rem !important;
-  border: 1px solid rgba(214, 224, 232, 0.92) !important;
-  border-radius: 1.45rem !important;
-  background: rgba(255, 255, 255, 0.96) !important;
-  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.14) !important;
+.dashboard-login-main .login-page::after {
+  content: 'EuropaService Hub\A\A Documenti, cantieri, foto e contabilità sono disponibili solo dopo l’accesso.\A\A ✓ Login reale Supabase\A ✓ Permessi per ruolo\A ✓ Dati interni non caricati prima della sessione';
+  white-space: pre-line;
+  display: grid;
+  align-content: end;
+  min-height: 100%;
+  border: 1px solid rgba(214, 224, 232, 0.78);
+  border-radius: 1.65rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.78)),
+    radial-gradient(circle at 18% 18%, rgba(37, 99, 235, 0.24), transparent 14rem),
+    radial-gradient(circle at 78% 72%, rgba(168, 95, 50, 0.18), transparent 15rem),
+    linear-gradient(135deg, #ffffff, #edf4fb);
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.09);
+  color: #17212b;
+  font-size: clamp(1rem, 1.35vw, 1.18rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.48;
+  padding: clamp(1.5rem, 2.4vw, 2.2rem);
 }
 
 .dashboard-login-main .login-card > .eyebrow {
   margin: 0 !important;
-  font-size: 0.76rem !important;
-  letter-spacing: 0.11em !important;
+  color: var(--dash-accent, #a85f32) !important;
+  font-size: 0.72rem !important;
+  font-weight: 820 !important;
+  letter-spacing: 0.12em !important;
   line-height: 1.2 !important;
+  text-transform: uppercase !important;
 }
 
 .dashboard-login-main .login-card h1 {
+  max-width: 10ch !important;
   margin: 0 !important;
   color: var(--dash-title, #17212b) !important;
-  font-size: clamp(2.45rem, 4.2vw, 4.2rem) !important;
+  font-size: clamp(2.25rem, 3.45vw, 3.55rem) !important;
   font-weight: 780 !important;
-  letter-spacing: -0.065em !important;
+  letter-spacing: -0.07em !important;
   line-height: 0.96 !important;
 }
 
 .dashboard-login-main .login-card > p:not(.eyebrow) {
+  max-width: 34rem !important;
   margin: 0 !important;
   color: var(--dash-muted, #6f7b85) !important;
-  font-size: 1rem !important;
-  line-height: 1.62 !important;
+  font-size: 0.94rem !important;
+  line-height: 1.56 !important;
 }
 
 .dashboard-login-main .login-card .mock-form.login-form,
@@ -81,30 +99,30 @@
 .dashboard-login-main .login-card .login-fallback-panel {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) !important;
-  gap: 0.88rem !important;
+  gap: 0.78rem !important;
   width: 100% !important;
   margin: 0 !important;
-  padding: 1rem !important;
+  padding: 0.92rem !important;
   border: 1px solid rgba(214, 224, 232, 0.9) !important;
-  border-radius: 1.05rem !important;
+  border-radius: 1rem !important;
   background: rgba(248, 250, 252, 0.78) !important;
   box-shadow: none !important;
 }
 
 .dashboard-login-main .login-card .login-fallback-panel {
-  gap: 0.8rem !important;
-  background: rgba(255, 255, 255, 0.74) !important;
+  gap: 0.72rem !important;
+  background: rgba(255, 255, 255, 0.75) !important;
 }
 
 .dashboard-login-main .login-card .mock-form.login-form label,
 .dashboard-login-main .login-card .login-form label {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) !important;
-  gap: 0.44rem !important;
+  gap: 0.38rem !important;
   color: var(--dash-title, #17212b) !important;
-  font-size: 0.76rem !important;
-  font-weight: 760 !important;
-  letter-spacing: 0.055em !important;
+  font-size: 0.7rem !important;
+  font-weight: 780 !important;
+  letter-spacing: 0.07em !important;
   line-height: 1.2 !important;
   text-transform: uppercase !important;
 }
@@ -114,15 +132,15 @@
 .dashboard-login-main .login-card .login-form input,
 .dashboard-login-main .login-card .login-form select {
   width: 100% !important;
-  min-height: 3rem !important;
-  border-radius: 0.88rem !important;
-  border: 1px solid rgba(188, 202, 216, 0.92) !important;
+  min-height: 2.88rem !important;
+  border-radius: 0.82rem !important;
+  border: 1px solid rgba(188, 202, 216, 0.95) !important;
   background: #ffffff !important;
   color: var(--dash-title, #17212b) !important;
   font-size: 16px !important;
   font-weight: 560 !important;
   line-height: 1.2 !important;
-  padding: 0.72rem 0.86rem !important;
+  padding: 0.68rem 0.82rem !important;
   box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.025) !important;
 }
 
@@ -138,32 +156,48 @@
 .dashboard-login-main .login-card .button,
 .dashboard-login-main .login-card .button-primary,
 .dashboard-login-main .login-card .button-secondary {
-  min-height: 3rem !important;
+  min-height: 2.88rem !important;
   justify-content: center !important;
-  border-radius: 0.9rem !important;
+  border-radius: 0.82rem !important;
   font-size: 16px !important;
   font-weight: 720 !important;
   line-height: 1.15 !important;
-  padding: 0.78rem 1rem !important;
+  padding: 0.72rem 1rem !important;
+}
+
+.dashboard-login-main .login-card .button-primary {
+  width: fit-content !important;
+  min-width: 6.2rem !important;
+}
+
+.dashboard-login-main .login-card .login-fallback-panel .button-secondary {
+  width: fit-content !important;
+  min-width: 12rem !important;
 }
 
 .dashboard-login-main .login-card .role-description,
 .dashboard-login-main .login-card .login-error {
   margin: 0 !important;
-  font-size: 0.86rem !important;
-  line-height: 1.45 !important;
+  border-left: 3px solid rgba(168, 95, 50, 0.85) !important;
+  border-radius: 0 !important;
+  background: rgba(168, 95, 50, 0.08) !important;
+  color: #17212b !important;
+  font-size: 0.84rem !important;
+  line-height: 1.42 !important;
+  padding: 0.72rem 0.82rem !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
 }
 
-@media (max-width: 920px) {
+@media (max-width: 1040px) {
   .dashboard-login-main .login-page {
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 30rem) !important;
+    justify-content: center !important;
     width: min(100%, 30rem) !important;
   }
 
   .dashboard-login-main .login-page::after {
-    display: none;
+    display: none !important;
   }
 
   .dashboard-login-main .login-card {
@@ -207,103 +241,11 @@
     box-shadow: 0 24px 70px rgba(15, 23, 42, 0.14) !important;
   }
 
-  .login-card > .eyebrow,
-  .dashboard-login-main .login-card > .eyebrow {
-    margin: 0 !important;
-    font-size: 0.72rem !important;
-    letter-spacing: 0.11em !important;
-    line-height: 1.2 !important;
-  }
-
   .login-card h1,
   .dashboard-login-main .login-card h1 {
-    margin: 0 !important;
-    color: var(--dash-title, #17212b) !important;
+    max-width: none !important;
     font-size: clamp(1.8rem, 8vw, 2.35rem) !important;
-    font-weight: 760 !important;
-    letter-spacing: -0.055em !important;
     line-height: 1.04 !important;
-  }
-
-  .login-card > p:not(.eyebrow),
-  .dashboard-login-main .login-card > p:not(.eyebrow) {
-    margin: 0 !important;
-    color: var(--dash-muted, #6f7b85) !important;
-    font-size: 0.95rem !important;
-    line-height: 1.55 !important;
-  }
-
-  .login-card .mock-form.login-form,
-  .login-card .login-form,
-  .login-card .login-fallback-panel,
-  .dashboard-login-main .login-card .mock-form.login-form,
-  .dashboard-login-main .login-card .login-form,
-  .dashboard-login-main .login-card .login-fallback-panel {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 0.88rem !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 1rem !important;
-    border: 1px solid rgba(214, 224, 232, 0.9) !important;
-    border-radius: 1.05rem !important;
-    background: rgba(248, 250, 252, 0.78) !important;
-    box-shadow: none !important;
-  }
-
-  .login-card .login-fallback-panel,
-  .dashboard-login-main .login-card .login-fallback-panel {
-    gap: 0.8rem !important;
-    background: rgba(255, 255, 255, 0.74) !important;
-  }
-
-  .login-card .mock-form.login-form label,
-  .login-card .login-form label,
-  .dashboard-login-main .login-card .mock-form.login-form label,
-  .dashboard-login-main .login-card .login-form label {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 0.44rem !important;
-    color: var(--dash-title, #17212b) !important;
-    font-size: 0.76rem !important;
-    font-weight: 760 !important;
-    letter-spacing: 0.055em !important;
-    line-height: 1.2 !important;
-    text-transform: uppercase !important;
-  }
-
-  .login-card .mock-form.login-form input,
-  .login-card .mock-form.login-form select,
-  .login-card .login-form input,
-  .login-card .login-form select,
-  .dashboard-login-main .login-card .mock-form.login-form input,
-  .dashboard-login-main .login-card .mock-form.login-form select,
-  .dashboard-login-main .login-card .login-form input,
-  .dashboard-login-main .login-card .login-form select {
-    width: 100% !important;
-    min-height: 3rem !important;
-    border-radius: 0.88rem !important;
-    border: 1px solid rgba(188, 202, 216, 0.92) !important;
-    background: #ffffff !important;
-    color: var(--dash-title, #17212b) !important;
-    font-size: 16px !important;
-    font-weight: 560 !important;
-    line-height: 1.2 !important;
-    padding: 0.72rem 0.86rem !important;
-    box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.025) !important;
-  }
-
-  .login-card .mock-form.login-form input:focus,
-  .login-card .mock-form.login-form select:focus,
-  .login-card .login-form input:focus,
-  .login-card .login-form select:focus,
-  .dashboard-login-main .login-card .mock-form.login-form input:focus,
-  .dashboard-login-main .login-card .mock-form.login-form select:focus,
-  .dashboard-login-main .login-card .login-form input:focus,
-  .dashboard-login-main .login-card .login-form select:focus {
-    outline: none !important;
-    border-color: rgba(37, 99, 235, 0.62) !important;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10) !important;
   }
 
   .login-card .button,
@@ -311,26 +253,9 @@
   .login-card .button-secondary,
   .dashboard-login-main .login-card .button,
   .dashboard-login-main .login-card .button-primary,
-  .dashboard-login-main .login-card .button-secondary {
+  .dashboard-login-main .login-card .button-secondary,
+  .dashboard-login-main .login-card .login-fallback-panel .button-secondary {
     width: 100% !important;
-    min-height: 3rem !important;
-    justify-content: center !important;
-    border-radius: 0.9rem !important;
-    font-size: 16px !important;
-    font-weight: 720 !important;
-    line-height: 1.15 !important;
-    padding: 0.78rem 1rem !important;
-  }
-
-  .login-card .role-description,
-  .login-card .login-error,
-  .dashboard-login-main .login-card .role-description,
-  .dashboard-login-main .login-card .login-error {
-    margin: 0 !important;
-    font-size: 0.86rem !important;
-    line-height: 1.45 !important;
-    text-transform: none !important;
-    letter-spacing: 0 !important;
   }
 
   /* Employee dashboard mobile: cleaner and compact, without becoming cramped. */
@@ -347,11 +272,9 @@
     letter-spacing: 0.055em !important;
   }
 
-  .employee-action-panel.employee-action-panel-strong > label select {
-    min-height: 2.65rem !important;
-    border-radius: 0.82rem !important;
+  .employee-action-panel.employee-action-panel-strong > label select,
+  .employee-quick-note textarea {
     font-size: 16px !important;
-    padding: 0.58rem 0.72rem !important;
   }
 
   .employee-actions {
@@ -383,30 +306,10 @@
     background: rgba(248, 250, 252, 0.76) !important;
   }
 
-  .employee-quick-note label {
-    gap: 0.38rem !important;
-    font-size: 0.68rem !important;
-    letter-spacing: 0.055em !important;
-  }
-
-  .employee-quick-note textarea {
-    min-height: 4.75rem !important;
-    border-radius: 0.82rem !important;
-    font-size: 16px !important;
-    line-height: 1.35 !important;
-    padding: 0.68rem 0.74rem !important;
-  }
-
   .employee-note-actions {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) !important;
     gap: 0.38rem !important;
-  }
-
-  .employee-note-actions .button {
-    min-height: 2.7rem !important;
-    border-radius: 0.82rem !important;
-    font-size: 0.86rem !important;
   }
 
   .employee-note-actions small {
@@ -426,18 +329,6 @@
     border-radius: 0.86rem !important;
   }
 
-  .employee-notes-panel .compact-upload-row strong,
-  .employee-action-panel + .internal-two-column .compact-upload-row strong {
-    font-size: 0.88rem !important;
-    line-height: 1.22 !important;
-  }
-
-  .employee-notes-panel .compact-upload-row small,
-  .employee-action-panel + .internal-two-column .compact-upload-row small {
-    font-size: 0.72rem !important;
-    line-height: 1.28 !important;
-  }
-
   .employee-action-panel + .internal-two-column {
     gap: 0.78rem !important;
   }
@@ -453,15 +344,6 @@
   .dashboard-login-main .login-card {
     padding: 1rem !important;
     border-radius: 1.15rem !important;
-  }
-
-  .login-card .mock-form.login-form,
-  .login-card .login-form,
-  .login-card .login-fallback-panel,
-  .dashboard-login-main .login-card .mock-form.login-form,
-  .dashboard-login-main .login-card .login-form,
-  .dashboard-login-main .login-card .login-fallback-panel {
-    padding: 0.86rem !important;
   }
 
   .employee-actions {
