@@ -18,6 +18,7 @@ import {
   tipiDocumento,
   todayIso,
 } from '../../data/mockUploads'
+import { buildOperationalCantiereOptions } from '../../lib/cantiereOptions'
 import { uploadOperationalFile } from '../../lib/supabaseStorage'
 
 const defaultFotoForm = {
@@ -54,7 +55,10 @@ export function UploadMock({ session, fotoUploads, documentUploads, onAddFoto, o
   const [uploadStatus, setUploadStatus] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
 
-  const uploadCantieri = useMemo(() => buildUploadCantieri(store, documentUploads, fotoUploads), [store?.cantieri, documentUploads, fotoUploads])
+  const uploadCantieri = useMemo(
+    () => buildOperationalCantiereOptions({ store, uploads: [...documentUploads, ...fotoUploads] }),
+    [store?.cantieri, store?.documents, store?.movements, documentUploads, fotoUploads],
+  )
   const visibleFotoUploads = isEmployee ? fotoUploads.filter((upload) => upload.caricatoDa === session.name) : fotoUploads
   const visibleDocumentUploads = isEmployee ? documentUploads.filter((upload) => upload.caricatoDa === session.name) : documentUploads
   const stats = useMemo(() => buildUploadStats(visibleFotoUploads, visibleDocumentUploads), [visibleFotoUploads, visibleDocumentUploads])
@@ -359,27 +363,6 @@ function SubmitRow({ status, label, disabled }) {
       <button className="button button-primary" type="submit" disabled={disabled}>{label}</button>
     </div>
   )
-}
-
-function buildUploadCantieri(store, documentUploads, fotoUploads) {
-  const map = new Map()
-  ;(store?.cantieri ?? []).forEach((cantiere) => {
-    if (!cantiere?.id) return
-    map.set(cantiere.id, {
-      id: cantiere.id,
-      nome: cantiere.nome ?? cantiere.cliente ?? cantiere.id,
-    })
-  })
-
-  ;[...(store?.documents ?? []), ...(store?.movements ?? []), ...documentUploads, ...fotoUploads].forEach((item) => {
-    const id = item.cantiereId ?? 'barcelo-roma'
-    const nome = item.cantiere ?? (id === 'barcelo-roma' ? 'Barcelò Roma' : id)
-    if (!map.has(id)) map.set(id, { id, nome })
-  })
-
-  if (!map.has('barcelo-roma')) map.set('barcelo-roma', { id: 'barcelo-roma', nome: 'Barcelò Roma' })
-
-  return [...map.values()].sort((a, b) => a.nome.localeCompare(b.nome))
 }
 
 function buildUploadStats(fotoUploads, documentUploads) {
