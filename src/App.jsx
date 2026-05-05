@@ -53,6 +53,7 @@ import './styles/dashboard-contabilita-redesign.css'
 import './styles/dashboard-final-uniformity.css'
 import './styles/dashboard-navigation-fix.css'
 import './styles/dashboard-search-sticky.css'
+import './styles/dashboard-mobile-balanced.css'
 
 function useHashPath() {
   const [path, setPath] = useState(() => normalizePath(window.location.hash))
