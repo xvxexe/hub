@@ -1,4 +1,4 @@
-/* Private navigation fixes: complete mobile nav, no redundant hamburger, sticky desktop sidebar. */
+/* Private navigation fixes: clean mobile nav, no redundant hamburger, sticky desktop sidebar. */
 
 @media (min-width: 768px) {
   .dashboard-shell {
@@ -33,7 +33,9 @@
   }
 
   .sidebar-menu-button,
-  .mobile-sidebar-trigger {
+  .mobile-sidebar-trigger,
+  .dashboard-mobile-more-panel,
+  .dashboard-mobile-more-backdrop {
     display: none !important;
   }
 }
@@ -54,28 +56,127 @@
   }
 
   .mobile-dashboard-nav {
-    display: grid !important;
-    gap: 0.45rem;
+    display: none !important;
   }
 
   .dashboard-bottom-nav {
-    display: flex !important;
-    gap: 0.35rem;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-inline: 0.55rem;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.25rem;
+    padding-inline: 0.5rem;
+    overflow: visible;
   }
 
-  .dashboard-bottom-nav::-webkit-scrollbar {
-    display: none;
-  }
-
-  .dashboard-bottom-nav a {
-    flex: 0 0 4.65rem;
-    min-width: 4.65rem;
-    scroll-snap-align: center;
+  .dashboard-bottom-nav a,
+  .dashboard-bottom-more-button {
+    display: grid;
+    place-items: center;
+    gap: 0.16rem;
+    min-width: 0;
+    min-height: 3.45rem;
+    border: 0;
+    border-radius: 0.9rem;
+    background: transparent;
+    color: var(--dash-muted, #6f7b85);
+    font: inherit;
+    font-size: 0.68rem;
+    font-weight: 650;
+    line-height: 1;
+    text-decoration: none;
     white-space: nowrap;
+  }
+
+  .dashboard-bottom-nav a span,
+  .dashboard-bottom-more-button span {
+    display: grid;
+    place-items: center;
+    width: 1.55rem;
+    height: 1.55rem;
+  }
+
+  .dashboard-bottom-nav a[aria-current='page'],
+  .dashboard-bottom-more-button[aria-current='page'],
+  .dashboard-bottom-more-button[aria-expanded='true'] {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+  }
+
+  .dashboard-mobile-more-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    border: 0;
+    background: rgba(15, 23, 42, 0.28);
+  }
+
+  .dashboard-mobile-more-panel {
+    position: fixed;
+    right: 0.75rem;
+    bottom: calc(5.45rem + env(safe-area-inset-bottom));
+    left: 0.75rem;
+    z-index: 40;
+    display: grid;
+    gap: 0.7rem;
+    max-height: min(66vh, 30rem);
+    overflow: auto;
+    border: 1px solid rgba(214, 224, 232, 0.95);
+    border-radius: 1.15rem;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 22px 70px rgba(15, 23, 42, 0.22);
+    padding: 0.8rem;
+  }
+
+  .dashboard-mobile-more-panel > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-inline: 0.15rem;
+  }
+
+  .dashboard-mobile-more-panel strong {
+    color: var(--dash-title, #17212b);
+    font-size: 1rem;
+  }
+
+  .dashboard-mobile-more-panel button {
+    display: grid;
+    width: 2.2rem;
+    height: 2.2rem;
+    place-items: center;
+    border: 1px solid rgba(214, 224, 232, 0.95);
+    border-radius: 0.7rem;
+    background: #ffffff;
+    color: var(--dash-title, #17212b);
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  .dashboard-mobile-more-panel nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .dashboard-mobile-more-panel nav a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 3rem;
+    border: 1px solid rgba(224, 231, 235, 0.9);
+    border-radius: 0.85rem;
+    background: rgba(248, 250, 252, 0.8);
+    color: var(--dash-title, #17212b);
+    font-size: 0.86rem;
+    font-weight: 680;
+    padding: 0.58rem 0.65rem;
+    text-decoration: none;
+  }
+
+  .dashboard-mobile-more-panel nav a[aria-current='page'] {
+    border-color: rgba(37, 99, 235, 0.32);
+    background: rgba(239, 246, 255, 0.95);
+    color: #2563eb;
   }
 }
