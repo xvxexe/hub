@@ -14,14 +14,15 @@ import { MoneyValue } from '../../components/MoneyValue'
 import { ProgressBar } from '../../components/ProgressBar'
 import { StatusBadge } from '../../components/StatusBadge'
 
-export function CantieriList({ documents = [] }) {
+export function CantieriList({ documents = [], store = null }) {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('tutti')
   const [sort, setSort] = useState('spese-desc')
   const [page, setPage] = useState(1)
   const [selectedCantiereId, setSelectedCantiereId] = useState(null)
   const [modalAction, setModalAction] = useState(null)
-  const cantieri = useMemo(() => buildCantieriFromDocuments(documents), [documents])
+  const operationalCantieri = Array.isArray(store?.cantieri) ? store.cantieri : []
+  const cantieri = useMemo(() => buildCantieri({ documents, operationalCantieri }), [documents, operationalCantieri])
 
   const filteredCantieri = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
@@ -57,8 +58,10 @@ export function CantieriList({ documents = [] }) {
   const criticalDocuments = documents.filter(isCriticalDocument)
   const totalCost = cantieri.reduce((sum, item) => sum + item.spese, 0)
   const active = cantieri.filter((item) => item.stato === 'attivo').length
+  const draft = cantieri.filter((item) => item.stato === 'bozza').length
   const toReview = cantieri.filter((item) => item.stato === 'da-verificare').length
-  const averageCost = cantieri.length ? totalCost / cantieri.length : 0
+  const cantieriWithCosts = cantieri.filter((item) => item.spese > 0)
+  const averageCost = cantieriWithCosts.length ? totalCost / cantieriWithCosts.length : 0
 
   function updateSearch(value) {
     setSearch(value)
@@ -112,6 +115,7 @@ export function CantieriList({ documents = [] }) {
           <select value={status} onChange={(event) => updateStatus(event.target.value)}>
             <option value="tutti">Tutti</option>
             <option value="attivo">In corso</option>
+            <option value="bozza">Bozza</option>
             <option value="da-verificare">Da controllare</option>
           </select>
         </label>
@@ -133,10 +137,10 @@ export function CantieriList({ documents = [] }) {
       </FilterGrid>
 
       <KpiStrip ariaLabel="Indicatori cantieri">
-        <KpiCard icon="building" label="Cantieri" value={cantieri.length} hint={`${active} in corso`} />
+        <KpiCard icon="building" label="Cantieri" value={cantieri.length} hint={`${active} in corso · ${draft} bozze`} />
         <KpiCard icon="warning" tone="amber" label="Da controllare" value={toReview} hint={`${criticalDocuments.length} documenti critici`} />
         <KpiCard icon="wallet" tone="green" label="Totale spese" value={<MoneyValue value={totalCost} />} hint="Somma cantieri" />
-        <KpiCard icon="report" tone="purple" label="Media cantiere" value={<MoneyValue value={averageCost} />} hint="Costo medio" />
+        <KpiCard icon="report" tone="purple" label="Media cantiere" value={<MoneyValue value={averageCost} />} hint="Solo cantieri con spese" />
       </KpiStrip>
 
       <WorkspaceLayout
@@ -338,6 +342,48 @@ function ActionsPanel({ selectedCantiere }) {
   )
 }
 
+function buildCantieri({ documents, operationalCantieri }) {
+  const derived = buildCantieriFromDocuments(documents)
+  const map = new Map()
+
+  operationalCantieri.forEach((site) => {
+    if (!site?.id) return
+    map.set(site.id, normalizeOperationalCantiere(site))
+  })
+
+  derived.forEach((site) => {
+    const current = map.get(site.id)
+    map.set(site.id, {
+      ...(current ?? {}),
+      ...site,
+      nome: current?.nome ?? site.nome,
+      localita: current?.localita || site.localita,
+      responsabile: current?.responsabile ?? site.responsabile,
+      stato: site.criticita > 0 ? 'da-verificare' : current?.stato ?? site.stato,
+      source: current ? 'supabase+documents' : 'documents',
+    })
+  })
+
+  return [...map.values()]
+}
+
+function normalizeOperationalCantiere(cantiere) {
+  const stato = cantiere.stato ?? 'attivo'
+  return {
+    id: cantiere.id,
+    nome: cantiere.nome ?? cantiere.cliente ?? cantiere.id,
+    localita: cantiere.localita || 'Da hub',
+    responsabile: cantiere.responsabile ?? 'Gianni Europa',
+    spese: 0,
+    movimenti: 0,
+    criticita: 0,
+    lastDate: cantiere.updatedAt ?? cantiere.createdAt,
+    stato: stato === 'attivo' ? 'bozza' : stato,
+    avanzamento: Number(cantiere.avanzamento || 0),
+    source: cantiere.source ?? 'supabase-operational',
+  }
+}
+
 function buildCantieriFromDocuments(documents) {
   const groups = documents.reduce((acc, document) => {
     const id = document.cantiereId ?? 'barcelo-roma'
@@ -391,6 +437,7 @@ function isCriticalDocument(document) {
 
 function displaySiteStatus(cantiere) {
   if (cantiere.stato === 'attivo') return 'In corso'
+  if (cantiere.stato === 'bozza') return 'Bozza operativa'
   if (cantiere.stato === 'da-verificare') return 'Da controllare'
   return cantiere.stato
 }
