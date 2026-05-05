@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import {
   DataCardRow,
@@ -7,12 +7,14 @@ import {
   SideContextPanel,
   WorkspaceLayout,
 } from '../../components/InternalLayout'
+import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
 import {
   exportSupabaseToGoogleSheets,
   importGoogleSheetsToSupabase,
   isGoogleSheetsSyncConfigured,
 } from '../../lib/googleSheetsSync'
+import { getOfficialMasterTotals } from '../../lib/masterTotals'
 import { inviteUserFromAdmin, supabaseRequest } from '../../lib/supabaseClient'
 
 const roleOptions = [
@@ -25,7 +27,7 @@ function normalizeRole(value) {
   return String(value ?? '').trim().toLowerCase()
 }
 
-export function SettingsMock({ session }) {
+export function SettingsMock({ session, store = null }) {
   const [syncStatus, setSyncStatus] = useState(null)
   const [isRunning, setIsRunning] = useState(false)
   const [inviteStatus, setInviteStatus] = useState(null)
@@ -38,6 +40,7 @@ export function SettingsMock({ session }) {
   })
   const isAdmin = normalizeRole(session?.role) === 'admin'
   const selectedRole = roleOptions.find((role) => role.value === inviteForm.role) ?? roleOptions[0]
+  const masterStatus = useMemo(() => buildMasterSyncStatus(store), [store])
 
   useEffect(() => {
     if (isAdmin) {
@@ -115,7 +118,11 @@ export function SettingsMock({ session }) {
       setSyncStatus({ type: 'error', message: result.error })
       return
     }
-    setSyncStatus({ type: 'success', message: `Import completato: ${result.summary.documents} documenti sincronizzati in Supabase.` })
+    const officialTotal = result.summary?.officialMaster?.totals?.totale ?? result.summary?.totals?.totale
+    setSyncStatus({
+      type: 'success',
+      message: `Import completato: ${result.summary.documents} righe/documenti sincronizzati. Totale master: ${formatMoneyText(officialTotal)}.`,
+    })
   }
 
   async function runExport() {
@@ -143,7 +150,7 @@ export function SettingsMock({ session }) {
       <KpiStrip ariaLabel="Indicatori impostazioni">
         <KpiCard icon="settings" label="Ruolo sessione" value={getCurrentRoleLabel(session?.role)} hint={isAdmin ? 'Accesso completo' : 'Accesso limitato'} />
         <KpiCard icon="users" tone="purple" label="Inviti" value={invitations.length} hint={isAdmin ? 'Utenti creati' : 'Solo admin'} muted={!isAdmin} />
-        <KpiCard icon="link" tone={isGoogleSheetsSyncConfigured ? 'green' : 'amber'} label="Sync Sheets" value={isGoogleSheetsSyncConfigured ? 'Pronto' : 'Manca URL'} hint="Google Sheets" />
+        <KpiCard icon="link" tone={masterStatus.hasOfficialMaster ? 'green' : 'amber'} label="Master" value={masterStatus.hasOfficialMaster ? 'Ufficiale' : 'Da importare'} hint={masterStatus.parser} />
         <KpiCard icon={syncStatus?.type === 'error' ? 'warning' : 'check'} tone={getSyncTone(syncStatus)} label="Ultima azione" value={syncStatus?.type ?? 'Nessuna'} hint={isRunning ? 'In corso' : 'Sessione'} />
       </KpiStrip>
 
@@ -157,6 +164,8 @@ export function SettingsMock({ session }) {
           </>
         )}
       >
+        <MasterSyncOverview masterStatus={masterStatus} />
+
         {isAdmin ? (
           <InvitePeoplePanel
             inviteForm={inviteForm}
@@ -185,7 +194,7 @@ export function SettingsMock({ session }) {
                 <StatusBadge>{isGoogleSheetsSyncConfigured ? 'Pronto' : 'Manca URL'}</StatusBadge>
               </div>
               <p>
-                Importa i dati aggiornati dal master Google Sheets dentro Supabase. Dopo il refresh, il sito legge i nuovi dati da Supabase.
+                Importa i dati aggiornati dal master Google Sheets dentro Supabase. I totali ufficiali vengono letti dal tab Riepilogo, non ricalcolati dal sito.
               </p>
               <button className="button button-primary" type="button" disabled={isRunning || !isGoogleSheetsSyncConfigured} onClick={runImport}>
                 Importa master in Supabase
@@ -208,6 +217,34 @@ export function SettingsMock({ session }) {
         </section>
       </WorkspaceLayout>
     </>
+  )
+}
+
+function MasterSyncOverview({ masterStatus }) {
+  return (
+    <section className="internal-panel internal-padded admin-invitations-panel">
+      <div className="section-heading panel-title-row">
+        <div>
+          <h2>Stato master Google Sheets</h2>
+          <p>Controllo rapido per capire se il sito sta leggendo i totali ufficiali del master e lo snapshot operativo importato.</p>
+        </div>
+        <StatusBadge>{masterStatus.hasOfficialMaster ? 'Totali ufficiali' : 'Da verificare'}</StatusBadge>
+      </div>
+      <div className="detail-list">
+        <div><dt>Parser</dt><dd>{masterStatus.parser}</dd></div>
+        <div><dt>Ultimo import</dt><dd>{formatDateTime(masterStatus.importedAt)}</dd></div>
+        <div><dt>Totale master</dt><dd><MoneyValue value={masterStatus.officialTotals.totale} /></dd></div>
+        <div><dt>Imponibile master</dt><dd><MoneyValue value={masterStatus.officialTotals.imponibile} /></dd></div>
+        <div><dt>IVA master</dt><dd><MoneyValue value={masterStatus.officialTotals.iva} /></dd></div>
+        <div><dt>Righe operative</dt><dd>{masterStatus.rows}</dd></div>
+        <div><dt>Movimenti</dt><dd>{masterStatus.movements}</dd></div>
+        <div><dt>Deleted records</dt><dd>{masterStatus.deletedRecords}</dd></div>
+      </div>
+      <div className="accounting-alert">
+        <strong>{masterStatus.hasOfficialMaster ? 'Configurazione corretta' : 'Import master necessario'}</strong>
+        <small>{masterStatus.hasOfficialMaster ? 'Dashboard, Contabilità e Report useranno i totali ufficiali del tab Riepilogo.' : 'Aggiorna Apps Script, poi esegui Import Google Sheets → Supabase.'}</small>
+      </div>
+    </section>
   )
 }
 
@@ -347,6 +384,20 @@ function ConfigurationPanel() {
   )
 }
 
+function buildMasterSyncStatus(store) {
+  const official = getOfficialMasterTotals(store)
+  const source = store?.source ?? {}
+  return {
+    hasOfficialMaster: Boolean(official),
+    parser: source.parser ?? 'Non disponibile',
+    importedAt: source.importedAt,
+    officialTotals: official ?? { imponibile: 0, iva: 0, totale: 0 },
+    rows: Array.isArray(store?.documents) ? store.documents.length : 0,
+    movements: Array.isArray(store?.movements) ? store.movements.length : 0,
+    deletedRecords: Array.isArray(store?.deletedRecords) ? store.deletedRecords.length : 0,
+  }
+}
+
 function getRolePermissionHint(role) {
   if (role === 'admin') return 'Accesso completo: utenti, dati, impostazioni e sync.'
   if (role === 'accounting') return 'Documenti, contabilità, report e upload documenti.'
@@ -365,6 +416,16 @@ function getSyncTone(syncStatus) {
   if (syncStatus?.type === 'success') return 'green'
   if (syncStatus?.type === 'loading') return 'amber'
   return 'blue'
+}
+
+function formatMoneyText(value) {
+  if (value === null || value === undefined) return '-'
+  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(value || 0))
+}
+
+function formatDateTime(date) {
+  if (!date) return '-'
+  return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(date))
 }
 
 function formatDate(date) {
