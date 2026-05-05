@@ -10,6 +10,7 @@ import {
 import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
 import { findDuplicateMovements, hasAmountWarning } from '../../lib/accountingChecks'
+import { buildOperationalCantiereOptions } from '../../lib/cantiereOptions'
 import { getOfficialMasterTotals, preferOfficialCategoryTotals, preferOfficialTotals } from '../../lib/masterTotals'
 
 const defaultCategories = ['Materiali', 'Manodopera', 'Non materiali', 'Extra / Altro', 'Vitto', 'Alloggi', 'FIR / Rifiuti', 'Bonifici / Pagamenti', 'Noleggi / Servizi']
@@ -33,7 +34,7 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
   }, [documents, store?.movements])
   const officialMaster = getOfficialMasterTotals(store)
   const duplicateIds = useMemo(() => buildDuplicateIdSet(sourceRows), [sourceRows])
-  const sites = useMemo(() => buildSiteOptions(sourceRows), [sourceRows])
+  const sites = useMemo(() => buildOperationalCantiereOptions({ store, rows: sourceRows }), [sourceRows, store?.cantieri, store?.documents, store?.movements])
   const tabs = useMemo(() => buildUniqueOptions(sourceRows, 'sheetTab', []), [sourceRows])
   const categories = useMemo(() => buildUniqueOptions(sourceRows, 'categoria', defaultCategories), [sourceRows])
   const statuses = useMemo(() => buildUniqueOptions(sourceRows, 'statoVerifica', defaultStatuses), [sourceRows])
@@ -60,7 +61,7 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
 
   const calculatedTotals = getAccountingTotals(filteredRows, duplicateIds)
   const totals = preferOfficialTotals(store, calculatedTotals)
-  const siteSummaries = getSiteAccountingSummaries(filteredRows, duplicateIds, store)
+  const siteSummaries = getSiteAccountingSummaries(filteredRows, duplicateIds, store, sites)
   const calculatedCategoryTotals = getCategoryTotals(filteredRows)
   const categoryTotals = preferOfficialCategoryTotals(store, calculatedCategoryTotals)
   const alerts = getAccountingAlerts(filteredRows, duplicateIds)
@@ -372,8 +373,8 @@ function getAccountingTotals(rows, duplicateIds) {
   return rows.reduce((acc, row) => ({ imponibile: acc.imponibile + row.imponibile, iva: acc.iva + row.iva, totale: acc.totale + row.totale, daVerificare: acc.daVerificare + (row.statoVerifica === 'Da verificare' ? 1 : 0), duplicati: acc.duplicati + ((row.statoVerifica === 'Possibile duplicato' || duplicateIds.has(row.id)) ? 1 : 0), pagamenti: acc.pagamenti + (row.categoria === 'Bonifici / Pagamenti' || String(row.pagamento).toLowerCase().includes('bonifico') ? row.totale : 0) }), { imponibile: 0, iva: 0, totale: 0, daVerificare: 0, duplicati: 0, pagamenti: 0 })
 }
 
-function getSiteAccountingSummaries(rows, duplicateIds, store) {
-  return buildSiteOptions(rows).map((cantiere) => { const movimenti = rows.filter((row) => row.cantiereId === cantiere.id); const calculatedTotals = getAccountingTotals(movimenti, duplicateIds); const totals = preferOfficialTotals(store, calculatedTotals); const categories = preferOfficialCategoryTotals(store, getCategoryTotals(movimenti)); return { cantiere, movimenti, totals, categories } })
+function getSiteAccountingSummaries(rows, duplicateIds, store, sites) {
+  return sites.map((cantiere) => { const movimenti = rows.filter((row) => row.cantiereId === cantiere.id); const calculatedTotals = getAccountingTotals(movimenti, duplicateIds); const totals = preferOfficialTotals(store, calculatedTotals); const categories = preferOfficialCategoryTotals(store, getCategoryTotals(movimenti)); return { cantiere, movimenti, totals, categories } })
 }
 
 function getCategoryTotals(rows) {
@@ -392,12 +393,6 @@ function buildDuplicateIdSet(rows) {
     if (matches.length) duplicates.add(row.id)
   })
   return duplicates
-}
-
-function buildSiteOptions(rows) {
-  const map = new Map()
-  rows.forEach((row) => map.set(row.cantiereId, { id: row.cantiereId, nome: row.cantiere }))
-  return [...map.values()]
 }
 
 function buildUniqueOptions(rows, field, fallback) {
