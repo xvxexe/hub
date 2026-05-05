@@ -1,0 +1,81 @@
+/* Private navigation fixes: complete mobile nav, no redundant hamburger, sticky desktop sidebar. */
+
+@media (min-width: 768px) {
+  .dashboard-shell {
+    grid-template-columns: 18rem minmax(0, 1fr) !important;
+    align-items: start;
+  }
+
+  .dashboard-sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .dashboard-sidebar .sidebar-brand-block {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: inherit;
+    padding-bottom: 0.6rem;
+  }
+
+  .dashboard-sidebar .dev-role-panel {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: inherit;
+    padding-top: 0.75rem;
+  }
+
+  .sidebar-menu-button,
+  .mobile-sidebar-trigger {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .sidebar-menu-button,
+  .mobile-sidebar-trigger {
+    display: none !important;
+  }
+
+  .internal-topbar {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .global-search {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+  }
+
+  .mobile-dashboard-nav {
+    display: grid !important;
+    gap: 0.45rem;
+  }
+
+  .dashboard-bottom-nav {
+    display: flex !important;
+    gap: 0.35rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-inline: 0.55rem;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .dashboard-bottom-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dashboard-bottom-nav a {
+    flex: 0 0 4.65rem;
+    min-width: 4.65rem;
+    scroll-snap-align: center;
+    white-space: nowrap;
+  }
+}
