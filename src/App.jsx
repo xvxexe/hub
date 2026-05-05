@@ -225,13 +225,29 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
   return <Home />
 }
 
+function AuthenticatedDashboardShell({ path, session, selectedRole, handlers, onLogout, onRoleChange }) {
+  const mockStore = useMockStore(session)
+
+  return (
+    <AppShell
+      currentPath={path}
+      session={session}
+      onLogout={onLogout}
+      onRoleChange={onRoleChange}
+      roles={roles}
+      dataStore={mockStore}
+    >
+      {renderRoute(path, session, selectedRole, handlers, mockStore)}
+    </AppShell>
+  )
+}
+
 export default function App() {
   const path = useHashPath()
   const [selectedRole, setSelectedRole] = useState('admin')
   const [session, setSession] = useState(null)
   const [loginError, setLoginError] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
-  const mockStore = useMockStore(session)
 
   useEffect(() => {
     let cancelled = false
@@ -295,6 +311,26 @@ export default function App() {
     navigateTo('/dashboard/login')
   }
 
+  const routeHandlers = {
+    onLogin: loginWithCredentials,
+    onRoleSelect: setSelectedRole,
+    loginError,
+    loginLoading,
+  }
+
+  if (session) {
+    return (
+      <AuthenticatedDashboardShell
+        path={path}
+        session={session}
+        selectedRole={selectedRole}
+        handlers={routeHandlers}
+        onLogout={logout}
+        onRoleChange={changeRole}
+      />
+    )
+  }
+
   return (
     <AppShell
       currentPath={path}
@@ -302,14 +338,9 @@ export default function App() {
       onLogout={logout}
       onRoleChange={changeRole}
       roles={roles}
-      dataStore={mockStore}
+      dataStore={null}
     >
-      {renderRoute(path, session, selectedRole, {
-        onLogin: loginWithCredentials,
-        onRoleSelect: setSelectedRole,
-        loginError,
-        loginLoading,
-      }, mockStore)}
+      {renderRoute(path, session, selectedRole, routeHandlers, null)}
     </AppShell>
   )
 }
