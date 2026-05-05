@@ -1,0 +1,30 @@
+/* Employee/private mobile nav polish: compact, readable direct items. */
+
+@media (max-width: 767px) {
+  .dashboard-bottom-nav {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    gap: 0.22rem !important;
+  }
+
+  .dashboard-bottom-nav a,
+  .dashboard-bottom-more-button {
+    min-width: 0 !important;
+    gap: 0.2rem !important;
+    padding-inline: 0.18rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .dashboard-bottom-nav a span,
+  .dashboard-bottom-more-button span {
+    flex: 0 0 auto !important;
+  }
+
+  .dashboard-bottom-nav a {
+    font-size: clamp(0.58rem, 2.6vw, 0.68rem) !important;
+    letter-spacing: -0.01em !important;
+  }
+}
