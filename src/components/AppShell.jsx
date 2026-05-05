@@ -22,8 +22,8 @@ export function AppShell({ children, currentPath, session, onLogout, roles, data
   const activeRole = session ? getRole(session.role) : null
   const [activeTopbarPanel, setActiveTopbarPanel] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const searchResults = getInternalSearchResults(searchQuery, visibleDashboardNav, dataStore)
-  const notifications = useMemo(() => buildNotifications(dataStore), [dataStore])
+  const searchResults = session ? getInternalSearchResults(searchQuery, visibleDashboardNav, dataStore) : []
+  const notifications = useMemo(() => (session ? buildNotifications(dataStore) : { count: 0, items: [] }), [dataStore, session])
 
   function toggleTopbarPanel(panel) {
     setActiveTopbarPanel((current) => (current === panel ? null : panel))
@@ -34,162 +34,154 @@ export function AppShell({ children, currentPath, session, onLogout, roles, data
       {!isDashboard ? <PublicHeader currentPath={currentPath} /> : null}
 
       {isDashboard ? (
-        <div className="dashboard-shell">
-          <aside className="dashboard-sidebar" aria-label="Menu area interna">
-            <div className="sidebar-brand-block">
-              <a className="dashboard-brand" href="#/dashboard">
-                <span className="brand-mark">ES</span>
-                <span>
-                  <strong>Area Privata</strong>
-                  <small>EuropaService Hub</small>
-                </span>
-              </a>
-            </div>
+        <div className={session ? 'dashboard-shell' : 'dashboard-shell dashboard-shell-locked'}>
+          {session ? (
+            <aside className="dashboard-sidebar" aria-label="Menu area interna">
+              <div className="sidebar-brand-block">
+                <a className="dashboard-brand" href="#/dashboard">
+                  <span className="brand-mark">ES</span>
+                  <span>
+                    <strong>Area Privata</strong>
+                    <small>EuropaService Hub</small>
+                  </span>
+                </a>
+              </div>
+              <nav className="side-nav">
+                {visibleDashboardNav.map((item) => (
+                  <a
+                    className="nav-icon-link"
+                    aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
+                    href={`#${item.path}`}
+                    key={item.path}
+                  >
+                    <span className="nav-icon" aria-hidden="true">{getNavIcon(item.label)}</span>
+                    {item.label}
+                  </a>
+                ))}
+              </nav>
+              <div className="dev-role-panel">
+                <span className="role-managed-label">Ruolo gestito da Supabase</span>
+                <button className="sidebar-button" type="button" onClick={onLogout}>
+                  Esci
+                </button>
+              </div>
+            </aside>
+          ) : null}
+          <main className={session ? 'dashboard-main' : 'dashboard-main dashboard-login-main'}>
             {session ? (
               <>
-                <nav className="side-nav">
-                  {visibleDashboardNav.map((item) => (
-                    <a
-                      className="nav-icon-link"
-                      aria-current={isActive(currentPath, item.path) ? 'page' : undefined}
-                      href={`#${item.path}`}
-                      key={item.path}
-                    >
-                      <span className="nav-icon" aria-hidden="true">{getNavIcon(item.label)}</span>
-                      {item.label}
-                    </a>
-                  ))}
-                </nav>
-                <div className="dev-role-panel">
-                  <span className="role-managed-label">Ruolo gestito da Supabase</span>
-                  <button className="sidebar-button" type="button" onClick={onLogout}>
-                    Esci
-                  </button>
-                </div>
-              </>
-            ) : (
-              <a className="sidebar-button" href="#/dashboard/login">
-                Login
-              </a>
-            )}
-          </aside>
-          <main className="dashboard-main">
-            <div className="internal-topbar">
-              <label className="global-search">
-                <InternalIcon name="search" size={18} />
-                <span>Cerca</span>
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  onFocus={() => setActiveTopbarPanel('search')}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && searchResults[0]) {
-                      window.location.assign(`#${searchResults[0].path}`)
-                      setSearchQuery('')
-                      setActiveTopbarPanel(null)
-                    }
-                  }}
-                  placeholder="Cerca cantieri, documenti, ..."
-                />
-                <kbd>⌘K</kbd>
-                {activeTopbarPanel === 'search' && searchQuery.trim() ? (
-                  <TopbarPanel title="Risultati ricerca">
-                    {searchResults.length > 0 ? searchResults.map((item) => (
-                      <a
-                        href={`#${item.path}`}
-                        key={`${item.path}-${item.label}`}
-                        onClick={() => {
+                <div className="internal-topbar">
+                  <label className="global-search">
+                    <InternalIcon name="search" size={18} />
+                    <span>Cerca</span>
+                    <input
+                      type="search"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      onFocus={() => setActiveTopbarPanel('search')}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' && searchResults[0]) {
+                          window.location.assign(`#${searchResults[0].path}`)
                           setSearchQuery('')
                           setActiveTopbarPanel(null)
-                        }}
-                      >
-                        <strong>{item.label}</strong>
-                        <small>{item.description}</small>
-                      </a>
-                    )) : (
-                      <article className="topbar-empty-state">
-                        <strong>Nessun risultato</strong>
-                        <small>Prova con cantieri, documenti, report o contabilità.</small>
-                      </article>
-                    )}
-                  </TopbarPanel>
-                ) : null}
-              </label>
-              <div className="internal-topbar-actions">
-                {session ? (
-                  <div className="topbar-popover-wrap">
-                    <button
-                      className={notifications.count > 0 ? 'icon-button with-dot' : 'icon-button'}
-                      type="button"
-                      aria-expanded={activeTopbarPanel === 'notifications'}
-                      aria-label="Notifiche"
-                      onClick={() => toggleTopbarPanel('notifications')}
-                    >
-                      <InternalIcon name="bell" size={18} />
-                    </button>
-                    {activeTopbarPanel === 'notifications' ? (
-                      <TopbarPanel title="Notifiche">
-                        {notifications.items.length > 0 ? notifications.items.map((item) => (
-                          <a href={`#${item.path}`} key={item.title} onClick={() => setActiveTopbarPanel(null)}>
-                            <strong>{item.title}</strong>
+                        }
+                      }}
+                      placeholder="Cerca cantieri, documenti, ..."
+                    />
+                    <kbd>⌘K</kbd>
+                    {activeTopbarPanel === 'search' && searchQuery.trim() ? (
+                      <TopbarPanel title="Risultati ricerca">
+                        {searchResults.length > 0 ? searchResults.map((item) => (
+                          <a
+                            href={`#${item.path}`}
+                            key={`${item.path}-${item.label}`}
+                            onClick={() => {
+                              setSearchQuery('')
+                              setActiveTopbarPanel(null)
+                            }}
+                          >
+                            <strong>{item.label}</strong>
                             <small>{item.description}</small>
                           </a>
                         )) : (
                           <article className="topbar-empty-state">
-                            <strong>Nessuna criticità aperta</strong>
-                            <small>I dati reali Supabase non hanno notifiche da mostrare.</small>
+                            <strong>Nessun risultato</strong>
+                            <small>Prova con cantieri, documenti, report o contabilità.</small>
                           </article>
                         )}
                       </TopbarPanel>
                     ) : null}
+                  </label>
+                  <div className="internal-topbar-actions">
+                    <div className="topbar-popover-wrap">
+                      <button
+                        className={notifications.count > 0 ? 'icon-button with-dot' : 'icon-button'}
+                        type="button"
+                        aria-expanded={activeTopbarPanel === 'notifications'}
+                        aria-label="Notifiche"
+                        onClick={() => toggleTopbarPanel('notifications')}
+                      >
+                        <InternalIcon name="bell" size={18} />
+                      </button>
+                      {activeTopbarPanel === 'notifications' ? (
+                        <TopbarPanel title="Notifiche">
+                          {notifications.items.length > 0 ? notifications.items.map((item) => (
+                            <a href={`#${item.path}`} key={item.title} onClick={() => setActiveTopbarPanel(null)}>
+                              <strong>{item.title}</strong>
+                              <small>{item.description}</small>
+                            </a>
+                          )) : (
+                            <article className="topbar-empty-state">
+                              <strong>Nessuna criticità aperta</strong>
+                              <small>I dati reali Supabase non hanno notifiche da mostrare.</small>
+                            </article>
+                          )}
+                        </TopbarPanel>
+                      ) : null}
+                    </div>
+                    <div className="topbar-popover-wrap">
+                      <button
+                        className="icon-button"
+                        type="button"
+                        aria-expanded={activeTopbarPanel === 'help'}
+                        aria-label="Help"
+                        onClick={() => toggleTopbarPanel('help')}
+                      >
+                        <InternalIcon name="help" size={18} />
+                      </button>
+                      {activeTopbarPanel === 'help' ? (
+                        <TopbarPanel title="Help rapido">
+                          <a href="#/dashboard/upload" onClick={() => setActiveTopbarPanel(null)}>
+                            <strong>Caricare documenti o foto</strong>
+                            <small>Usa Upload per aggiungere dati reali nello store Supabase.</small>
+                          </a>
+                          <a href="#/dashboard/documenti" onClick={() => setActiveTopbarPanel(null)}>
+                            <strong>Verificare un documento</strong>
+                            <small>Apri Documenti, seleziona una riga e usa le azioni rapide.</small>
+                          </a>
+                          <a href="#/dashboard/report" onClick={() => setActiveTopbarPanel(null)}>
+                            <strong>Preparare un report</strong>
+                            <small>La pagina Report usa i dati reali presenti in Supabase.</small>
+                          </a>
+                        </TopbarPanel>
+                      ) : null}
+                    </div>
+                    <a className="button button-secondary" href="#/">Sito pubblico</a>
+                    <div className="user-menu">
+                      <span className="avatar">{session.name.split(' ').map((part) => part[0]).join('').slice(0, 2)}</span>
+                      <span>
+                        <strong>{session.name}</strong>
+                        <small>{activeRole?.label}</small>
+                      </span>
+                    </div>
                   </div>
-                ) : null}
-                {session ? (
-                  <div className="topbar-popover-wrap">
-                    <button
-                      className="icon-button"
-                      type="button"
-                      aria-expanded={activeTopbarPanel === 'help'}
-                      aria-label="Help"
-                      onClick={() => toggleTopbarPanel('help')}
-                    >
-                      <InternalIcon name="help" size={18} />
-                    </button>
-                    {activeTopbarPanel === 'help' ? (
-                      <TopbarPanel title="Help rapido">
-                        <a href="#/dashboard/upload" onClick={() => setActiveTopbarPanel(null)}>
-                          <strong>Caricare documenti o foto</strong>
-                          <small>Usa Upload per aggiungere dati reali nello store Supabase.</small>
-                        </a>
-                        <a href="#/dashboard/documenti" onClick={() => setActiveTopbarPanel(null)}>
-                          <strong>Verificare un documento</strong>
-                          <small>Apri Documenti, seleziona una riga e usa le azioni rapide.</small>
-                        </a>
-                        <a href="#/dashboard/report" onClick={() => setActiveTopbarPanel(null)}>
-                          <strong>Preparare un report</strong>
-                          <small>La pagina Report usa i dati reali presenti in Supabase.</small>
-                        </a>
-                      </TopbarPanel>
-                    ) : null}
-                  </div>
-                ) : null}
-                <a className="button button-secondary" href="#/">Sito pubblico</a>
-                {session ? (
-                  <div className="user-menu">
-                    <span className="avatar">{session.name.split(' ').map((part) => part[0]).join('').slice(0, 2)}</span>
-                    <span>
-                      <strong>{session.name}</strong>
-                      <small>{activeRole?.label}</small>
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-            <div className="breadcrumb">
-              <a href="#/dashboard">Area interna</a>
-              <span>{currentPath.replace('/dashboard', '') || '/dashboard'}</span>
-            </div>
+                </div>
+                <div className="breadcrumb">
+                  <a href="#/dashboard">Area interna</a>
+                  <span>{currentPath.replace('/dashboard', '') || '/dashboard'}</span>
+                </div>
+              </>
+            ) : null}
             {children}
             {session ? <BottomDashboardNav items={visibleDashboardNav} currentPath={currentPath} /> : null}
             {session && currentPath !== '/dashboard' ? <GlobalFloatingActions role={session.role} /> : null}
