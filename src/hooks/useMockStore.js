@@ -232,9 +232,29 @@ export function useMockStore(session) {
     })
   }
 
+  function getCantiereDependencies(cantiereId) {
+    const documents = store.documents.filter((document) => (document.cantiereId ?? 'barcelo-roma') === cantiereId)
+    const movements = store.movements.filter((movement) => (movement.cantiereId ?? 'barcelo-roma') === cantiereId)
+    const photos = store.photos.filter((photo) => (photo.cantiereId ?? 'barcelo-roma') === cantiereId)
+    const estimates = store.estimates.filter((estimate) => estimate.cantiereId === cantiereId)
+    return { documents, movements, photos, estimates }
+  }
+
   async function deleteEntity(collection, id) {
     const entity = store[collection]?.find((item) => item.id === id)
     if (!entity) return { ok: false, error: 'Elemento non trovato.' }
+
+    if (collection === 'cantieri') {
+      if (session?.role !== 'admin') return { ok: false, error: 'Solo admin può eliminare un cantiere.' }
+      const dependencies = getCantiereDependencies(id)
+      const blocked = dependencies.documents.length || dependencies.movements.length || dependencies.photos.length || dependencies.estimates.length
+      if (blocked) {
+        return {
+          ok: false,
+          error: `Cantiere non eliminato: contiene ${dependencies.documents.length} documenti, ${dependencies.movements.length} movimenti, ${dependencies.photos.length} foto e ${dependencies.estimates.length} preventivi collegati.`,
+        }
+      }
+    }
 
     const result = await deleteOperationalEntity({ entityType: collection, entity, session })
     if (!result.ok) {
@@ -329,6 +349,8 @@ export function useMockStore(session) {
     priorities,
     addCantiere,
     updateCantiereData: (id, data) => updateEntity('cantieri', id, data, 'Cantiere modificato'),
+    deleteCantiere: (id) => deleteEntity('cantieri', id),
+    getCantiereDependencies,
     updateDocumentStatus: (id, status) => updateEntity('documents', id, { statoVerifica: status, stato: status.toLowerCase() }, `Documento segnato come ${status}`),
     updateDocumentData: (id, data) => updateEntity('documents', id, data, 'Documento modificato'),
     deleteDocument: (id) => deleteEntity('documents', id),
