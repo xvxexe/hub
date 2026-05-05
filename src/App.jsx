@@ -129,6 +129,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
         activities={mockStore.activities}
         notes={mockStore.notes}
         onAddNote={mockStore.addInternalNote}
+        store={mockStore}
       />
     )
   }
