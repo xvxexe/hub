@@ -17,13 +17,14 @@ import {
   getAccountingTotals,
   getCategoryTotals,
 } from '../../data/mockMovimentiContabili'
+import { getOfficialMasterTotals, preferOfficialCategoryTotals, preferOfficialTotals } from '../../lib/masterTotals'
 import { getRole } from '../../lib/roles'
 
 const documentFlow = ['Importato', 'Da verificare', 'Confermato', 'Collegato al cantiere']
 const photoFlow = ['Caricata', 'Da revisionare', 'Approvata', 'Pubblicabile sul sito']
 const quoteFlow = ['Nuovo', 'Da valutare', 'Contattato', 'Accettato/Rifiutato']
 
-export function DashboardHome({ session, fotoUploads, documentUploads, documents = [], activities = [], estimates = [], syncState }) {
+export function DashboardHome({ session, fotoUploads, documentUploads, documents = [], activities = [], estimates = [], syncState, store = null }) {
   const activeRole = getRole(session.role)
   const isSupabase = syncState?.status === 'supabase'
 
@@ -41,9 +42,9 @@ export function DashboardHome({ session, fotoUploads, documentUploads, documents
       </DashboardHeader>
 
       {session.role === 'admin' ? (
-        <AdminDashboard fotoUploads={fotoUploads} documentUploads={documentUploads} documents={documents} activities={activities} estimates={estimates} />
+        <AdminDashboard fotoUploads={fotoUploads} documentUploads={documentUploads} documents={documents} activities={activities} estimates={estimates} store={store} />
       ) : null}
-      {session.role === 'accounting' ? <AccountingDashboard documentUploads={documentUploads} documents={documents} /> : null}
+      {session.role === 'accounting' ? <AccountingDashboard documentUploads={documentUploads} documents={documents} store={store} /> : null}
       {session.role === 'employee' ? (
         <EmployeeDashboard session={session} fotoUploads={fotoUploads} documentUploads={documentUploads} documents={documents} />
       ) : null}
@@ -57,12 +58,15 @@ function getDashboardTitle(role) {
   return 'Dashboard admin / capo'
 }
 
-function AdminDashboard({ documentUploads, documents, activities }) {
+function AdminDashboard({ documentUploads, documents, activities, store }) {
   const accountingRows = documents.map(documentToAccountingRow)
-  const accountingTotals = getAccountingTotals(accountingRows)
+  const calculatedTotals = getAccountingTotals(accountingRows)
+  const accountingTotals = preferOfficialTotals(store, calculatedTotals)
+  const officialMaster = getOfficialMasterTotals(store)
   const docsToCheck = documentUploads.filter((doc) => doc.stato === 'da verificare').length
-  const sites = useMemo(() => buildSitesFromDocuments(documents), [documents])
-  const categoryTotals = getCategoryTotals(accountingRows).filter((row) => row.totale > 0).slice(0, 6)
+  const sites = useMemo(() => buildSitesFromDocuments(documents, accountingTotals), [documents, accountingTotals.totale])
+  const calculatedCategoryTotals = getCategoryTotals(accountingRows).filter((row) => row.totale > 0).slice(0, 6)
+  const categoryTotals = preferOfficialCategoryTotals(store, calculatedCategoryTotals).filter((row) => row.totale > 0).slice(0, 6)
   const pendingPayments = accountingRows
     .filter((row) => row.pagamento?.toLowerCase().includes('da') || row.categoria?.toLowerCase().includes('bonifici'))
     .reduce((total, row) => total + Number(row.totale || 0), 0)
@@ -71,7 +75,7 @@ function AdminDashboard({ documentUploads, documents, activities }) {
     <>
       <div className="hub-priority-grid">
         <div className="hub-summary-first">
-          <CostSummaryPanel total={accountingTotals.totale} categoryTotals={categoryTotals} />
+          <CostSummaryPanel total={accountingTotals.totale} categoryTotals={categoryTotals} officialMaster={officialMaster} />
         </div>
 
         <section className="internal-panel hub-command-panel">
@@ -110,8 +114,8 @@ function AdminDashboard({ documentUploads, documents, activities }) {
 
       <div className="hub-kpi-strip" aria-label="Indicatori principali">
         <MiniKpi icon="building" label="Cantieri" value={sites.length} hint="Fonte Supabase" />
-        <MiniKpi icon="file" label="Da controllare" value={docsToCheck} hint={`${documents.length} righe importate`} tone="amber" />
-        <MiniKpi icon="wallet" label="Totale spese" value={<MoneyValue value={accountingTotals.totale} />} hint="Master importato" tone="green" />
+        <MiniKpi icon="file" label="Da controllare" value={docsToCheck} hint={`${documents.length} righe operative`} tone="amber" />
+        <MiniKpi icon="wallet" label="Totale spese" value={<MoneyValue value={accountingTotals.totale} />} hint={officialMaster ? 'Da master' : 'Calcolato'} tone="green" />
         <MiniKpi icon="calendar" label="Pagamenti" value={<MoneyValue value={pendingPayments} />} hint="Da classificare" tone="purple" />
       </div>
 
@@ -160,7 +164,7 @@ function AdminDashboard({ documentUploads, documents, activities }) {
           </section>
 
           <section className="internal-panel hub-imported-panel">
-            <PanelTitle title="Ultime righe importate" actionHref="#/dashboard/contabilita" />
+            <PanelTitle title="Ultime righe operative" actionHref="#/dashboard/contabilita" />
             <div className="compact-upload-list">
               {documents.slice(0, 4).map((document) => (
                 <article className="compact-upload-row" key={document.id}>
@@ -260,14 +264,14 @@ function MiniKpi({ icon, label, value, hint, tone = 'blue' }) {
   )
 }
 
-function CostSummaryPanel({ total, categoryTotals }) {
+function CostSummaryPanel({ total, categoryTotals, officialMaster }) {
   return (
     <section className="internal-panel cost-card-redesign">
       <div className="cost-card-head">
         <div>
           <span className="eyebrow">Spese</span>
           <h2>Riepilogo spese</h2>
-          <p>Vista compatta per capire subito dove stanno andando i costi.</p>
+          <p>{officialMaster ? 'Totali ufficiali letti dal master Google Sheets.' : 'Vista compatta per capire subito dove stanno andando i costi.'}</p>
         </div>
         <a className="button button-secondary button-small" href="#/dashboard/contabilita">Dettaglio</a>
       </div>
@@ -276,7 +280,7 @@ function CostSummaryPanel({ total, categoryTotals }) {
         <div className="cost-total-block">
           <span>Totale costi</span>
           <strong><MoneyValue value={total} /></strong>
-          <small className="positive-trend">Dati reali importati</small>
+          <small className="positive-trend">{officialMaster ? 'Da tab Riepilogo' : 'Dati reali importati'}</small>
         </div>
         <div className="donut-chart" aria-label="Ripartizione costi">
           <span>Totale<br /><MoneyValue value={total} /></span>
@@ -296,15 +300,15 @@ function CostSummaryPanel({ total, categoryTotals }) {
   )
 }
 
-function AccountingDashboard({ documentUploads, documents }) {
+function AccountingDashboard({ documentUploads, documents, store }) {
   const accountingRows = documents.map(documentToAccountingRow)
   const documentsToCheck = documentUploads.filter((documento) => documento.stato === 'da verificare')
   const firIncomplete = accountingRows.filter((row) => row.tipoDocumento === 'FIR' && row.statoVerifica === 'Incompleto')
   const duplicates = accountingRows.filter((row) => row.statoVerifica === 'Possibile duplicato')
   const transfersToLink = accountingRows.filter((row) => row.tipoDocumento === 'Bonifico' && row.note.toLowerCase().includes('collegare'))
   const documentsWithoutSite = accountingRows.filter((row) => !row.cantiereId)
-  const totals = getAccountingTotals(accountingRows)
-  const categoryTotals = getCategoryTotals(accountingRows).filter((row) => row.totale > 0).slice(0, 5)
+  const totals = preferOfficialTotals(store, getAccountingTotals(accountingRows))
+  const categoryTotals = preferOfficialCategoryTotals(store, getCategoryTotals(accountingRows)).filter((row) => row.totale > 0).slice(0, 5)
   const accountingAlerts = getAccountingAlerts(accountingRows).map((alert) => ({
     id: alert.id,
     title: alert.message,
@@ -410,7 +414,7 @@ function EmployeeDashboard({ session, fotoUploads, documentUploads, documents })
   )
 }
 
-function buildSitesFromDocuments(documents) {
+function buildSitesFromDocuments(documents, officialTotals = null) {
   const groups = documents.reduce((acc, document) => {
     const id = document.cantiereId ?? 'barcelo-roma'
     const name = document.cantiere ?? 'Barcelò Roma'
@@ -430,6 +434,10 @@ function buildSitesFromDocuments(documents) {
   }, {})
 
   const sites = Object.values(groups)
+  if (officialTotals?.isOfficialMaster && sites.length === 1) {
+    return [{ ...sites[0], totale: officialTotals.totale, avanzamento: 100 }]
+  }
+
   const maxTotal = Math.max(...sites.map((site) => site.totale), 1)
   return sites.map((site) => ({
     ...site,
