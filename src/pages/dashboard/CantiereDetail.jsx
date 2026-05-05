@@ -15,13 +15,15 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
   const storeDocuments = Array.isArray(store?.documents) && store.documents.length ? store.documents : documents
   const storeMovements = Array.isArray(store?.movements) ? store.movements : []
   const storeNotes = Array.isArray(store?.notes) ? store.notes : notes
+  const storeCantieri = Array.isArray(store?.cantieri) ? store.cantieri : []
 
   const siteDocuments = useMemo(() => storeDocuments.filter((document) => (document.cantiereId ?? 'barcelo-roma') === cantiereId), [storeDocuments, cantiereId])
   const accountingRows = useMemo(() => {
     const rows = storeMovements.length ? storeMovements.map(normalizeMovementRow) : siteDocuments.map(documentToAccountingRow)
     return rows.filter((row) => (row.cantiereId ?? 'barcelo-roma') === cantiereId)
   }, [storeMovements, siteDocuments, cantiereId])
-  const cantiere = useMemo(() => buildCantiere(cantiereId, siteDocuments, accountingRows), [cantiereId, siteDocuments, accountingRows])
+  const cantiereRecord = useMemo(() => storeCantieri.find((item) => item.id === cantiereId), [storeCantieri, cantiereId])
+  const cantiere = useMemo(() => buildCantiere(cantiereId, siteDocuments, accountingRows, cantiereRecord), [cantiereId, siteDocuments, accountingRows, cantiereRecord])
 
   if (!cantiere) {
     return (
@@ -51,6 +53,7 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
   const lastUploads = [...linkedDocumentUploads, ...linkedFotoUploads]
     .sort((a, b) => new Date(b.dataCaricamento || 0) - new Date(a.dataCaricamento || 0))
     .slice(0, 5)
+  const isEmptyOperationalCantiere = cantiere.source === 'supabase-operational' && !siteDocuments.length && !accountingRows.length && !linkedFotoUploads.length
 
   function submitNote(event) {
     event.preventDefault()
@@ -81,6 +84,13 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
         <a className="button button-primary button-small" href="#/dashboard/report">Report</a>
       </DashboardHeader>
 
+      {isEmptyOperationalCantiere ? (
+        <section className="accounting-alert success-alert">
+          <strong>Bozza cantiere creata</strong>
+          <p>Questo cantiere esiste su Supabase ma non ha ancora documenti, foto o movimenti. Carica il primo documento oppure aggiungi una nota operativa.</p>
+        </section>
+      ) : null}
+
       <section className="cantiere-detail-hero" aria-label="Panoramica cantiere">
         <div className="cantiere-identity-card">
           <div className="cantiere-identity-top">
@@ -90,7 +100,7 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
               <h2>{cantiere.cliente}</h2>
               <p>{cantiere.indirizzo} · {cantiere.localita}</p>
             </div>
-            <StatusBadge>{pendingRows.length ? 'Da controllare' : 'In corso'}</StatusBadge>
+            <StatusBadge>{isEmptyOperationalCantiere ? 'Bozza operativa' : pendingRows.length ? 'Da controllare' : 'In corso'}</StatusBadge>
           </div>
           <ProgressBar value={cantiere.avanzamento} />
           <div className="cantiere-hero-meta">
@@ -117,6 +127,7 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
                   <small>{item.percent ?? '-'}%</small>
                 </div>
               ))}
+              {categoryTotals.length === 0 ? <p>Nessuna spesa ancora collegata.</p> : null}
             </div>
           </div>
         ) : null}
@@ -166,12 +177,13 @@ export function CantiereDetail({ cantiereId, documents = [], fotoUploads = [], d
               setNoteText={setNoteText}
               submitNote={submitNote}
               canViewEconomics={canViewEconomics}
+              isEmptyOperationalCantiere={isEmptyOperationalCantiere}
             />
           </section>
         </main>
 
         <aside className="cantiere-context-panel">
-          <OpenControls pendingRows={pendingRows} documents={siteDocuments} />
+          <OpenControls pendingRows={pendingRows} documents={siteDocuments} isEmptyOperationalCantiere={isEmptyOperationalCantiere} />
           <RecentDocumentsPanel documents={lastDocuments} />
           <RecentActivityPanel documents={lastDocuments} uploads={lastUploads} notes={siteNotes} />
         </aside>
@@ -190,7 +202,7 @@ function DetailKpi({ icon, label, value, hint, tone = 'blue' }) {
 }
 
 function TabContent(props) {
-  const { currentTab, documents, lavorazioni, pendingRows, categoryTotals, accountingRows, accountingTotals, photos, notes, noteText, noteStatus, setNoteText, submitNote, canViewEconomics } = props
+  const { currentTab, documents, lavorazioni, pendingRows, categoryTotals, accountingRows, accountingTotals, photos, notes, noteText, noteStatus, setNoteText, submitNote, canViewEconomics, isEmptyOperationalCantiere } = props
   if (currentTab === 'Lavorazioni') return <WorkPackages lavorazioni={lavorazioni} />
   if (currentTab === 'Documenti') return <DocumentsTab documents={documents} />
   if (currentTab === 'Contabilità') return <AccountingTab accountingRows={accountingRows} accountingTotals={accountingTotals} />
@@ -199,11 +211,29 @@ function TabContent(props) {
 
   return (
     <div className="cantiere-overview-grid">
+      {isEmptyOperationalCantiere ? <EmptyCantierePanel /> : null}
       <WorkPackages lavorazioni={lavorazioni.slice(0, 6)} compact />
       {canViewEconomics ? <MaterialsPanel categoryTotals={categoryTotals} total={accountingTotals.totale} /> : null}
       <DocumentsTab documents={documents.slice(0, 5)} compact />
       <AccountingSnapshot accountingTotals={accountingTotals} pendingRows={pendingRows} />
     </div>
+  )
+}
+
+function EmptyCantierePanel() {
+  return (
+    <section className="detail-section-card">
+      <div className="section-heading panel-title-row">
+        <div>
+          <h2>Primo passo operativo</h2>
+          <p>Il cantiere è pronto ma va popolato con documenti, foto o note.</p>
+        </div>
+      </div>
+      <div className="quick-actions-grid">
+        <a className="quick-action-card" href="#/dashboard/upload"><InternalIcon name="upload" size={18} /><strong>Carica documento</strong><span>Fattura, ricevuta o foto</span></a>
+        <a className="quick-action-card" href="#/dashboard/contabilita"><InternalIcon name="wallet" size={18} /><strong>Nuova spesa</strong><span>Movimento manuale</span></a>
+      </div>
+    </section>
   )
 }
 
@@ -213,13 +243,14 @@ function MaterialsPanel({ categoryTotals, total }) {
       <div className="section-heading panel-title-row"><h2>Spese principali</h2></div>
       <div className="detail-category-list">
         {categoryTotals.slice(0, 8).map((item) => <div key={item.categoria}><span>{formatLabel(item.categoria)}</span><strong><MoneyValue value={item.totale} /></strong></div>)}
+        {categoryTotals.length === 0 ? <p>Nessuna categoria collegata.</p> : null}
       </div>
       <small>Totale riferimento: <MoneyValue value={total} /></small>
     </section>
   )
 }
 
-function OpenControls({ pendingRows, documents }) {
+function OpenControls({ pendingRows, documents, isEmptyOperationalCantiere = false }) {
   const mathWarnings = documents.filter((item) => {
     const imponibile = Number(item.imponibile || 0)
     const iva = Number(item.iva || 0)
@@ -236,7 +267,7 @@ function OpenControls({ pendingRows, documents }) {
       </div>
       <div className="detail-alert-list">
         {alerts.map((item) => <a href={`#/dashboard/contabilita/${item.id}`} key={`${item.id}-${item.statoVerifica}`}><span className="file-chip file-pdf">!</span><div><strong>{item.numeroDocumento ?? item.descrizione}</strong><small>{item.fornitore} · {formatLabel(item.sheetTab ?? item.categoria)}</small></div><StatusBadge>{normalizeDocumentStatus(item.statoVerifica ?? 'Totale da verificare')}</StatusBadge></a>)}
-        {alerts.length === 0 ? <article><span className="file-chip">OK</span><div><strong>Nessun controllo urgente</strong><small>Documento e contabilità risultano ordinati.</small></div></article> : null}
+        {alerts.length === 0 ? <article><span className="file-chip">OK</span><div><strong>{isEmptyOperationalCantiere ? 'Bozza senza criticità' : 'Nessun controllo urgente'}</strong><small>{isEmptyOperationalCantiere ? 'Collega il primo documento per iniziare i controlli.' : 'Documento e contabilità risultano ordinati.'}</small></div></article> : null}
       </div>
     </section>
   )
@@ -251,6 +282,7 @@ function WorkPackages({ lavorazioni, compact = false }) {
       </div>
       <div className="detail-work-list">
         {lavorazioni.map((item) => <article key={item.name}><div><strong>{formatLabel(item.name)}</strong><small>{item.movimenti} movimenti · <MoneyValue value={item.spent} /></small></div><StatusBadge>{item.status}</StatusBadge><ProgressBar value={item.progress} /></article>)}
+        {lavorazioni.length === 0 ? <p>Nessuna lavorazione ancora collegata.</p> : null}
       </div>
     </section>
   )
@@ -262,6 +294,7 @@ function DocumentsTab({ documents, compact = false }) {
       <div className="section-heading panel-title-row"><div><h2>Documenti</h2><p>Righe e documenti collegati al cantiere.</p></div><a className="button button-secondary button-small" href="#/dashboard/documenti">Tutti</a></div>
       <div className="detail-document-list">
         {documents.map((doc) => <a href={`#/dashboard/documenti/${doc.id}`} key={doc.id}><span className="file-chip file-pdf">DOC</span><div><strong>{doc.numeroDocumento ?? doc.tipoDocumento ?? 'Documento'}</strong><small>{doc.fornitore} · {formatLabel(doc.sheetTab ?? doc.categoria)}</small></div><strong><MoneyValue value={doc.totale ?? doc.importoTotale ?? 0} /></strong><StatusBadge>{normalizeDocumentStatus(doc.statoVerifica)}</StatusBadge></a>)}
+        {documents.length === 0 ? <p>Nessun documento collegato a questo cantiere.</p> : null}
       </div>
     </section>
   )
@@ -314,6 +347,7 @@ function AccountingTab({ accountingRows, accountingTotals }) {
       <div className="section-heading panel-title-row"><h2>Contabilità cantiere</h2><span className="data-mode-badge"><MoneyValue value={accountingTotals.totale} /></span></div>
       <div className="detail-accounting-table">
         {accountingRows.map((movimento) => <a href={`#/dashboard/contabilita/${movimento.id}`} key={movimento.id}><div><strong>{movimento.descrizione}</strong><small>{movimento.fornitore} · {formatLabel(movimento.sheetTab ?? movimento.categoria)}</small></div><span><MoneyValue value={movimento.imponibile} /></span><span><MoneyValue value={movimento.iva} /></span><strong><MoneyValue value={movimento.totale} /></strong><StatusBadge>{normalizeDocumentStatus(movimento.statoVerifica)}</StatusBadge></a>)}
+        {accountingRows.length === 0 ? <p>Nessun movimento contabile collegato.</p> : null}
       </div>
     </section>
   )
@@ -325,6 +359,7 @@ function RecentDocumentsPanel({ documents }) {
       <div className="section-heading panel-title-row"><h2>Ultimi documenti</h2><a className="button button-secondary button-small" href="#/dashboard/documenti">Tutti</a></div>
       <div className="detail-mini-list">
         {documents.map((doc) => <a href={`#/dashboard/documenti/${doc.id}`} key={doc.id}><div><strong>{doc.numeroDocumento ?? doc.tipoDocumento}</strong><small>{doc.fornitore} · {formatDate(doc.dataDocumento)}</small></div><span><MoneyValue value={doc.totale ?? doc.importoTotale ?? 0} /></span></a>)}
+        {documents.length === 0 ? <p>Nessun documento recente.</p> : null}
       </div>
     </section>
   )
@@ -340,18 +375,19 @@ function RecentActivityPanel({ documents, uploads, notes }) {
   return <ActivityFeed title="Timeline" items={activities} />
 }
 
-function buildCantiere(cantiereId, documents, movements) {
-  if (!documents.length && !movements.length) return null
+function buildCantiere(cantiereId, documents, movements, cantiereRecord) {
+  if (!documents.length && !movements.length && !cantiereRecord) return null
   const first = documents[0] ?? movements[0]
-  const lastDate = [...documents.map((doc) => doc.dataDocumento), ...movements.map((row) => row.data)].filter(Boolean).sort().at(-1)
+  const lastDate = [...documents.map((doc) => doc.dataDocumento), ...movements.map((row) => row.data), cantiereRecord?.updatedAt, cantiereRecord?.createdAt].filter(Boolean).sort().at(-1)
   return {
     id: cantiereId,
-    nome: first?.cantiere ?? 'Barcelò Roma',
-    cliente: first?.cantiere ?? 'Barcelò Roma',
-    indirizzo: 'Fonte: BARCELO_ROMA_master Google Sheets',
-    localita: cantiereId === 'barcelo-roma' ? 'Roma, zona Eur' : 'Da Google Sheets',
-    avanzamento: 100,
+    nome: cantiereRecord?.nome ?? first?.cantiere ?? 'Cantiere',
+    cliente: cantiereRecord?.cliente ?? cantiereRecord?.nome ?? first?.cantiere ?? 'Cantiere',
+    indirizzo: cantiereRecord?.indirizzo || (first ? 'Fonte: BARCELO_ROMA_master Google Sheets' : 'Creato da hub operativo'),
+    localita: cantiereRecord?.localita || (cantiereId === 'barcelo-roma' ? 'Roma, zona Eur' : 'Da hub'),
+    avanzamento: Number(cantiereRecord?.avanzamento ?? (first ? 100 : 0)),
     lastDate,
+    source: cantiereRecord ? 'supabase-operational' : 'documents',
   }
 }
 
