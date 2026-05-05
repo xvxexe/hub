@@ -13,6 +13,8 @@ import {
 } from '../../components/InternalLayout'
 import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
+import { buildOperationalCantiereOptions } from '../../lib/cantiereOptions'
+import { getOfficialMasterTotals, preferOfficialTotals } from '../../lib/masterTotals'
 
 const tipiDocumentoFallback = ['Fattura', 'Bonifico', 'Ricevuta', 'FIR', 'Preventivo', 'Scontrino', 'Riepilogo tab', 'Altro']
 
@@ -29,7 +31,8 @@ export function DocumentiMock({ session, store }) {
   })
 
   const rows = store.documents ?? []
-  const cantieri = useMemo(() => getCantieriFromRows(rows), [rows])
+  const cantieri = useMemo(() => buildOperationalCantiereOptions({ store, rows }), [store?.cantieri, store?.documents, store?.movements, rows])
+  const officialMaster = getOfficialMasterTotals(store)
   const tipiDocumento = useMemo(() => {
     const realTypes = [...new Set(rows.map((row) => row.tipoDocumento).filter(Boolean))]
     return realTypes.length ? realTypes : tipiDocumentoFallback
@@ -63,7 +66,11 @@ export function DocumentiMock({ session, store }) {
   const incomplete = rows.filter((row) => row.statoVerifica === 'Incompleto')
   const duplicates = rows.filter((row) => row.statoVerifica === 'Possibile duplicato')
   const mathWarnings = filteredRows.filter(hasAmountWarning).length
-  const totalAmount = filteredRows.reduce((sum, row) => sum + Number(row.totale || 0), 0)
+  const filteredTotals = getDocumentTotals(filteredRows)
+  const allRowsSelected = isAllDocumentFilters(filters)
+  const displayedTotals = allRowsSelected ? preferOfficialTotals(store, filteredTotals) : filteredTotals
+  const displayedTotalLabel = allRowsSelected && officialMaster ? 'Totale ufficiale master' : 'Totale filtrato operativo'
+  const displayedTotalHint = allRowsSelected && officialMaster ? 'Da Google Sheets' : 'Somma documenti filtrati'
   const canEdit = session.role === 'admin' || session.role === 'accounting'
   const selectedDocument = filteredRows.find((row) => row.id === selectedId) ?? filteredRows[0] ?? rows[0]
   const pageSize = 10
@@ -85,9 +92,16 @@ export function DocumentiMock({ session, store }) {
         title="Centro documenti"
         description="Dati letti da Supabase, importati da BARCELO_ROMA_master: verifica, duplicati e collegamento contabile nello stesso flusso."
       >
-        <DataModeBadge>Dati reali Supabase</DataModeBadge>
+        <DataModeBadge>{officialMaster ? 'Totali master' : 'Dati reali Supabase'}</DataModeBadge>
         <a className="button button-primary button-small" href="#/dashboard/upload">Carica documento</a>
       </DashboardHeader>
+
+      {allRowsSelected && officialMaster ? (
+        <section className="accounting-alert success-alert master-source-alert">
+          <strong>Totale economico ufficiale dal master Google Sheets</strong>
+          <p>Il totale principale coincide con il tab Riepilogo. Le righe documento restano il dettaglio operativo e possono avere una somma diversa.</p>
+        </section>
+      ) : null}
 
       <FilterGrid ariaLabel="Filtri documenti">
         <label className="accounting-search">
@@ -138,9 +152,9 @@ export function DocumentiMock({ session, store }) {
         <KpiCard icon="warning" tone="red" label="Duplicati" value={duplicates.length} hint={`${incomplete.length} incompleti`} />
       </KpiStrip>
       <KpiStrip className="document-operational-kpis" ariaLabel="Indicatori economici documenti">
-        <KpiCard icon="wallet" tone="green" label="Totale filtrato" value={<MoneyValue value={totalAmount} />} hint="Somma documenti" />
+        <KpiCard icon="wallet" tone="green" label={displayedTotalLabel} value={<MoneyValue value={displayedTotals.totale} />} hint={displayedTotalHint} />
         <KpiCard icon="report" label="Tipi documento" value={tipiDocumento.length} hint="Classificazione" />
-        <KpiCard icon="building" tone="purple" label="Cantieri" value={cantieri.length} hint="Collegamenti" />
+        <KpiCard icon="building" tone="purple" label="Cantieri" value={cantieri.length} hint="Collegamenti reali" />
         <KpiCard icon="warning" tone={mathWarnings ? 'amber' : 'green'} label="Controllo importi" value={mathWarnings} hint={mathWarnings ? 'Warning matematici' : 'Nessun errore'} />
       </KpiStrip>
 
@@ -160,7 +174,7 @@ export function DocumentiMock({ session, store }) {
               <h2>Tutti i documenti ({filteredRows.length})</h2>
               <p>Lista operativa compatta: documento, fornitore, cantiere, importo e stato sempre visibili.</p>
             </div>
-            <span className="data-mode-badge"><MoneyValue value={totalAmount} /></span>
+            <span className="data-mode-badge"><MoneyValue value={displayedTotals.totale} /></span>
           </div>
           {filteredRows.length > 0 ? (
             <>
@@ -179,7 +193,7 @@ export function DocumentiMock({ session, store }) {
                       { label: 'Fornitore', value: row.fornitore ?? '-' },
                       { label: 'Cantiere', value: row.cantiere ?? '-' },
                       { label: 'Data', value: formatDate(row.dataDocumento) },
-                      { label: 'Importo', value: <MoneyValue value={row.totale} /> },
+                      { label: 'Importo riga', value: <MoneyValue value={row.totale} /> },
                     ]}
                     action={(
                       <ActionList>
@@ -272,7 +286,7 @@ function DocumentPriorityPanel({ rows }) {
             meta={[
               { label: 'Documento', value: row.numeroDocumento ?? row.fileName ?? '-' },
               { label: 'Categoria', value: row.categoria ?? '-' },
-              { label: 'Totale', value: <MoneyValue value={row.totale} /> },
+              { label: 'Totale riga', value: <MoneyValue value={row.totale} /> },
             ]}
           />
         )) : <article className="accounting-alert"><strong>Nessuna priorità aperta</strong><small>I documenti filtrati non richiedono controlli immediati.</small></article>}
@@ -312,7 +326,7 @@ function DocumentPreviewPanel({ document, canEdit, store }) {
           <div><dt>Numero</dt><dd>{document.numeroDocumento ?? '-'}</dd></div>
           <div><dt>Imponibile</dt><dd><MoneyValue value={document.imponibile} /></dd></div>
           <div><dt>IVA</dt><dd><MoneyValue value={document.iva} /></dd></div>
-          <div><dt>Totale</dt><dd><MoneyValue value={document.totale} /></dd></div>
+          <div><dt>Totale riga</dt><dd><MoneyValue value={document.totale} /></dd></div>
           <div><dt>Categoria</dt><dd>{document.categoria ?? '-'}</dd></div>
         </dl>
       </section>
@@ -343,13 +357,21 @@ function DocumentPreviewPanel({ document, canEdit, store }) {
   )
 }
 
-function getCantieriFromRows(rows) {
-  const map = new Map()
-  rows.forEach((row) => {
-    if (!row.cantiereId) return
-    map.set(row.cantiereId, { id: row.cantiereId, nome: row.cantiere ?? row.cantiereId })
-  })
-  return [...map.values()]
+function isAllDocumentFilters(filters) {
+  return filters.cantiereId === 'tutti'
+    && filters.tipoDocumento === 'tutti'
+    && filters.stato === 'tutti'
+    && filters.quick === 'tutti'
+    && filters.search.trim() === ''
+}
+
+function getDocumentTotals(rows) {
+  return rows.reduce((acc, row) => ({
+    imponibile: acc.imponibile + Number(row.imponibile || 0),
+    iva: acc.iva + Number(row.iva || 0),
+    totale: acc.totale + Number(row.totale || 0),
+    daVerificare: acc.daVerificare + (row.statoVerifica === 'Da verificare' ? 1 : 0),
+  }), { imponibile: 0, iva: 0, totale: 0, daVerificare: 0 })
 }
 
 function formatDate(date) {
