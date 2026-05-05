@@ -1,0 +1,393 @@
+/* Mobile UI balanced refinement: più pulita, più ariosa, senza comprimere troppo. */
+
+@media (max-width: 767px) {
+  :root {
+    --m-page: 0.85rem;
+    --m-card: 0.95rem;
+    --m-gap: 0.85rem;
+    --m-radius: 1rem;
+  }
+
+  .dashboard-main {
+    gap: var(--m-gap) !important;
+    padding-inline: var(--m-page) !important;
+    padding-top: 2.45rem !important;
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .breadcrumb {
+    margin: 0 !important;
+    padding: 0.48rem 0.72rem !important;
+    border-radius: 0.85rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  .dashboard-header,
+  .internal-header {
+    gap: 0.58rem !important;
+    padding: 1rem var(--m-card) 0.9rem !important;
+    border-radius: var(--m-radius) !important;
+  }
+
+  .dashboard-header h1,
+  .internal-header h1 {
+    font-size: clamp(1.42rem, 6vw, 1.85rem) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.04em !important;
+    margin: 0 !important;
+  }
+
+  .dashboard-header p,
+  .internal-header p {
+    font-size: 0.88rem !important;
+    line-height: 1.45 !important;
+    margin: 0 !important;
+    -webkit-line-clamp: 3 !important;
+  }
+
+  .eyebrow,
+  .dashboard-header .eyebrow,
+  .dashboard-main .eyebrow {
+    font-size: 0.66rem !important;
+    letter-spacing: 0.1em !important;
+  }
+
+  .button,
+  .button-small,
+  .sidebar-button {
+    min-height: 2.28rem !important;
+    border-radius: 0.72rem !important;
+    font-size: 0.78rem !important;
+    padding: 0.5rem 0.72rem !important;
+  }
+
+  .data-mode-badge,
+  .role-pill,
+  .status-badge {
+    font-size: 0.64rem !important;
+    line-height: 1.05 !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  .kpi-strip,
+  .stats-grid,
+  .hub-kpi-grid,
+  .cantiere-detail-kpis,
+  .document-operational-kpis,
+  .accounting-operational-kpis {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.72rem !important;
+    padding: 0 !important;
+  }
+
+  .kpi-card,
+  .stat-card,
+  .detail-kpi {
+    min-height: 6.1rem !important;
+    border-radius: var(--m-radius) !important;
+    gap: 0.55rem !important;
+    padding: 0.9rem !important;
+  }
+
+  .kpi-card strong,
+  .stat-card strong,
+  .detail-kpi strong {
+    font-size: clamp(1.22rem, 5.4vw, 1.58rem) !important;
+    line-height: 1.06 !important;
+  }
+
+  .kpi-card small,
+  .stat-card small,
+  .detail-kpi small,
+  .kpi-card em,
+  .detail-kpi em {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .internal-panel,
+  .accounting-section,
+  .detail-section-card,
+  .detail-side-card,
+  .info-card,
+  .table-card,
+  .command-panel,
+  .side-context-panel,
+  .cantiere-tabs-card,
+  .upload-form-panel,
+  .cantieri-master-panel,
+  .document-table-panel,
+  .public-card {
+    border-radius: var(--m-radius) !important;
+    padding: var(--m-card) !important;
+  }
+
+  .internal-padded {
+    padding: var(--m-card) !important;
+  }
+
+  .section-heading,
+  .panel-title-row {
+    gap: 0.7rem !important;
+    margin-bottom: 0.72rem !important;
+  }
+
+  .section-heading h2,
+  .panel-title-row h2,
+  .internal-panel > h2,
+  .detail-section-card h2 {
+    font-size: clamp(1.08rem, 4.8vw, 1.3rem) !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+  }
+
+  .section-heading p,
+  .panel-title-row p,
+  .internal-panel > p,
+  .detail-section-card p {
+    font-size: 0.82rem !important;
+    line-height: 1.42 !important;
+    margin: 0.16rem 0 0 !important;
+  }
+
+  .filter-grid,
+  .real-accounting-filters,
+  .cantieri-tools,
+  .document-filters,
+  .upload-form-grid,
+  .admin-invite-form,
+  .mock-form,
+  .detail-edit-form {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.72rem !important;
+  }
+
+  .filter-grid .accounting-search,
+  .mock-form .form-wide,
+  .detail-edit-form .form-wide,
+  .upload-note-field,
+  .full-row {
+    grid-column: 1 / -1 !important;
+  }
+
+  .filter-grid label,
+  .mock-form label,
+  .detail-edit-form label,
+  .upload-redesign-form label,
+  .admin-invite-form label {
+    gap: 0.34rem !important;
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
+  }
+
+  input,
+  select,
+  textarea,
+  .mock-form input,
+  .mock-form select,
+  .mock-form textarea,
+  .filter-grid input,
+  .filter-grid select,
+  .detail-edit-form input,
+  .detail-edit-form select,
+  .detail-edit-form textarea,
+  .upload-redesign-form input,
+  .upload-redesign-form select,
+  .upload-redesign-form textarea {
+    min-height: 2.45rem !important;
+    border-radius: 0.72rem !important;
+    font-size: 0.86rem !important;
+    line-height: 1.25 !important;
+    padding: 0.54rem 0.68rem !important;
+  }
+
+  textarea {
+    min-height: 5.6rem !important;
+  }
+
+  .workspace-layout,
+  .cantieri-workspace,
+  .documents-workspace,
+  .upload-workspace,
+  .cantiere-detail-layout,
+  .detail-layout,
+  .internal-two-column,
+  .internal-three-column,
+  .hub-dashboard-grid,
+  .hub-lower-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: var(--m-gap) !important;
+  }
+
+  .document-card-list,
+  .compact-upload-list,
+  .detail-document-list,
+  .detail-work-list,
+  .detail-alert-list,
+  .detail-mini-list,
+  .activity-feed,
+  .accounting-mobile-list,
+  .selected-category-list,
+  .compact-category-grid {
+    gap: 0.68rem !important;
+  }
+
+  .data-card-row,
+  .compact-upload-row,
+  .activity-item,
+  .detail-document-list a,
+  .detail-alert-list a,
+  .detail-mini-list a,
+  .detail-mini-list article,
+  .accounting-mobile-card,
+  .selected-category-list div,
+  .compact-category-item,
+  .detail-work-list article {
+    border-radius: 0.9rem !important;
+    gap: 0.58rem !important;
+    padding: 0.78rem 0.82rem !important;
+  }
+
+  .data-card-row strong,
+  .compact-upload-row strong,
+  .activity-item strong,
+  .detail-document-list strong,
+  .detail-mini-list strong,
+  .detail-work-list strong {
+    font-size: 0.92rem !important;
+    line-height: 1.22 !important;
+  }
+
+  .data-card-row small,
+  .compact-upload-row small,
+  .activity-item small,
+  .detail-document-list small,
+  .detail-mini-list small,
+  .detail-work-list small {
+    font-size: 0.76rem !important;
+    line-height: 1.34 !important;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.68rem !important;
+  }
+
+  .quick-action-card,
+  .quick-actions-grid a,
+  .quick-actions-grid button {
+    min-height: 4.6rem !important;
+    border-radius: 0.95rem !important;
+    padding: 0.82rem !important;
+  }
+
+  .detail-list {
+    gap: 0.48rem !important;
+  }
+
+  .detail-list div {
+    gap: 0.6rem !important;
+    padding-block: 0.48rem !important;
+  }
+
+  .detail-list dt,
+  .detail-list dd {
+    font-size: 0.82rem !important;
+    line-height: 1.34 !important;
+  }
+
+  .cantiere-detail-hero,
+  .selected-site-hero,
+  .cantiere-identity-card,
+  .cantiere-money-card,
+  .cantiere-action-rail {
+    border-radius: var(--m-radius) !important;
+    gap: 0.82rem !important;
+    padding: var(--m-card) !important;
+  }
+
+  .cantiere-hero-meta,
+  .detail-accounting-grid,
+  .selected-site-meta,
+  .cantiere-money-split {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.68rem !important;
+  }
+
+  .donut-chart {
+    width: 9rem !important;
+    height: 9rem !important;
+    margin-inline: auto !important;
+  }
+
+  .cost-summary {
+    gap: 0.9rem !important;
+  }
+
+  .cost-summary > div:first-child strong,
+  .cantiere-money-total strong {
+    font-size: 1.58rem !important;
+    line-height: 1.08 !important;
+  }
+
+  .accounting-table-wrap {
+    margin-inline: calc(var(--m-card) * -1) !important;
+    padding-inline: var(--m-card) !important;
+    overflow-x: auto !important;
+  }
+
+  .accounting-table,
+  .real-accounting-table {
+    min-width: 48rem !important;
+  }
+
+  .pagination-bar {
+    gap: 0.62rem !important;
+    padding-top: 0.72rem !important;
+  }
+
+  .dashboard-bottom-nav {
+    left: 0.68rem !important;
+    right: 0.68rem !important;
+    bottom: 0.45rem !important;
+    min-height: 3.85rem !important;
+    border-radius: 1.08rem !important;
+    padding: 0.36rem 0.42rem max(0.36rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  .dashboard-bottom-nav a,
+  .dashboard-bottom-more-button {
+    min-height: 3rem !important;
+    border-radius: 0.85rem !important;
+    font-size: 0.65rem !important;
+  }
+
+  .floating-actions-trigger {
+    width: 3.12rem !important;
+    height: 3.12rem !important;
+    bottom: calc(4.95rem + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .filter-grid,
+  .real-accounting-filters,
+  .cantieri-tools,
+  .document-filters,
+  .upload-form-grid,
+  .admin-invite-form,
+  .mock-form,
+  .detail-edit-form,
+  .kpi-strip,
+  .stats-grid,
+  .hub-kpi-grid,
+  .cantiere-detail-kpis,
+  .document-operational-kpis,
+  .accounting-operational-kpis {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
