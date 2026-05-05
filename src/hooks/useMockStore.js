@@ -161,6 +161,28 @@ export function useMockStore(session) {
     persist(nextStore)
   }
 
+  function addEstimate(estimate) {
+    const nextEstimate = normalizeEstimate({
+      ...estimate,
+      id: estimate.id ?? `estimate-${Date.now()}`,
+      requestDate: estimate.requestDate ?? todayIso(),
+      status: estimate.status ?? 'Nuovo',
+      priority: estimate.priority ?? 'Media',
+      source: estimate.source ?? 'hub-ui',
+    })
+
+    persist({
+      ...store,
+      estimates: [nextEstimate, ...store.estimates.filter((item) => item.id !== nextEstimate.id)],
+      activities: [createActivity({
+        type: 'estimates',
+        entityType: 'estimates',
+        entityId: nextEstimate.id,
+        description: `Preventivo ${nextEstimate.client} creato`,
+      }, actor()), ...store.activities],
+    })
+  }
+
   function upsertAccountingMovement(id, data, activityText) {
     const current = store.movements.find((item) => item.id === id)
     const nextMovement = normalizeMovement({
@@ -302,6 +324,7 @@ export function useMockStore(session) {
     deletePhoto: (id) => deleteEntity('photos', id),
     approvePhoto: (id) => updateEntity('photos', id, { stato: 'Approvata', pubblicata: false }, 'Foto approvata'),
     markPhotoPublicable: (id, value) => updateEntity('photos', id, { pubblicabile: value ? 'si' : 'no' }, value ? 'Foto segnata pubblicabile' : 'Foto segnata non pubblicabile'),
+    addEstimate,
     updateEstimateStatus: (id, status) => updateEntity('estimates', id, { status }, `Preventivo segnato come ${status}`),
     updateEstimateData: (id, data) => updateEntity('estimates', id, data, 'Preventivo modificato'),
     deleteEstimate: (id) => deleteEntity('estimates', id),
@@ -339,7 +362,7 @@ function normalizeStore(data) {
     documents: Array.isArray(data?.documents) ? data.documents : [],
     movements: Array.isArray(data?.movements) ? data.movements.map(normalizeMovement) : [],
     photos: Array.isArray(data?.photos) ? data.photos : [],
-    estimates: Array.isArray(data?.estimates) ? data.estimates : [],
+    estimates: Array.isArray(data?.estimates) ? data.estimates.map(normalizeEstimate) : [],
     notes: Array.isArray(data?.notes) ? data.notes : [],
     activities: Array.isArray(data?.activities) ? data.activities : [],
     deletedRecords: Array.isArray(data?.deletedRecords) ? data.deletedRecords : [],
@@ -434,6 +457,27 @@ function normalizeMovement(movement) {
     statoVerifica: movement.statoVerifica ?? 'Da verificare',
     documentoCollegato: movement.documentoCollegato ?? movement.fileName ?? '',
     note: movement.note ?? movement.nota ?? '',
+  }
+}
+
+function normalizeEstimate(estimate) {
+  return {
+    ...estimate,
+    id: estimate.id,
+    client: estimate.client ?? 'Cliente da verificare',
+    phone: estimate.phone ?? '',
+    email: estimate.email ?? '',
+    city: estimate.city ?? '',
+    customerType: estimate.customerType ?? 'Da verificare',
+    workType: estimate.workType ?? 'Da verificare',
+    urgency: estimate.urgency ?? 'Da programmare',
+    budget: estimate.budget ?? 'Da definire',
+    contactPreference: estimate.contactPreference ?? 'Telefono',
+    priority: estimate.priority ?? 'Media',
+    status: estimate.status ?? 'Nuovo',
+    description: estimate.description ?? '',
+    internalNotes: estimate.internalNotes ?? '',
+    requestDate: estimate.requestDate ?? todayIso(),
   }
 }
 
