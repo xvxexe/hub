@@ -146,18 +146,7 @@ export async function fetchCurrentAuthSession() {
 }
 
 export function readInviteSessionFromUrl() {
-  const sources = [window.location.search, window.location.hash]
-  const params = new URLSearchParams()
-
-  sources.forEach((source) => {
-    String(source || '')
-      .replace(/^#/, '')
-      .split('?')
-      .forEach((part) => {
-        if (!part || !part.includes('=')) return
-        new URLSearchParams(part).forEach((value, key) => params.set(key, value))
-      })
-  })
+  const params = readParamsFromCurrentUrl()
 
   const accessToken = params.get('access_token')
   const refreshToken = params.get('refresh_token')
@@ -166,7 +155,7 @@ export function readInviteSessionFromUrl() {
   const role = params.get('role')
   const invite = params.get('invite')
 
-  const isSupabaseInvite = Boolean(accessToken && refreshToken && (type === 'invite' || type === 'recovery'))
+  const isSupabaseInvite = Boolean(accessToken && refreshToken && (type === 'invite' || type === 'recovery' || !type))
   const isLocalInvite = Boolean(invite && email)
 
   if (!isSupabaseInvite && !isLocalInvite) return null
@@ -180,6 +169,40 @@ export function readInviteSessionFromUrl() {
     invite,
     isSupabaseInvite,
     isLocalInvite,
+  }
+}
+
+function readParamsFromCurrentUrl() {
+  const params = new URLSearchParams()
+  const sources = [
+    window.location.search,
+    window.location.hash,
+    window.location.href.split('#')[1] ?? '',
+  ]
+
+  sources.forEach((source) => {
+    const normalizedSource = String(source || '').replace(/^#/, '')
+    if (!normalizedSource) return
+
+    normalizedSource
+      .split(/[?#&]/)
+      .filter((part) => part.includes('='))
+      .forEach((part) => {
+        const separatorIndex = part.indexOf('=')
+        const key = safeDecode(part.slice(0, separatorIndex))
+        const value = safeDecode(part.slice(separatorIndex + 1))
+        if (key) params.set(key, value)
+      })
+  })
+
+  return params
+}
+
+function safeDecode(value) {
+  try {
+    return decodeURIComponent(String(value || '').replace(/\+/g, ' '))
+  } catch {
+    return String(value || '')
   }
 }
 
