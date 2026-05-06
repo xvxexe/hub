@@ -11,6 +11,8 @@ const EMPTY_OPERATIONAL_STORE = {
   deletedRecords: [],
 }
 
+const ACTIVITY_LOGS_TABLE = 'activity_logs'
+
 export async function fetchOperationalStore() {
   if (!isSupabaseConfigured) return { data: null, error: null, source: 'local' }
 
@@ -80,12 +82,14 @@ export async function saveOperationalStore(store, session) {
       ['estimates', estimates],
       ['accounting_movements', movements],
       ['notes', notes],
-      ['activity_logs', activities],
+      [ACTIVITY_LOGS_TABLE, activities],
     ]
 
     for (const [table, rows] of orderedWrites) {
       if (!rows.length) continue
-      const result = await upsertRows(table, rows)
+      const result = table === ACTIVITY_LOGS_TABLE
+        ? await insertActivityRows(rows)
+        : await upsertRows(table, rows)
       if (result.error) return { error: result.error, source: 'supabase-operational' }
     }
 
@@ -102,6 +106,19 @@ function upsertRows(table, rows) {
       Prefer: 'resolution=merge-duplicates,return=minimal',
     },
     body: JSON.stringify(rows),
+  })
+}
+
+function insertActivityRows(rows) {
+  const insertableRows = rows.filter((row) => row.actor_id)
+  if (!insertableRows.length) return { error: null, source: 'supabase-operational' }
+
+  return supabaseRequest(`${ACTIVITY_LOGS_TABLE}?on_conflict=id`, {
+    method: 'POST',
+    headers: {
+      Prefer: 'resolution=ignore-duplicates,return=minimal',
+    },
+    body: JSON.stringify(insertableRows),
   })
 }
 
