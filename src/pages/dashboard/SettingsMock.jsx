@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { exportSupabaseToGoogleSheets, importGoogleSheetsToSupabase } from '../../lib/googleSheetsSync'
+import { getStoredAuthSession, supabaseUrl } from '../../lib/supabaseClient'
 
 const STORAGE_KEY = 'europaservice-created-invites-v001'
 const roleOptions = [
@@ -353,11 +354,10 @@ async function deleteSupabaseUser(invite) {
 }
 
 async function callInviteFunction(payload) {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-  if (!supabaseUrl) throw new Error('VITE_SUPABASE_URL mancante')
+  if (!supabaseUrl) throw new Error('Supabase URL non configurato')
 
   const token = getAccessToken()
-  if (!token) throw new Error('sessione Supabase non disponibile')
+  if (!token) throw new Error('sessione Supabase non disponibile: esci e rientra con login admin')
 
   const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/functions/v1/invite-user`, {
     method: 'POST',
@@ -371,6 +371,9 @@ async function callInviteFunction(payload) {
 }
 
 function getAccessToken() {
+  const storedSession = getStoredAuthSession()
+  if (storedSession?.access_token) return storedSession.access_token
+
   try {
     const entry = Object.entries(window.localStorage).find(([key]) => key.startsWith('sb-') && key.endsWith('-auth-token'))
     if (!entry) return ''
