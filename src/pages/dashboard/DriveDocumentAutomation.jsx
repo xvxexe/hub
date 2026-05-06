@@ -10,19 +10,20 @@ import {
 import { StatusBadge } from '../../components/StatusBadge'
 import {
   DRIVE_AUTOMATION_CONFIG,
-  DRIVE_AUTOMATION_SCRIPT,
   buildDocumentAutomationRows,
   buildPlanTsv,
   callDriveAutomationEndpoint,
   getDriveAutomationStats,
 } from '../../lib/driveDocumentAutomation'
+import { CHUNKED_DRIVE_AUTOMATION_SCRIPT } from '../../lib/driveDocumentAutomationChunked'
 
 const STORAGE_KEY = 'europaservice-drive-automation-endpoint'
 const endpointFromEnv = import.meta.env.VITE_DRIVE_AUTOMATION_URL || ''
 
 export function DriveDocumentAutomation({ session, store }) {
   const [endpoint, setEndpoint] = useState(() => window.localStorage.getItem(STORAGE_KEY) || endpointFromEnv)
-  const [status, setStatus] = useState({ state: 'idle', message: 'Pronto: carica i file in Drive e premi Sistema automaticamente.' })
+  const [status, setStatus] = useState({ state: 'idle', message: 'Pronto: usa Avvia a blocchi, poi Continua blocco finché arriva al 100%.' })
+  const [progress, setProgress] = useState(null)
   const rows = useMemo(() => buildDocumentAutomationRows(store?.documents ?? []), [store?.documents])
   const stats = useMemo(() => getDriveAutomationStats(rows), [rows])
   const previewRows = rows.filter((row) => row.status === 'DA COLLEGARE').slice(0, 8)
@@ -46,18 +47,36 @@ export function DriveDocumentAutomation({ session, store }) {
   async function runAction(action, label) {
     if (!canRun) {
       setStatus({ state: 'error', message: 'Solo admin o contabile possono usare questa automazione.' })
-      return
+      return null
     }
 
     setStatus({ state: 'loading', message: `${label} in corso...` })
     const result = await callDriveAutomationEndpoint(endpoint, action)
+    if (result.progress) setProgress(result.progress)
     if (!result.ok) {
       setStatus({ state: 'error', message: result.error ?? 'Errore Apps Script.' })
-      return
+      return result
     }
 
     const summary = formatResultSummary(result)
-    setStatus({ state: 'success', message: `${label} completato. ${summary}` })
+    setStatus({ state: result.progress?.status === 'complete' ? 'success' : 'idle', message: `${label} completato. ${summary}` })
+    return result
+  }
+
+  async function startChunked() {
+    await runAction('startChunked', 'Avvio a blocchi')
+  }
+
+  async function continueChunk() {
+    await runAction('processNextChunk', 'Blocco successivo')
+  }
+
+  async function stopChunked() {
+    await runAction('stopChunked', 'Stop sicuro')
+  }
+
+  async function refreshProgress() {
+    await runAction('status', 'Aggiornamento stato')
   }
 
   return (
@@ -65,7 +84,7 @@ export function DriveDocumentAutomation({ session, store }) {
       <DashboardHeader
         eyebrow="Automazione Drive"
         title="Sistema documenti Barcelo Roma"
-        description="Sistema automatico per leggere i file grezzi da Drive, abbinarli alle righe del master, rinominarli, spostarli e collegare il link al documento."
+        description="Sistema a blocchi per leggere i file grezzi da Drive con OCR, abbinarli alle righe del master, rinominarli, spostarli e collegare il link al documento."
       >
         <DataModeBadge>Google Drive + Master</DataModeBadge>
       </DashboardHeader>
@@ -79,22 +98,30 @@ export function DriveDocumentAutomation({ session, store }) {
 
       <section className="internal-panel drive-auto-hero">
         <div>
-          <span className="eyebrow">Modalità consigliata</span>
-          <h2>Sistema automaticamente i documenti sicuri</h2>
+          <span className="eyebrow">Modalità sicura</span>
+          <h2>Automazione OCR a blocchi</h2>
           <p>
-            Premi un solo pulsante: lo script prepara i tab, scannerizza Drive, genera il piano, approva solo i match sicuri,
-            fa un dry-run e applica automaticamente le righe senza rischi evidenti. I casi dubbi restano fermi da controllare.
+            Invece di lavorare 103 file tutti insieme, il sistema legge circa 10 file per volta. Così eviti timeout,
+            puoi fermare senza fare casino e vedi sempre se sta andando avanti.
           </p>
         </div>
-        <button
-          className="button button-primary drive-auto-main-button"
-          type="button"
-          disabled={!canRun || !endpoint || status.state === 'loading'}
-          onClick={() => runAction('runFullAuto', 'Sistema automatico')}
-        >
-          {status.state === 'loading' ? 'Automazione in corso…' : 'Sistema automaticamente'}
-        </button>
+        <div className="drive-auto-button-group">
+          <button className="button button-primary drive-auto-main-button" type="button" disabled={!canRun || !endpoint || status.state === 'loading'} onClick={startChunked}>
+            Avvia a blocchi
+          </button>
+          <button className="button button-secondary drive-auto-main-button" type="button" disabled={!canRun || !endpoint || status.state === 'loading'} onClick={continueChunk}>
+            Continua blocco
+          </button>
+          <button className="button button-secondary drive-auto-main-button" type="button" disabled={!canRun || !endpoint || status.state === 'loading'} onClick={refreshProgress}>
+            Aggiorna stato
+          </button>
+          <button className="button button-danger drive-auto-main-button" type="button" disabled={!canRun || !endpoint || status.state === 'loading'} onClick={stopChunked}>
+            Stop sicuro
+          </button>
+        </div>
       </section>
+
+      <ProgressPanel progress={progress} />
 
       <section className={`drive-automation-status drive-status-${status.state}`}>
         <strong>{status.state === 'loading' ? 'Operazione in corso' : 'Stato automazione'}</strong>
@@ -102,8 +129,8 @@ export function DriveDocumentAutomation({ session, store }) {
       </section>
 
       <section className="accounting-alert warning-alert drive-automation-warning">
-        <strong>La prima configurazione resta necessaria una sola volta</strong>
-        <p>Copia lo script, pubblicalo come Web App separata, incolla qui l’URL /exec. Dopo questa configurazione userai quasi sempre solo “Sistema automaticamente”.</p>
+        <strong>Importante: aggiorna lo script prima di usare i blocchi</strong>
+        <p>Copia il nuovo Apps Script a blocchi, sostituisci il codice nel progetto Apps Script separato e pubblica una nuova versione Web App. Poi usa Avvia a blocchi.</p>
       </section>
 
       <WorkspaceLayout
@@ -127,16 +154,11 @@ export function DriveDocumentAutomation({ session, store }) {
 
             <label className="drive-endpoint-field">
               Endpoint Apps Script separato
-              <input
-                type="url"
-                value={endpoint}
-                onChange={(event) => saveEndpoint(event.target.value)}
-                placeholder="https://script.google.com/macros/s/.../exec"
-              />
+              <input type="url" value={endpoint} onChange={(event) => saveEndpoint(event.target.value)} placeholder="https://script.google.com/macros/s/.../exec" />
             </label>
 
             <ActionList className="drive-automation-actions">
-              <button className="button button-secondary" type="button" onClick={() => copyText(DRIVE_AUTOMATION_SCRIPT, 'Codice Apps Script copiato.')}>Copia Apps Script</button>
+              <button className="button button-secondary" type="button" onClick={() => copyText(CHUNKED_DRIVE_AUTOMATION_SCRIPT, 'Nuovo Apps Script a blocchi copiato.')}>Copia Apps Script a blocchi</button>
               <button className="button button-secondary" type="button" onClick={() => copyText(planTsv, 'Piano TSV copiato. Incollalo nel tab Drive_Automation_Plan se vuoi lavorare manualmente.')}>Copia piano TSV</button>
             </ActionList>
           </aside>
@@ -145,42 +167,17 @@ export function DriveDocumentAutomation({ session, store }) {
         <section className="internal-panel drive-automation-flow">
           <div className="section-heading panel-title-row">
             <div>
-              <h2>Strumenti tecnici</h2>
-              <p>Da usare solo se vuoi controllare un passaggio specifico. Il flusso normale è il pulsante automatico sopra.</p>
+              <h2>Come usarlo senza rischi</h2>
+              <p>Avvia una volta, poi continua blocco per blocco. Se vuoi fermare, usa Stop sicuro: non interrompe a metà un file.</p>
             </div>
-            <StatusBadge>Emergenza / debug</StatusBadge>
+            <StatusBadge>A blocchi</StatusBadge>
           </div>
 
           <div className="drive-step-grid">
-            <DriveStep
-              number="1"
-              title="Setup"
-              text="Crea o aggiorna i tab tecnici nel master. Serve anche dentro al flusso automatico."
-              action={<button className="button button-secondary button-small" type="button" disabled={!canRun} onClick={() => runAction('setup', 'Setup')}>Setup</button>}
-            />
-            <DriveStep
-              number="2"
-              title="Scannerizza"
-              text="Legge tutti i PDF/JPG presenti nella cartella Documenti grezzi di Barcelo Roma."
-              action={<button className="button button-primary button-small" type="button" disabled={!canRun || !endpoint} onClick={() => runAction('scan', 'Scansione')}>Scannerizza</button>}
-            />
-            <DriveStep
-              number="3"
-              title="Genera piano"
-              text="Crea il piano di match tra righe del master e file grezzi trovati in Drive."
-              action={<button className="button button-primary button-small" type="button" disabled={!canRun || !endpoint} onClick={() => runAction('buildPlan', 'Generazione piano')}>Genera piano</button>}
-            />
-            <DriveStep
-              number="4"
-              title="Applica approvate"
-              text="Esegue solo righe già approvate nel tab Drive_Automation_Plan. Il flusso automatico approva solo i match sicuri."
-              action={(
-                <ActionList>
-                  <button className="button button-secondary button-small" type="button" disabled={!canRun || !endpoint} onClick={() => runAction('dryRun', 'Dry-run')}>Dry-run</button>
-                  <button className="button button-primary button-small" type="button" disabled={!canRun || !endpoint} onClick={() => runAction('applyApproved', 'Applicazione')}>Applica</button>
-                </ActionList>
-              )}
-            />
+            <DriveStep number="1" title="Avvia a blocchi" text="Ricrea la lista file in Drive_Raw_Files e mette tutti i file in stato PENDING." action={<button className="button button-primary button-small" type="button" disabled={!canRun || !endpoint} onClick={startChunked}>Avvia</button>} />
+            <DriveStep number="2" title="Continua blocco" text="Legge circa 10 file alla volta con OCR. Ripetilo finché la barra arriva al 100%." action={<button className="button button-primary button-small" type="button" disabled={!canRun || !endpoint} onClick={continueChunk}>Continua</button>} />
+            <DriveStep number="3" title="Finalizza" text="Quando OCR è al 100%, Continua blocco genera piano, approva match sicuri e applica solo quelli." action={<button className="button button-secondary button-small" type="button" disabled={!canRun || !endpoint} onClick={continueChunk}>Finalizza</button>} />
+            <DriveStep number="4" title="Stop sicuro" text="Richiede lo stop e si ferma al termine del blocco corrente, senza lasciare il file a metà." action={<button className="button button-danger button-small" type="button" disabled={!canRun || !endpoint} onClick={stopChunked}>Stop</button>} />
           </div>
         </section>
 
@@ -221,61 +218,56 @@ export function DriveDocumentAutomation({ session, store }) {
       <section className="internal-panel drive-docs-panel">
         <div className="section-heading panel-title-row">
           <div>
-            <h2>Come funziona l’automatico</h2>
-            <p>Il sistema agisce da solo solo dove il match è sicuro. Non forza righe dubbie, duplicati o file senza corrispondenza.</p>
+            <h2>Regola pratica</h2>
+            <p>Non usare più il vecchio pulsante unico per 100+ file. Usa blocchi piccoli: più lento da cliccare, ma molto più stabile.</p>
           </div>
-          <StatusBadge>Automatico sicuro</StatusBadge>
+          <StatusBadge>Sicuro</StatusBadge>
         </div>
-
         <div className="drive-docs-grid">
-          <GuideCard
-            title="1. Tu fai solo una cosa"
-            items={[
-              'Metti PDF/foto ricevuti da WhatsApp nella cartella Documenti grezzi di Barcelo Roma.',
-              'Torna qui e premi Sistema automaticamente.',
-              'Non devi aprire il master se tutto viene riconosciuto correttamente.'
-            ]}
-          />
-          <GuideCard
-            title="2. Cosa fa il sistema"
-            items={[
-              'Crea/aggiorna i tab tecnici del master.',
-              'Scannerizza i file presenti nella cartella Drive.',
-              'Confronta file grezzi e righe del master.',
-              'Approva automaticamente solo i match esatti e sicuri.'
-            ]}
-          />
-          <GuideCard
-            title="3. Cosa viene applicato"
-            items={[
-              'Rinomina i file con nome standard.',
-              'Sposta i file nella cartella corretta del cantiere/tab.',
-              'Aggiorna il master con il link Drive del documento.',
-              'Segna nel log cosa è stato fatto.'
-            ]}
-          />
-          <GuideCard
-            title="4. Cosa resta fermo"
-            items={[
-              'File con nome non riconosciuto.',
-              'Righe con dati insufficienti.',
-              'Possibili duplicati nella cartella di destinazione.',
-              'Match ambigui che richiedono controllo umano.'
-            ]}
-          />
+          <GuideCard title="Quando premere Continua" items={[ 'Quando il blocco precedente è finito.', 'Quando la barra mostra ancora file pending.', 'Quando la fase è OCR o finalize.' ]} />
+          <GuideCard title="Quando premere Stop" items={[ 'Se vedi che resta bloccato troppo tempo.', 'Se hai caricato file sbagliati.', 'Se vuoi evitare timeout e ripartire con calma.' ]} />
+          <GuideCard title="Cosa controllare" items={[ 'OCR OK indica file letto.', 'VUOTO indica file letto ma senza testo utile.', 'ERRORE indica file non leggibile o problema permessi.' ]} />
+          <GuideCard title="Quando applica davvero" items={[ 'Solo alla fase finale.', 'Solo sui match con score alto.', 'Solo se non trova duplicati nella cartella target.' ]} />
         </div>
       </section>
 
       <section className="internal-panel drive-script-panel">
         <div className="section-heading panel-title-row">
           <div>
-            <h2>Script Apps Script separato</h2>
-            <p>Serve per rinominare/spostare fisicamente i file su Drive e aggiornare il link nella colonna K del master.</p>
+            <h2>Script Apps Script a blocchi</h2>
+            <p>Sostituisce il vecchio script. È pensato per evitare timeout e mostrare avanzamento reale.</p>
           </div>
-          <button className="button button-secondary button-small" type="button" onClick={() => copyText(DRIVE_AUTOMATION_SCRIPT, 'Codice Apps Script copiato.')}>Copia</button>
+          <button className="button button-secondary button-small" type="button" onClick={() => copyText(CHUNKED_DRIVE_AUTOMATION_SCRIPT, 'Nuovo Apps Script a blocchi copiato.')}>Copia</button>
         </div>
-        <pre><code>{DRIVE_AUTOMATION_SCRIPT}</code></pre>
+        <pre><code>{CHUNKED_DRIVE_AUTOMATION_SCRIPT}</code></pre>
       </section>
+    </section>
+  )
+}
+
+function ProgressPanel({ progress }) {
+  const percent = Math.max(0, Math.min(100, Number(progress?.percent || 0)))
+  return (
+    <section className="internal-panel drive-progress-panel">
+      <div className="section-heading panel-title-row">
+        <div>
+          <h2>Progresso OCR</h2>
+          <p>{progress?.message || 'Nessuna automazione a blocchi avviata.'}</p>
+        </div>
+        <StatusBadge>{progress?.phase || 'idle'}</StatusBadge>
+      </div>
+      <div className="drive-progress-bar" aria-label={`Progresso ${percent}%`}>
+        <span style={{ width: `${percent}%` }} />
+      </div>
+      <div className="drive-progress-stats">
+        <span><strong>{percent}%</strong> completato</span>
+        <span>{progress?.processed ?? 0}/{progress?.total ?? 0} file</span>
+        <span>{progress?.ocrOk ?? 0} OCR OK</span>
+        <span>{progress?.ocrFailed ?? 0} vuoti/errori</span>
+        <span>{progress?.autoApproved ?? 0} auto-approvati</span>
+        <span>{progress?.applied ?? 0} applicati</span>
+        <span>{progress?.needsReview ?? 0} da controllare</span>
+      </div>
     </section>
   )
 }
@@ -297,28 +289,25 @@ function GuideCard({ title, items }) {
   return (
     <article className="drive-guide-card">
       <strong>{title}</strong>
-      <ul>
-        {items.map((item) => <li key={item}>{item}</li>)}
-      </ul>
+      <ul>{items.map((item) => <li key={item}>{item}</li>)}</ul>
     </article>
   )
 }
 
 function formatMoney(value) {
-  return new Intl.NumberFormat('it-IT', {
-    style: 'currency',
-    currency: 'EUR',
-  }).format(Number(value || 0))
+  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(value || 0))
 }
 
 function formatResultSummary(result) {
   const parts = []
   if (typeof result.scannedFiles === 'number') parts.push(`${result.scannedFiles} file letti`)
+  if (result.progress?.percent !== undefined) parts.push(`${result.progress.percent}%`)
+  if (typeof result.processedThisChunk === 'number') parts.push(`${result.processedThisChunk} in questo blocco`)
+  if (typeof result.ocrOk === 'number') parts.push(`${result.ocrOk} OCR ok`)
+  if (typeof result.ocrFailed === 'number') parts.push(`${result.ocrFailed} vuoti/errori`)
   if (typeof result.planRows === 'number') parts.push(`${result.planRows} righe piano`)
   if (typeof result.autoApproved === 'number') parts.push(`${result.autoApproved} auto-approvati`)
-  if (typeof result.processed === 'number') parts.push(`${result.processed} processati`)
-  if (typeof result.success === 'number') parts.push(`${result.success} ok`)
-  if (typeof result.failed === 'number') parts.push(`${result.failed} errori/dubbi`)
+  if (typeof result.success === 'number') parts.push(`${result.success} applicati`)
   if (typeof result.needsReview === 'number') parts.push(`${result.needsReview} da controllare`)
   return parts.length ? parts.join(' · ') : 'Operazione completata.'
 }
