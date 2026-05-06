@@ -61,7 +61,7 @@ export function SettingsMock({ session, store }) {
 
       setInvites((current) => [invite, ...current.filter((item) => item.email !== email)])
       setForm({ name: '', email: '', role: 'employee' })
-      setFeedback(result?.actionLink ? 'Utente creato in Supabase Auth. Copia il link invito e invialo manualmente.' : 'Invito creato.')
+      setFeedback(result?.actionLink ? 'Utente creato in Supabase Auth. Copia o apri il link invito reale.' : 'Invito creato.')
     } catch (error) {
       setFeedback(`Errore creazione invito: ${error.message}`)
     } finally {
@@ -70,17 +70,56 @@ export function SettingsMock({ session, store }) {
   }
 
   async function copyInvite(invite) {
-    const url = normalizeInviteUrl(invite)
+    setBusyId(`copy-${invite.id}`)
     try {
+      const url = await getRealInviteUrl(invite)
       await navigator.clipboard.writeText(url)
-      setFeedback(`Link copiato per ${invite.email}.`)
-    } catch {
-      setFeedback(url)
+      setFeedback(`Link Supabase reale copiato per ${invite.email}.`)
+    } catch (error) {
+      setFeedback(`Errore link invito: ${error.message}`)
+    } finally {
+      setBusyId('')
     }
   }
 
-  function openInvite(invite) {
-    window.open(normalizeInviteUrl(invite), '_blank', 'noopener,noreferrer')
+  async function openInvite(invite) {
+    setBusyId(`open-${invite.id}`)
+    try {
+      const url = await getRealInviteUrl(invite)
+      window.open(url, '_blank', 'noopener,noreferrer')
+      setFeedback(`Link Supabase reale aperto per ${invite.email}.`)
+    } catch (error) {
+      setFeedback(`Errore apertura invito: ${error.message}`)
+    } finally {
+      setBusyId('')
+    }
+  }
+
+  async function getRealInviteUrl(invite) {
+    if (isRealSupabaseInviteUrl(invite.inviteUrl)) return invite.inviteUrl
+
+    if (!isAdmin) throw new Error('solo admin può rigenerare il link invito reale')
+
+    const result = await callInviteFunction({
+      email: invite.email,
+      full_name: invite.name,
+      fullName: invite.name,
+      role: invite.role ?? 'employee',
+    })
+
+    if (!result?.actionLink) {
+      throw new Error('la funzione Supabase non ha restituito actionLink')
+    }
+
+    const updatedInvite = {
+      ...invite,
+      inviteUrl: result.actionLink,
+      userId: result?.user?.id ?? invite.userId ?? '',
+      status: 'created_in_auth',
+    }
+
+    setInvites((current) => current.map((item) => (item.id === invite.id ? updatedInvite : item)))
+    return result.actionLink
   }
 
   async function removeInvite(invite) {
@@ -203,7 +242,7 @@ export function SettingsMock({ session, store }) {
         <div className="panel-title-row">
           <div>
             <h2>Inviti / utenti creati</h2>
-            <p>Copia, apri o elimina gli inviti creati. Elimina rimuove subito la riga e prova anche Supabase Auth.</p>
+            <p>Copia o apri sempre il link Supabase reale. Se una riga ha ancora un link vecchio, viene rigenerato automaticamente.</p>
           </div>
           <span className="data-mode-badge">{invites.length} totali</span>
         </div>
@@ -217,10 +256,14 @@ export function SettingsMock({ session, store }) {
                 <span>{invite.email}</span>
                 <small>{roleLabels[invite.role] ?? invite.role} · {formatDate(invite.createdAt)}</small>
               </div>
-              <span className="status-badge">{invite.status ?? 'Pending'}</span>
+              <span className="status-badge">{isRealSupabaseInviteUrl(invite.inviteUrl) ? 'link reale' : (invite.status ?? 'Pending')}</span>
               <div className="settings-clean-actions">
-                <button className="button button-secondary button-small" type="button" onClick={() => copyInvite(invite)}>Copia</button>
-                <button className="button button-secondary button-small" type="button" onClick={() => openInvite(invite)}>Apri</button>
+                <button className="button button-secondary button-small" type="button" disabled={busyId === `copy-${invite.id}`} onClick={() => copyInvite(invite)}>
+                  {busyId === `copy-${invite.id}` ? 'Genero…' : 'Copia'}
+                </button>
+                <button className="button button-secondary button-small" type="button" disabled={busyId === `open-${invite.id}`} onClick={() => openInvite(invite)}>
+                  {busyId === `open-${invite.id}` ? 'Genero…' : 'Apri'}
+                </button>
                 <button className="button button-danger button-small" type="button" disabled={busyId === invite.id} onClick={() => removeInvite(invite)}>
                   {busyId === invite.id ? 'Elimino…' : 'Elimina'}
                 </button>
@@ -295,8 +338,14 @@ function buildInviteUrl({ token, email, role }) {
 }
 
 function normalizeInviteUrl(invite) {
-  if (invite.inviteUrl && !invite.inviteUrl.includes('localhost') && !invite.inviteUrl.includes('127.0.0.1')) return invite.inviteUrl
+  if (isRealSupabaseInviteUrl(invite.inviteUrl)) return invite.inviteUrl
   return buildInviteUrl({ token: invite.token ?? createToken(), email: invite.email ?? '', role: invite.role ?? 'employee' })
+}
+
+function isRealSupabaseInviteUrl(url) {
+  if (!url || typeof url !== 'string') return false
+  if (url.includes('localhost') || url.includes('127.0.0.1')) return false
+  return url.includes('/auth/v1/verify') || url.includes('access_token=') || url.includes('type=invite')
 }
 
 async function deleteSupabaseUser(invite) {
