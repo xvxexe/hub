@@ -22,9 +22,12 @@ export const DRIVE_AUTOMATION_SCRIPT = String.raw`const DRIVE_AUTOMATION_CONFIG 
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('EuropaService Drive')
+    .addItem('Sistema automaticamente documenti sicuri', 'runFullAutoDriveAutomation')
+    .addSeparator()
     .addItem('1. Setup schede automazione', 'setupDriveDocumentAutomation')
     .addItem('2. Scannerizza cartella Documenti', 'scanBarceloDocumenti')
     .addItem('3. Genera piano da Drive_Documenti', 'buildPlanFromDriveDocumenti')
+    .addItem('Auto-approva match sicuri', 'autoApproveSafeDriveAutomation')
     .addSeparator()
     .addItem('Dry-run righe approvate', 'dryRunApprovedDriveAutomation')
     .addItem('Applica righe approvate', 'applyApprovedDriveAutomation')
@@ -52,8 +55,10 @@ function handleDriveAutomationAction_(action, payload) {
     if (action === 'setup') return setupDriveDocumentAutomation();
     if (action === 'scan') return scanBarceloDocumenti();
     if (action === 'buildPlan') return buildPlanFromDriveDocumenti();
+    if (action === 'autoApproveSafe') return autoApproveSafeDriveAutomation();
     if (action === 'dryRun') return dryRunApprovedDriveAutomation();
     if (action === 'applyApproved') return applyApprovedDriveAutomation();
+    if (action === 'runFullAuto') return runFullAutoDriveAutomation();
     return { ok: false, error: 'Azione non riconosciuta: ' + action };
   } catch (error) {
     logDriveAutomation_('ERRORE', action, '', error.message);
@@ -65,6 +70,42 @@ function driveAutomationResponse_(payload) {
   return ContentService
     .createTextOutput(JSON.stringify(payload, null, 2))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function runFullAutoDriveAutomation() {
+  const setup = setupDriveDocumentAutomation();
+  const scan = scanBarceloDocumenti();
+  const plan = buildPlanFromDriveDocumenti();
+  const approval = autoApproveSafeDriveAutomation();
+  const dryRun = dryRunApprovedDriveAutomation();
+  const apply = applyApprovedDriveAutomation();
+  const needsReview = countDriveAutomationNeedsReview_();
+
+  const message = [
+    'Automatico completato',
+    scan.scannedFiles + ' file letti',
+    plan.planRows + ' righe piano',
+    approval.autoApproved + ' match sicuri approvati',
+    apply.success + ' applicati',
+    needsReview + ' da controllare'
+  ].join(' · ');
+
+  logDriveAutomation_('OK', 'runFullAuto', '', message);
+  return {
+    ok: true,
+    mode: 'full_auto_safe_matches_only',
+    message: message,
+    setup: setup,
+    scannedFiles: scan.scannedFiles || 0,
+    planRows: plan.planRows || 0,
+    autoApproved: approval.autoApproved || 0,
+    dryRun: dryRun,
+    processed: apply.processed || 0,
+    success: apply.success || 0,
+    failed: apply.failed || 0,
+    needsReview: needsReview,
+    apply: apply,
+  };
 }
 
 function setupDriveDocumentAutomation() {
@@ -170,6 +211,38 @@ function buildPlanFromDriveDocumenti() {
   return { ok: true, planRows: rows.length, tab: DRIVE_AUTOMATION_CONFIG.PLAN_TAB };
 }
 
+function autoApproveSafeDriveAutomation() {
+  setupDriveDocumentAutomation();
+  const ss = SpreadsheetApp.openById(DRIVE_AUTOMATION_CONFIG.MASTER_SPREADSHEET_ID);
+  const planSheet = ss.getSheetByName(DRIVE_AUTOMATION_CONFIG.PLAN_TAB);
+  const values = planSheet.getDataRange().getValues();
+  let autoApproved = 0;
+  let needsReview = 0;
+
+  for (let i = 1; i < values.length; i += 1) {
+    const row = values[i];
+    const status = String(row[1] || '').trim();
+    const fileId = String(row[8] || '').trim();
+    const newName = String(row[10] || '').trim();
+    const targetPath = String(row[11] || '').trim();
+    const action = String(row[12] || '').trim();
+    const urlAfter = String(row[13] || '').trim();
+
+    const safe = status === 'AUTO_MATCH' && fileId && newName && targetPath && action === 'RINOMINA_SPOSTA' && !urlAfter;
+    if (safe) {
+      planSheet.getRange(i + 1, 1).setValue(true);
+      planSheet.getRange(i + 1, 15).setValue('AUTO-APPROVATO: match esatto per nome file. Verrà verificato anche dal dry-run.');
+      autoApproved += 1;
+    } else if (status !== 'GIA_COLLEGATO') {
+      planSheet.getRange(i + 1, 1).setValue(false);
+      needsReview += 1;
+    }
+  }
+
+  logDriveAutomation_('OK', 'autoApproveSafe', '', 'Auto-approvati: ' + autoApproved + '. Da controllare: ' + needsReview);
+  return { ok: true, autoApproved: autoApproved, needsReview: needsReview, tab: DRIVE_AUTOMATION_CONFIG.PLAN_TAB };
+}
+
 function dryRunApprovedDriveAutomation() {
   return applyDriveAutomationPlan_(true);
 }
@@ -213,6 +286,7 @@ function applyDriveAutomationPlan_(dryRun) {
 
     if (duplicate && action !== 'FORZA_RINOMINA_SPOSTA') {
       const message = 'Duplicato già presente nella cartella target: ' + duplicate.getUrl();
+      planSheet.getRange(i + 1, 1).setValue(false);
       planSheet.getRange(i + 1, 2).setValue('DUPLICATO_TARGET');
       planSheet.getRange(i + 1, 15).setValue(message);
       logDriveAutomation_('WARN', dryRun ? 'dryRun' : 'apply', fileId, message);
@@ -224,6 +298,7 @@ function applyDriveAutomationPlan_(dryRun) {
       file.setName(newName);
       file.moveTo(targetFolder);
       const url = file.getUrl();
+      planSheet.getRange(i + 1, 1).setValue(false);
       planSheet.getRange(i + 1, 2).setValue('SPOSTATO_OK');
       planSheet.getRange(i + 1, 14).setValue(url);
       planSheet.getRange(i + 1, 15).setValue('Applicato il ' + new Date().toISOString());
@@ -249,6 +324,20 @@ function applyDriveAutomationPlan_(dryRun) {
     failed: results.filter(function(item) { return !item.ok; }).length,
     results: results.slice(0, 50),
   };
+}
+
+function countDriveAutomationNeedsReview_() {
+  const ss = SpreadsheetApp.openById(DRIVE_AUTOMATION_CONFIG.MASTER_SPREADSHEET_ID);
+  const planSheet = ss.getSheetByName(DRIVE_AUTOMATION_CONFIG.PLAN_TAB);
+  if (!planSheet || planSheet.getLastRow() < 2) return 0;
+  const values = planSheet.getDataRange().getValues();
+  let count = 0;
+  for (let i = 1; i < values.length; i += 1) {
+    const status = String(values[i][1] || '').trim();
+    const action = String(values[i][12] || '').trim();
+    if (status !== 'GIA_COLLEGATO' && status !== 'SPOSTATO_OK' && action !== 'NESSUNA') count += 1;
+  }
+  return count;
 }
 
 function scanFolder_(folder, path, rows) {
