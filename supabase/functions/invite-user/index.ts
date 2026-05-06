@@ -1,5 +1,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
+const productionInviteRedirect = "https://xvxexe.github.io/hub/#/dashboard/login";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -20,14 +22,8 @@ function errorMessage(error: unknown) {
   return "Errore sconosciuto";
 }
 
-function buildRedirectTo(req: Request) {
-  const origin = req.headers.get("origin") ?? "";
-  if (!origin.startsWith("https://") && !origin.startsWith("http://localhost")) return undefined;
-
-  const cleanOrigin = origin.replace(/\/$/, "");
-  const isGithubPages = cleanOrigin.endsWith("github.io");
-  const basePath = isGithubPages ? "/hub" : "";
-  return `${cleanOrigin}${basePath}/#/dashboard/login`;
+function buildRedirectTo() {
+  return productionInviteRedirect;
 }
 
 async function getAdminContext(req: Request) {
@@ -76,10 +72,10 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { status: 200, headers: corsHeaders });
 
   try {
-    const redirectTo = buildRedirectTo(req);
+    const redirectTo = buildRedirectTo();
 
     if (req.method === "GET") {
-      return json({ ok: true, function: "invite-user", version: 7, redirectTo: redirectTo ?? null });
+      return json({ ok: true, function: "invite-user", version: 8, redirectTo });
     }
 
     if (req.method !== "POST") return json({ error: "Metodo non consentito" }, 405);
@@ -107,7 +103,7 @@ Deno.serve(async (req: Request) => {
       }
 
       await adminClient.from("profiles").delete().eq("id", targetUserId);
-      await adminClient.from("invitations").delete().eq("email", email);
+      if (email) await adminClient.from("invitations").delete().eq("email", email);
 
       const { error: deleteError } = await adminClient.auth.admin.deleteUser(targetUserId);
       if (deleteError) return json({ error: deleteError.message }, 500);
@@ -122,7 +118,6 @@ Deno.serve(async (req: Request) => {
     if (!email || !email.includes("@")) return json({ error: "Email non valida" }, 400);
     if (!fullName) return json({ error: "Nome completo obbligatorio" }, 400);
     if (!allowedRoles.includes(role)) return json({ error: "Ruolo non valido" }, 400);
-    if (!redirectTo) return json({ error: "Origine sito non valida per generare il link invito" }, 400);
 
     const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
       type: "invite",
