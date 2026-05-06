@@ -82,6 +82,11 @@ export function DriveDocumentAutomation({ session, store }) {
         <p>{status.message}</p>
       </section>
 
+      <section className="accounting-alert warning-alert">
+        <strong>Importante: non incollare questo codice sotto allo script Google Sheets già esistente</strong>
+        <p>Questo script ha propri doGet/doPost. Va pubblicato come Web App separata, poi devi incollare qui il nuovo URL /exec.</p>
+      </section>
+
       <WorkspaceLayout
         className="drive-automation-workspace"
         sidebar={(
@@ -102,7 +107,7 @@ export function DriveDocumentAutomation({ session, store }) {
             </dl>
 
             <label className="drive-endpoint-field">
-              Endpoint Apps Script
+              Endpoint Apps Script separato
               <input
                 type="url"
                 value={endpoint}
@@ -130,8 +135,8 @@ export function DriveDocumentAutomation({ session, store }) {
           <div className="drive-step-grid">
             <DriveStep
               number="1"
-              title="Installa script"
-              text="Apri il master Google Sheets, Estensioni > Apps Script, incolla il codice e pubblica come Web App."
+              title="Crea script separato"
+              text="Vai su script.google.com, crea un nuovo progetto, incolla solo questo codice e pubblicalo come Web App autonoma."
               action={<button className="button button-secondary button-small" type="button" onClick={() => copyText(DRIVE_AUTOMATION_SCRIPT, 'Codice Apps Script copiato.')}>Copia codice</button>}
             />
             <DriveStep
@@ -202,7 +207,7 @@ export function DriveDocumentAutomation({ session, store }) {
       <section className="internal-panel drive-script-panel">
         <div className="section-heading panel-title-row">
           <div>
-            <h2>Script Apps Script incluso</h2>
+            <h2>Script Apps Script separato</h2>
             <p>Serve per rinominare/spostare fisicamente i file su Drive e aggiornare il link nella colonna K del master.</p>
           </div>
           <button className="button button-secondary button-small" type="button" onClick={() => copyText(DRIVE_AUTOMATION_SCRIPT, 'Codice Apps Script copiato.')}>Copia</button>
