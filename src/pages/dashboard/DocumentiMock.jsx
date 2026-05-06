@@ -93,6 +93,7 @@ export function DocumentiMock({ session, store }) {
         description="Dati letti da Supabase, importati da BARCELO_ROMA_master: verifica, duplicati e collegamento contabile nello stesso flusso."
       >
         <DataModeBadge>{officialMaster ? 'Totali master' : 'Dati reali Supabase'}</DataModeBadge>
+        {canEdit ? <a className="button button-secondary button-small" href="#/dashboard/drive-documenti">Automazione Drive</a> : null}
         <a className="button button-primary button-small" href="#/dashboard/upload">Carica documento</a>
       </DashboardHeader>
 
