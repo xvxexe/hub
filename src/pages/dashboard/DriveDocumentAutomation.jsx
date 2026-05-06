@@ -61,7 +61,7 @@ export function DriveDocumentAutomation({ session, store }) {
   }
 
   return (
-    <>
+    <section className="drive-automation-page">
       <DashboardHeader
         eyebrow="Automazione Drive"
         title="Sistema documenti Barcelo Roma"
@@ -82,7 +82,7 @@ export function DriveDocumentAutomation({ session, store }) {
         <p>{status.message}</p>
       </section>
 
-      <section className="accounting-alert warning-alert">
+      <section className="accounting-alert warning-alert drive-automation-warning">
         <strong>Importante: non incollare questo codice sotto allo script Google Sheets già esistente</strong>
         <p>Questo script ha propri doGet/doPost. Va pubblicato come Web App separata, poi devi incollare qui il nuovo URL /exec.</p>
       </section>
@@ -204,6 +204,71 @@ export function DriveDocumentAutomation({ session, store }) {
         </section>
       </WorkspaceLayout>
 
+      <section className="internal-panel drive-docs-panel">
+        <div className="section-heading panel-title-row">
+          <div>
+            <h2>Guida operativa: come far sistemare i documenti</h2>
+            <p>Questa automazione non decide da sola: prepara un piano, tu controlli le righe sicure, poi applichi solo quelle approvate.</p>
+          </div>
+          <StatusBadge>Procedura consigliata</StatusBadge>
+        </div>
+
+        <div className="drive-docs-grid">
+          <GuideCard
+            title="1. Prima prepara Drive"
+            items={[
+              'Metti tutti i PDF/foto ricevuti da WhatsApp nella cartella Documenti grezzi di Barcelo Roma.',
+              'Non rinominare manualmente i file prima della scansione: lo script deve leggere i nomi originali.',
+              'Evita doppioni evidenti se li vedi già, ma non cancellare file dubbi senza controllo.'
+            ]}
+          />
+          <GuideCard
+            title="2. Collega lo script una volta sola"
+            items={[
+              'Premi Copia Apps Script da questa pagina.',
+              'Apri script.google.com e crea un progetto nuovo/separato, non dentro lo script del master già usato per import/export.',
+              'Incolla il codice, distribuisci come Web App, accesso consentito al tuo account, poi copia l’URL che finisce con /exec.'
+            ]}
+          />
+          <GuideCard
+            title="3. Esegui i pulsanti in ordine"
+            items={[
+              'Incolla l’endpoint /exec nel campo a destra.',
+              'Premi Setup per creare/aggiornare i tab tecnici nel master.',
+              'Premi Scannerizza per leggere i file presenti in Drive.',
+              'Premi Genera piano per creare le righe da controllare nel tab Drive_Automation_Plan.'
+            ]}
+          />
+          <GuideCard
+            title="4. Controlla prima di applicare"
+            items={[
+              'Apri il master Google Sheets e vai nel tab Drive_Automation_Plan.',
+              'Controlla fornitore, importo, data, tab/lavorazione e nome suggerito.',
+              'Metti TRUE/SI solo sulle righe dove sei sicuro del collegamento file-documento.',
+              'Premi Dry-run: se il riepilogo torna, premi Applica approvate.'
+            ]}
+          />
+          <GuideCard
+            title="5. Cosa succede dopo Applica"
+            items={[
+              'I file approvati vengono rinominati con nome standard.',
+              'I file vengono spostati nella cartella/tab corretta del cantiere.',
+              'Il master viene aggiornato con il link Drive del documento collegato.',
+              'Le righe non approvate restano ferme e non vengono toccate.'
+            ]}
+          />
+          <GuideCard
+            title="6. Se qualcosa non torna"
+            items={[
+              'Se lo script dà errore permessi, ridistribuisci la Web App e autorizza Drive/Sheets.',
+              'Se non trova file, controlla che siano nella cartella Documenti grezzi corretta.',
+              'Se il match è dubbio, non approvare la riga: rinominala o collegala manualmente.',
+              'Se hai paura di fare danni, fai sempre Dry-run prima di Applica approvate.'
+            ]}
+          />
+        </div>
+      </section>
+
       <section className="internal-panel drive-script-panel">
         <div className="section-heading panel-title-row">
           <div>
@@ -214,7 +279,7 @@ export function DriveDocumentAutomation({ session, store }) {
         </div>
         <pre><code>{DRIVE_AUTOMATION_SCRIPT}</code></pre>
       </section>
-    </>
+    </section>
   )
 }
 
@@ -227,6 +292,17 @@ function DriveStep({ number, title, text, action }) {
         <p>{text}</p>
       </div>
       {action ? <div className="drive-step-action">{action}</div> : null}
+    </article>
+  )
+}
+
+function GuideCard({ title, items }) {
+  return (
+    <article className="drive-guide-card">
+      <strong>{title}</strong>
+      <ul>
+        {items.map((item) => <li key={item}>{item}</li>)}
+      </ul>
     </article>
   )
 }
