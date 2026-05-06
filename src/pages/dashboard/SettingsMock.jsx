@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { exportSupabaseToGoogleSheets, importGoogleSheetsToSupabase } from '../../lib/googleSheetsSync'
 
 const STORAGE_KEY = 'europaservice-created-invites-v001'
 const roleOptions = [
@@ -13,6 +14,8 @@ export function SettingsMock({ session, store }) {
   const [invites, setInvites] = useState(loadInvites)
   const [feedback, setFeedback] = useState('')
   const [busyId, setBusyId] = useState('')
+  const [syncBusy, setSyncBusy] = useState('')
+  const [syncFeedback, setSyncFeedback] = useState('')
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(invites))
@@ -102,6 +105,56 @@ export function SettingsMock({ session, store }) {
     }
   }
 
+  async function handleImportMaster() {
+    if (!isAdmin) {
+      setSyncFeedback('Solo admin può importare il master.')
+      return
+    }
+
+    setSyncBusy('import')
+    setSyncFeedback('Import master in corso...')
+
+    try {
+      const result = await importGoogleSheetsToSupabase(session)
+      if (!result.ok) {
+        setSyncFeedback(`Errore import: ${result.error}`)
+        return
+      }
+
+      const summary = result.summary ?? {}
+      setSyncFeedback(`Import completato: ${summary.documents ?? 0} documenti, ${summary.movements ?? 0} movimenti, ${summary.cantieri ?? 0} cantieri.`)
+    } catch (error) {
+      setSyncFeedback(`Errore import: ${error.message}`)
+    } finally {
+      setSyncBusy('')
+    }
+  }
+
+  async function handleExportMaster() {
+    if (!isAdmin) {
+      setSyncFeedback('Solo admin può esportare nel master.')
+      return
+    }
+
+    setSyncBusy('export')
+    setSyncFeedback('Export Supabase nel master in corso...')
+
+    try {
+      const result = await exportSupabaseToGoogleSheets(store)
+      if (!result.ok) {
+        setSyncFeedback(`Errore export: ${result.error}`)
+        return
+      }
+
+      const summary = result.summary ?? {}
+      setSyncFeedback(`Export completato: ${summary.documents ?? 0} documenti, ${summary.movements ?? 0} movimenti, ${summary.deletedRecords ?? 0} eliminazioni esportate.`)
+    } catch (error) {
+      setSyncFeedback(`Errore export: ${error.message}`)
+    } finally {
+      setSyncBusy('')
+    }
+  }
+
   return (
     <section className="settings-page settings-clean-page">
       <style>{settingsStyles}</style>
@@ -188,20 +241,27 @@ export function SettingsMock({ session, store }) {
             <h2>Sincronizzazione dati</h2>
             <p>Importa o esporta i dati tra Google Sheets, Supabase e sito senza cambiare formule del master.</p>
           </div>
-          <span className="data-mode-badge">Pronto</span>
+          <span className="data-mode-badge">{syncBusy ? 'In corso' : 'Pronto'}</span>
         </div>
         <div className="settings-clean-sync">
           <article>
             <span className="data-mode-badge">Pronto</span>
             <h3>Google Sheets → Supabase → Sito</h3>
-            <p>Importa i dati aggiornati dal master Google Sheets dentro Supabase.</p>
+            <p>Importa i dati aggiornati dal master Google Sheets dentro Supabase. I totali ufficiali restano quelli del tab Riepilogo.</p>
+            <button className="button button-primary" type="button" disabled={!isAdmin || syncBusy === 'import' || syncBusy === 'export'} onClick={handleImportMaster}>
+              {syncBusy === 'import' ? 'Import in corso…' : 'Importa master in Supabase'}
+            </button>
           </article>
           <article>
             <span className="data-mode-badge">Pronto</span>
             <h3>Sito / Supabase → Google Sheets</h3>
-            <p>Esporta lo store Supabase nel tab controllato Hub_Sync_Data.</p>
+            <p>Esporta lo store Supabase nel tab controllato Hub_Sync_Data, senza toccare formule o tab contabili esistenti.</p>
+            <button className="button button-secondary" type="button" disabled={!isAdmin || syncBusy === 'import' || syncBusy === 'export'} onClick={handleExportMaster}>
+              {syncBusy === 'export' ? 'Export in corso…' : 'Esporta Supabase nel master'}
+            </button>
           </article>
         </div>
+        {syncFeedback ? <p className="success-alert settings-clean-feedback">{syncFeedback}</p> : null}
       </section>
     </section>
   )
@@ -285,5 +345,5 @@ function formatDate(value) {
 }
 
 const settingsStyles = `
-.settings-clean-page{width:min(100% - 2rem,980px);margin:0 auto;display:grid;gap:.95rem}.settings-clean-header,.settings-clean-card{width:100%!important;max-width:100%!important;margin:0!important}.settings-clean-card{border-radius:1rem!important}.settings-clean-form{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:.8rem!important;align-items:end!important}.settings-clean-form label:nth-child(3){grid-column:1/2}.settings-clean-form>button{grid-column:2/3;min-height:2.65rem;align-self:end;justify-self:start}.settings-clean-feedback{margin-top:.8rem!important}.settings-clean-list{display:grid;gap:.6rem}.settings-clean-row{display:grid;grid-template-columns:2.45rem minmax(0,1fr) auto auto;align-items:center;gap:.75rem;min-height:5.1rem;padding:.78rem .85rem;border:1px solid rgba(214,224,232,.86);border-radius:.86rem;background:rgba(248,250,252,.72)}.settings-clean-avatar{display:grid;width:2.25rem;height:2.25rem;place-items:center;border-radius:.75rem;background:rgba(37,99,235,.1)}.settings-clean-main{min-width:0;display:grid;gap:.12rem}.settings-clean-main strong{color:var(--dash-title,#17212b);font-size:.92rem;font-weight:760;line-height:1.15}.settings-clean-main span{overflow:hidden;color:var(--dash-muted,#6f7b85);font-size:.8rem;text-overflow:ellipsis;white-space:nowrap}.settings-clean-main small{color:var(--dash-title,#17212b);font-size:.72rem;font-weight:700}.settings-clean-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.38rem}.settings-clean-actions .button-small{min-height:2rem!important;padding:.42rem .58rem!important;border-radius:.62rem!important;font-size:.72rem!important}.button-danger{border:1px solid rgba(220,38,38,.24)!important;background:rgba(254,242,242,.92)!important;color:#b91c1c!important}.settings-clean-empty{padding:1rem!important;border-radius:.86rem!important}.settings-clean-sync{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem}.settings-clean-sync article{display:grid;gap:.7rem;min-height:11rem;padding:1rem;border:1px solid rgba(214,224,232,.86);border-radius:1rem;background:rgba(255,255,255,.84)}.settings-clean-sync .data-mode-badge{justify-self:end}.settings-clean-sync h3{margin:0;color:var(--dash-title,#17212b);font-size:1.18rem;line-height:1.12;letter-spacing:-.04em}.settings-clean-sync p{margin:0;color:var(--dash-muted,#6f7b85);font-size:.84rem;line-height:1.42}@media(max-width:767px){.settings-clean-page{width:100%;gap:.82rem}.settings-clean-form,.settings-clean-sync{grid-template-columns:minmax(0,1fr)!important}.settings-clean-form label:nth-child(3),.settings-clean-form>button{grid-column:auto}.settings-clean-form>button{width:100%;justify-self:stretch}.settings-clean-row{grid-template-columns:2.25rem minmax(0,1fr);align-items:start;gap:.58rem;padding:.76rem}.settings-clean-row>.status-badge,.settings-clean-actions{grid-column:1/-1;justify-content:flex-start}.settings-clean-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}.settings-clean-actions .button-small{width:100%}}
+.settings-clean-page{width:min(100% - 2rem,980px);margin:0 auto;display:grid;gap:.95rem}.settings-clean-header,.settings-clean-card{width:100%!important;max-width:100%!important;margin:0!important}.settings-clean-card{border-radius:1rem!important}.settings-clean-form{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:.8rem!important;align-items:end!important}.settings-clean-form label:nth-child(3){grid-column:1/2}.settings-clean-form>button{grid-column:2/3;min-height:2.65rem;align-self:end;justify-self:start}.settings-clean-feedback{margin-top:.8rem!important}.settings-clean-list{display:grid;gap:.6rem}.settings-clean-row{display:grid;grid-template-columns:2.45rem minmax(0,1fr) auto auto;align-items:center;gap:.75rem;min-height:5.1rem;padding:.78rem .85rem;border:1px solid rgba(214,224,232,.86);border-radius:.86rem;background:rgba(248,250,252,.72)}.settings-clean-avatar{display:grid;width:2.25rem;height:2.25rem;place-items:center;border-radius:.75rem;background:rgba(37,99,235,.1)}.settings-clean-main{min-width:0;display:grid;gap:.12rem}.settings-clean-main strong{color:var(--dash-title,#17212b);font-size:.92rem;font-weight:760;line-height:1.15}.settings-clean-main span{overflow:hidden;color:var(--dash-muted,#6f7b85);font-size:.8rem;text-overflow:ellipsis;white-space:nowrap}.settings-clean-main small{color:var(--dash-title,#17212b);font-size:.72rem;font-weight:700}.settings-clean-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.38rem}.settings-clean-actions .button-small{min-height:2rem!important;padding:.42rem .58rem!important;border-radius:.62rem!important;font-size:.72rem!important}.button-danger{border:1px solid rgba(220,38,38,.24)!important;background:rgba(254,242,242,.92)!important;color:#b91c1c!important}.settings-clean-empty{padding:1rem!important;border-radius:.86rem!important}.settings-clean-sync{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem}.settings-clean-sync article{display:grid;gap:.7rem;min-height:12rem;padding:1rem;border:1px solid rgba(214,224,232,.86);border-radius:1rem;background:rgba(255,255,255,.84)}.settings-clean-sync .data-mode-badge{justify-self:end}.settings-clean-sync h3{margin:0;color:var(--dash-title,#17212b);font-size:1.18rem;line-height:1.12;letter-spacing:-.04em}.settings-clean-sync p{margin:0;color:var(--dash-muted,#6f7b85);font-size:.84rem;line-height:1.42}.settings-clean-sync .button{align-self:end;justify-self:start}@media(max-width:767px){.settings-clean-page{width:100%;gap:.82rem}.settings-clean-form,.settings-clean-sync{grid-template-columns:minmax(0,1fr)!important}.settings-clean-form label:nth-child(3),.settings-clean-form>button{grid-column:auto}.settings-clean-form>button{width:100%;justify-self:stretch}.settings-clean-row{grid-template-columns:2.25rem minmax(0,1fr);align-items:start;gap:.58rem;padding:.76rem}.settings-clean-row>.status-badge,.settings-clean-actions{grid-column:1/-1;justify-content:flex-start}.settings-clean-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}.settings-clean-actions .button-small{width:100%}.settings-clean-sync .button{width:100%;justify-self:stretch}}
 `
