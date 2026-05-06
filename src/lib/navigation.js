@@ -13,7 +13,13 @@ export const publicNav = [
 export { canAccessDashboardPath, getDashboardNavForRole }
 
 export function normalizePath(hash) {
-  const path = hash.replace(/^#/, '') || '/'
+  const rawHash = hash.replace(/^#/, '') || '/'
+
+  if (rawHash.includes('access_token=') || rawHash.includes('type=invite') || rawHash.includes('type=recovery')) {
+    return '/dashboard/login'
+  }
+
+  const path = rawHash.split('?')[0] || '/'
   return path === '' ? '/' : path
 }
 
