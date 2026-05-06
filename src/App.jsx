@@ -19,6 +19,7 @@ import { DashboardHome } from './pages/dashboard/DashboardHome'
 import { DashboardListPage } from './pages/dashboard/DashboardListPage'
 import { DocumentDetail } from './pages/dashboard/DocumentDetail'
 import { DocumentiMock } from './pages/dashboard/DocumentiMock'
+import { DriveDocumentAutomation } from './pages/dashboard/DriveDocumentAutomation'
 import { EstimateDetail } from './pages/dashboard/EstimateDetail'
 import { EstimatesMock } from './pages/dashboard/EstimatesMock'
 import { PhotoDetail } from './pages/dashboard/PhotoDetail'
@@ -55,6 +56,7 @@ import './styles/dashboard-navigation-fix.css'
 import './styles/dashboard-search-sticky.css'
 import './styles/dashboard-mobile-balanced.css'
 import './styles/dashboard-login-mobile-restore.css'
+import './styles/dashboard-drive-automation.css'
 
 function useHashPath() {
   const [path, setPath] = useState(() => normalizePath(window.location.hash))
@@ -176,6 +178,9 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
   }
   if (path === '/dashboard/documenti') {
     return <DocumentiMock session={session} store={mockStore} />
+  }
+  if (path === '/dashboard/drive-documenti') {
+    return <DriveDocumentAutomation session={session} store={mockStore} />
   }
   if (path.startsWith('/dashboard/foto/')) {
     return <PhotoDetail photoId={path.split('/').at(-1)} session={session} store={mockStore} />
