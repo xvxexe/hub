@@ -145,6 +145,90 @@ export async function fetchCurrentAuthSession() {
   }
 }
 
+export function readInviteSessionFromUrl() {
+  const sources = [window.location.search, window.location.hash]
+  const params = new URLSearchParams()
+
+  sources.forEach((source) => {
+    String(source || '')
+      .replace(/^#/, '')
+      .split('?')
+      .forEach((part) => {
+        if (!part || !part.includes('=')) return
+        new URLSearchParams(part).forEach((value, key) => params.set(key, value))
+      })
+  })
+
+  const accessToken = params.get('access_token')
+  const refreshToken = params.get('refresh_token')
+  const type = params.get('type')
+  const email = params.get('email')
+  const role = params.get('role')
+  const invite = params.get('invite')
+
+  const isSupabaseInvite = Boolean(accessToken && refreshToken && (type === 'invite' || type === 'recovery'))
+  const isLocalInvite = Boolean(invite && email)
+
+  if (!isSupabaseInvite && !isLocalInvite) return null
+
+  return {
+    accessToken,
+    refreshToken,
+    type: type || 'invite',
+    email,
+    role,
+    invite,
+    isSupabaseInvite,
+    isLocalInvite,
+  }
+}
+
+export async function completeInviteWithPassword({ accessToken, refreshToken, password }) {
+  if (!accessToken || !refreshToken) {
+    return { data: null, error: new Error('Link Supabase non valido: token invito mancanti.'), source: 'supabase' }
+  }
+
+  const updateResponse = await authRequest('user', {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ password }),
+  })
+
+  if (updateResponse.error) return updateResponse
+
+  const session = {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    token_type: 'bearer',
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    user: updateResponse.data,
+  }
+
+  setStoredAuthSession(session)
+
+  const profile = await fetchProfileForUser(updateResponse.data, accessToken)
+  if (profile.error) {
+    clearStoredAuthSession()
+    return profile
+  }
+
+  cleanInviteParamsFromUrl()
+
+  return {
+    data: buildAppSession(updateResponse.data, profile.data, session),
+    error: null,
+    source: 'supabase',
+  }
+}
+
+function cleanInviteParamsFromUrl() {
+  const cleanPath = `${window.location.origin}${window.location.pathname}#/dashboard`
+  window.history.replaceState(null, '', cleanPath)
+}
+
 async function fetchProfileForUser(user, accessToken) {
   const response = await supabaseRequest(`profiles?id=eq.${user.id}&select=id,email,full_name,role,active`, {
     method: 'GET',
