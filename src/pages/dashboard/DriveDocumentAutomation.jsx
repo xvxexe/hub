@@ -22,7 +22,7 @@ const endpointFromEnv = import.meta.env.VITE_DRIVE_AUTOMATION_URL || ''
 
 export function DriveDocumentAutomation({ session, store }) {
   const [endpoint, setEndpoint] = useState(() => window.localStorage.getItem(STORAGE_KEY) || endpointFromEnv)
-  const [status, setStatus] = useState({ state: 'idle', message: 'Pronto per collegare Apps Script.' })
+  const [status, setStatus] = useState({ state: 'idle', message: 'Pronto: carica i file in Drive e premi Sistema automaticamente.' })
   const rows = useMemo(() => buildDocumentAutomationRows(store?.documents ?? []), [store?.documents])
   const stats = useMemo(() => getDriveAutomationStats(rows), [rows])
   const previewRows = rows.filter((row) => row.status === 'DA COLLEGARE').slice(0, 8)
@@ -65,7 +65,7 @@ export function DriveDocumentAutomation({ session, store }) {
       <DashboardHeader
         eyebrow="Automazione Drive"
         title="Sistema documenti Barcelo Roma"
-        description="Genera il piano di rinomina/spostamento dai file WhatsApp caricati in Drive e collega ogni documento alla riga del master."
+        description="Sistema automatico per leggere i file grezzi da Drive, abbinarli alle righe del master, rinominarli, spostarli e collegare il link al documento."
       >
         <DataModeBadge>Google Drive + Master</DataModeBadge>
       </DashboardHeader>
@@ -77,14 +77,33 @@ export function DriveDocumentAutomation({ session, store }) {
         <KpiCard icon="building" tone="purple" label="Aree/tab" value={stats.areas} hint="Destinazioni" />
       </KpiStrip>
 
+      <section className="internal-panel drive-auto-hero">
+        <div>
+          <span className="eyebrow">Modalità consigliata</span>
+          <h2>Sistema automaticamente i documenti sicuri</h2>
+          <p>
+            Premi un solo pulsante: lo script prepara i tab, scannerizza Drive, genera il piano, approva solo i match sicuri,
+            fa un dry-run e applica automaticamente le righe senza rischi evidenti. I casi dubbi restano fermi da controllare.
+          </p>
+        </div>
+        <button
+          className="button button-primary drive-auto-main-button"
+          type="button"
+          disabled={!canRun || !endpoint || status.state === 'loading'}
+          onClick={() => runAction('runFullAuto', 'Sistema automatico')}
+        >
+          {status.state === 'loading' ? 'Automazione in corso…' : 'Sistema automaticamente'}
+        </button>
+      </section>
+
       <section className={`drive-automation-status drive-status-${status.state}`}>
         <strong>{status.state === 'loading' ? 'Operazione in corso' : 'Stato automazione'}</strong>
         <p>{status.message}</p>
       </section>
 
       <section className="accounting-alert warning-alert drive-automation-warning">
-        <strong>Importante: non incollare questo codice sotto allo script Google Sheets già esistente</strong>
-        <p>Questo script ha propri doGet/doPost. Va pubblicato come Web App separata, poi devi incollare qui il nuovo URL /exec.</p>
+        <strong>La prima configurazione resta necessaria una sola volta</strong>
+        <p>Copia lo script, pubblicalo come Web App separata, incolla qui l’URL /exec. Dopo questa configurazione userai quasi sempre solo “Sistema automaticamente”.</p>
       </section>
 
       <WorkspaceLayout
@@ -126,44 +145,39 @@ export function DriveDocumentAutomation({ session, store }) {
         <section className="internal-panel drive-automation-flow">
           <div className="section-heading panel-title-row">
             <div>
-              <h2>Flusso semi-automatico</h2>
-              <p>Prima genera le schede nel master, poi scannerizza la cartella Documenti, poi approva solo le righe sicure.</p>
+              <h2>Strumenti tecnici</h2>
+              <p>Da usare solo se vuoi controllare un passaggio specifico. Il flusso normale è il pulsante automatico sopra.</p>
             </div>
-            <StatusBadge>Review prima di applicare</StatusBadge>
+            <StatusBadge>Emergenza / debug</StatusBadge>
           </div>
 
           <div className="drive-step-grid">
             <DriveStep
               number="1"
-              title="Crea script separato"
-              text="Vai su script.google.com, crea un nuovo progetto, incolla solo questo codice e pubblicalo come Web App autonoma."
-              action={<button className="button button-secondary button-small" type="button" onClick={() => copyText(DRIVE_AUTOMATION_SCRIPT, 'Codice Apps Script copiato.')}>Copia codice</button>}
+              title="Setup"
+              text="Crea o aggiorna i tab tecnici nel master. Serve anche dentro al flusso automatico."
+              action={<button className="button button-secondary button-small" type="button" disabled={!canRun} onClick={() => runAction('setup', 'Setup')}>Setup</button>}
             />
             <DriveStep
               number="2"
-              title="Setup + scansione"
-              text="Crea i tab tecnici e legge tutti i PDF/JPG presenti in Barcelo Roma > Documenti."
-              action={(
-                <ActionList>
-                  <button className="button button-secondary button-small" type="button" disabled={!canRun} onClick={() => runAction('setup', 'Setup')}>Setup</button>
-                  <button className="button button-primary button-small" type="button" disabled={!canRun || !endpoint} onClick={() => runAction('scan', 'Scansione')}>Scannerizza</button>
-                </ActionList>
-              )}
+              title="Scannerizza"
+              text="Legge tutti i PDF/JPG presenti nella cartella Documenti grezzi di Barcelo Roma."
+              action={<button className="button button-primary button-small" type="button" disabled={!canRun || !endpoint} onClick={() => runAction('scan', 'Scansione')}>Scannerizza</button>}
             />
             <DriveStep
               number="3"
               title="Genera piano"
-              text="Confronta Drive_Documenti con i file grezzi e compila Drive_Automation_Plan."
+              text="Crea il piano di match tra righe del master e file grezzi trovati in Drive."
               action={<button className="button button-primary button-small" type="button" disabled={!canRun || !endpoint} onClick={() => runAction('buildPlan', 'Generazione piano')}>Genera piano</button>}
             />
             <DriveStep
               number="4"
-              title="Approva e applica"
-              text="Nel tab piano metti TRUE/SI solo sulle righe controllate. Dry-run prima, applica dopo."
+              title="Applica approvate"
+              text="Esegue solo righe già approvate nel tab Drive_Automation_Plan. Il flusso automatico approva solo i match sicuri."
               action={(
                 <ActionList>
                   <button className="button button-secondary button-small" type="button" disabled={!canRun || !endpoint} onClick={() => runAction('dryRun', 'Dry-run')}>Dry-run</button>
-                  <button className="button button-primary button-small" type="button" disabled={!canRun || !endpoint} onClick={() => runAction('applyApproved', 'Applicazione')}>Applica approvate</button>
+                  <button className="button button-primary button-small" type="button" disabled={!canRun || !endpoint} onClick={() => runAction('applyApproved', 'Applicazione')}>Applica</button>
                 </ActionList>
               )}
             />
@@ -174,7 +188,7 @@ export function DriveDocumentAutomation({ session, store }) {
           <div className="section-heading panel-title-row">
             <div>
               <h2>Prime righe da collegare</h2>
-              <p>Anteprima generata dai documenti nello store. Il match finale avviene nel master tramite Apps Script.</p>
+              <p>Queste sono le righe senza link Drive nello store. L’automazione prova a collegarle automaticamente quando trova un match sicuro.</p>
             </div>
             <StatusBadge>{previewRows.length} visibili</StatusBadge>
           </div>
@@ -207,63 +221,46 @@ export function DriveDocumentAutomation({ session, store }) {
       <section className="internal-panel drive-docs-panel">
         <div className="section-heading panel-title-row">
           <div>
-            <h2>Guida operativa: come far sistemare i documenti</h2>
-            <p>Questa automazione non decide da sola: prepara un piano, tu controlli le righe sicure, poi applichi solo quelle approvate.</p>
+            <h2>Come funziona l’automatico</h2>
+            <p>Il sistema agisce da solo solo dove il match è sicuro. Non forza righe dubbie, duplicati o file senza corrispondenza.</p>
           </div>
-          <StatusBadge>Procedura consigliata</StatusBadge>
+          <StatusBadge>Automatico sicuro</StatusBadge>
         </div>
 
         <div className="drive-docs-grid">
           <GuideCard
-            title="1. Prima prepara Drive"
+            title="1. Tu fai solo una cosa"
             items={[
-              'Metti tutti i PDF/foto ricevuti da WhatsApp nella cartella Documenti grezzi di Barcelo Roma.',
-              'Non rinominare manualmente i file prima della scansione: lo script deve leggere i nomi originali.',
-              'Evita doppioni evidenti se li vedi già, ma non cancellare file dubbi senza controllo.'
+              'Metti PDF/foto ricevuti da WhatsApp nella cartella Documenti grezzi di Barcelo Roma.',
+              'Torna qui e premi Sistema automaticamente.',
+              'Non devi aprire il master se tutto viene riconosciuto correttamente.'
             ]}
           />
           <GuideCard
-            title="2. Collega lo script una volta sola"
+            title="2. Cosa fa il sistema"
             items={[
-              'Premi Copia Apps Script da questa pagina.',
-              'Apri script.google.com e crea un progetto nuovo/separato, non dentro lo script del master già usato per import/export.',
-              'Incolla il codice, distribuisci come Web App, accesso consentito al tuo account, poi copia l’URL che finisce con /exec.'
+              'Crea/aggiorna i tab tecnici del master.',
+              'Scannerizza i file presenti nella cartella Drive.',
+              'Confronta file grezzi e righe del master.',
+              'Approva automaticamente solo i match esatti e sicuri.'
             ]}
           />
           <GuideCard
-            title="3. Esegui i pulsanti in ordine"
+            title="3. Cosa viene applicato"
             items={[
-              'Incolla l’endpoint /exec nel campo a destra.',
-              'Premi Setup per creare/aggiornare i tab tecnici nel master.',
-              'Premi Scannerizza per leggere i file presenti in Drive.',
-              'Premi Genera piano per creare le righe da controllare nel tab Drive_Automation_Plan.'
+              'Rinomina i file con nome standard.',
+              'Sposta i file nella cartella corretta del cantiere/tab.',
+              'Aggiorna il master con il link Drive del documento.',
+              'Segna nel log cosa è stato fatto.'
             ]}
           />
           <GuideCard
-            title="4. Controlla prima di applicare"
+            title="4. Cosa resta fermo"
             items={[
-              'Apri il master Google Sheets e vai nel tab Drive_Automation_Plan.',
-              'Controlla fornitore, importo, data, tab/lavorazione e nome suggerito.',
-              'Metti TRUE/SI solo sulle righe dove sei sicuro del collegamento file-documento.',
-              'Premi Dry-run: se il riepilogo torna, premi Applica approvate.'
-            ]}
-          />
-          <GuideCard
-            title="5. Cosa succede dopo Applica"
-            items={[
-              'I file approvati vengono rinominati con nome standard.',
-              'I file vengono spostati nella cartella/tab corretta del cantiere.',
-              'Il master viene aggiornato con il link Drive del documento collegato.',
-              'Le righe non approvate restano ferme e non vengono toccate.'
-            ]}
-          />
-          <GuideCard
-            title="6. Se qualcosa non torna"
-            items={[
-              'Se lo script dà errore permessi, ridistribuisci la Web App e autorizza Drive/Sheets.',
-              'Se non trova file, controlla che siano nella cartella Documenti grezzi corretta.',
-              'Se il match è dubbio, non approvare la riga: rinominala o collegala manualmente.',
-              'Se hai paura di fare danni, fai sempre Dry-run prima di Applica approvate.'
+              'File con nome non riconosciuto.',
+              'Righe con dati insufficienti.',
+              'Possibili duplicati nella cartella di destinazione.',
+              'Match ambigui che richiedono controllo umano.'
             ]}
           />
         </div>
@@ -318,8 +315,10 @@ function formatResultSummary(result) {
   const parts = []
   if (typeof result.scannedFiles === 'number') parts.push(`${result.scannedFiles} file letti`)
   if (typeof result.planRows === 'number') parts.push(`${result.planRows} righe piano`)
-  if (typeof result.processed === 'number') parts.push(`${result.processed} righe processate`)
+  if (typeof result.autoApproved === 'number') parts.push(`${result.autoApproved} auto-approvati`)
+  if (typeof result.processed === 'number') parts.push(`${result.processed} processati`)
   if (typeof result.success === 'number') parts.push(`${result.success} ok`)
-  if (typeof result.failed === 'number') parts.push(`${result.failed} errori`)
-  return parts.join(' · ')
+  if (typeof result.failed === 'number') parts.push(`${result.failed} errori/dubbi`)
+  if (typeof result.needsReview === 'number') parts.push(`${result.needsReview} da controllare`)
+  return parts.length ? parts.join(' · ') : 'Operazione completata.'
 }
