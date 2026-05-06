@@ -25,7 +25,7 @@ export function SettingsMock({ session, store }) {
     setFeedback('')
   }
 
-  function createInvite(event) {
+  async function createInvite(event) {
     event.preventDefault()
     if (!isAdmin) {
       setFeedback('Solo admin può creare inviti.')
@@ -39,21 +39,31 @@ export function SettingsMock({ session, store }) {
       return
     }
 
-    const token = createToken()
-    const invite = {
-      id: `invite-${Date.now()}`,
-      name,
-      email,
-      role: form.role,
-      status: 'Pending',
-      createdAt: new Date().toISOString(),
-      token,
-      inviteUrl: buildInviteUrl({ token, email, role: form.role }),
-    }
+    setBusyId('create')
 
-    setInvites((current) => [invite, ...current.filter((item) => item.email !== email)])
-    setForm({ name: '', email: '', role: 'employee' })
-    setFeedback('Invito creato. Il link ora apre correttamente la pagina login.')
+    try {
+      const result = await callInviteFunction({ email, full_name: name, fullName: name, role: form.role })
+      const token = createToken()
+      const invite = {
+        id: result?.user?.id ? `invite-${result.user.id}` : `invite-${Date.now()}`,
+        name,
+        email,
+        role: form.role,
+        status: result?.user?.id ? 'created_in_auth' : 'Pending',
+        createdAt: new Date().toISOString(),
+        token,
+        inviteUrl: result?.actionLink || buildInviteUrl({ token, email, role: form.role }),
+        userId: result?.user?.id ?? '',
+      }
+
+      setInvites((current) => [invite, ...current.filter((item) => item.email !== email)])
+      setForm({ name: '', email: '', role: 'employee' })
+      setFeedback(result?.actionLink ? 'Utente creato in Supabase Auth. Copia il link invito e invialo manualmente.' : 'Invito creato.')
+    } catch (error) {
+      setFeedback(`Errore creazione invito: ${error.message}`)
+    } finally {
+      setBusyId('')
+    }
   }
 
   async function copyInvite(invite) {
@@ -77,13 +87,11 @@ export function SettingsMock({ session, store }) {
     setInvites((current) => current.filter((item) => item.id !== invite.id))
 
     try {
-      const result = await deleteSupabaseUser(invite.email)
+      const result = await deleteSupabaseUser(invite)
       if (result?.deleted) {
         setFeedback(`${invite.email} eliminato dalla lista e da Supabase Auth.`)
       } else if (result?.notFound) {
         setFeedback(`${invite.email} eliminato dalla lista. In Supabase Auth non esisteva.`)
-      } else if (result?.notConfigured) {
-        setFeedback(`${invite.email} eliminato dalla lista. Funzione Supabase delete-user non configurata.`)
       } else {
         setFeedback(`${invite.email} eliminato dalla lista. Supabase non ha confermato la cancellazione.`)
       }
@@ -120,19 +128,19 @@ export function SettingsMock({ session, store }) {
         <form className="settings-clean-form" onSubmit={createInvite}>
           <label>
             Nome completo
-            <input value={form.name} onChange={(event) => updateForm('name', event.target.value)} placeholder="Es. Mario Rossi" disabled={!isAdmin} />
+            <input value={form.name} onChange={(event) => updateForm('name', event.target.value)} placeholder="Es. Mario Rossi" disabled={!isAdmin || busyId === 'create'} />
           </label>
           <label>
             Email
-            <input type="email" value={form.email} onChange={(event) => updateForm('email', event.target.value)} placeholder="nome@azienda.it" disabled={!isAdmin} />
+            <input type="email" value={form.email} onChange={(event) => updateForm('email', event.target.value)} placeholder="nome@azienda.it" disabled={!isAdmin || busyId === 'create'} />
           </label>
           <label>
             Ruolo
-            <select value={form.role} onChange={(event) => updateForm('role', event.target.value)} disabled={!isAdmin}>
+            <select value={form.role} onChange={(event) => updateForm('role', event.target.value)} disabled={!isAdmin || busyId === 'create'}>
               {roleOptions.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
             </select>
           </label>
-          <button className="button button-primary" type="submit" disabled={!isAdmin}>Crea link invito</button>
+          <button className="button button-primary" type="submit" disabled={!isAdmin || busyId === 'create'}>{busyId === 'create' ? 'Creo…' : 'Crea link invito'}</button>
         </form>
 
         {feedback ? <p className="success-alert settings-clean-feedback">{feedback}</p> : null}
@@ -212,6 +220,7 @@ function loadInvites() {
       createdAt: invite.createdAt ?? new Date().toISOString(),
       token: invite.token ?? createToken(),
       inviteUrl: invite.inviteUrl,
+      userId: invite.userId ?? invite.user_id ?? '',
     })).filter((invite) => invite.email)
   } catch {
     return []
@@ -226,28 +235,29 @@ function buildInviteUrl({ token, email, role }) {
 }
 
 function normalizeInviteUrl(invite) {
-  return buildInviteUrl({
-    token: invite.token ?? createToken(),
-    email: invite.email ?? '',
-    role: invite.role ?? 'employee',
-  })
+  if (invite.inviteUrl && !invite.inviteUrl.includes('localhost') && !invite.inviteUrl.includes('127.0.0.1')) return invite.inviteUrl
+  return buildInviteUrl({ token: invite.token ?? createToken(), email: invite.email ?? '', role: invite.role ?? 'employee' })
 }
 
-async function deleteSupabaseUser(email) {
+async function deleteSupabaseUser(invite) {
+  return callInviteFunction({ action: 'delete_user', email: invite.email, userId: invite.userId ?? '' })
+}
+
+async function callInviteFunction(payload) {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-  if (!supabaseUrl) return { notConfigured: true }
+  if (!supabaseUrl) throw new Error('VITE_SUPABASE_URL mancante')
 
   const token = getAccessToken()
   if (!token) throw new Error('sessione Supabase non disponibile')
 
-  const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/functions/v1/delete-user`, {
+  const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/functions/v1/invite-user`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify(payload),
   })
 
   const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data.error ?? 'funzione delete-user non riuscita')
+  if (!response.ok) throw new Error(data.error ?? 'funzione invite-user non riuscita')
   return data
 }
 
