@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { GlobalFloatingActions } from './GlobalFloatingActions'
 import { InternalIcon } from './InternalIcons'
 import europaServiceLogoUrl from '../assets/europaservice-logo.svg'
+import europaServiceFooterLogoUrl from '../assets/europaservice-logo-footer.svg'
 import { company } from '../data/mockData'
 import { isActive, publicNav } from '../lib/navigation'
 import { getDashboardNavForRole, getRole } from '../lib/roles'
@@ -17,8 +18,9 @@ const publicMobileNav = [
   { path: '/dashboard/login', label: 'Area privata', description: 'Accesso area privata admin, capo e dipendenti' },
 ]
 
-function BrandLogo({ className = '' }) {
-  return <img className={`brand-logo ${className}`.trim()} src={europaServiceLogoUrl} alt="EuropaService" />
+function BrandLogo({ className = '', variant = 'default' }) {
+  const logoUrl = variant === 'footer' ? europaServiceFooterLogoUrl : europaServiceLogoUrl
+  return <img className={`brand-logo ${className}`.trim()} src={logoUrl} alt="EuropaService" />
 }
 
 export function AppShell({ children, currentPath, session, onLogout, roles, dataStore }) {
@@ -204,7 +206,7 @@ export function AppShell({ children, currentPath, session, onLogout, roles, data
             </section>
             <div className="footer-brand">
               <a className="brand" href="#/">
-                <BrandLogo className="footer-brand-logo" />
+                <BrandLogo className="footer-brand-logo" variant="footer" />
               </a>
               <p>
                 Costruiamo spazi di valore con cartongesso, ristrutturazioni tecniche, finiture
