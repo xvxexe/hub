@@ -7,17 +7,17 @@
 }
 
 .site-brand-logo {
-  width: 11.5rem;
-  max-width: 36vw;
+  width: 13rem;
+  max-width: 40vw;
 }
 
 .footer-brand-logo {
-  width: 12rem;
+  width: 13rem;
   max-width: 100%;
 }
 
 .dashboard-brand-logo {
-  width: 10.5rem;
+  width: 11.5rem;
   max-width: 100%;
 }
 
@@ -27,12 +27,12 @@
 
 @media (max-width: 900px) {
   .site-brand-logo {
-    width: 10rem;
+    width: 11rem;
   }
 }
 
 @media (max-width: 560px) {
   .site-brand-logo {
-    width: 8.5rem;
+    width: 9.2rem;
   }
 }
