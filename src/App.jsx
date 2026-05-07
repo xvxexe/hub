@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { AppShell } from './components/AppShell'
 import { CantiereDeleteGuard } from './components/CantiereDeleteGuard'
 import { OperationalCantieriPanel } from './components/OperationalCantieriPanel'
-import europaServiceLogoUrl from './assets/europaservice-logo.svg'
 import {
   employees,
   mockUsers,
@@ -59,8 +58,6 @@ import './styles/dashboard-mobile-balanced.css'
 import './styles/dashboard-login-mobile-restore.css'
 import './styles/dashboard-drive-automation.css'
 import './styles/europaservice-brand.css'
-
-document.documentElement.style.setProperty('--europaservice-logo-url', `url(${europaServiceLogoUrl})`)
 
 function useHashPath() {
   const [path, setPath] = useState(() => normalizePath(window.location.hash))
