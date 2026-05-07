@@ -1,7 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 220" role="img" aria-labelledby="title desc">
   <title id="title">EuropaService logo</title>
   <desc id="desc">Logo EuropaService con lupo a sinistra, tetto blu e dettaglio rosso separato sopra il tetto, scritta Europa Service a destra.</desc>
-  <rect width="980" height="220" fill="#ffffff"/>
 
   <path id="symbol-red-detail" d="M150 4h44c7 0 10 3 10 10v28l-12-22h-31l-11 30V14c0-7 3-10 10-10z" fill="#ef1d25"/>
 
