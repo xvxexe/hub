@@ -1,19 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 260" role="img" aria-labelledby="title desc">
   <title id="title">EuropaService logo</title>
-  <desc id="desc">Logo EuropaService con tetto blu, dettaglio rosso, scritta nera e cane giallo.</desc>
-  <rect width="900" height="360" fill="#ffffff"/>
-  <path d="M312 28h104c10 0 15 5 15 15v72l-25-58h-66l-28 86V43c0-10 5-15 15-15z" fill="#ef1d25"/>
-  <path d="M66 162C224 114 386 68 558 18c30-9 48-5 70 18l190 145-183-86c-46-22-86-25-139-11L66 162z" fill="#0757b8"/>
-  <path d="M66 162C246 111 430 56 610 5c18-5 31-1 48 15l178 148L659 36c-22-17-35-19-64-11L66 162z" fill="#0a49a3" opacity=".94"/>
-  <text x="70" y="230" fill="#111111" font-family="Arial Rounded MT Bold, Arial, Helvetica, sans-serif" font-size="74" font-weight="800" letter-spacing="5" textLength="760" lengthAdjust="spacingAndGlyphs">EUROPA SERVICE</text>
-  <g transform="translate(5 -105) scale(.98)" fill="#ffcc00">
+  <desc id="desc">Logo EuropaService con tetto blu, dettaglio rosso, scritta nera e cane giallo a destra.</desc>
+  <rect width="980" height="260" fill="#ffffff"/>
+
+  <g id="roof" transform="translate(42 0) scale(.9)">
+    <path d="M292 22h98c10 0 15 5 15 15v66l-24-54h-60l-29 80V37c0-10 5-15 15-15z" fill="#ef1d25"/>
+    <path d="M30 145C188 98 348 52 520 4c30-8 48-4 70 18l182 136-176-81c-46-21-86-23-139-9L30 145z" fill="#0757b8"/>
+    <path d="M30 145C208 95 392 42 572-6c18-5 31-1 48 15l171 138L621 25c-22-16-35-18-64-10L30 145z" fill="#0a49a3" opacity=".94"/>
+  </g>
+
+  <text x="48" y="174" fill="#111111" font-family="Arial Rounded MT Bold, Arial, Helvetica, sans-serif" font-size="72" font-weight="800" letter-spacing="4" textLength="610" lengthAdjust="spacingAndGlyphs">EUROPA SERVICE</text>
+
+  <g id="dog" transform="translate(640 -206) scale(.36)" fill="#ffcc00">
     <path d="M110 430c40-11 74-17 108-27 44-13 84-20 127-8 21 6 45 0 74-13 53-24 116-32 167-17 24 8 57 7 97-4 26-7 45-7 57-1 21 10 41 13 64 10 22-3 41 1 57 14 8 7 11 15 8 23-9 3-22 1-37-5-9-4-18-5-28-3 12 9 21 18 26 27-19 5-38 3-57-6-19-9-37-11-55-7-35 7-70 8-104 1-37-7-74-8-111-3-53 8-107 7-160-1-54-8-104-1-151 20-42 18-85 24-130 18-34-4-67-11-98-18z"/>
     <path d="M92 433c-28-1-58-8-87-20 42-4 79-14 111-31-15 18-21 35-24 51z"/>
     <path d="M657 352c31-3 56-23 75-59 6 27 2 50-11 70l-64-11z"/>
     <path d="M703 354c42-18 82-31 121-36 34-4 52 2 56 18-33 5-58 13-75 26 31-5 55-1 72 10-28 15-67 19-117 12l-57-30z"/>
     <path d="M811 360c26 6 48 20 65 41-28 0-51-12-70-35l5-6z"/>
   </g>
-  <g transform="translate(5 -105) scale(.98)" fill="#ffffff">
+
+  <g id="dog-details" transform="translate(640 -206) scale(.36)" fill="#ffffff">
     <rect x="647" y="356" width="15" height="58" rx="3"/>
     <circle cx="654.5" cy="368" r="3.5" fill="#ffcc00"/>
     <circle cx="654.5" cy="382" r="3.5" fill="#ffcc00"/>
