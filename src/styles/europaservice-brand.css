@@ -1,0 +1,38 @@
+/* Logo EuropaService ufficiale — applicato a sito pubblico e area privata */
+.brand-mark {
+  background: transparent url('/europaservice-logo.svg') center / contain no-repeat;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.site-header .brand-mark,
+.public-footer .brand-mark {
+  width: 8.4rem;
+  height: 3.1rem;
+  border-radius: 0;
+}
+
+.site-header .brand > span:last-child,
+.public-footer .brand > span:last-child {
+  display: none;
+}
+
+.dashboard-brand .brand-mark {
+  width: 8.8rem;
+  height: 3.25rem;
+  border-radius: 0;
+}
+
+.dashboard-brand {
+  align-items: center;
+}
+
+@media (max-width: 560px) {
+  .site-header .brand-mark {
+    width: 7.2rem;
+    height: 2.65rem;
+  }
+}
