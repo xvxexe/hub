@@ -1,15 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 200" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 220" role="img" aria-labelledby="title desc">
   <title id="title">EuropaService logo</title>
-  <desc id="desc">Logo EuropaService con lupo a sinistra, tetto blu e dettaglio rosso sopra il lupo, scritta Europa Service a destra.</desc>
-  <rect width="980" height="200" fill="#ffffff"/>
+  <desc id="desc">Logo EuropaService con lupo a sinistra, tetto blu e dettaglio rosso separato sopra il tetto, scritta Europa Service a destra.</desc>
+  <rect width="980" height="220" fill="#ffffff"/>
 
-  <g id="symbol-roof" transform="translate(24 18) scale(.42)">
-    <path d="M292 22h98c10 0 15 5 15 15v66l-24-54h-60l-29 80V37c0-10 5-15 15-15z" fill="#ef1d25"/>
+  <path id="symbol-red-detail" d="M150 4h44c7 0 10 3 10 10v28l-12-22h-31l-11 30V14c0-7 3-10 10-10z" fill="#ef1d25"/>
+
+  <g id="symbol-roof" transform="translate(24 46) scale(.42)">
     <path d="M30 145C188 98 348 52 520 4c30-8 48-4 70 18l182 136-176-81c-46-21-86-23-139-9L30 145z" fill="#0757b8"/>
     <path d="M30 145C208 95 392 42 572-6c18-5 31-1 48 15l171 138L621 25c-22-16-35-18-64-10L30 145z" fill="#0a49a3" opacity=".94"/>
   </g>
 
-  <g id="symbol-wolf" transform="translate(18 -18) scale(.36)" fill="#ffcc00">
+  <g id="symbol-wolf" transform="translate(18 -4) scale(.36)" fill="#ffcc00">
     <path d="M110 430c40-11 74-17 108-27 44-13 84-20 127-8 21 6 45 0 74-13 53-24 116-32 167-17 24 8 57 7 97-4 26-7 45-7 57-1 21 10 41 13 64 10 22-3 41 1 57 14 8 7 11 15 8 23-9 3-22 1-37-5-9-4-18-5-28-3 12 9 21 18 26 27-19 5-38 3-57-6-19-9-37-11-55-7-35 7-70 8-104 1-37-7-74-8-111-3-53 8-107 7-160-1-54-8-104-1-151 20-42 18-85 24-130 18-34-4-67-11-98-18z"/>
     <path d="M92 433c-28-1-58-8-87-20 42-4 79-14 111-31-15 18-21 35-24 51z"/>
     <path d="M657 352c31-3 56-23 75-59 6 27 2 50-11 70l-64-11z"/>
@@ -17,7 +18,7 @@
     <path d="M811 360c26 6 48 20 65 41-28 0-51-12-70-35l5-6z"/>
   </g>
 
-  <g id="symbol-wolf-details" transform="translate(18 -18) scale(.36)" fill="#ffffff">
+  <g id="symbol-wolf-details" transform="translate(18 -4) scale(.36)" fill="#ffffff">
     <rect x="647" y="356" width="15" height="58" rx="3"/>
     <circle cx="654.5" cy="368" r="3.5" fill="#ffcc00"/>
     <circle cx="654.5" cy="382" r="3.5" fill="#ffcc00"/>
@@ -27,5 +28,5 @@
     <path d="M828 384c18-1 33 3 46 12-17 1-32-3-46-12z"/>
   </g>
 
-  <text x="385" y="128" fill="#111111" font-family="Arial Rounded MT Bold, Arial, Helvetica, sans-serif" font-size="76" font-weight="800" letter-spacing="4" textLength="540" lengthAdjust="spacingAndGlyphs">EUROPA SERVICE</text>
+  <text x="385" y="146" fill="#111111" font-family="Arial Rounded MT Bold, Arial, Helvetica, sans-serif" font-size="78" font-weight="800" letter-spacing="4" textLength="555" lengthAdjust="spacingAndGlyphs">EUROPA SERVICE</text>
 </svg>
