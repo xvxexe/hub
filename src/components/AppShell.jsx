@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { GlobalFloatingActions } from './GlobalFloatingActions'
 import { InternalIcon } from './InternalIcons'
+import europaServiceLogoUrl from '../assets/europaservice-logo.svg'
 import { company } from '../data/mockData'
 import { isActive, publicNav } from '../lib/navigation'
 import { getDashboardNavForRole, getRole } from '../lib/roles'
@@ -15,6 +16,10 @@ const publicMobileNav = [
   { path: '/contatti', label: 'Contatti', description: 'Telefono, email, modulo e sopralluogo' },
   { path: '/dashboard/login', label: 'Area privata', description: 'Accesso area privata admin, capo e dipendenti' },
 ]
+
+function BrandLogo({ className = '' }) {
+  return <img className={`brand-logo ${className}`.trim()} src={europaServiceLogoUrl} alt="EuropaService" />
+}
 
 export function AppShell({ children, currentPath, session, onLogout, roles, dataStore }) {
   const isDashboard = currentPath.startsWith('/dashboard')
@@ -39,7 +44,7 @@ export function AppShell({ children, currentPath, session, onLogout, roles, data
             <aside className="dashboard-sidebar" aria-label="Menu area interna">
               <div className="sidebar-brand-block">
                 <a className="dashboard-brand" href="#/dashboard">
-                  <span className="brand-mark">ES</span>
+                  <BrandLogo className="dashboard-brand-logo" />
                   <span>
                     <strong>Area Privata</strong>
                     <small>EuropaService Hub</small>
@@ -199,11 +204,7 @@ export function AppShell({ children, currentPath, session, onLogout, roles, data
             </section>
             <div className="footer-brand">
               <a className="brand" href="#/">
-                <span className="brand-mark">ES</span>
-                <span>
-                  <strong>EuropaService</strong>
-                  <small>Edilizia tecnica e finiture interne</small>
-                </span>
+                <BrandLogo className="footer-brand-logo" />
               </a>
               <p>
                 Costruiamo spazi di valore con cartongesso, ristrutturazioni tecniche, finiture
@@ -435,11 +436,7 @@ function PublicHeader({ currentPath }) {
   return (
     <header className="site-header">
       <a className="brand" href="#/" onClick={() => setIsMenuOpen(false)}>
-        <span className="brand-mark">ES</span>
-        <span>
-          <strong>EuropaService</strong>
-          <small>{company.payoff}</small>
-        </span>
+        <BrandLogo className="site-brand-logo" />
       </a>
 
       <button
