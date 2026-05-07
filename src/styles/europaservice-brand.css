@@ -1,11 +1,20 @@
-/* Logo EuropaService ufficiale — applicato a sito pubblico e area privata */
+/* Logo EuropaService ufficiale — applicato a sito pubblico e area privata.
+   Asset importato dal bundle Vite per funzionare correttamente anche su GitHub Pages /hub/. */
 .brand-mark {
-  background: transparent url('/europaservice-logo.svg') center / contain no-repeat;
+  background: transparent;
   color: transparent;
   font-size: 0;
   line-height: 0;
   box-shadow: none;
   overflow: hidden;
+}
+
+.brand-mark::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--europaservice-logo-url) center / contain no-repeat;
 }
 
 .site-header .brand-mark,
