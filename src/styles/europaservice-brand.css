@@ -1,43 +1,24 @@
-/* Logo EuropaService ufficiale — applicato a sito pubblico e area privata.
-   Asset importato dal bundle Vite per funzionare correttamente anche su GitHub Pages /hub/. */
-.brand-mark {
-  background: transparent;
-  color: transparent;
-  font-size: 0;
-  line-height: 0;
-  box-shadow: none;
-  overflow: hidden;
-}
-
-.brand-mark::before {
-  content: '';
+/* Logo EuropaService ufficiale.
+   Il logo è renderizzato come <img> in AppShell.jsx: questo file gestisce solo dimensioni e layout. */
+.brand-logo {
   display: block;
-  width: 100%;
-  height: 100%;
-  background: var(--europaservice-logo-url) center / contain no-repeat;
+  height: auto;
+  object-fit: contain;
 }
 
-.site-header .brand-mark {
-  width: 14rem;
-  height: 5.15rem;
-  border-radius: 0;
+.site-brand-logo {
+  width: 11.5rem;
+  max-width: 36vw;
 }
 
-.public-footer .brand-mark {
+.footer-brand-logo {
   width: 12rem;
-  height: 4.4rem;
-  border-radius: 0;
+  max-width: 100%;
 }
 
-.site-header .brand > span:last-child,
-.public-footer .brand > span:last-child {
-  display: none;
-}
-
-.dashboard-brand .brand-mark {
+.dashboard-brand-logo {
   width: 10.5rem;
-  height: 3.85rem;
-  border-radius: 0;
+  max-width: 100%;
 }
 
 .dashboard-brand {
@@ -45,15 +26,13 @@
 }
 
 @media (max-width: 900px) {
-  .site-header .brand-mark {
-    width: 11.5rem;
-    height: 4.25rem;
+  .site-brand-logo {
+    width: 10rem;
   }
 }
 
 @media (max-width: 560px) {
-  .site-header .brand-mark {
-    width: 9rem;
-    height: 3.35rem;
+  .site-brand-logo {
+    width: 8.5rem;
   }
 }
