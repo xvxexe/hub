@@ -49,6 +49,531 @@ const nextSteps = [
   ['04', 'Proposta operativa', 'Definiamo lavorazioni, priorità, tempistiche e prossimi passaggi.'],
 ]
 
+const contactPageStyles = `
+.contact-page-redesign {
+  background: linear-gradient(180deg, #f7f8fb 0%, #fff 42%, #f7f8fb 100%);
+  color: var(--pub-ink);
+}
+
+.contact-shell {
+  width: min(100%, var(--pub-max));
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3vw, 1.25rem);
+}
+
+.contact-hero-panel {
+  padding: clamp(4rem, 7vw, 6.5rem) 0 clamp(1.75rem, 4vw, 3rem);
+  overflow: hidden;
+}
+
+.contact-hero-copy {
+  display: grid;
+  gap: 1rem;
+  max-width: calc(var(--pub-max) + 2.5rem);
+}
+
+.contact-hero-copy > * {
+  max-width: 760px;
+}
+
+.contact-hero-copy h1 {
+  margin: 0;
+  color: var(--pub-ink);
+  font-size: clamp(2.65rem, 7.4vw, 5rem);
+  line-height: 0.96;
+  letter-spacing: -0.055em;
+  font-weight: 900;
+}
+
+.contact-hero-copy > p:not(.premium-eyebrow) {
+  margin: 0;
+  color: var(--pub-text);
+  font-size: clamp(1.04rem, 2.2vw, 1.22rem);
+  line-height: 1.62;
+  font-weight: 650;
+}
+
+.contact-section-tight {
+  padding-block: clamp(1.3rem, 3.5vw, 2.1rem);
+}
+
+.contact-section-spaced {
+  padding-block: clamp(2rem, 5vw, 3.5rem);
+}
+
+.contact-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.85rem;
+}
+
+.contact-info-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+  min-height: 5.2rem;
+  padding: 1rem;
+  border: 1px solid var(--pub-line);
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: var(--pub-shadow);
+}
+
+.contact-icon {
+  display: inline-grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #f0f5ff;
+  color: #1f57a4;
+}
+
+.contact-info-card h3,
+.contact-step-card h3 {
+  margin: 0;
+  color: var(--pub-ink);
+  font-size: 1rem;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.contact-info-card strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: #203047;
+  font-size: clamp(0.96rem, 1.9vw, 1.02rem);
+  line-height: 1.35;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.contact-info-card p,
+.contact-step-card p,
+.contact-company-head p,
+.contact-bottom-cta p {
+  margin: 0;
+  color: var(--pub-muted);
+  font-size: clamp(0.92rem, 1.8vw, 1rem);
+  line-height: 1.52;
+  font-weight: 650;
+}
+
+.contact-company-panel,
+.contact-bottom-cta {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+  border: 1px solid var(--pub-line);
+  border-radius: 1.5rem;
+  background: #fff;
+  box-shadow: var(--pub-shadow);
+}
+
+.contact-company-head {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.contact-company-head h2,
+.contact-steps-heading h2,
+.contact-bottom-cta h2,
+.contact-request-intro h2 {
+  margin: 0;
+  color: var(--pub-ink);
+  font-size: clamp(1.65rem, 4.4vw, 2.5rem);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  font-weight: 900;
+}
+
+.contact-legal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--pub-line);
+}
+
+.contact-legal-row {
+  padding: 0.72rem 0;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.75);
+}
+
+.contact-legal-row span {
+  display: block;
+  margin-bottom: 0.28rem;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.contact-legal-row strong {
+  display: block;
+  color: var(--pub-ink);
+  font-size: clamp(0.98rem, 2vw, 1.04rem);
+  line-height: 1.35;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.contact-request-block {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.72fr) minmax(320px, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 1.65rem;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.14);
+}
+
+.contact-request-intro {
+  display: grid;
+  gap: 1rem;
+  align-content: center;
+  padding: clamp(1.4rem, 4vw, 2.1rem);
+  background: radial-gradient(circle at 90% 20%, rgba(29, 78, 216, 0.2), transparent 34%), linear-gradient(135deg, #080f1f 0%, #101827 58%, #172a46 100%);
+  color: #fff;
+}
+
+.contact-request-intro .premium-eyebrow {
+  color: #f59e0b !important;
+}
+
+.contact-request-intro h2 {
+  color: #fff;
+  font-size: clamp(1.8rem, 4.8vw, 2.7rem);
+}
+
+.contact-request-intro p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(1rem, 2.2vw, 1.08rem);
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.contact-request-intro ul {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contact-request-intro li {
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.contact-request-intro li::before {
+  content: '✓';
+  color: #f59e0b;
+  margin-right: 0.55rem;
+}
+
+.contact-pec-box {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.contact-pec-box strong,
+.contact-pec-box span {
+  display: block;
+}
+
+.contact-pec-box strong {
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.contact-pec-box span {
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.contact-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+  align-content: center;
+}
+
+.contact-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--pub-ink);
+  font-size: clamp(0.95rem, 1.8vw, 1rem);
+  font-weight: 850;
+}
+
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
+  width: 100%;
+  min-height: 3.25rem;
+  border: 1px solid var(--pub-line);
+  border-radius: 0.9rem;
+  background: #fff;
+  color: var(--pub-ink);
+  padding: 0.9rem 1rem;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.contact-form textarea {
+  min-height: 8.5rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.contact-form-wide,
+.contact-form button,
+.contact-form-note,
+.contact-form-success {
+  grid-column: 1 / -1;
+}
+
+.contact-form button {
+  min-height: 3.35rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pub-ink);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.contact-form-note,
+.contact-form-success {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.45;
+  font-weight: 750;
+}
+
+.contact-form-success {
+  color: #166534;
+}
+
+.contact-steps-heading {
+  display: grid;
+  gap: 0.5rem;
+  text-align: center;
+  justify-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.contact-steps-heading p:not(.premium-eyebrow) {
+  max-width: 680px;
+  margin: 0;
+  color: var(--pub-muted);
+  font-size: clamp(0.98rem, 2vw, 1.05rem);
+  line-height: 1.6;
+  font-weight: 650;
+}
+
+.contact-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.85rem;
+}
+
+.contact-step-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+  padding: 1rem;
+  border: 1px solid var(--pub-line);
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: var(--pub-shadow);
+}
+
+.contact-step-card > span {
+  display: inline-grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #f0f5ff;
+  color: #1f57a4;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.contact-bottom-cta {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+@media (max-width: 760px) {
+  .contact-page-redesign {
+    background: #f8fafc;
+  }
+
+  .contact-shell {
+    padding-inline: 1rem;
+  }
+
+  .contact-hero-panel {
+    padding: 2.2rem 0 1rem;
+  }
+
+  .contact-hero-copy {
+    gap: 0.75rem;
+  }
+
+  .contact-hero-copy h1 {
+    font-size: clamp(2.35rem, 12vw, 3.25rem);
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+  }
+
+  .contact-hero-copy > p:not(.premium-eyebrow) {
+    font-size: 1.06rem;
+    line-height: 1.55;
+    font-weight: 650;
+  }
+
+  .contact-section-tight,
+  .contact-section-spaced {
+    padding-block: 0.8rem;
+  }
+
+  .contact-info-grid,
+  .contact-steps-grid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .contact-info-card,
+  .contact-step-card {
+    padding: 1rem;
+    border-radius: 1.05rem;
+  }
+
+  .contact-info-card h3,
+  .contact-step-card h3 {
+    font-size: 1.05rem;
+  }
+
+  .contact-info-card strong {
+    font-size: 1rem;
+  }
+
+  .contact-info-card p,
+  .contact-step-card p {
+    font-size: 0.98rem;
+    line-height: 1.45;
+  }
+
+  .contact-company-panel,
+  .contact-bottom-cta {
+    border-radius: 1.2rem;
+    padding: 1.1rem;
+  }
+
+  .contact-company-head h2,
+  .contact-steps-heading h2,
+  .contact-bottom-cta h2 {
+    font-size: clamp(1.8rem, 8vw, 2.35rem);
+  }
+
+  .contact-legal-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .contact-legal-row {
+    display: grid;
+    grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.72rem 0;
+  }
+
+  .contact-legal-row span {
+    margin: 0;
+    font-size: 0.78rem;
+  }
+
+  .contact-legal-row strong {
+    font-size: 0.98rem;
+    text-align: right;
+  }
+
+  .contact-request-block {
+    grid-template-columns: 1fr;
+    border-radius: 1.25rem;
+  }
+
+  .contact-request-intro {
+    padding: 1.2rem;
+    align-content: start;
+  }
+
+  .contact-request-intro h2 {
+    font-size: 2rem;
+    line-height: 1.02;
+  }
+
+  .contact-request-intro p,
+  .contact-request-intro li {
+    font-size: 1.02rem;
+    line-height: 1.5;
+  }
+
+  .contact-form {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .contact-form label {
+    font-size: 1rem;
+  }
+
+  .contact-form input,
+  .contact-form select,
+  .contact-form textarea {
+    min-height: 3.35rem;
+    font-size: 1.02rem;
+    padding: 0.92rem 1rem;
+  }
+
+  .contact-form textarea {
+    min-height: 8rem;
+  }
+
+  .contact-form button {
+    min-height: 3.5rem;
+    font-size: 1.06rem;
+  }
+
+  .contact-bottom-cta {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-bottom-cta .premium-button {
+    width: 100%;
+  }
+}
+`
+
 export function Contacts() {
   const [form, setForm] = useState(initialForm)
   const [sent, setSent] = useState(false)
@@ -64,6 +589,7 @@ export function Contacts() {
 
   return (
     <>
+      <style>{contactPageStyles}</style>
       <SEO
         title="Contatti e richiesta preventivo"
         description="Parla con EUROPA SERVICE S.R.L. per edilizia, cartongesso, ristrutturazioni tecniche, finiture interne e gestione cantieri."
