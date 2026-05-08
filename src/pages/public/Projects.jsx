@@ -13,7 +13,6 @@ import { PremiumChipMarquee } from '../../components/PremiumChipMarquee'
 import { SEO } from '../../components/SEO'
 import {
   partners,
-  premiumStats,
   testimonials,
 } from '../../data/publicPremiumData'
 import { realPublicProjects } from '../../data/publicRealData'
@@ -33,32 +32,32 @@ export function Projects() {
     <>
       <SEO
         title="Cantieri e portfolio"
-        description="Portfolio EuropaService aggiornato con i cantieri reali presenti nell’area privata, mantenendo foto generiche fino ad approvazione pubblica."
+        description="Portfolio EuropaService: case study e lavorazioni per strutture ricettive, interni tecnici, cartongesso, finiture e gestione cantiere."
       />
 
       <PremiumHero
-        eyebrow="Cantieri reali"
-        title="Cantieri collegati ai dati dell’area privata"
-        text="La sezione cantieri usa i dati operativi interni: lavorazioni, tab, movimenti e riepiloghi del master. Le immagini restano generiche finché non vengono approvate foto pubblicabili."
+        eyebrow="Cantieri"
+        title="Interventi organizzati per qualità, tempi e ordine operativo"
+        text="Ogni cantiere viene seguito con attenzione alle fasi, alla pulizia delle aree di lavoro, al coordinamento delle squadre e alla qualità finale degli ambienti."
         image={featured.image}
         imageAlt={featured.alt}
         primaryLabel="Richiedi un lavoro simile"
         secondaryLabel="Apri case study"
         secondaryHref={`#/cantieri/${featured.id}`}
         variant="compact"
-        meta={['Dati area privata', 'Master contabile', 'Foto generiche', 'Cantieri reali']}
+        meta={['Hospitality', 'Cartongesso', 'Finiture interne', 'Gestione cantiere']}
       />
 
-      <PremiumSection title="Dati operativi in evidenza" text="I dati pubblici sono ricavati dal sistema interno: Barcelò Roma, sotto-lavorazioni e riepiloghi per tab. Le cifre servono come sintesi pubblica del lavoro tracciato, non come contabilità completa.">
+      <PremiumSection title="Esperienza in contesti complessi" text="Interveniamo in strutture ricettive, spazi interni e aree tecniche dove servono organizzazione, precisione e continuità durante tutte le fasi di lavoro.">
         <PremiumStats stats={[
-          { value: '1', label: 'cantiere reale collegato al master interno' },
-          { value: '20', label: 'tab/lavorazioni importate dal sistema privato' },
-          { value: '68', label: 'movimenti letti dal dettaglio operativo' },
-          { value: '26.676,38 €', label: 'totale tracciato nel riepilogo interno' },
+          { value: 'Hotel', label: 'strutture ricettive e spazi ad alta percorrenza' },
+          { value: 'Interni', label: 'cartongesso, soffitti tecnici e finiture' },
+          { value: 'Esterni', label: 'scale, aiuole, scarichi e aree di servizio' },
+          { value: 'Metodo', label: 'coordinamento, pulizia e controllo finale' },
         ]} />
       </PremiumSection>
 
-      <PremiumSection title="Filtra i progetti" text="Per ora i cantieri pubblici sono collegati al cantiere reale Barcelò Roma e alle sue sotto-lavorazioni." tone="soft">
+      <PremiumSection title="Filtra i progetti" text="Sfoglia i case study disponibili per settore e tipologia di intervento." tone="soft">
         <div className="premium-filter-pills" role="list" aria-label="Categorie portfolio">
           {categories.map((item) => (
             <button
@@ -85,24 +84,24 @@ export function Projects() {
       </PremiumSection>
 
       <PremiumImageSplit
-        eyebrow="Come leggiamo un progetto"
-        title="Il portfolio pubblico parte dal cantiere reale, non da esempi finti."
-        text="Ogni scheda pubblica deriva da una lavorazione o da un riepilogo interno: piscina, soffitti, scala/aiuola, scarichi/pergole e altre attività. Le immagini sono ancora generiche per evitare di pubblicare foto non approvate."
+        eyebrow="Approccio"
+        title="Un buon risultato nasce da un cantiere ordinato."
+        text="Organizziamo lavorazioni, materiali e priorità per ridurre interferenze e mantenere il controllo su qualità, sicurezza e pulizia. Ogni fase viene gestita con attenzione al contesto in cui si lavora."
         image={serviceImages.finitureInterne.src}
         imageAlt={serviceImages.finitureInterne.alt}
         reverse
       >
         <div className="premium-feature-grid">
-          <PremiumTextCard title="Prima" text="I dati nascono dal master, dai tab e dai documenti della parte privata." />
-          <PremiumTextCard title="Durante" text="Le lavorazioni vengono raccontate come aree operative del cantiere, non come righe contabili sparse." />
-          <PremiumTextCard title="Dopo" text="Quando le foto saranno approvate, potranno sostituire le immagini generiche." />
+          <PremiumTextCard title="Analisi" text="Valutiamo spazi, accessi, priorità e vincoli prima di iniziare le lavorazioni." />
+          <PremiumTextCard title="Esecuzione" text="Coordiniamo le fasi in modo progressivo, mantenendo ordine e continuità operativa." />
+          <PremiumTextCard title="Consegna" text="Controlliamo dettagli, pulizia e finiture per lasciare ambienti pronti e coerenti." />
         </div>
       </PremiumImageSplit>
 
       <PremiumSection
-        eyebrow="Griglia cantieri"
-        title="Cantieri e lavorazioni reali"
-        text="Le schede sotto usano dati della parte privata. Foto e immagini rimangono generiche finché non vengono validate per uso pubblico."
+        eyebrow="Portfolio"
+        title="Cantieri e lavorazioni"
+        text="Una selezione di interventi e aree operative seguite da EuropaService in contesti hospitality e spazi tecnici."
         tone="soft"
       >
         <div className="premium-project-grid">
@@ -110,11 +109,11 @@ export function Projects() {
         </div>
       </PremiumSection>
 
-      <PremiumSection eyebrow="Cosa trovi nei case study" title="Informazioni operative, non solo immagini">
+      <PremiumSection eyebrow="Case study" title="Cosa raccontiamo di ogni intervento">
         <div className="premium-feature-grid">
-          <PremiumTextCard title="Dati chiave" text="Movimenti, importi tracciati, anno, città, settore e lavorazioni coinvolte." />
-          <PremiumTextCard title="Sfida e soluzione" text="Il problema reale del cantiere e come viene gestito nel sistema operativo interno." />
-          <PremiumTextCard title="Risultati" text="Più ordine tra tab, documenti, riepilogo e racconto pubblico del cantiere." />
+          <PremiumTextCard title="Contesto" text="Tipologia di struttura, area di lavoro e vincoli principali del cantiere." />
+          <PremiumTextCard title="Lavorazioni" text="Attività eseguite, fasi coordinate e servizi coinvolti nell’intervento." />
+          <PremiumTextCard title="Risultato" text="Miglioramenti ottenuti in ordine, funzionalità, finiture e qualità percepita degli spazi." />
         </div>
       </PremiumSection>
 
