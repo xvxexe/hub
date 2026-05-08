@@ -8,7 +8,8 @@ import {
   PremiumTextCard,
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
-import { contactCards, mainHeroImage } from '../../data/publicPremiumData'
+import { mainHeroImage } from '../../data/publicPremiumData'
+import { publicCompanyLegalRows, realContactCards } from '../../data/publicRealData'
 import { serviceImages } from '../../data/publicImages'
 
 const initialForm = {
@@ -33,8 +34,8 @@ const contactFaq = [
     answer: 'Sì. Il campo allegati è predisposto in modalità mock. Nel flusso reale potrà collegarsi allo storage per archiviare tutto per cantiere.',
   },
   {
-    question: 'Fate sopralluoghi fuori Verona?',
-    answer: 'Sì, valutiamo cantieri in Veneto, Lombardia, Roma e Nord Italia in base al tipo di intervento, urgenza e complessità.',
+    question: 'Dove ha sede EuropaService?',
+    answer: 'La sede legale è in VIA MARCO PERENNIO 21 - 52100 - AREZZO (AR). La società opera su cantieri in Toscana, Roma e altre zone in base al progetto.',
   },
   {
     question: 'Il modulo invia davvero la richiesta?',
@@ -59,7 +60,7 @@ export function Contacts() {
     <>
       <SEO
         title="Contatti e richiesta preventivo"
-        description="Parla con EuropaService per edilizia, cartongesso, ristrutturazioni tecniche, finiture interne e gestione cantieri."
+        description="Parla con EUROPA SERVICE S.R.L. per edilizia, cartongesso, ristrutturazioni tecniche, finiture interne e gestione cantieri."
       />
 
       <PremiumHero
@@ -72,17 +73,25 @@ export function Contacts() {
         primaryHref="#contatti-form"
         secondaryLabel="Scopri i servizi"
         variant="contact"
-        meta={['Sopralluoghi', 'Preventivi', 'Foto e allegati', 'Piano operativo']}
+        meta={['EUROPA SERVICE S.R.L.', 'P.IVA 02399910518', 'Arezzo', 'PEC ufficiale']}
       />
 
-      <PremiumSection eyebrow="Contatti diretti" title="Scegli il canale più comodo" text="Per richieste urgenti usa il telefono. Per progetti strutturati invia foto, planimetrie e informazioni tramite modulo o email.">
+      <PremiumSection eyebrow="Contatti diretti" title="Dati aziendali e canali ufficiali" text="Informazioni aggiornate per identificazione aziendale, comunicazioni amministrative e richieste operative.">
         <div className="premium-contact-grid">
-          {contactCards.map((card) => (
+          {realContactCards.map((card) => (
             <article className="premium-card" key={card.title}>
               <h3>{card.title}</h3>
               <strong>{card.value}</strong>
               <p>{card.text}</p>
             </article>
+          ))}
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Informazioni aziendali" title="Anagrafica EUROPA SERVICE S.R.L." tone="soft">
+        <div className="premium-feature-grid">
+          {publicCompanyLegalRows.map((row) => (
+            <PremiumTextCard key={row.label} title={row.label} text={row.value} />
           ))}
         </div>
       </PremiumSection>
@@ -108,8 +117,8 @@ export function Contacts() {
           <h2>Inserisci le informazioni essenziali</h2>
           <p>Il modulo è mock: serve a progettare il flusso futuro verso area interna e backend. I campi sono pensati per raccogliere subito ciò che serve a valutare un cantiere.</p>
           <div className="premium-map-card">
-            <strong>EuropaService</strong>
-            <span>Verona · Veneto · Lombardia · Roma · Nord Italia</span>
+            <strong>EUROPA SERVICE S.R.L.</strong>
+            <span>VIA MARCO PERENNIO 21 - 52100 - AREZZO (AR)</span>
           </div>
         </div>
 
@@ -164,7 +173,7 @@ export function Contacts() {
         <PremiumFAQ items={contactFaq} />
       </PremiumSection>
 
-      <PremiumCTA title="Preferisci parlare subito con noi?" text="Usa telefono o email per fissare un primo confronto operativo sul progetto." />
+      <PremiumCTA title="Preferisci parlare subito con noi?" text="Usa il modulo o la PEC per fissare un primo confronto operativo sul progetto." />
     </>
   )
 }
