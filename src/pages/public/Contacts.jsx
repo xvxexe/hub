@@ -95,13 +95,26 @@ export function Contacts() {
         </div>
       </PremiumSection>
 
-      <PremiumSection eyebrow="Informazioni aziendali" title="Anagrafica EUROPA SERVICE S.R.L." tone="soft">
-        <div className="premium-feature-grid">
+      <section className="premium-contact-layout">
+        <div className="premium-contact-intro-card">
+          <p className="premium-eyebrow">Sede e dati fiscali</p>
+          <h2>EUROPA SERVICE S.R.L.</h2>
+          <p>Riferimenti societari ufficiali per clienti, fornitori, tecnici e amministrazioni. Per comunicazioni formali è disponibile il canale PEC indicato.</p>
+          <div className="premium-map-card">
+            <strong>Sede legale</strong>
+            <span>VIA MARCO PERENNIO 21 - 52100 - AREZZO (AR)</span>
+          </div>
+        </div>
+
+        <div className="premium-form" aria-label="Dati societari EUROPA SERVICE S.R.L.">
           {publicCompanyLegalRows.map((row) => (
-            <PremiumTextCard key={row.label} title={row.label} text={row.value} />
+            <label key={row.label} className={row.label === 'Indirizzo' || row.label === 'PEC' ? 'premium-form-wide' : undefined}>
+              {row.label}
+              <strong>{row.value}</strong>
+            </label>
           ))}
         </div>
-      </PremiumSection>
+      </section>
 
       <PremiumImageSplit
         eyebrow="Prima del preventivo"
