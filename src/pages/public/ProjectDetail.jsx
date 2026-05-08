@@ -10,22 +10,23 @@ import {
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import { SafeImage } from '../../components/SafeImage'
-import { premiumProjects, testimonials, workMethod } from '../../data/publicPremiumData'
+import { testimonials, workMethod } from '../../data/publicPremiumData'
+import { realPublicProjects } from '../../data/publicRealData'
 import { serviceImages } from '../../data/publicImages'
 
 export function ProjectDetail({ projectId }) {
-  const project = premiumProjects.find((item) => item.id === projectId) ?? premiumProjects[0]
-  const related = premiumProjects.filter((item) => item.id !== project.id).slice(0, 3)
+  const project = realPublicProjects.find((item) => item.id === projectId) ?? realPublicProjects[0]
+  const related = realPublicProjects.filter((item) => item.id !== project.id).slice(0, 3)
 
   return (
     <>
       <SEO
         title={`${project.title} - case study`}
-        description={`${project.title}: case study EuropaService per ${project.category}, ${project.city}, con cartongesso, finiture e gestione cantiere.`}
+        description={`${project.title}: case study EuropaService per ${project.category}, ${project.city}, con dati collegati all’area privata e immagini generiche provvisorie.`}
       />
 
       <PremiumHero
-        eyebrow="Case study"
+        eyebrow="Case study reale"
         title={project.title}
         text={project.longText ?? project.summary}
         image={project.image}
@@ -37,11 +38,11 @@ export function ProjectDetail({ projectId }) {
         meta={[project.city, project.category, project.status, project.year]}
       />
 
-      <PremiumSection eyebrow="Dati chiave" title="Il progetto in sintesi" text="Prima di parlare di estetica, un case study deve chiarire dimensione, durata, servizi coinvolti e risultato operativo.">
+      <PremiumSection eyebrow="Dati chiave" title="Il progetto in sintesi" text="Questi dati derivano dalla parte privata: tab di lavorazione, movimenti e riepilogo operativo. Le foto sono ancora generiche finché non vengono approvate immagini pubblicabili.">
         <div className="premium-key-facts">
-          <article><span>Superficie</span><strong>{project.metrics[0]}</strong></article>
-          <article><span>Durata</span><strong>{project.metrics[1]}</strong></article>
-          <article><span>Team / risultato</span><strong>{project.metrics[2]}</strong></article>
+          <article><span>Dato 1</span><strong>{project.metrics[0]}</strong></article>
+          <article><span>Dato 2</span><strong>{project.metrics[1]}</strong></article>
+          <article><span>Dato 3</span><strong>{project.metrics[2]}</strong></article>
           <article><span>Anno</span><strong>{project.year}</strong></article>
         </div>
       </PremiumSection>
@@ -50,20 +51,20 @@ export function ProjectDetail({ projectId }) {
         <article>
           <p className="premium-eyebrow">Sfida</p>
           <h2>{project.challenge}</h2>
-          <p>Ogni cantiere ha un punto critico: tempi stretti, spazi da proteggere, interferenze tecniche, attività aperte o esigenze estetiche elevate.</p>
+          <p>Ogni cantiere ha un punto critico: dati dispersi, lavorazioni sovrapposte, documenti da collegare e fasi da rendere leggibili anche fuori dall’area privata.</p>
         </article>
         <article>
           <p className="premium-eyebrow">Soluzione</p>
           <h2>{project.solution}</h2>
-          <p>La risposta è stata organizzare le fasi, ridurre passaggi inutili, documentare avanzamento e controllare i dettagli prima della consegna.</p>
+          <p>La risposta è usare i dati interni come base pubblica controllata: schede sintetiche, foto generiche e informazioni operative senza esporre tutta la contabilità.</p>
         </article>
       </section>
 
-      <PremiumSection eyebrow="Galleria" title="Immagini e materiali del progetto" tone="soft">
+      <PremiumSection eyebrow="Galleria" title="Immagini provvisorie del progetto" tone="soft">
         <div className="premium-gallery">
           {[project.image, serviceImages.cartongesso.src, serviceImages.finitureInterne.src].map((src, index) => (
             <SafeImage
-              alt={`${project.title} immagine ${index + 1}`}
+              alt={`${project.title} immagine generica ${index + 1}`}
               className="premium-gallery-image"
               fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
               key={`${src}-${index}`}
@@ -76,8 +77,8 @@ export function ProjectDetail({ projectId }) {
 
       <PremiumImageSplit
         eyebrow="Metodo applicato"
-        title="Il risultato finale dipende dalla qualità delle fasi intermedie."
-        text="Abbiamo impostato il progetto per zone, lavorazioni e priorità. Questo ha permesso di ridurre interferenze, controllare i dettagli e mantenere una comunicazione chiara con tutti i soggetti coinvolti."
+        title="Il racconto pubblico parte dal sistema interno."
+        text="Le lavorazioni vengono lette per tab, importi e categorie. Questo permette di trasformare il cantiere in schede semplici da capire, senza pubblicare dati sensibili o immagini non validate."
         image={serviceImages.supportoCantieri.src}
         imageAlt={serviceImages.supportoCantieri.alt}
       >
@@ -92,7 +93,7 @@ export function ProjectDetail({ projectId }) {
             <PremiumTextCard
               key={service}
               title={service}
-              text="Lavorazione integrata nel piano operativo con controlli intermedi, coordinamento e attenzione alla consegna finale."
+              text="Lavorazione collegata al cantiere e riportata in modo sintetico per uso pubblico."
             />
           ))}
         </div>
@@ -100,7 +101,7 @@ export function ProjectDetail({ projectId }) {
 
       <PremiumSection eyebrow="Risultati" title="Cosa è stato ottenuto" tone="soft">
         <div className="premium-feature-grid">
-          {project.results.map((result) => <PremiumTextCard key={result} title={result} text="Risultato concreto ottenuto grazie a pianificazione, presenza in cantiere e controllo delle fasi." />)}
+          {project.results.map((result) => <PremiumTextCard key={result} title={result} text="Risultato operativo ottenuto grazie a classificazione, ordine dei tab e collegamento con il master interno." />)}
         </div>
       </PremiumSection>
 
