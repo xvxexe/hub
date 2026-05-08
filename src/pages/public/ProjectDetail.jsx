@@ -22,11 +22,11 @@ export function ProjectDetail({ projectId }) {
     <>
       <SEO
         title={`${project.title} - case study`}
-        description={`${project.title}: case study EuropaService per ${project.category}, ${project.city}, con dati collegati all’area privata e immagini generiche provvisorie.`}
+        description={`${project.title}: case study EuropaService per ${project.category}, ${project.city}, con lavorazioni interne, finiture e gestione cantiere.`}
       />
 
       <PremiumHero
-        eyebrow="Case study reale"
+        eyebrow="Case study"
         title={project.title}
         text={project.longText ?? project.summary}
         image={project.image}
@@ -38,11 +38,11 @@ export function ProjectDetail({ projectId }) {
         meta={[project.city, project.category, project.status, project.year]}
       />
 
-      <PremiumSection eyebrow="Dati chiave" title="Il progetto in sintesi" text="Questi dati derivano dalla parte privata: tab di lavorazione, movimenti e riepilogo operativo. Le foto sono ancora generiche finché non vengono approvate immagini pubblicabili.">
+      <PremiumSection eyebrow="Sintesi" title="Il progetto in breve" text="Un intervento seguito con attenzione a contesto, accessi, priorità operative e qualità finale delle lavorazioni.">
         <div className="premium-key-facts">
-          <article><span>Dato 1</span><strong>{project.metrics[0]}</strong></article>
-          <article><span>Dato 2</span><strong>{project.metrics[1]}</strong></article>
-          <article><span>Dato 3</span><strong>{project.metrics[2]}</strong></article>
+          <article><span>Settore</span><strong>{project.metrics[0]}</strong></article>
+          <article><span>Ambito</span><strong>{project.metrics[1]}</strong></article>
+          <article><span>Focus</span><strong>{project.metrics[2]}</strong></article>
           <article><span>Anno</span><strong>{project.year}</strong></article>
         </div>
       </PremiumSection>
@@ -51,20 +51,20 @@ export function ProjectDetail({ projectId }) {
         <article>
           <p className="premium-eyebrow">Sfida</p>
           <h2>{project.challenge}</h2>
-          <p>Ogni cantiere ha un punto critico: dati dispersi, lavorazioni sovrapposte, documenti da collegare e fasi da rendere leggibili anche fuori dall’area privata.</p>
+          <p>In contesti ricettivi e tecnici serve lavorare con precisione, rispettando accessi, tempi, pulizia e continuità degli spazi.</p>
         </article>
         <article>
           <p className="premium-eyebrow">Soluzione</p>
           <h2>{project.solution}</h2>
-          <p>La risposta è usare i dati interni come base pubblica controllata: schede sintetiche, foto generiche e informazioni operative senza esporre tutta la contabilità.</p>
+          <p>EuropaService organizza le fasi in modo progressivo, coordinando squadre, materiali e controlli per ottenere un risultato pulito e coerente.</p>
         </article>
       </section>
 
-      <PremiumSection eyebrow="Galleria" title="Immagini provvisorie del progetto" tone="soft">
+      <PremiumSection eyebrow="Galleria" title="Immagini del progetto" tone="soft">
         <div className="premium-gallery">
           {[project.image, serviceImages.cartongesso.src, serviceImages.finitureInterne.src].map((src, index) => (
             <SafeImage
-              alt={`${project.title} immagine generica ${index + 1}`}
+              alt={`${project.title} immagine ${index + 1}`}
               className="premium-gallery-image"
               fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
               key={`${src}-${index}`}
@@ -77,8 +77,8 @@ export function ProjectDetail({ projectId }) {
 
       <PremiumImageSplit
         eyebrow="Metodo applicato"
-        title="Il racconto pubblico parte dal sistema interno."
-        text="Le lavorazioni vengono lette per tab, importi e categorie. Questo permette di trasformare il cantiere in schede semplici da capire, senza pubblicare dati sensibili o immagini non validate."
+        title="Ogni fase viene coordinata per mantenere il cantiere pulito e leggibile."
+        text="Dalla preparazione alla chiusura, l’intervento viene gestito con attenzione a materiali, sicurezza, lavorazioni collegate e qualità finale degli ambienti."
         image={serviceImages.supportoCantieri.src}
         imageAlt={serviceImages.supportoCantieri.alt}
       >
@@ -93,7 +93,7 @@ export function ProjectDetail({ projectId }) {
             <PremiumTextCard
               key={service}
               title={service}
-              text="Lavorazione collegata al cantiere e riportata in modo sintetico per uso pubblico."
+              text="Attività integrata nel piano di lavoro con attenzione a ordine, coordinamento e finitura finale."
             />
           ))}
         </div>
@@ -101,7 +101,7 @@ export function ProjectDetail({ projectId }) {
 
       <PremiumSection eyebrow="Risultati" title="Cosa è stato ottenuto" tone="soft">
         <div className="premium-feature-grid">
-          {project.results.map((result) => <PremiumTextCard key={result} title={result} text="Risultato operativo ottenuto grazie a classificazione, ordine dei tab e collegamento con il master interno." />)}
+          {project.results.map((result) => <PremiumTextCard key={result} title={result} text="Un risultato concreto per rendere l’intervento più ordinato, funzionale e coerente con gli obiettivi del cliente." />)}
         </div>
       </PremiumSection>
 
