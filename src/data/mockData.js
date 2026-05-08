@@ -1,56 +1,62 @@
 export const company = {
-  name: 'EuropaService Hub',
-  payoff: 'Cartongesso, ristrutturazioni e gestione cantieri',
+  name: 'EUROPA SERVICE S.R.L.',
+  payoff: 'Cartongesso, ristrutturazioni tecniche, finiture interne e gestione cantieri',
   phone: '+39 045 000 0000',
   email: 'info@europaservice.example',
-  area: 'Verona, Veneto e province limitrofe',
+  pec: 'europaservizi272@pec.it',
+  area: 'Arezzo, Toscana, Roma e cantieri su richiesta',
+  address: 'VIA MARCO PERENNIO 21 - 52100 - AREZZO (AR)',
+  vatNumber: '02399910518',
+  fiscalCode: '02399910518',
+  europeanVat: 'IT02399910518',
+  rea: '208794',
 }
 
 export const services = [
   {
     title: 'Cartongesso tecnico',
     description:
-      'Pareti, contropareti, controsoffitti e velette con finiture pulite per abitazioni e locali commerciali.',
+      'Pareti, contropareti, controsoffitti e velette con finiture pulite per abitazioni, hotel, locali commerciali e cantieri complessi.',
   },
   {
-    title: 'Ristrutturazioni interne',
+    title: 'Ristrutturazioni tecniche',
     description:
-      'Coordinamento delle lavorazioni, protezione ambienti, ripristini e consegna ordinata del cantiere.',
+      'Coordinamento delle lavorazioni, protezione ambienti, ripristini, assistenze edili e consegna ordinata del cantiere.',
   },
   {
-    title: 'Isolamenti e finiture',
+    title: 'Finiture interne e gestione cantiere',
     description:
-      'Soluzioni per comfort acustico e termico, rasature, tinteggiature e dettagli di chiusura.',
+      'Rasature, dettagli finali, controllo operativo, documentazione e supporto organizzato per ogni fase di lavoro.',
   },
 ]
 
 export const publicProjects = [
   {
-    id: 'villa-san-michele',
-    title: 'Villa San Michele',
-    type: 'Residenziale',
-    location: 'Verona',
+    id: 'barcelo-roma',
+    title: 'Barcelò Roma',
+    type: 'Hospitality',
+    location: 'Roma, zona EUR',
     year: '2026',
-    status: 'Concluso',
-    summary: 'Controsoffitti, pareti tecniche e finiture interne per una villa su due livelli.',
+    status: 'Attivo',
+    summary: 'Cantiere reale collegato alla parte privata: piscina, soffitti fase 2, scala/aiuola, scarichi/pergole, docce esterne e rifiuti.',
   },
   {
-    id: 'uffici-borgo-roma',
-    title: 'Uffici Borgo Roma',
-    type: 'Commerciale',
-    location: 'Verona',
-    year: '2025',
-    status: 'Concluso',
-    summary: 'Ridisegno degli spazi interni con pareti modulari, isolamento e tinteggiatura.',
+    id: 'barcelo-piscina',
+    title: 'Barcelò Roma · Piscina',
+    type: 'Hospitality',
+    location: 'Roma, zona EUR',
+    year: '2026',
+    status: 'In lavorazione',
+    summary: 'Lavorazione reale dal tab Piscina: materiali, noleggi e lavorazioni dedicate alla zona piscina.',
   },
   {
-    id: 'appartamenti-lago',
-    title: 'Appartamenti Lago',
-    type: 'Residenziale',
-    location: 'Peschiera del Garda',
-    year: '2025',
-    status: 'Concluso',
-    summary: 'Finiture in cartongesso, nicchie tecniche e rasature per un complesso turistico.',
+    id: 'barcelo-soffitti-f2',
+    title: 'Barcelò Roma · Soffitti fase 2',
+    type: 'Hospitality',
+    location: 'Roma, zona EUR',
+    year: '2026',
+    status: 'In lavorazione',
+    summary: 'Lavorazioni reali su soffitti fase 2 e rete soffitti antincendio, lette dal master interno.',
   },
 ]
 
@@ -69,53 +75,53 @@ export const mockUsers = [
 
 export const internalProjects = [
   {
-    code: 'C-104',
-    name: 'Residenza Via Roma',
-    client: 'Studio Bianchi',
-    status: 'In corso',
-    progress: 68,
-    budget: '48.500 EUR',
+    code: 'C-001',
+    name: 'Barcelò Roma',
+    client: 'Barcelò Roma',
+    status: 'Attivo',
+    progress: 0,
+    budget: '26.676,38 EUR tracciati',
   },
   {
-    code: 'C-108',
-    name: 'Negozio Centro',
-    client: 'Retail Nord',
-    status: 'Da pianificare',
-    progress: 15,
-    budget: '18.900 EUR',
+    code: 'C-001-PISCINA',
+    name: 'Barcelò Roma · Piscina',
+    client: 'Barcelò Roma',
+    status: 'In lavorazione',
+    progress: 0,
+    budget: '8.490,95 EUR',
   },
   {
-    code: 'C-111',
-    name: 'Uffici Direzionali',
-    client: 'Tecnica Srl',
-    status: 'In verifica',
-    progress: 42,
-    budget: '33.200 EUR',
+    code: 'C-001-SOFFITTI-F2',
+    name: 'Barcelò Roma · Soffitti fase 2',
+    client: 'Barcelò Roma',
+    status: 'In lavorazione',
+    progress: 0,
+    budget: '2.334,09 EUR',
   },
 ]
 
 export const documents = [
-  { name: 'Fattura materiale cartongesso', project: 'C-104', type: 'Fattura', status: 'Da verificare' },
-  { name: 'Ricevuta bonifico acconto', project: 'C-108', type: 'Pagamento', status: 'Archiviato' },
-  { name: 'FIR smaltimento macerie', project: 'C-111', type: 'FIR', status: 'Da verificare' },
+  { name: 'Master contabile Barcelò Roma', project: 'C-001', type: 'Google Sheets', status: 'Importato' },
+  { name: 'Riepilogo Piscina', project: 'C-001-PISCINA', type: 'Tab lavorazione', status: 'Collegato' },
+  { name: 'Riepilogo Soffitti F2', project: 'C-001-SOFFITTI-F2', type: 'Tab lavorazione', status: 'Collegato' },
 ]
 
 export const sitePhotos = [
-  { title: 'Avanzamento controsoffitto', project: 'C-104', date: '30/04/2026', author: 'Marco' },
-  { title: 'Dettaglio veletta ingresso', project: 'C-104', date: '29/04/2026', author: 'Luca' },
-  { title: 'Pareti negozio lato cassa', project: 'C-108', date: '28/04/2026', author: 'Sara' },
+  { title: 'Foto generica cantiere hospitality', project: 'C-001', date: '2026', author: 'EuropaService' },
+  { title: 'Foto generica cartongesso e finiture', project: 'C-001-SOFFITTI-F2', date: '2026', author: 'EuropaService' },
+  { title: 'Foto generica supporto operativo', project: 'C-001-PISCINA', date: '2026', author: 'EuropaService' },
 ]
 
 export const quotes = [
-  { client: 'Famiglia Rossi', request: 'Ristrutturazione soggiorno', status: 'Nuovo', value: 'Da stimare' },
-  { client: 'Hotel Garda', request: 'Controsoffitti corridoi', status: 'Da valutare', value: '24.000 EUR' },
-  { client: 'Studio Medico Nord', request: 'Pareti divisorie', status: 'Contattato', value: '9.800 EUR' },
+  { client: 'Cliente privato', request: 'Cartongesso e finiture interne', status: 'Nuovo', value: 'Da stimare' },
+  { client: 'Struttura ricettiva', request: 'Supporto operativo cantiere', status: 'Da valutare', value: 'Da definire' },
+  { client: 'Studio tecnico', request: 'Assistenze edili e lavorazioni interne', status: 'Contattato', value: 'Da definire' },
 ]
 
 export const accountingRows = [
-  { item: 'Materiali lastre e profili', project: 'C-104', category: 'Materiali', amount: '6.430 EUR' },
-  { item: 'Acconto cliente', project: 'C-108', category: 'Entrata', amount: '5.000 EUR' },
-  { item: 'Smaltimento', project: 'C-111', category: 'Servizi', amount: '780 EUR' },
+  { item: 'Barcelò Roma · Totale tracciato', project: 'C-001', category: 'Master', amount: '26.676,38 EUR' },
+  { item: 'Piscina', project: 'C-001-PISCINA', category: 'Lavorazione', amount: '8.490,95 EUR' },
+  { item: 'Soffitti fase 2 e antincendio', project: 'C-001-SOFFITTI-F2', category: 'Lavorazione', amount: '2.334,09 EUR' },
 ]
 
 export const employees = [
