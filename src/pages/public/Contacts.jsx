@@ -31,16 +31,23 @@ const contactFaq = [
   },
   {
     question: 'Posso allegare foto, planimetrie o capitolati?',
-    answer: 'Sì. Il campo allegati è predisposto in modalità mock. Nel flusso reale potrà collegarsi allo storage per archiviare tutto per cantiere.',
+    answer: 'Sì. Puoi allegare materiale utile alla valutazione del lavoro: foto degli ambienti, planimetrie, capitolati o documenti tecnici.',
   },
   {
     question: 'Dove ha sede EuropaService?',
     answer: 'La sede legale è in VIA MARCO PERENNIO 21 - 52100 - AREZZO (AR). La società opera su cantieri in Toscana, Roma e altre zone in base al progetto.',
   },
   {
-    question: 'Il modulo invia davvero la richiesta?',
-    answer: 'In questa versione è mock: serve per progettare esperienza, contenuti e flusso futuro. Nessuna email reale viene inviata dal sito statico.',
+    question: 'Quanto tempo serve per ricevere una prima risposta?',
+    answer: 'Dopo la richiesta valutiamo le informazioni inviate e ti ricontattiamo per chiarire obiettivi, misure, urgenza e disponibilità per eventuale sopralluogo.',
   },
+]
+
+const nextSteps = [
+  ['01', 'Analisi richiesta', 'Valutiamo intervento, zona, urgenza, foto e allegati ricevuti.'],
+  ['02', 'Primo contatto', 'Chiariamo obiettivi, vincoli, misure e disponibilità per un sopralluogo.'],
+  ['03', 'Sopralluogo', 'Verifichiamo accessi, materiali, superfici, impianti e complessità del lavoro.'],
+  ['04', 'Proposta', 'Definiamo lavorazioni, tempi, priorità operative e prossimi passaggi.'],
 ]
 
 export function Contacts() {
@@ -114,8 +121,14 @@ export function Contacts() {
       <section className="premium-contact-layout" id="contatti-form">
         <div className="premium-contact-intro-card">
           <p className="premium-eyebrow">Richiedi preventivo</p>
-          <h2>Inserisci le informazioni essenziali</h2>
-          <p>Il modulo è mock: serve a progettare il flusso futuro verso area interna e backend. I campi sono pensati per raccogliere subito ciò che serve a valutare un cantiere.</p>
+          <h2>Raccontaci il lavoro da realizzare</h2>
+          <p>Invia le informazioni principali sul cantiere: città, tipologia di intervento, tempi, foto disponibili e priorità. Ti ricontatteremo per chiarire i dettagli e valutare i prossimi passaggi.</p>
+          <div className="premium-tags">
+            <small>Cartongesso</small>
+            <small>Finiture interne</small>
+            <small>Ristrutturazioni tecniche</small>
+            <small>Gestione cantiere</small>
+          </div>
           <div className="premium-map-card">
             <strong>EUROPA SERVICE S.R.L.</strong>
             <span>VIA MARCO PERENNIO 21 - 52100 - AREZZO (AR)</span>
@@ -150,24 +163,51 @@ export function Contacts() {
           </label>
           <label>Upload allegati<input type="file" onChange={(event) => update('fileName', event.target.files?.[0]?.name ?? '')} /></label>
           <label className="premium-form-wide">Messaggio<textarea rows="6" value={form.message} onChange={(event) => update('message', event.target.value)} placeholder="Descrivi progetto, tempi, stato attuale, accessi, priorità e criticità" /></label>
-          <button className="premium-button premium-button-primary" type="submit">Invia richiesta mock</button>
+          <button className="premium-button premium-button-primary" type="submit">Invia richiesta</button>
           {form.fileName ? <p className="premium-form-note">Allegato selezionato: {form.fileName}</p> : null}
-          {sent ? <p className="premium-form-success">Richiesta mock registrata. Nessun invio reale eseguito.</p> : null}
+          {sent ? <p className="premium-form-success">Richiesta registrata. Ti ricontatteremo per i prossimi passaggi.</p> : null}
         </form>
       </section>
 
-      <PremiumSection eyebrow="Dopo l’invio" title="Cosa succede dopo" tone="soft">
-        <div className="premium-process">
-          {[
-            ['01', 'Analisi richiesta', 'Valutiamo tipo intervento, zona, urgenza, foto e allegati.'],
-            ['02', 'Primo contatto', 'Chiariamo obiettivo, vincoli, misure e disponibilità per sopralluogo.'],
-            ['03', 'Sopralluogo', 'Verifichiamo accessi, materiali, superfici, impianti e complessità.'],
-            ['04', 'Proposta', 'Impostiamo lavorazioni, tempi, priorità operative e prossimi step.'],
-          ].map(([step, title, text]) => (
-            <article key={step} className="premium-scroll-reveal"><span>{step}</span><h3>{title}</h3><p>{text}</p></article>
+      <section className="premium-section premium-section-soft">
+        <div className="premium-section-heading premium-scroll-reveal" style={{ textAlign: 'center', justifyItems: 'center', marginInline: 'auto' }}>
+          <p className="premium-eyebrow">Dopo l’invio</p>
+          <h2>Cosa succede dopo</h2>
+          <p>Ti accompagniamo dai primi dati alla proposta operativa, con un percorso chiaro e senza passaggi inutili.</p>
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+            gap: '1rem',
+            width: 'min(100%, var(--pub-max))',
+            marginInline: 'auto',
+          }}
+        >
+          {nextSteps.map(([step, title, text]) => (
+            <article key={step} className="premium-card premium-scroll-reveal">
+              <span
+                style={{
+                  display: 'inline-grid',
+                  width: '2.15rem',
+                  height: '2.15rem',
+                  placeItems: 'center',
+                  borderRadius: '999px',
+                  background: 'var(--pub-ink)',
+                  color: '#fff',
+                  fontSize: '0.76rem',
+                  fontWeight: 900,
+                  marginBottom: '1rem',
+                }}
+              >
+                {step}
+              </span>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
           ))}
         </div>
-      </PremiumSection>
+      </section>
 
       <PremiumSection eyebrow="FAQ" title="Domande prima del contatto">
         <PremiumFAQ items={contactFaq} />
