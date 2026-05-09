@@ -294,6 +294,7 @@ function getNavIcon(label) {
     Report: 'report',
     Dipendenti: 'users',
     Impostazioni: 'settings',
+    'Sito pubblico': 'home',
   }
 
   return <InternalIcon name={icons[label] ?? 'file'} size={17} />
@@ -328,6 +329,7 @@ function getInternalSearchResults(query, navItems, dataStore) {
 function BottomDashboardNav({ items, currentPath }) {
   const [isMoreOpen, setIsMoreOpen] = useState(false)
   const shouldShowAllItems = items.length <= 5
+  const publicSiteItem = { path: '/', label: 'Sito pubblico' }
   const primaryLabels = ['Dashboard', 'Cantieri', 'Documenti', 'Contabilita']
   const preferredItems = primaryLabels
     .map((label) => items.find((item) => item.label === label || item.label.startsWith(label)))
@@ -336,8 +338,9 @@ function BottomDashboardNav({ items, currentPath }) {
     ? items
     : (preferredItems.length ? preferredItems : items.slice(0, 4))
   const primaryPaths = new Set(fallbackItems.map((item) => item.path))
-  const moreItems = shouldShowAllItems ? [] : items.filter((item) => !primaryPaths.has(item.path))
-  const isMoreActive = moreItems.some((item) => isActive(currentPath, item.path))
+  const dashboardMoreItems = shouldShowAllItems ? [] : items.filter((item) => !primaryPaths.has(item.path))
+  const moreItems = [publicSiteItem, ...dashboardMoreItems]
+  const isMoreActive = dashboardMoreItems.some((item) => isActive(currentPath, item.path))
 
   function closeMore() {
     setIsMoreOpen(false)
@@ -401,6 +404,7 @@ function getCompactNavLabel(label) {
     Contabilita: 'Conti',
     Caricamenti: 'Carichi',
     Impostazioni: 'Impost.',
+    'Sito pubblico': 'Sito',
   }
 
   return labels[label] ?? label
