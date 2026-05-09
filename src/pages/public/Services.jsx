@@ -9,13 +9,11 @@ import {
   PremiumTextCard,
   PremiumTimeline,
 } from '../../components/PublicComponents'
-import { PremiumChipMarquee } from '../../components/PremiumChipMarquee'
 import { SEO } from '../../components/SEO'
 import {
   mainHeroImage,
   operationalMethod,
   premiumServices,
-  sectorsServed,
   serviceFaq,
   workMethod,
 } from '../../data/publicPremiumData'
@@ -25,16 +23,16 @@ export function Services() {
   return (
     <>
       <SEO
-        title="Servizi premium per edilizia, cartongesso e finiture"
+        title="Servizi per edilizia, cartongesso e finiture"
         description="Servizi EuropaService: cartongesso, ristrutturazioni tecniche, finiture interne, gestione cantiere, manutenzioni e supporto operativo."
       />
 
       <PremiumHero
         eyebrow="Servizi"
         title="Servizi coordinati per cantieri interni di qualità"
-        text="Non trattiamo le lavorazioni come elementi separati. Cartongesso, finiture, manutenzioni e gestione operativa vengono organizzati dentro un unico metodo, così il cantiere resta leggibile e il risultato finale è coerente."
+        text="Cartongesso, finiture, manutenzioni e gestione operativa vengono organizzati dentro un unico metodo, così il cantiere resta leggibile e il risultato finale è coerente."
         image={mainHeroImage}
-        imageAlt="Lavorazioni interne in cantiere premium"
+        imageAlt="Lavorazioni interne in cantiere"
         primaryLabel="Richiedi preventivo"
         secondaryLabel="Guarda i cantieri"
         secondaryHref="#/cantieri"
@@ -44,8 +42,8 @@ export function Services() {
 
       <PremiumSection
         eyebrow="Cosa facciamo"
-        title="Sei aree operative, un unico standard"
-        text="Ogni servizio è progettato per dialogare con gli altri: meno dispersione, più controllo e una consegna più pulita."
+        title="Aree operative con un unico standard"
+        text="Ogni servizio è pensato per dialogare con gli altri: meno dispersione, più controllo e una consegna più pulita."
       >
         <div className="premium-service-grid">
           {premiumServices.map((service) => <PremiumServiceCard detailed key={service.id} service={service} />)}
@@ -54,7 +52,7 @@ export function Services() {
 
       <PremiumImageSplit
         eyebrow="Cartongesso e sistemi a secco"
-        title="Precisione millimetrica per pareti, velette e controsoffitti."
+        title="Precisione per pareti, velette e controsoffitti."
         text="Le lavorazioni in cartongesso sono spesso la struttura invisibile della qualità finale: quote, impianti, luce, acustica e finiture dipendono da una posa precisa. Per questo curiamo tracciamenti, profili, chiusure e dettagli prima ancora della rasatura."
         image={serviceImages.cartongesso.src}
         imageAlt={serviceImages.cartongesso.alt}
@@ -68,7 +66,7 @@ export function Services() {
       <PremiumImageSplit
         eyebrow="Ristrutturazioni tecniche"
         title="Quando il cantiere è complesso serve una regia chiara."
-        text="Hotel, negozi e uffici hanno vincoli reali: orari, accessi, fornitori, clienti, pulizia, rumore e tempi di consegna. La nostra gestione serve a trasformare queste variabili in un piano operativo leggibile."
+        text="Accessi, fornitori, pulizia, rumore e tempi di consegna sono variabili reali di ogni cantiere. La nostra gestione serve a trasformarle in un piano operativo leggibile."
         image={serviceImages.ediliGenerali.src}
         imageAlt={serviceImages.ediliGenerali.alt}
         reverse
@@ -77,7 +75,7 @@ export function Services() {
           <small>Fasi programmate</small>
           <small>Assistenze edili</small>
           <small>Ripristini</small>
-          <small>Coordinamento DL</small>
+          <small>Coordinamento</small>
         </div>
       </PremiumImageSplit>
 
@@ -95,10 +93,6 @@ export function Services() {
 
       <PremiumSection eyebrow="Metodo operativo" title="Cosa controlliamo durante il lavoro" tone="soft">
         <PremiumTimeline items={operationalMethod} />
-      </PremiumSection>
-
-      <PremiumSection eyebrow="Settori serviti" title="Contesti diversi, stesso livello di controllo">
-        <PremiumChipMarquee items={sectorsServed} className="premium-sector-row" ariaLabel="Settori serviti" />
       </PremiumSection>
 
       <PremiumSection eyebrow="FAQ" title="Domande frequenti" tone="soft">
