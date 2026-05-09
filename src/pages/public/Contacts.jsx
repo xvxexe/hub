@@ -8,7 +8,7 @@ import {
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import { mainHeroImage } from '../../data/publicPremiumData'
-import { publicCompanyLegalRows, realContactCards } from '../../data/publicRealData'
+import { realContactCards } from '../../data/publicRealData'
 
 const initialForm = {
   name: '',
@@ -92,24 +92,6 @@ export function Contacts() {
           ))}
         </div>
       </PremiumSection>
-
-      <section className="premium-contact-layout">
-        <div className="premium-contact-intro-card">
-          <p className="premium-eyebrow">Informazioni aziendali</p>
-          <h2>EUROPA SERVICE S.R.L.</h2>
-          <p>Riferimenti societari ufficiali per clienti, fornitori, tecnici e amministrazioni.</p>
-          <p>
-            <strong>Sede legale</strong><br />
-            VIA MARCO PERENNIO 21 - 52100 - AREZZO (AR)
-          </p>
-        </div>
-
-        <div className="premium-feature-grid" aria-label="Dati societari EUROPA SERVICE S.R.L.">
-          {publicCompanyLegalRows.map((row) => (
-            <PremiumTextCard key={row.label} title={row.label} text={row.value} />
-          ))}
-        </div>
-      </section>
 
       <section className="premium-contact-layout" id="contatti-form">
         <div className="premium-contact-intro-card">
