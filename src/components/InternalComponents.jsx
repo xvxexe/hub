@@ -45,22 +45,8 @@ export function ActivityFeed({ title, items }) {
   )
 }
 
-export function WorkflowStepper({ title, steps }) {
-  return (
-    <section className="internal-panel">
-      <div className="section-heading">
-        <h2>{title}</h2>
-      </div>
-      <div className="workflow-stepper">
-        {steps.map((step, index) => (
-          <article className="workflow-step" key={step}>
-            <span>{index + 1}</span>
-            <strong>{step}</strong>
-          </article>
-        ))}
-      </div>
-    </section>
-  )
+export function WorkflowStepper() {
+  return null
 }
 
 export function DataModeBadge({ children = 'Dati mock locali' }) {
