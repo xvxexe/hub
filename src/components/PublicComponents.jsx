@@ -1,5 +1,27 @@
 import { SafeImage } from './SafeImage'
 
+function scrollToQuoteForm() {
+  const target = document.getElementById('contatti-form')
+  if (target) {
+    target.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }
+}
+
+function handlePremiumLinkClick(event, href) {
+  if (href !== '#/preventivo?form=1') return
+
+  event.preventDefault()
+
+  const currentRoute = window.location.hash.split('?')[0]
+  if (currentRoute !== '#/preventivo') {
+    window.location.hash = '/preventivo?form=1'
+    window.setTimeout(scrollToQuoteForm, 180)
+    return
+  }
+
+  scrollToQuoteForm()
+}
+
 export function PremiumHero({
   eyebrow,
   title,
@@ -32,8 +54,8 @@ export function PremiumHero({
         <h1>{title}</h1>
         {text ? <p>{text}</p> : null}
         <div className="premium-actions">
-          <a className="premium-button premium-button-primary" href={primaryHref}>{primaryLabel}</a>
-          <a className="premium-button premium-button-secondary" href={secondaryHref}>{secondaryLabel}</a>
+          <a className="premium-button premium-button-primary" href={primaryHref} onClick={(event) => handlePremiumLinkClick(event, primaryHref)}>{primaryLabel}</a>
+          <a className="premium-button premium-button-secondary" href={secondaryHref} onClick={(event) => handlePremiumLinkClick(event, secondaryHref)}>{secondaryLabel}</a>
         </div>
         {meta.length > 0 ? (
           <div className="premium-hero-meta" aria-label="Settori e servizi principali">
@@ -157,7 +179,7 @@ export function PremiumCTA({ title = 'Parliamo del tuo progetto', text = 'Raccon
         <p>{text}</p>
       </div>
       <div className="premium-actions">
-        <a className="premium-button premium-button-primary" href="#/preventivo">Richiedi preventivo</a>
+        <a className="premium-button premium-button-primary" href="#/preventivo?form=1" onClick={(event) => handlePremiumLinkClick(event, '#/preventivo?form=1')}>Richiedi preventivo</a>
         <a className="premium-button premium-button-secondary" href="#/contatti">Parla con noi</a>
       </div>
     </section>
