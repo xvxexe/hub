@@ -415,6 +415,52 @@ function getPublicLabel(item) {
 function PublicHeader({ currentPath }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
+  const menuPanelStyle = {
+    position: 'fixed',
+    zIndex: 10000,
+    inset: 0,
+    display: 'grid',
+    gridTemplateRows: 'auto minmax(0, 1fr)',
+    gap: '1rem',
+    width: '100vw',
+    height: '100dvh',
+    minHeight: '100vh',
+    padding: 'max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom))',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    background: '#fff',
+    color: '#111827',
+    pointerEvents: isMenuOpen ? 'auto' : 'none',
+    opacity: isMenuOpen ? 1 : 0,
+    transform: isMenuOpen ? 'translateX(0)' : 'translateX(100%)',
+    transition: 'transform 0.34s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease',
+  }
+
+  const menuHeaderStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr)',
+    alignItems: 'start',
+    justifyItems: 'start',
+    gap: '0.4rem',
+    padding: '0 3.75rem 0.85rem 0',
+    borderBottom: '1px solid #e2e8f0',
+  }
+
+  const menuLogoStyle = {
+    display: 'block',
+    width: 'min(52vw, 180px)',
+    maxWidth: '180px',
+    height: 'auto',
+    objectFit: 'contain',
+  }
+
+  const menuLinksStyle = {
+    display: 'grid',
+    alignContent: 'start',
+    gap: '0.7rem',
+    padding: '0.25rem 0 1rem',
+  }
+
   useEffect(() => {
     if (!isMenuOpen) return undefined
 
@@ -464,21 +510,42 @@ function PublicHeader({ currentPath }) {
       </nav>
 
       <div className={isMenuOpen ? 'mobile-menu-backdrop open' : 'mobile-menu-backdrop'} onClick={() => setIsMenuOpen(false)} />
-      <nav aria-label="Menu principale mobile" className={isMenuOpen ? 'mobile-public-menu open' : 'mobile-public-menu'} id="public-mobile-menu">
-        <div className="mobile-menu-header">
-          <a className="brand mobile-menu-brand" href="#/" onClick={() => setIsMenuOpen(false)}>
-            <BrandLogo className="mobile-menu-logo" />
+      <nav aria-label="Menu principale mobile" id="public-mobile-menu" style={menuPanelStyle}>
+        <div style={menuHeaderStyle}>
+          <a href="#/" onClick={() => setIsMenuOpen(false)} aria-label="Vai alla home">
+            <img style={menuLogoStyle} src={europaServiceLogoUrl} alt="EuropaService" />
           </a>
-          <small>Menu principale</small>
+          <small style={{ color: '#64748b', fontSize: '0.86rem', fontWeight: 850, letterSpacing: '0.02em' }}>Menu principale</small>
         </div>
 
-        <div className="mobile-menu-links">
-          {publicMobileNav.map((item) => (
-            <a className={item.path.startsWith('/dashboard') ? 'mobile-private-link' : undefined} aria-current={isActive(currentPath, item.path) ? 'page' : undefined} href={`#${item.path}`} key={item.path} onClick={() => setIsMenuOpen(false)}>
-              <span>{item.label}</span>
-              <small>{item.description}</small>
-            </a>
-          ))}
+        <div style={menuLinksStyle}>
+          {publicMobileNav.map((item) => {
+            const active = isActive(currentPath, item.path)
+            const privateLink = item.path.startsWith('/dashboard')
+            return (
+              <a
+                aria-current={active ? 'page' : undefined}
+                href={`#${item.path}`}
+                key={item.path}
+                onClick={() => setIsMenuOpen(false)}
+                style={{
+                  display: 'grid',
+                  gap: '0.26rem',
+                  minHeight: '4.35rem',
+                  padding: '0.86rem 1rem',
+                  border: privateLink ? '1px solid #111827' : active ? '1px solid rgba(184, 100, 43, 0.32)' : '1px solid #e2e8f0',
+                  borderRadius: '1.05rem',
+                  background: privateLink ? '#111827' : active ? '#fff7ed' : '#fff',
+                  color: privateLink ? '#fff' : '#111827',
+                  textDecoration: 'none',
+                  boxShadow: active || privateLink ? '0 14px 30px rgba(15, 23, 42, 0.08)' : 'none',
+                }}
+              >
+                <span style={{ fontSize: '1.28rem', lineHeight: 1.05, fontWeight: 900 }}>{item.label}</span>
+                <small style={{ color: privateLink ? 'rgba(255,255,255,0.68)' : '#64748b', fontSize: '0.98rem', lineHeight: 1.28, fontWeight: 760 }}>{item.description}</small>
+              </a>
+            )
+          })}
         </div>
       </nav>
     </header>
