@@ -98,18 +98,15 @@ export function Contacts() {
           <p className="premium-eyebrow">Informazioni aziendali</p>
           <h2>EUROPA SERVICE S.R.L.</h2>
           <p>Riferimenti societari ufficiali per clienti, fornitori, tecnici e amministrazioni.</p>
-          <div className="premium-map-card">
-            <strong>Sede legale</strong>
-            <span>VIA MARCO PERENNIO 21 - 52100 - AREZZO (AR)</span>
-          </div>
+          <p>
+            <strong>Sede legale</strong><br />
+            VIA MARCO PERENNIO 21 - 52100 - AREZZO (AR)
+          </p>
         </div>
 
-        <div className="premium-form" aria-label="Dati societari EUROPA SERVICE S.R.L.">
+        <div className="premium-feature-grid" aria-label="Dati societari EUROPA SERVICE S.R.L.">
           {publicCompanyLegalRows.map((row) => (
-            <label key={row.label} className={row.label === 'Indirizzo' || row.label === 'PEC' ? 'premium-form-wide' : undefined}>
-              {row.label}
-              <strong>{row.value}</strong>
-            </label>
+            <PremiumTextCard key={row.label} title={row.label} text={row.value} />
           ))}
         </div>
       </section>
@@ -119,15 +116,15 @@ export function Contacts() {
           <p className="premium-eyebrow">Richiedi un preventivo</p>
           <h2>Parlaci del tuo progetto</h2>
           <p>Compila il modulo e descrivi le tue esigenze. Ti ricontatteremo per un primo confronto e per valutare una proposta su misura.</p>
-          <ul className="premium-check-list">
-            <li>Sopralluogo su richiesta</li>
-            <li>Preventivi chiari e trasparenti</li>
-            <li>Valutazione tecnica del lavoro</li>
-          </ul>
-          <div className="premium-map-card">
-            <strong>Canale formale</strong>
-            <span>PEC: europaservizi272@pec.it</span>
-          </div>
+          <p>
+            ✓ Sopralluogo su richiesta<br />
+            ✓ Preventivi chiari e trasparenti<br />
+            ✓ Valutazione tecnica del lavoro
+          </p>
+          <p>
+            <strong>Canale formale</strong><br />
+            PEC: europaservizi272@pec.it
+          </p>
         </div>
 
         <form className="premium-form" onSubmit={submit}>
