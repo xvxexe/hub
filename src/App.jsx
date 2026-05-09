@@ -75,6 +75,18 @@ function navigateTo(path) {
   window.location.assign(`#${path}`)
 }
 
+function scrollPublicRoute(path, behavior = 'auto') {
+  if (path === '/preventivo') {
+    const target = document.getElementById('contatti-form')
+    if (target) {
+      target.scrollIntoView({ block: 'start', behavior })
+      return
+    }
+  }
+
+  window.scrollTo({ top: 0, left: 0, behavior })
+}
+
 function renderRoute(path, session, selectedRole, handlers, mockStore) {
   if (path === '/') return <Home />
   if (path === '/servizi') return <Services />
@@ -279,6 +291,13 @@ export default function App() {
       navigateTo('/dashboard')
     }
   }, [session, path])
+
+  useEffect(() => {
+    if (path.startsWith('/dashboard')) return undefined
+
+    const timeoutId = window.setTimeout(() => scrollPublicRoute(path), 90)
+    return () => window.clearTimeout(timeoutId)
+  }, [path])
 
   async function loginWithCredentials(credentials) {
     setLoginError('')
