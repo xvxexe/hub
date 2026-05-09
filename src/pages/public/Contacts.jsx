@@ -75,7 +75,7 @@ export function Contacts() {
         image={mainHeroImage}
         imageAlt="Cantiere interno per richiesta preventivo"
         primaryLabel="Compila il modulo"
-        primaryHref="#contatti-form"
+        primaryHref="#/preventivo?form=1"
         secondaryLabel="Scopri i servizi"
         variant="compact"
         meta={['EUROPA SERVICE S.R.L.', 'P.IVA 02399910518', 'Arezzo', 'PEC ufficiale']}
