@@ -6,24 +6,17 @@ import {
   PremiumProjectCard,
   PremiumSection,
   PremiumServiceCard,
-  PremiumStats,
   PremiumTextCard,
-  TestimonialMock,
 } from '../../components/PublicComponents'
-import { PremiumChipMarquee } from '../../components/PremiumChipMarquee'
 import { SEO } from '../../components/SEO'
 import {
-  operationalMethod,
-  partners,
-  premiumProjects,
   premiumServices,
-  premiumStats,
-  sectorsServed,
-  testimonials,
-  teamImage,
   workMethod,
 } from '../../data/publicPremiumData'
+import { realPublicProjects } from '../../data/publicRealData'
 import { heroImages, serviceImages } from '../../data/publicImages'
+
+const featuredProject = realPublicProjects[0]
 
 export function Home() {
   return (
@@ -37,15 +30,11 @@ export function Home() {
         eyebrow="EuropaService"
         title="Costruiamo spazi di valore"
         text="Edilizia tecnica, cartongesso, ristrutturazioni e finiture interne per chi cerca un partner serio: organizzazione, presenza in cantiere, documentazione e un risultato finale pulito."
-        image={premiumProjects[0].image}
-        imageAlt="Cantiere interno premium con lavorazioni di cartongesso e finiture"
+        image={featuredProject.image}
+        imageAlt="Cantiere interno con lavorazioni di cartongesso e finiture"
         variant="overlay"
         meta={['Edilizia tecnica', 'Cartongesso', 'Finiture interne', 'Gestione cantieri']}
       />
-
-      <PremiumSection title="Numeri che raccontano metodo" text="Non vendiamo solo manodopera: portiamo controllo, ordine e continuità operativa nei cantieri interni.">
-        <PremiumStats stats={premiumStats} />
-      </PremiumSection>
 
       <PremiumImageSplit
         eyebrow="Approccio"
@@ -74,21 +63,15 @@ export function Home() {
         </div>
       </PremiumSection>
 
-      <PremiumSection eyebrow="Dove interveniamo" title="Settori con esigenze diverse, stesso livello di controllo" text="Retail, hospitality, uffici e residenziale richiedono tempi, finiture e comunicazione differenti. Il metodo resta costante: analisi, piano, esecuzione, verifica.">
-        <PremiumChipMarquee items={sectorsServed} className="premium-sector-row" ariaLabel="Settori serviti" />
-      </PremiumSection>
-
       <PremiumSection
         eyebrow="Portfolio"
-        title="Cantieri in evidenza"
-        text="Progetti selezionati per mostrare lavorazioni tecniche, gestione operativa e qualità finale degli ambienti consegnati."
+        title="Cantiere in evidenza"
+        text="Al momento mostriamo solo cantieri con informazioni operative disponibili e verificabili. Gli altri case study verranno aggiunti quando saranno pronti."
         tone="soft"
-        action={<a className="premium-button premium-button-secondary" href="#/cantieri">Guarda il portfolio</a>}
+        action={<a className="premium-button premium-button-secondary" href="#/cantieri">Apri il case study</a>}
       >
         <div className="premium-project-grid">
-          {premiumProjects.slice(0, 3).map((project, index) => (
-            <PremiumProjectCard featured={index === 0} key={project.id} project={project} />
-          ))}
+          <PremiumProjectCard featured project={featuredProject} />
         </div>
       </PremiumSection>
 
@@ -105,9 +88,8 @@ export function Home() {
         reverse
       >
         <div className="premium-feature-grid">
-          {operationalMethod.slice(0, 2).map((item) => (
-            <PremiumTextCard key={item.title} title={item.title} text={item.text} eyebrow={item.step} />
-          ))}
+          <PremiumTextCard title="Ordine documentale" text="Foto, note, preventivi e aggiornamenti vengono organizzati per cantiere e fase." />
+          <PremiumTextCard title="Comunicazione chiara" text="Il cliente sa cosa è stato fatto, cosa manca e quali decisioni servono." />
         </div>
       </PremiumImageSplit>
 
@@ -116,26 +98,6 @@ export function Home() {
           <PremiumTextCard title="Referente unico" text="Ogni progetto ha una regia chiara: meno telefonate sparse e più responsabilità operative." />
           <PremiumTextCard title="Finiture controllate" text="Allineamenti, rasature, chiusure, pulizia e dettagli vengono verificati prima della consegna." />
           <PremiumTextCard title="Cantiere leggibile" text="Le fasi sono organizzate in modo che cliente, tecnici e squadre capiscano sempre lo stato reale." />
-        </div>
-      </PremiumSection>
-
-      <PremiumSection eyebrow="Partner e filiera" title="Collaboriamo con una rete tecnica affidabile">
-        <PremiumChipMarquee items={partners} className="premium-logo-row" ariaLabel="Partner e filiera" speed="slow" />
-      </PremiumSection>
-
-      <PremiumImageSplit
-        eyebrow="Chi siamo"
-        title="Una squadra pensata per gestire lavorazioni interne con standard elevati."
-        text="EuropaService lavora con un approccio tecnico e ordinato: referenti chiari, squadre coordinate, materiali selezionati, documentazione delle fasi e attenzione ai dettagli che definiscono la qualità finale."
-        image={teamImage}
-        imageAlt="Squadra EuropaService in cantiere interno"
-      >
-        <a className="premium-button premium-button-secondary" href="#/chi-siamo">Conosci EuropaService</a>
-      </PremiumImageSplit>
-
-      <PremiumSection eyebrow="Clienti" title="Fiducia costruita sul campo" tone="soft">
-        <div className="premium-testimonial-grid">
-          {testimonials.map((testimonial) => <TestimonialMock key={testimonial.author} testimonial={testimonial} />)}
         </div>
       </PremiumSection>
 
