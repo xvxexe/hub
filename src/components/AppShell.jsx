@@ -10,12 +10,13 @@ import { getDashboardNavForRole, getRole } from '../lib/roles'
 const primaryPublicNav = publicNav.filter((item) => ['/', '/servizi', '/cantieri'].includes(item.path))
 const secondaryPublicNav = publicNav.filter((item) => item.path === '/contatti')
 const publicMobileNav = [
-  { path: '/', label: 'Home', description: 'Panoramica servizi e metodo EuropaService' },
-  { path: '/servizi', label: 'Servizi', description: 'Cartongesso, finiture, ristrutturazioni e gestione cantiere' },
-  { path: '/cantieri', label: 'Progetti', description: 'Portfolio, cantieri e case study' },
-  { path: '/chi-siamo', label: 'Azienda', description: 'Metodo, valori e organizzazione operativa' },
-  { path: '/contatti', label: 'Contatti', description: 'Telefono, email, modulo e sopralluogo' },
-  { path: '/dashboard/login', label: 'Area privata', description: 'Accesso area privata admin, capo e dipendenti' },
+  { path: '/', label: 'Home', description: 'Panoramica servizi' },
+  { path: '/servizi', label: 'Servizi', description: 'Cartongesso e finiture' },
+  { path: '/cantieri', label: 'Progetti', description: 'Cantieri e case study' },
+  { path: '/chi-siamo', label: 'Azienda', description: 'Metodo e valori' },
+  { path: '/contatti', label: 'Contatti', description: 'Email, PEC e sede' },
+  { path: '/preventivo', label: 'Preventivo', description: 'Richiedi sopralluogo' },
+  { path: '/dashboard/login', label: 'Area privata', description: 'Accesso riservato' },
 ]
 
 function BrandLogo({ className = '', variant = 'default' }) {
@@ -465,8 +466,10 @@ function PublicHeader({ currentPath }) {
       <div className={isMenuOpen ? 'mobile-menu-backdrop open' : 'mobile-menu-backdrop'} onClick={() => setIsMenuOpen(false)} />
       <nav aria-label="Menu principale mobile" className={isMenuOpen ? 'mobile-public-menu open' : 'mobile-public-menu'} id="public-mobile-menu">
         <div className="mobile-menu-header">
-          <div><strong>EuropaService</strong><small>Menu principale</small></div>
-          <button type="button" className="mobile-menu-close" aria-label="Chiudi menu" onClick={() => setIsMenuOpen(false)}>×</button>
+          <a className="brand mobile-menu-brand" href="#/" onClick={() => setIsMenuOpen(false)}>
+            <BrandLogo className="mobile-menu-logo" />
+          </a>
+          <small>Menu principale</small>
         </div>
 
         <div className="mobile-menu-links">
@@ -476,12 +479,6 @@ function PublicHeader({ currentPath }) {
               <small>{item.description}</small>
             </a>
           ))}
-        </div>
-
-        <div className="mobile-menu-cta-panel">
-          <small>Hai un lavoro da valutare?</small>
-          <strong>Richiedi un preventivo o un sopralluogo.</strong>
-          <a className="nav-cta" aria-current={isActive(currentPath, '/preventivo') ? 'page' : undefined} href="#/preventivo" onClick={() => setIsMenuOpen(false)}>Richiedi preventivo</a>
         </div>
       </nav>
     </header>
