@@ -11,10 +11,10 @@ import {
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import {
-  mainHeroImage,
   operationalMethod,
   premiumServices,
   serviceFaq,
+  servicesHeroImage,
   workMethod,
 } from '../../data/publicPremiumData'
 import { serviceImages } from '../../data/publicImages'
@@ -31,8 +31,8 @@ export function Services() {
         eyebrow="Servizi"
         title="Servizi coordinati per cantieri interni di qualità"
         text="Cartongesso, finiture, manutenzioni e gestione operativa vengono organizzati dentro un unico metodo, così il cantiere resta leggibile e il risultato finale è coerente."
-        image={mainHeroImage}
-        imageAlt="Lavorazioni interne in cantiere"
+        image={servicesHeroImage}
+        imageAlt="Foto reale di cantiere edile per servizi"
         primaryLabel="Richiedi preventivo"
         secondaryLabel="Guarda i cantieri"
         secondaryHref="#/cantieri"
@@ -54,8 +54,8 @@ export function Services() {
         eyebrow="Cartongesso e sistemi a secco"
         title="Precisione per pareti, velette e controsoffitti."
         text="Le lavorazioni in cartongesso sono spesso la struttura invisibile della qualità finale: quote, impianti, luce, acustica e finiture dipendono da una posa precisa. Per questo curiamo tracciamenti, profili, chiusure e dettagli prima ancora della rasatura."
-        image={serviceImages.cartongesso.src}
-        imageAlt={serviceImages.cartongesso.alt}
+        image={serviceImages.paretiDivisorie.src}
+        imageAlt={serviceImages.paretiDivisorie.alt}
       >
         <div className="premium-feature-grid">
           <PremiumTextCard title="Pareti e contropareti" text="Soluzioni tecniche per distribuzione interna, isolamento e integrazione impiantistica." />
@@ -67,8 +67,8 @@ export function Services() {
         eyebrow="Ristrutturazioni tecniche"
         title="Quando il cantiere è complesso serve una regia chiara."
         text="Accessi, fornitori, pulizia, rumore e tempi di consegna sono variabili reali di ogni cantiere. La nostra gestione serve a trasformarle in un piano operativo leggibile."
-        image={serviceImages.ediliGenerali.src}
-        imageAlt={serviceImages.ediliGenerali.alt}
+        image={serviceImages.materials.src}
+        imageAlt={serviceImages.materials.alt}
         reverse
       >
         <div className="premium-tags">
