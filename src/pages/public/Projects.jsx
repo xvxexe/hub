@@ -7,11 +7,12 @@ import {
   PremiumTextCard,
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
+import { projectsHeroImage } from '../../data/publicPremiumData'
 import { realPublicProjects } from '../../data/publicRealData'
-import { serviceImages } from '../../data/publicImages'
+import { projectImages, serviceImages } from '../../data/publicImages'
 
 export function Projects() {
-  const featured = realPublicProjects[0]
+  const featured = { ...realPublicProjects[0], image: projectImages.barceloRoma.src, alt: projectImages.barceloRoma.alt }
 
   return (
     <>
@@ -24,8 +25,8 @@ export function Projects() {
         eyebrow="Cantieri"
         title="Cantieri documentati con attenzione a ordine e qualità"
         text="Mostriamo solo interventi per cui abbiamo informazioni reali e utilizzabili. Altri case study verranno aggiunti quando saranno completi e pronti per la pubblicazione."
-        image={featured.image}
-        imageAlt={featured.alt}
+        image={projectsHeroImage}
+        imageAlt="Foto reale di cantiere edile per portfolio"
         primaryLabel="Richiedi un lavoro simile"
         secondaryLabel="Apri case study"
         secondaryHref={`#/cantieri/${featured.id}`}
@@ -58,17 +59,6 @@ export function Projects() {
           <PremiumTextCard title="Consegna" text="Controlliamo dettagli, pulizia e finiture per lasciare ambienti pronti e coerenti." />
         </div>
       </PremiumImageSplit>
-
-      <PremiumSection
-        eyebrow="Portfolio"
-        title="Case study disponibili"
-        text="Al momento è pubblicato solo il cantiere Barcelò Roma. Verranno aggiunti nuovi interventi quando saranno disponibili dati, testi e immagini adeguati."
-        tone="soft"
-      >
-        <div className="premium-project-grid">
-          <PremiumProjectCard project={featured} />
-        </div>
-      </PremiumSection>
 
       <PremiumSection eyebrow="Case study" title="Cosa raccontiamo di ogni intervento">
         <div className="premium-feature-grid">
