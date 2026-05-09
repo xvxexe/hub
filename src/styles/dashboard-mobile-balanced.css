@@ -363,7 +363,7 @@
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
     align-items: center !important;
-    gap: 0.86rem !important;
+    gap: 0.62rem !important;
   }
 
   .cost-total-block strong,
@@ -381,9 +381,20 @@
     flex: 0 0 auto !important;
   }
 
+  .cost-card-redesign .donut-chart {
+    width: clamp(5.25rem, 22vw, 6.35rem) !important;
+    height: clamp(5.25rem, 22vw, 6.35rem) !important;
+    justify-self: end !important;
+    margin-inline: 0 !important;
+  }
+
   .donut-chart span {
     font-size: 0.68rem !important;
     line-height: 1.18 !important;
+  }
+
+  .cost-card-redesign .donut-chart span {
+    display: none !important;
   }
 
   .cost-legend,
@@ -624,18 +635,23 @@
 @media (max-width: 430px) {
   .cost-summary,
   .cost-summary-redesign {
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.58rem !important;
   }
 
-  .donut-chart {
-    width: min(9rem, 58vw) !important;
-    height: min(9rem, 58vw) !important;
+  .cost-card-redesign .donut-chart {
+    width: clamp(5rem, 24vw, 6rem) !important;
+    height: clamp(5rem, 24vw, 6rem) !important;
+    justify-self: end !important;
+    margin-inline: 0 !important;
   }
 
   .cost-legend,
   .cost-legend-redesign,
   .compact-category-grid {
     grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.48rem !important;
   }
 }
 
