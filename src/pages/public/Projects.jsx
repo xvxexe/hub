@@ -1,76 +1,37 @@
-import { useMemo, useState } from 'react'
 import {
   PremiumCTA,
   PremiumHero,
   PremiumImageSplit,
   PremiumProjectCard,
   PremiumSection,
-  PremiumStats,
   PremiumTextCard,
-  TestimonialMock,
 } from '../../components/PublicComponents'
-import { PremiumChipMarquee } from '../../components/PremiumChipMarquee'
 import { SEO } from '../../components/SEO'
-import {
-  partners,
-  testimonials,
-} from '../../data/publicPremiumData'
 import { realPublicProjects } from '../../data/publicRealData'
 import { serviceImages } from '../../data/publicImages'
 
-const categories = ['Tutti', 'Hospitality']
-
 export function Projects() {
-  const [category, setCategory] = useState('Tutti')
-  const filteredProjects = useMemo(
-    () => realPublicProjects.filter((project) => category === 'Tutti' || project.category === category),
-    [category],
-  )
   const featured = realPublicProjects[0]
 
   return (
     <>
       <SEO
         title="Cantieri e portfolio"
-        description="Portfolio EuropaService: case study e lavorazioni per strutture ricettive, interni tecnici, cartongesso, finiture e gestione cantiere."
+        description="Portfolio EuropaService: case study e lavorazioni con dati disponibili e verificabili."
       />
 
       <PremiumHero
         eyebrow="Cantieri"
-        title="Interventi organizzati per qualità, tempi e ordine operativo"
-        text="Ogni cantiere viene seguito con attenzione alle fasi, alla pulizia delle aree di lavoro, al coordinamento delle squadre e alla qualità finale degli ambienti."
+        title="Cantieri documentati con attenzione a ordine e qualità"
+        text="Mostriamo solo interventi per cui abbiamo informazioni reali e utilizzabili. Altri case study verranno aggiunti quando saranno completi e pronti per la pubblicazione."
         image={featured.image}
         imageAlt={featured.alt}
         primaryLabel="Richiedi un lavoro simile"
         secondaryLabel="Apri case study"
         secondaryHref={`#/cantieri/${featured.id}`}
         variant="compact"
-        meta={['Hospitality', 'Cartongesso', 'Finiture interne', 'Gestione cantiere']}
+        meta={['Hospitality', 'Roma', 'Lavorazioni coordinate']}
       />
-
-      <PremiumSection title="Esperienza in contesti complessi" text="Interveniamo in strutture ricettive, spazi interni e aree tecniche dove servono organizzazione, precisione e continuità durante tutte le fasi di lavoro.">
-        <PremiumStats stats={[
-          { value: 'Hotel', label: 'strutture ricettive e spazi ad alta percorrenza' },
-          { value: 'Interni', label: 'cartongesso, soffitti tecnici e finiture' },
-          { value: 'Esterni', label: 'scale, aiuole, scarichi e aree di servizio' },
-          { value: 'Metodo', label: 'coordinamento, pulizia e controllo finale' },
-        ]} />
-      </PremiumSection>
-
-      <PremiumSection title="Filtra i progetti" text="Sfoglia i case study disponibili per settore e tipologia di intervento." tone="soft">
-        <div className="premium-filter-pills" role="list" aria-label="Categorie portfolio">
-          {categories.map((item) => (
-            <button
-              aria-pressed={category === item}
-              key={item}
-              type="button"
-              onClick={() => setCategory(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      </PremiumSection>
 
       <PremiumSection eyebrow="Cantiere in evidenza" title={featured.title} text={featured.longText}>
         <div className="premium-featured-project">
@@ -100,12 +61,12 @@ export function Projects() {
 
       <PremiumSection
         eyebrow="Portfolio"
-        title="Cantieri e lavorazioni"
-        text="Una selezione di interventi e aree operative seguite da EuropaService in contesti hospitality e spazi tecnici."
+        title="Case study disponibili"
+        text="Al momento è pubblicato solo il cantiere Barcelò Roma. Verranno aggiunti nuovi interventi quando saranno disponibili dati, testi e immagini adeguati."
         tone="soft"
       >
         <div className="premium-project-grid">
-          {filteredProjects.map((project) => <PremiumProjectCard key={project.id} project={project} />)}
+          <PremiumProjectCard project={featured} />
         </div>
       </PremiumSection>
 
@@ -114,16 +75,6 @@ export function Projects() {
           <PremiumTextCard title="Contesto" text="Tipologia di struttura, area di lavoro e vincoli principali del cantiere." />
           <PremiumTextCard title="Lavorazioni" text="Attività eseguite, fasi coordinate e servizi coinvolti nell’intervento." />
           <PremiumTextCard title="Risultato" text="Miglioramenti ottenuti in ordine, funzionalità, finiture e qualità percepita degli spazi." />
-        </div>
-      </PremiumSection>
-
-      <PremiumSection eyebrow="Partner" title="Una rete operativa affidabile" tone="soft">
-        <PremiumChipMarquee items={partners} className="premium-logo-row" ariaLabel="Partner e filiera" speed="slow" />
-      </PremiumSection>
-
-      <PremiumSection eyebrow="Testimonianze" title="Cosa apprezzano i clienti">
-        <div className="premium-testimonial-grid">
-          {testimonials.map((testimonial) => <TestimonialMock key={testimonial.author} testimonial={testimonial} />)}
         </div>
       </PremiumSection>
 
