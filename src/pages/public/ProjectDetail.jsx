@@ -3,20 +3,17 @@ import {
   PremiumHero,
   PremiumImageSplit,
   PremiumProcess,
-  PremiumProjectCard,
   PremiumSection,
   PremiumTextCard,
-  TestimonialMock,
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import { SafeImage } from '../../components/SafeImage'
-import { testimonials, workMethod } from '../../data/publicPremiumData'
+import { workMethod } from '../../data/publicPremiumData'
 import { realPublicProjects } from '../../data/publicRealData'
 import { serviceImages } from '../../data/publicImages'
 
 export function ProjectDetail({ projectId }) {
   const project = realPublicProjects.find((item) => item.id === projectId) ?? realPublicProjects[0]
-  const related = realPublicProjects.filter((item) => item.id !== project.id).slice(0, 3)
 
   return (
     <>
@@ -107,20 +104,6 @@ export function ProjectDetail({ projectId }) {
 
       <PremiumSection eyebrow="Timeline" title="Processo di lavoro">
         <PremiumProcess steps={workMethod} />
-      </PremiumSection>
-
-      <PremiumSection eyebrow="Cliente" title="Testimonianza" tone="soft">
-        <div className="premium-testimonial-grid">
-          <TestimonialMock testimonial={testimonials[0]} />
-          <TestimonialMock testimonial={testimonials[1]} />
-          <TestimonialMock testimonial={testimonials[2]} />
-        </div>
-      </PremiumSection>
-
-      <PremiumSection eyebrow="Altri progetti" title="Case study correlati">
-        <div className="premium-project-grid">
-          {related.map((item) => <PremiumProjectCard key={item.id} project={item} />)}
-        </div>
       </PremiumSection>
 
       <PremiumCTA title="Vuoi un risultato simile?" text="Raccontaci il progetto, gli spazi e le priorità. Ti aiutiamo a impostare un cantiere ordinato." />
