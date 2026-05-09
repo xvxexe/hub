@@ -4,15 +4,12 @@ import {
   PremiumImageSplit,
   PremiumProcess,
   PremiumSection,
-  PremiumStats,
   PremiumTextCard,
   PremiumTimeline,
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import {
-  leadership,
   operationalMethod,
-  premiumStats,
   premiumValues,
   teamImage,
   workMethod,
@@ -40,14 +37,12 @@ export function About() {
         meta={['Squadre coordinate', 'Referenti chiari', 'Qualità controllata', 'Cantiere ordinato']}
       />
 
-      <PremiumSection eyebrow="Identità" title="Non siamo solo esecutori. Siamo un partner operativo." text="Trasformiamo richieste, vincoli e urgenze in un percorso ordinato: sopralluogo, analisi, pianificazione, lavorazione, controllo e consegna.">
-        <PremiumStats stats={premiumStats} />
-      </PremiumSection>
+      <PremiumSection eyebrow="Identità" title="Non siamo solo esecutori. Siamo un partner operativo." text="Trasformiamo richieste, vincoli e urgenze in un percorso ordinato: sopralluogo, analisi, pianificazione, lavorazione, controllo e consegna." />
 
       <PremiumImageSplit
-        eyebrow="Storia"
+        eyebrow="Metodo"
         title="Da squadra di cantiere a struttura organizzata per interni complessi."
-        text="Negli anni abbiamo visto che molti problemi nascono dalla mancanza di ordine: decisioni non tracciate, fornitori non coordinati, tempi poco chiari. Per questo lavoriamo con un metodo che aumenta controllo e qualità."
+        text="Molti problemi nascono dalla mancanza di ordine: decisioni non tracciate, fornitori non coordinati, tempi poco chiari. Per questo lavoriamo con un metodo che aumenta controllo e qualità."
         image={heroImages.main.src}
         imageAlt={heroImages.main.alt}
       >
@@ -75,22 +70,10 @@ export function About() {
         </article>
         <article>
           <p className="premium-eyebrow">Visione</p>
-          <h2>Diventare il partner di fiducia per cantieri interni premium.</h2>
-          <p>Vogliamo essere il riferimento per clienti, tecnici, imprese e facility manager che cercano una squadra seria, ordinata e capace di lavorare con standard elevati.</p>
+          <h2>Diventare un partner affidabile per cantieri interni ordinati.</h2>
+          <p>Vogliamo essere un riferimento per clienti, tecnici e imprese che cercano una squadra seria, presente e capace di lavorare con standard elevati.</p>
         </article>
       </section>
-
-      <PremiumSection eyebrow="Leadership" title="Referenti chiari, responsabilità chiare">
-        <div className="premium-feature-grid">
-          {leadership.map((person) => (
-            <article className="premium-card" key={person.name}>
-              <h3>{person.name}</h3>
-              <strong>{person.role}</strong>
-              <p>{person.text}</p>
-            </article>
-          ))}
-        </div>
-      </PremiumSection>
 
       <PremiumImageSplit
         eyebrow="Come lavoriamo"
