@@ -29,7 +29,7 @@ export function About() {
         title="Una squadra solida dietro ogni risultato"
         text="EuropaService nasce dall’esperienza diretta nei cantieri. Il nostro lavoro unisce presenza operativa, responsabilità, pianificazione e cura dei dettagli."
         image={teamImage}
-        imageAlt="Squadra EuropaService in cantiere"
+        imageAlt="Foto reale di cantiere per pagina azienda"
         primaryLabel="Parla con noi"
         primaryHref="#/contatti"
         secondaryLabel="Scopri i servizi"
@@ -43,8 +43,8 @@ export function About() {
         eyebrow="Metodo"
         title="Da squadra di cantiere a struttura organizzata per interni complessi."
         text="Molti problemi nascono dalla mancanza di ordine: decisioni non tracciate, fornitori non coordinati, tempi poco chiari. Per questo lavoriamo con un metodo che aumenta controllo e qualità."
-        image={heroImages.main.src}
-        imageAlt={heroImages.main.alt}
+        image={heroImages.planning.src}
+        imageAlt={heroImages.planning.alt}
       >
         <div className="premium-tags">
           <small>Metodo</small>
@@ -79,8 +79,8 @@ export function About() {
         eyebrow="Come lavoriamo"
         title="In cantiere servono ordine, sicurezza e comunicazione."
         text="Proteggiamo gli spazi, pianifichiamo accessi e materiali, documentiamo le fasi e manteniamo una comunicazione leggibile con cliente, direzione lavori e fornitori coinvolti."
-        image={serviceImages.supportoCantieri.src}
-        imageAlt={serviceImages.supportoCantieri.alt}
+        image={serviceImages.uffici.src}
+        imageAlt={serviceImages.uffici.alt}
         reverse
       >
         <PremiumTimeline items={operationalMethod} />
