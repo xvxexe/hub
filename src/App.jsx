@@ -85,7 +85,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
   if (path === '/preventivo') return <QuoteRequest />
   if (path === '/contatti') return <Contacts />
 
-  if (path === '/dashboard/login') {
+  if (path === '/dashboard/login' && !session) {
     return (
       <LoginMock
         selectedRole={selectedRole}
@@ -233,17 +233,18 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
 
 function AuthenticatedDashboardShell({ path, session, selectedRole, handlers, onLogout, onRoleChange }) {
   const mockStore = useMockStore(session)
+  const effectivePath = path === '/dashboard/login' ? '/dashboard' : path
 
   return (
     <AppShell
-      currentPath={path}
+      currentPath={effectivePath}
       session={session}
       onLogout={onLogout}
       onRoleChange={onRoleChange}
       roles={roles}
       dataStore={mockStore}
     >
-      {renderRoute(path, session, selectedRole, handlers, mockStore)}
+      {renderRoute(effectivePath, session, selectedRole, handlers, mockStore)}
     </AppShell>
   )
 }
@@ -272,6 +273,12 @@ export default function App() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    if (session && path === '/dashboard/login') {
+      navigateTo('/dashboard')
+    }
+  }, [session, path])
 
   async function loginWithCredentials(credentials) {
     setLoginError('')
