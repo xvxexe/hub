@@ -8,9 +8,9 @@ import {
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import { SafeImage } from '../../components/SafeImage'
-import { workMethod } from '../../data/publicPremiumData'
+import { caseStudyHeroImage, workMethod } from '../../data/publicPremiumData'
 import { realPublicProjects } from '../../data/publicRealData'
-import { serviceImages } from '../../data/publicImages'
+import { projectImages, serviceImages } from '../../data/publicImages'
 
 export function ProjectDetail({ projectId }) {
   const project = realPublicProjects.find((item) => item.id === projectId) ?? realPublicProjects[0]
@@ -26,8 +26,8 @@ export function ProjectDetail({ projectId }) {
         eyebrow="Case study"
         title={project.title}
         text={project.longText ?? project.summary}
-        image={project.image}
-        imageAlt={project.alt}
+        image={caseStudyHeroImage}
+        imageAlt="Foto reale di cantiere tecnico per case study"
         primaryLabel="Richiedi un lavoro simile"
         secondaryLabel="Torna al portfolio"
         secondaryHref="#/cantieri"
@@ -57,16 +57,20 @@ export function ProjectDetail({ projectId }) {
         </article>
       </section>
 
-      <PremiumSection eyebrow="Galleria" title="Immagini del progetto" tone="soft">
+      <PremiumSection eyebrow="Galleria" title="Wireframe provvisori del progetto" tone="soft">
         <div className="premium-gallery">
-          {[project.image, serviceImages.cartongesso.src, serviceImages.finitureInterne.src].map((src, index) => (
+          {[
+            projectImages.barceloRomaDetail.src,
+            projectImages.barceloRomaGalleryOne.src,
+            projectImages.barceloRomaGalleryTwo.src,
+          ].map((src, index) => (
             <SafeImage
-              alt={`${project.title} immagine ${index + 1}`}
+              alt={`${project.title} wireframe ${index + 1}`}
               className="premium-gallery-image"
               fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
               key={`${src}-${index}`}
               src={src}
-              title={`${project.title} galleria`}
+              title={`${project.title} wireframe provvisorio`}
             />
           ))}
         </div>
