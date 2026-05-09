@@ -282,9 +282,7 @@ function CostSummaryPanel({ total, categoryTotals, officialMaster }) {
           <strong><MoneyValue value={total} /></strong>
           <small className="positive-trend">{officialMaster ? 'Da tab Riepilogo' : 'Dati reali importati'}</small>
         </div>
-        <div className="donut-chart" aria-label="Ripartizione costi">
-          <span>Totale<br /><MoneyValue value={total} /></span>
-        </div>
+        <div className="donut-chart" aria-label="Ripartizione costi" />
       </div>
 
       <div className="cost-legend cost-legend-redesign">
