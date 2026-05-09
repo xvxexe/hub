@@ -10,10 +10,9 @@ export function asset(src) {
 }
 
 // Immagini pubbliche.
-// Regola attuale:
 // - HERO di inizio pagina = foto reali prese da Internet, tema cantiere/edilizia.
-// - Tutto il resto = wireframe/placeholder SVG locale, senza persone e senza stock esterni.
-// - Nessuna sorgente deve essere riutilizzata due volte dentro questo file.
+// - Sezioni interne/card/gallerie = wireframe architettonici SVG locali.
+// - Niente persone random, niente foto stock nelle card sotto, nessuna sorgente duplicata.
 
 const usedSources = new Set()
 const photo = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1900&q=82`
@@ -29,65 +28,65 @@ const heroPhotoConfigs = {
 
 const wireConfigs = {
   placeholderImages: {
-    hero: ['placeholder-hero', 'Placeholder cantiere interno', 'interior'],
-    service: ['placeholder-service', 'Placeholder cartongesso', 'drywall'],
-    project: ['placeholder-project', 'Placeholder rilievo cantiere', 'blueprint'],
-    sector: ['placeholder-sector', 'Placeholder struttura interna', 'ceiling'],
-    document: ['placeholder-document', 'Placeholder materiali edili', 'materials'],
-    heroSvg: ['placeholder-hero-svg', 'Wireframe ristrutturazione interna', 'room'],
-    serviceSvg: ['placeholder-service-svg', 'Wireframe rasatura parete', 'plaster'],
-    projectSvg: ['placeholder-project-svg', 'Wireframe attrezzature cantiere', 'tools'],
-    sectorSvg: ['placeholder-sector-svg', 'Wireframe ponteggio edile', 'scaffold'],
-    documentSvg: ['placeholder-document-svg', 'Wireframe corridoio in lavorazione', 'corridor'],
+    hero: ['placeholder-hero', 'Cantiere interno', 'interior'],
+    service: ['placeholder-service', 'Cartongesso', 'drywall'],
+    project: ['placeholder-project', 'Rilievo cantiere', 'blueprint'],
+    sector: ['placeholder-sector', 'Struttura interna', 'ceiling'],
+    document: ['placeholder-document', 'Materiali edili', 'materials'],
+    heroSvg: ['placeholder-hero-svg', 'Ristrutturazione interna', 'room'],
+    serviceSvg: ['placeholder-service-svg', 'Rasatura parete', 'plaster'],
+    projectSvg: ['placeholder-project-svg', 'Attrezzature cantiere', 'tools'],
+    sectorSvg: ['placeholder-sector-svg', 'Ponteggio edile', 'scaffold'],
+    documentSvg: ['placeholder-document-svg', 'Corridoio in lavorazione', 'corridor'],
   },
   heroWireframes: {
-    main: ['hero-wire-main', 'Wireframe lavorazioni interne', 'drywall-wide'],
-    ceiling: ['hero-wire-ceiling', 'Wireframe controsoffitto tecnico', 'ceiling-grid'],
-    building: ['hero-wire-building', 'Wireframe ponteggio e facciata', 'exterior'],
-    lobby: ['hero-wire-lobby', 'Wireframe ambiente interno in finitura', 'room'],
-    planning: ['hero-wire-planning', 'Wireframe rilievo operativo', 'blueprint'],
-    blueprint: ['hero-wire-blueprint', 'Wireframe tavola tecnica', 'blueprint'],
+    main: ['hero-wire-main', 'Lavorazioni interne', 'drywall-wide'],
+    ceiling: ['hero-wire-ceiling', 'Controsoffitto tecnico', 'ceiling-grid'],
+    building: ['hero-wire-building', 'Ponteggio e facciata', 'exterior'],
+    lobby: ['hero-wire-lobby', 'Ambiente interno', 'room'],
+    planning: ['hero-wire-planning', 'Rilievo operativo', 'blueprint'],
+    blueprint: ['hero-wire-blueprint', 'Tavola tecnica', 'blueprint'],
   },
   serviceImages: {
-    cartongesso: ['service-cartongesso', 'Wireframe pareti divisorie in cartongesso', 'drywall'],
-    controsoffitti: ['service-controsoffitti', 'Wireframe struttura controsoffitto', 'ceiling'],
-    paretiDivisorie: ['service-pareti-divisorie', 'Wireframe telaio pareti divisorie', 'drywall-frame'],
-    rasature: ['service-rasature', 'Wireframe rasatura e preparazione parete', 'plaster'],
-    finitureInterne: ['service-finiture-interne', 'Wireframe finiture interne', 'room'],
-    isolamenti: ['service-isolamenti', 'Wireframe pannelli e materiali isolamento', 'materials'],
-    ediliGenerali: ['service-edili-generali', 'Wireframe cantiere interno organizzato', 'interior'],
-    manutenzioni: ['service-manutenzioni', 'Wireframe attrezzature manutenzione edile', 'tools'],
-    hotel: ['service-hotel', 'Wireframe corridoio hospitality in lavorazione', 'corridor'],
-    negozi: ['service-negozi', 'Wireframe spazio commerciale in finitura', 'room-retail'],
-    supportoCantieri: ['service-supporto-cantieri', 'Wireframe controllo operativo cantiere', 'blueprint-check'],
-    uffici: ['service-uffici', 'Wireframe ufficio in ristrutturazione', 'interior-office'],
-    tools: ['service-tools', 'Wireframe banco attrezzi da cantiere', 'tools-detail'],
-    materials: ['service-materials', 'Wireframe pannelli profili e materiali', 'materials-board'],
+    cartongesso: ['service-cartongesso', 'Pareti divisorie in cartongesso', 'drywall'],
+    controsoffitti: ['service-controsoffitti', 'Struttura controsoffitto', 'ceiling'],
+    paretiDivisorie: ['service-pareti-divisorie', 'Telaio pareti divisorie', 'drywall-frame'],
+    rasature: ['service-rasature', 'Rasatura e preparazione parete', 'plaster'],
+    finitureInterne: ['service-finiture-interne', 'Finiture interne', 'room'],
+    isolamenti: ['service-isolamenti', 'Pannelli e isolamento', 'materials'],
+    ediliGenerali: ['service-edili-generali', 'Cantiere interno organizzato', 'interior'],
+    manutenzioni: ['service-manutenzioni', 'Attrezzature manutenzione edile', 'tools'],
+    hotel: ['service-hotel', 'Corridoio hospitality in lavorazione', 'corridor'],
+    negozi: ['service-negozi', 'Spazio commerciale in finitura', 'room-retail'],
+    supportoCantieri: ['service-supporto-cantieri', 'Controllo operativo cantiere', 'blueprint-check'],
+    uffici: ['service-uffici', 'Ufficio in ristrutturazione', 'interior-office'],
+    tools: ['service-tools', 'Banco attrezzi da cantiere', 'tools-detail'],
+    materials: ['service-materials', 'Pannelli profili e materiali', 'materials-board'],
   },
   projectImages: {
-    barceloRoma: ['project-barcelo-roma', 'Wireframe cantiere hospitality Barcelò Roma', 'corridor'],
-    barceloRomaDetail: ['project-barcelo-roma-detail', 'Wireframe dettaglio cantiere Barcelò Roma', 'blueprint'],
-    barceloRomaGalleryOne: ['project-barcelo-roma-gallery-one', 'Wireframe galleria cartongesso hospitality', 'drywall'],
-    barceloRomaGalleryTwo: ['project-barcelo-roma-gallery-two', 'Wireframe galleria finiture hospitality', 'plaster'],
-    residenzaVerdi: ['project-residenza-verdi', 'Wireframe ristrutturazione residenziale', 'room'],
-    hotelInternoMilano: ['project-hotel-milano', 'Wireframe hotel con controsoffitti', 'ceiling'],
-    negozioCentro: ['project-negozio-centro', 'Wireframe negozio in finitura', 'plaster-retail'],
-    condominioBianchi: ['project-condominio-bianchi', 'Wireframe condominio con lavori edili', 'exterior'],
-    ufficiDirezionali: ['project-uffici-direzionali', 'Wireframe uffici direzionali in cartongesso', 'drywall-office'],
+    barceloRoma: ['project-barcelo-roma', 'Cantiere hospitality Barcelò Roma', 'corridor'],
+    barceloRomaDetail: ['project-barcelo-roma-detail', 'Dettaglio cantiere Barcelò Roma', 'blueprint'],
+    barceloRomaGalleryOne: ['project-barcelo-roma-gallery-one', 'Galleria cartongesso hospitality', 'drywall'],
+    barceloRomaGalleryTwo: ['project-barcelo-roma-gallery-two', 'Galleria finiture hospitality', 'plaster'],
+    residenzaVerdi: ['project-residenza-verdi', 'Ristrutturazione residenziale', 'room'],
+    hotelInternoMilano: ['project-hotel-milano', 'Hotel con controsoffitti', 'ceiling'],
+    negozioCentro: ['project-negozio-centro', 'Negozio in finitura', 'plaster-retail'],
+    condominioBianchi: ['project-condominio-bianchi', 'Condominio con lavori edili', 'exterior'],
+    ufficiDirezionali: ['project-uffici-direzionali', 'Uffici direzionali in cartongesso', 'drywall-office'],
   },
   sectorImages: {
-    privati: ['sector-privati', 'Wireframe interni privati in ristrutturazione', 'room-private'],
-    aziende: ['sector-aziende', 'Wireframe spazi aziendali in lavorazione', 'interior-company'],
-    hotel: ['sector-hotel', 'Wireframe ambiente hotel in ristrutturazione', 'corridor-sector'],
-    negozi: ['sector-negozi', 'Wireframe spazio retail in finitura', 'plaster-sector'],
-    studiTecnici: ['sector-studi-tecnici', 'Wireframe rilievo tecnico e misure', 'blueprint-technical'],
-    generalContractor: ['sector-general-contractor', 'Wireframe coordinamento generale cantiere', 'scaffold'],
-    amministratori: ['sector-amministratori', 'Wireframe manutenzione edile condominiale', 'exterior-maintenance'],
+    privati: ['sector-privati', 'Interni privati in ristrutturazione', 'room-private'],
+    aziende: ['sector-aziende', 'Spazi aziendali in lavorazione', 'interior-company'],
+    hotel: ['sector-hotel', 'Ambiente hotel in ristrutturazione', 'corridor-sector'],
+    negozi: ['sector-negozi', 'Spazio retail in finitura', 'plaster-sector'],
+    studiTecnici: ['sector-studi-tecnici', 'Rilievo tecnico e misure', 'blueprint-technical'],
+    generalContractor: ['sector-general-contractor', 'Coordinamento generale cantiere', 'scaffold'],
+    amministratori: ['sector-amministratori', 'Manutenzione edile condominiale', 'exterior-maintenance'],
   },
   teamImages: {
-    squadra: ['team-squadra', 'Wireframe squadra e lavorazioni interne', 'tools-team'],
-    meeting: ['team-meeting', 'Wireframe riunione tecnica su planimetria', 'blueprint-meeting'],
-    contractor: ['team-contractor', 'Wireframe controllo lavorazioni di cantiere', 'interior-control'],
+    squadra: ['team-squadra', 'Squadra e lavorazioni interne', 'tools-team'],
+    meeting: ['team-meeting', 'Riunione tecnica su planimetria', 'blueprint-meeting'],
+    contractor: ['team-contractor', 'Controllo lavorazioni di cantiere', 'interior-control'],
   },
 }
 
@@ -114,7 +113,7 @@ function makeWireGroup(groupName) {
   return Object.fromEntries(
     Object.entries(wireConfigs[groupName]).map(([key, [id, title, scene]]) => [
       key,
-      uniqueImage(`${groupName}.${key}`, wireframeData(id, title, scene), title, `${title} - wireframe placeholder`),
+      uniqueImage(`${groupName}.${key}`, wireframeData(id, title, scene), title, `${title} - wireframe tecnico`),
     ]),
   )
 }
@@ -128,91 +127,243 @@ function uniqueImage(key, src, alt, title) {
 }
 
 function wireframeData(id, title, scene) {
-  const p = palette(hashString(id))
-  const shapes = sceneShapes(scene, p)
+  const seed = hashString(id)
+  const p = palette(seed)
+  const sceneSvg = sceneShapes(scene, p, seed)
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1200" role="img" aria-label="${escapeXml(title)}">
       <defs>
-        <pattern id="grid-${id}" width="80" height="80" patternUnits="userSpaceOnUse">
-          <path d="M80 0H0v80" fill="none" stroke="${p.grid}" stroke-width="2"/>
+        <linearGradient id="paper-${id}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="${p.paper1}"/>
+          <stop offset="1" stop-color="${p.paper2}"/>
+        </linearGradient>
+        <pattern id="paper-grid-${id}" width="64" height="64" patternUnits="userSpaceOnUse">
+          <path d="M64 0H0v64" fill="none" stroke="${p.grid}" stroke-width="1.2" opacity="0.38"/>
         </pattern>
-        <filter id="shadow-${id}" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="24" stdDeviation="26" flood-color="#0f172a" flood-opacity="0.12"/>
+        <filter id="soft-${id}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#0f172a" flood-opacity="0.08"/>
         </filter>
       </defs>
-      <rect width="1800" height="1200" fill="${p.bg}"/>
-      <rect width="1800" height="1200" fill="url(#grid-${id})" opacity="0.72"/>
-      <g opacity="0.55" fill="none" stroke="${p.line}" stroke-width="4" stroke-dasharray="18 18">
-        <rect x="92" y="84" width="1616" height="1032" rx="42"/>
-        <path d="M92 260h1616M92 920h1616"/>
+      <rect width="1800" height="1200" fill="url(#paper-${id})"/>
+      <rect width="1800" height="1200" fill="url(#paper-grid-${id})"/>
+      <g fill="none" stroke="${p.line}" stroke-width="2.2" opacity="0.34">
+        <path d="M90 90H1710V1110H90Z"/>
+        <path d="M90 230H1710M90 965H1710"/>
       </g>
-      <text x="140" y="172" fill="${p.ink}" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="900" letter-spacing="8">WIREFRAME CANTIERE</text>
-      <text x="140" y="222" fill="${p.muted}" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">${escapeXml(title)}</text>
-      <text x="1270" y="172" fill="${p.accent}" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="900" letter-spacing="5">PLACEHOLDER</text>
-      <text x="1270" y="215" fill="${p.muted}" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">${escapeXml(sketchNote(scene))}</text>
-      ${shapes}
-      ${measurementMarks(p)}
+      <g fill="${p.muted}" font-family="Arial, Helvetica, sans-serif" opacity="0.42">
+        <text x="132" y="166" font-size="27" font-weight="800" letter-spacing="6">WIREFRAME / ${escapeXml(sketchNote(scene)).toUpperCase()}</text>
+        <text x="132" y="204" font-size="21" font-weight="600">${escapeXml(title)}</text>
+      </g>
+      ${perspectiveGuide(p, seed)}
+      ${sceneSvg}
+      ${cartouche(id, title, p)}
     </svg>`
 
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
 }
 
-function sceneShapes(scene, p) {
-  const frame = `<g filter="url(#shadow-${scene})"><rect x="220" y="330" width="1040" height="510" rx="24" fill="#ffffff" stroke="${p.line}" stroke-width="8"/><rect x="275" y="385" width="930" height="400" rx="12" fill="${p.fill}" stroke="${p.line}" stroke-width="4"/></g>`
-  const studs = `<g stroke="${p.blue}" stroke-width="16" stroke-linecap="round"><path d="M360 385v400"/><path d="M520 385v400"/><path d="M680 385v400"/><path d="M840 385v400"/><path d="M1000 385v400"/><path d="M275 505h930"/><path d="M275 650h930"/></g>`
-  const boards = `<g stroke="#c7b58f" stroke-width="7" fill="#fbf5e8"><rect x="315" y="460" width="250" height="430" rx="12"/><rect x="600" y="430" width="255" height="460" rx="12"/><rect x="890" y="480" width="260" height="410" rx="12"/></g>`
-  const drywall = `${frame}${studs}${boards}`
-  const ceiling = `<g filter="url(#shadow-${scene})"><path d="M180 350h1410l-190 430H360z" fill="#fff" stroke="${p.line}" stroke-width="8"/><g stroke="${p.blue}" stroke-width="12"><path d="M290 440h1180M260 550h1160M235 665h1110"/><path d="M410 350l-80 430M650 350l-45 430M890 350v430M1130 350l45 430M1350 350l80 430"/></g></g>`
-  const plaster = `<g filter="url(#shadow-${scene})"><rect x="240" y="345" width="1030" height="550" rx="26" fill="#f8f1e8" stroke="#d8c8b5" stroke-width="8"/><path d="M310 520c230-70 400 86 650-20 120-50 220-45 285-20v160c-205-80-340 92-560 26-170-50-320-18-375 28z" fill="#d8c7b1"/><rect x="1035" y="560" width="420" height="46" rx="23" fill="${p.accent}"/><rect x="1310" y="505" width="170" height="145" rx="24" fill="${p.ink}"/></g>`
-  const tools = `<g filter="url(#shadow-${scene})"><rect x="300" y="720" width="590" height="150" rx="24" fill="${p.ink}"/><rect x="370" y="625" width="230" height="120" rx="18" fill="${p.accent}"/><path d="M1000 420l250 250" stroke="${p.blue}" stroke-width="30" stroke-linecap="round"/><path d="M1225 650l-100 100" stroke="${p.accent}" stroke-width="42" stroke-linecap="round"/><rect x="1020" y="830" width="430" height="38" rx="19" fill="${p.blue}" opacity="0.72"/></g>`
-  const blueprint = `<g filter="url(#shadow-${scene})"><rect x="230" y="340" width="1140" height="560" rx="26" fill="#fff" stroke="${p.line}" stroke-width="7"/><g stroke="${p.blue}" stroke-width="8" fill="none"><rect x="340" y="445" width="370" height="220"/><rect x="710" y="445" width="420" height="280"/><path d="M340 665h280v170H340zM1130 445v390H830"/><path d="M445 445v220M710 580h420M830 725v110"/></g><path d="M1225 820l270-270" stroke="${p.accent}" stroke-width="12"/></g>`
-  const materials = `<g filter="url(#shadow-${scene})"><rect x="260" y="740" width="1180" height="95" rx="16" fill="#b7791f"/><rect x="300" y="595" width="430" height="130" rx="18" fill="#f4e6cd" stroke="#d7bd90" stroke-width="7"/><rect x="770" y="545" width="430" height="180" rx="18" fill="#f9eed8" stroke="#d7bd90" stroke-width="7"/><rect x="470" y="445" width="430" height="150" rx="18" fill="#f5dfb9" stroke="#d7bd90" stroke-width="7"/></g>`
-  const scaffold = `<g fill="none" stroke="${p.ink}" stroke-width="16" stroke-linecap="round"><path d="M260 900V320M600 900V320M940 900V320M1280 900V320"/><path d="M210 420h1120M210 585h1120M210 750h1120"/><path d="M260 900 600 320M600 900 940 320M940 900 1280 320"/></g><g fill="${p.accent}"><rect x="180" y="748" width="1190" height="54" rx="10"/><rect x="250" y="565" width="1010" height="46" rx="10"/></g>`
-  const corridor = `<g filter="url(#shadow-${scene})"><path d="M230 330h1180l-225 610H420z" fill="#fff" stroke="${p.line}" stroke-width="8"/><path d="M420 940 640 330M1185 940 985 330" stroke="${p.blue}" stroke-width="14"/><path d="M620 450h450M580 580h530M535 730h625" stroke="${p.ink}" stroke-width="12" opacity="0.28"/></g>`
-  const exterior = `<g filter="url(#shadow-${scene})"><rect x="315" y="355" width="780" height="500" rx="18" fill="#eef2f7" stroke="${p.line}" stroke-width="8"/><g fill="#dbeafe"><rect x="390" y="425" width="140" height="105"/><rect x="615" y="425" width="140" height="105"/><rect x="840" y="425" width="140" height="105"/><rect x="390" y="610" width="140" height="105"/><rect x="615" y="610" width="140" height="105"/><rect x="840" y="610" width="140" height="105"/></g></g>${scaffold}`
-  const room = `<g filter="url(#shadow-${scene})"><path d="M220 345h1160v560H220z" fill="#fff" stroke="${p.line}" stroke-width="8"/><path d="M220 805h1160v100H220z" fill="#e8edf3"/><rect x="750" y="470" width="300" height="335" fill="#f7f9fc" stroke="${p.line}" stroke-width="7"/><path d="M220 345l530 460M1380 345l-330 460" stroke="#dbe3ec" stroke-width="10"/></g>`
-  const interior = `${frame}<g fill="${p.accent}"><rect x="300" y="755" width="980" height="55" rx="10"/><rect x="340" y="690" width="520" height="34" rx="8"/></g><g stroke="${p.blue}" stroke-width="12"><path d="M315 430h770M315 540h710M315 650h610"/></g>`
-
-  if (scene.includes('ceiling')) return ceiling
-  if (scene.includes('plaster')) return plaster
-  if (scene.includes('materials')) return materials
-  if (scene.includes('tools')) return tools
-  if (scene.includes('blueprint')) return blueprint
-  if (scene.includes('scaffold')) return scaffold
-  if (scene.includes('corridor')) return corridor
-  if (scene.includes('exterior')) return exterior
-  if (scene.includes('room')) return room
-  if (scene.includes('drywall')) return drywall
-  return interior
+function perspectiveGuide(p, seed) {
+  const vx = 1080 + (seed % 180)
+  const vy = 520 + (seed % 70)
+  return `
+    <g fill="none" stroke="${p.guide}" stroke-width="1.8" opacity="0.46">
+      ${[160, 300, 440, 580, 720, 860, 1000, 1140, 1280, 1420, 1560].map((x) => `<path d="M${x} 980L${vx} ${vy}"/>`).join('')}
+      ${[330, 430, 530, 630, 730, 830, 930].map((y) => `<path d="M170 ${y}H1630"/>`).join('')}
+    </g>`
 }
 
-function measurementMarks(p) {
+function sceneShapes(scene, p, seed) {
+  if (scene.includes('ceiling')) return ceilingWire(p)
+  if (scene.includes('plaster')) return plasterWire(p)
+  if (scene.includes('materials')) return materialsWire(p)
+  if (scene.includes('tools')) return toolsWire(p)
+  if (scene.includes('blueprint')) return planWire(p)
+  if (scene.includes('scaffold')) return scaffoldWire(p)
+  if (scene.includes('corridor')) return corridorWire(p)
+  if (scene.includes('exterior')) return exteriorWire(p)
+  if (scene.includes('room')) return roomWire(p)
+  if (scene.includes('drywall')) return drywallWire(p, seed)
+  return interiorWire(p)
+}
+
+function basePerspectiveRoom(p) {
   return `
-    <g fill="none" stroke="${p.ink}" stroke-width="5" opacity="0.36" stroke-linecap="round">
-      <path d="M210 1010h520"/>
-      <path d="M210 985v50M730 985v50"/>
-      <path d="M250 992l-40 18 40 18M690 992l40 18-40 18"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M230 885H1510L1270 338H505Z" stroke="${p.strong}" stroke-width="3.5" opacity="0.76"/>
+      <path d="M505 338L230 885M1270 338L1510 885M505 338H1270" stroke="${p.mid}" stroke-width="2.8" opacity="0.72"/>
+      ${[0, 1, 2, 3, 4, 5].map((n) => {
+        const y = 430 + n * 82
+        return `<path d="M${470 - n * 36} ${y}H${1300 + n * 44}" stroke="${p.thin}" stroke-width="1.8" opacity="0.56"/>`
+      }).join('')}
+      ${[310, 460, 610, 760, 910, 1060, 1210, 1360].map((x) => `<path d="M${x} 885L890 338" stroke="${p.thin}" stroke-width="1.8" opacity="0.48"/>`).join('')}
+    </g>`
+}
+
+function drywallWire(p, seed) {
+  const variant = seed % 2
+  return `
+    ${basePerspectiveRoom(p)}
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M365 415H860V812H300V520Z" stroke="${p.strong}" stroke-width="4"/>
+      ${[400, 500, 600, 700, 800].map((x) => `<path d="M${x} 430V805" stroke="${p.accentLine}" stroke-width="3.2" opacity="0.82"/>`).join('')}
+      ${[480, 620, 760].map((y) => `<path d="M335 ${y}H850" stroke="${p.accentLine}" stroke-width="2.5" opacity="0.72"/>`).join('')}
+      <path d="M935 455H1260V790H900V525Z" stroke="${p.strong}" stroke-width="3.6"/>
+      ${[980, 1060, 1140, 1220].map((x) => `<path d="M${x} 470V785" stroke="${p.mid}" stroke-width="2.6"/>`).join('')}
+      ${variant ? '<path d="M250 770c190-70 310 36 480-28" stroke="#c4c8cf" stroke-width="2.2" opacity="0.55"/>' : ''}
+    </g>`
+}
+
+function ceilingWire(p) {
+  return `
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M190 330H1610L1370 815H410Z" stroke="${p.strong}" stroke-width="4"/>
+      ${[320, 420, 520, 620, 720].map((y) => `<path d="M${240 - (y - 320) * 0.25} ${y}H${1560 - (y - 320) * 0.18}" stroke="${p.mid}" stroke-width="2.8"/>`).join('')}
+      ${[340, 510, 680, 850, 1020, 1190, 1360, 1530].map((x) => `<path d="M${x} 330L${900 + (x - 900) * 0.22} 815" stroke="${p.mid}" stroke-width="2.5"/>`).join('')}
+      <path d="M440 398h300v142H440Z" stroke="${p.accentLine}" stroke-width="4"/>
+      <path d="M860 425h340v165H860Z" stroke="${p.accentLine}" stroke-width="4"/>
+      <path d="M1210 520h210v120h-210Z" stroke="${p.accentLine}" stroke-width="3.6"/>
+    </g>`
+}
+
+function plasterWire(p) {
+  return `
+    ${basePerspectiveRoom(p)}
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M310 385H1285V840H310Z" stroke="${p.strong}" stroke-width="3.8"/>
+      <path d="M355 565c180-70 310 70 520 5 150-48 260-50 355 0" stroke="${p.mid}" stroke-width="3.2"/>
+      <path d="M355 635c210-80 360 72 570 0 132-45 218-38 285 10" stroke="${p.thin}" stroke-width="2.4"/>
+      <path d="M1185 510l185 120" stroke="${p.accentLine}" stroke-width="6"/>
+      <path d="M1335 600l-78 96" stroke="${p.strong}" stroke-width="9"/>
+      <path d="M1260 690h240" stroke="${p.accentLine}" stroke-width="10"/>
+    </g>`
+}
+
+function materialsWire(p) {
+  return `
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M280 780H1390" stroke="${p.strong}" stroke-width="5"/>
+      ${[0, 1, 2].map((n) => `<path d="M${330 + n * 300} ${650 - n * 70}h430v135H${330 + n * 300}z" stroke="${p.strong}" stroke-width="3.6"/>`).join('')}
+      ${[360, 470, 580, 690, 800, 910, 1020, 1130].map((x) => `<path d="M${x} 640l160 145" stroke="${p.thin}" stroke-width="1.9" opacity="0.56"/>`).join('')}
+      <path d="M280 815h1080M350 850h960" stroke="${p.mid}" stroke-width="2.2"/>
+      <path d="M1110 420h260v170h-260z" stroke="${p.accentLine}" stroke-width="3.5"/>
+      <path d="M1130 455h220M1130 500h220M1130 545h160" stroke="${p.accentLine}" stroke-width="2.4"/>
+    </g>`
+}
+
+function toolsWire(p) {
+  return `
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M300 780h620v120H300z" stroke="${p.strong}" stroke-width="4"/>
+      <path d="M345 660h220v120H345zM410 620h92v40" stroke="${p.strong}" stroke-width="3.5"/>
+      <circle cx="405" cy="925" r="38" stroke="${p.mid}" stroke-width="4"/>
+      <circle cx="790" cy="925" r="38" stroke="${p.mid}" stroke-width="4"/>
+      <path d="M1030 470l245 245" stroke="${p.accentLine}" stroke-width="10"/>
+      <path d="M1265 705l-92 92" stroke="${p.strong}" stroke-width="14"/>
+      <path d="M1050 840h420M1120 790h265" stroke="${p.mid}" stroke-width="4"/>
+      <path d="M1320 405v390M1270 455h100" stroke="${p.thin}" stroke-width="2" opacity="0.5"/>
+    </g>`
+}
+
+function planWire(p) {
+  return `
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M250 330H1350V900H250Z" stroke="${p.strong}" stroke-width="4"/>
+      <path d="M360 450h370v215H360zM730 450h420v280H730zM360 665h280v165H360zM1150 450v380H820" stroke="${p.mid}" stroke-width="3"/>
+      <path d="M470 450v215M730 580h420M820 730v100" stroke="${p.thin}" stroke-width="2.2"/>
+      <path d="M1210 840l260-260M1440 570l72 72" stroke="${p.accentLine}" stroke-width="4"/>
+      <path d="M310 385h980M310 865h980" stroke="${p.guide}" stroke-width="1.8" stroke-dasharray="14 14"/>
+      <circle cx="520" cy="560" r="44" stroke="${p.accentLine}" stroke-width="3"/>
+    </g>`
+}
+
+function scaffoldWire(p) {
+  return `
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M380 330h620v550H380z" stroke="${p.strong}" stroke-width="3.8"/>
+      ${[455, 600, 745, 890].map((x) => `<path d="M${x} 390v420" stroke="${p.thin}" stroke-width="2"/>`).join('')}
+      ${[410, 550, 690].map((y) => `<path d="M420 ${y}h520" stroke="${p.thin}" stroke-width="2"/>`).join('')}
+      ${[250, 520, 790, 1060, 1330].map((x) => `<path d="M${x} 900V285" stroke="${p.mid}" stroke-width="4"/>`).join('')}
+      ${[385, 560, 735, 900].map((y) => `<path d="M220 ${y}h1180" stroke="${p.mid}" stroke-width="3.2"/>`).join('')}
+      <path d="M250 900l270-615M520 900l270-615M790 900l270-615M1060 900l270-615" stroke="${p.accentLine}" stroke-width="2.6"/>
+    </g>`
+}
+
+function corridorWire(p) {
+  return `
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M235 320h1280l-270 620H480z" stroke="${p.strong}" stroke-width="4"/>
+      <path d="M480 940 690 320M1245 940 1030 320" stroke="${p.mid}" stroke-width="3.6"/>
+      ${[420, 520, 620, 720, 820].map((y) => `<path d="M${275 + (y - 420) * 0.26} ${y}h${1130 - (y - 420) * 0.46}" stroke="${p.thin}" stroke-width="2"/>`).join('')}
+      ${[360, 520, 680, 840, 1000, 1160, 1320].map((x) => `<path d="M${x} 320L860 940" stroke="${p.guide}" stroke-width="1.8"/>`).join('')}
+      <path d="M1160 470h155v300h-155z" stroke="${p.accentLine}" stroke-width="3.8"/>
+      <path d="M420 520h165v310H420z" stroke="${p.accentLine}" stroke-width="3.2"/>
+    </g>`
+}
+
+function exteriorWire(p) {
+  return `
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M350 355h720v520H350z" stroke="${p.strong}" stroke-width="4"/>
+      ${[430, 610, 790, 970].map((x) => `<path d="M${x} 420v375" stroke="${p.thin}" stroke-width="2"/>`).join('')}
+      ${[455, 590, 725].map((y) => `<path d="M405 ${y}h600" stroke="${p.thin}" stroke-width="2"/>`).join('')}
+      ${[240, 520, 800, 1080, 1360].map((x) => `<path d="M${x} 920V320" stroke="${p.mid}" stroke-width="3.8"/>`).join('')}
+      ${[455, 615, 775, 920].map((y) => `<path d="M210 ${y}h1240" stroke="${p.mid}" stroke-width="3"/>`).join('')}
+      <path d="M240 920l280-600M520 920l280-600M800 920l280-600M1080 920l280-600" stroke="${p.accentLine}" stroke-width="2.4"/>
+    </g>`
+}
+
+function roomWire(p) {
+  return `
+    ${basePerspectiveRoom(p)}
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M480 420h300v430H480z" stroke="${p.accentLine}" stroke-width="3.5"/>
+      <path d="M955 455h265v375H955z" stroke="${p.mid}" stroke-width="3"/>
+      <path d="M300 780h1120M360 720h1000" stroke="${p.thin}" stroke-width="2.2"/>
+      <path d="M360 490h220M360 548h190M360 606h230" stroke="${p.guide}" stroke-width="2"/>
+    </g>`
+}
+
+function interiorWire(p) {
+  return `
+    ${basePerspectiveRoom(p)}
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M330 455h830v310H330z" stroke="${p.strong}" stroke-width="3.5"/>
+      <path d="M330 560h830M330 660h830M520 455v310M700 455v310M880 455v310M1060 455v310" stroke="${p.mid}" stroke-width="2.4"/>
+      <path d="M250 820h1120" stroke="${p.accentLine}" stroke-width="4"/>
+    </g>`
+}
+
+function cartouche(id, title, p) {
+  return `
+    <g opacity="0.58" fill="none" stroke="${p.line}" stroke-width="2">
+      <rect x="1180" y="998" width="440" height="78" rx="8"/>
+      <path d="M1320 998v78M1450 998v78"/>
     </g>
-    <text x="335" y="978" fill="${p.muted}" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800">quote / misure da confermare</text>`
+    <g fill="${p.muted}" font-family="Arial, Helvetica, sans-serif" opacity="0.58">
+      <text x="1204" y="1028" font-size="18" font-weight="800">EUROPA SERVICE</text>
+      <text x="1204" y="1055" font-size="16">bozza wireframe</text>
+      <text x="1342" y="1045" font-size="15">${escapeXml(id)}</text>
+      <text x="1470" y="1045" font-size="15">${escapeXml(title).slice(0, 26)}</text>
+    </g>`
 }
 
 function sketchNote(scene) {
-  if (scene.includes('drywall')) return 'cartongesso / orditura'
+  if (scene.includes('drywall')) return 'cartongesso'
   if (scene.includes('ceiling')) return 'controsoffitto'
-  if (scene.includes('plaster')) return 'rasatura / finitura'
-  if (scene.includes('materials')) return 'materiali e profili'
+  if (scene.includes('plaster')) return 'rasatura'
+  if (scene.includes('materials')) return 'materiali'
   if (scene.includes('tools')) return 'attrezzi'
-  if (scene.includes('blueprint')) return 'rilievo e quote'
-  if (scene.includes('scaffold') || scene.includes('exterior')) return 'edilizia / ponteggio'
-  if (scene.includes('corridor')) return 'corridoio cantiere'
-  return 'interno in lavorazione'
+  if (scene.includes('blueprint')) return 'rilievo'
+  if (scene.includes('scaffold') || scene.includes('exterior')) return 'ponteggio'
+  if (scene.includes('corridor')) return 'corridoio'
+  return 'interno'
 }
 
 function palette(seed) {
   const palettes = [
-    { bg: '#f6f8fb', fill: '#ffffff', ink: '#172033', accent: '#d78228', blue: '#235789', line: '#d7e0ea', grid: '#8fa3b8', muted: '#64748b' },
-    { bg: '#f8f5ef', fill: '#fffaf0', ink: '#1b2430', accent: '#c76f2a', blue: '#0b4ea2', line: '#ddcdbb', grid: '#b9a997', muted: '#73675c' },
-    { bg: '#f1f6f3', fill: '#ffffff', ink: '#10291f', accent: '#e0a21b', blue: '#145c9e', line: '#cdded3', grid: '#9fb7a8', muted: '#66756b' },
+    { paper1: '#fbfbf8', paper2: '#eef1f4', strong: '#2e333a', mid: '#69717c', thin: '#9aa2ad', guide: '#c4c9d0', line: '#d5d9df', grid: '#b9c0ca', muted: '#6b7280', accentLine: '#4a5568' },
+    { paper1: '#f8fafc', paper2: '#eef4ff', strong: '#243247', mid: '#667085', thin: '#9aa6b2', guide: '#c9d2df', line: '#d7dee8', grid: '#b7c4d4', muted: '#64748b', accentLine: '#2f5f96' },
+    { paper1: '#fbf8f1', paper2: '#f0ece4', strong: '#302f2c', mid: '#706b62', thin: '#a39b8f', guide: '#cbc4b9', line: '#ded8ce', grid: '#c8bfb1', muted: '#746b61', accentLine: '#9a6335' },
   ]
   return palettes[seed % palettes.length]
 }
