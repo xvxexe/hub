@@ -10,6 +10,7 @@ import {
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import {
+  homeHeroImage,
   premiumServices,
   workMethod,
 } from '../../data/publicPremiumData'
@@ -30,8 +31,8 @@ export function Home() {
         eyebrow="EuropaService"
         title="Costruiamo spazi di valore"
         text="Edilizia tecnica, cartongesso, ristrutturazioni e finiture interne per chi cerca un partner serio: organizzazione, presenza in cantiere, documentazione e un risultato finale pulito."
-        image={featuredProject.image}
-        imageAlt="Cantiere interno con lavorazioni di cartongesso e finiture"
+        image={homeHeroImage}
+        imageAlt="Foto reale di cantiere edile in lavorazione"
         variant="overlay"
         meta={['Edilizia tecnica', 'Cartongesso', 'Finiture interne', 'Gestione cantieri']}
       />
