@@ -1,11 +1,6 @@
 import { heroImages, projectImages, serviceImages, teamImages } from './publicImages'
 
-export const premiumStats = [
-  { value: '15+', label: 'anni di esperienza in lavorazioni interne' },
-  { value: '250+', label: 'cantieri gestiti e documentati' },
-  { value: '120+', label: 'tecnici e collaboratori qualificati' },
-  { value: '98%', label: 'clienti soddisfatti sul risultato finale' },
-]
+export const premiumStats = []
 
 export const premiumServices = [
   {
@@ -42,8 +37,8 @@ export const premiumServices = [
     id: 'gestione-cantiere',
     title: 'Gestione cantiere',
     icon: 'gestione-cantiere',
-    image: heroImages.main.src,
-    alt: heroImages.main.alt,
+    image: serviceImages.supportoCantieri.src,
+    alt: serviceImages.supportoCantieri.alt,
     summary: 'Coordinamento operativo, documentazione delle fasi, controllo accessi, priorità e avanzamento per lavorare senza caos.',
     benefits: ['Referente operativo unico', 'Aggiornamenti ordinati', 'Foto e note per ogni fase'],
     deliverables: ['Pianificazione', 'Controllo fasi', 'Report foto', 'Verifiche finali'],
@@ -62,101 +57,15 @@ export const premiumServices = [
     id: 'supporto-operativo',
     title: 'Supporto operativo',
     icon: 'supporto-operativo',
-    image: serviceImages.supportoCantieri.src,
-    alt: serviceImages.supportoCantieri.alt,
+    image: serviceImages.tools.src,
+    alt: serviceImages.tools.alt,
     summary: 'Squadre specializzate per imprese, studi tecnici e general contractor che cercano continuità, ordine e capacità esecutiva.',
     benefits: ['Pacchetti lavoro chiari', 'Coordinamento con DL e impresa', 'Documentazione ordinata'],
     deliverables: ['Squadre dedicate', 'Supporto imprese', 'Fasi extra', 'Presidio cantiere'],
   },
 ]
 
-export const premiumProjects = [
-  {
-    id: 'barcelo-roma',
-    title: 'Barcelo Roma',
-    city: 'Roma',
-    category: 'Hospitality',
-    status: 'In corso',
-    year: '2026',
-    image: projectImages.barceloRoma.src,
-    alt: projectImages.barceloRoma.alt,
-    summary: 'Controsoffitti tecnici, cartongesso e finiture interne per camere, corridoi e aree comuni di una struttura ricettiva complessa.',
-    longText: 'Un intervento hospitality richiede ordine, silenziosità operativa, protezioni e comunicazione costante. Il progetto è stato organizzato per zone, con controllo delle interferenze e priorità sulle aree più sensibili.',
-    metrics: ['4.200 mq', '18 settimane', '12 tecnici'],
-    services: ['Cartongesso', 'Controsoffitti', 'Finiture interne'],
-    challenge: 'Lavorare in un contesto ricettivo con aree comuni, corridoi e camere da gestire senza creare dispersione operativa.',
-    solution: 'Suddivisione per zone, avanzamenti fotografici, controllo accessi e verifiche intermedie su quote, allineamenti e dettagli finali.',
-    results: ['Maggiore controllo delle fasi', 'Riduzione interferenze tra squadre', 'Finiture uniformi nelle aree comuni'],
-  },
-  {
-    id: 'negozio-centro',
-    title: 'Boutique Centro',
-    city: 'Verona',
-    category: 'Retail',
-    status: 'Completato',
-    year: '2026',
-    image: projectImages.negozioCentro.src,
-    alt: projectImages.negozioCentro.alt,
-    summary: 'Restyling tecnico di locale commerciale con pareti, controsoffitti, velette e dettagli per illuminazione architettonica.',
-    longText: 'Nel retail il tempo è un costo. Il cantiere è stato impostato per arrivare alla riapertura con superfici finite, impianti integrati e dettagli coerenti con l’immagine del brand.',
-    metrics: ['620 mq', '6 settimane', 'Apertura puntuale'],
-    services: ['Retail', 'Finiture', 'Gestione cantiere'],
-    challenge: 'Ridurre i tempi di chiusura del locale mantenendo una qualità visiva coerente con un ambiente commerciale premium.',
-    solution: 'Sequenza lavori serrata, materiali pronti prima dell’avvio, controllo giornaliero delle priorità e pulizia finale coordinata.',
-    results: ['Apertura rispettata', 'Immagine più moderna', 'Meno passaggi correttivi'],
-  },
-  {
-    id: 'hotel-interno-milano',
-    title: 'Hotel Interno Milano',
-    city: 'Milano',
-    category: 'Hospitality',
-    status: 'In corso',
-    year: '2026',
-    image: projectImages.hotelInternoMilano.src,
-    alt: projectImages.hotelInternoMilano.alt,
-    summary: 'Pareti curve, isolamento acustico e controsoffitti per spazi comuni ad alta percorrenza e corridoi tecnici.',
-    longText: 'Il focus era migliorare comfort, immagine e funzionalità degli spazi interni senza perdere controllo su tempi e interferenze impiantistiche.',
-    metrics: ['2.800 mq', '10 settimane', 'Acustica migliorata'],
-    services: ['Isolamenti', 'Cartongesso', 'Controsoffitti'],
-    challenge: 'Integrare elementi tecnici e acustici in un ambiente esistente con vincoli estetici e funzionali.',
-    solution: 'Sistemi a secco, coordinamento con impiantisti, verifiche acustiche e chiusure progressive delle aree terminate.',
-    results: ['Comfort acustico superiore', 'Spazi più puliti', 'Impianti integrati'],
-  },
-  {
-    id: 'residenza-verdi',
-    title: 'Residenza Verdi',
-    city: 'Verona',
-    category: 'Residenziale',
-    status: 'Completato',
-    year: '2026',
-    image: projectImages.residenzaVerdi.src,
-    alt: projectImages.residenzaVerdi.alt,
-    summary: 'Pareti divisorie, contropareti acustiche, rasature e ripristini per una palazzina residenziale in fase di riqualificazione.',
-    longText: 'Un intervento residenziale richiede attenzione a comfort, pulizia e continuità tra le unità. La lavorazione è stata organizzata per ridurre varianti e mantenere coerenza tra ambienti.',
-    metrics: ['28 unità', '14 settimane', 'Comfort acustico'],
-    services: ['Pareti divisorie', 'Rasature', 'Isolamenti'],
-    challenge: 'Gestire più unità abitative con esigenze ripetitive ma dettagli diversi da appartamento ad appartamento.',
-    solution: 'Standard esecutivi replicabili, controllo dei materiali e verifiche progressive prima delle finiture.',
-    results: ['Maggiore uniformità', 'Riduzione errori', 'Comfort migliorato'],
-  },
-  {
-    id: 'uffici-direzionali',
-    title: 'Uffici Direzionali',
-    city: 'Brescia',
-    category: 'Uffici',
-    status: 'Completato',
-    year: '2025',
-    image: projectImages.ufficiDirezionali.src,
-    alt: projectImages.ufficiDirezionali.alt,
-    summary: 'Nuova distribuzione interna con pareti tecniche, controsoffitti, manutenzioni e finiture operative per uffici direzionali.',
-    longText: 'Negli uffici serve equilibrio tra estetica, acustica e funzionalità. Il cantiere ha previsto fasi notturne e coordinamento per ridurre l’impatto sull’attività.',
-    metrics: ['1.450 mq', '8 settimane', 'Fasi notturne'],
-    services: ['Uffici', 'Cartongesso', 'Manutenzioni'],
-    challenge: 'Ristrutturare senza interrompere completamente l’operatività degli uffici.',
-    solution: 'Turni pianificati, aree isolate, comunicazione con facility manager e consegne per step.',
-    results: ['Continuità operativa', 'Spazi più funzionali', 'Migliore percezione aziendale'],
-  },
-]
+export const premiumProjects = []
 
 export const workMethod = [
   { step: '01', title: 'Ascolto e sopralluogo', text: 'Raccogliamo obiettivi, foto, planimetrie, priorità, vincoli tecnici, accessi e stato reale degli ambienti.' },
@@ -173,7 +82,7 @@ export const operationalMethod = [
   { step: 'D', title: 'Chiusura pulita', text: 'La consegna non è solo “fine lavori”: è controllo, ripristino e ordine finale.' },
 ]
 
-export const sectorsServed = ['Retail', 'Hospitality', 'Uffici', 'Residenziale', 'Spazi commerciali', 'Studi tecnici', 'General contractor', 'Facility manager']
+export const sectorsServed = []
 
 export const premiumValues = [
   { title: 'Precisione', text: 'Quote, allineamenti e dettagli vengono controllati perché il valore finale si vede nelle finiture.' },
@@ -207,38 +116,15 @@ export const serviceFaq = [
   },
 ]
 
-export const testimonials = [
-  {
-    quote: 'EuropaService ha gestito lavorazioni e tempi con un livello di ordine raro in cantiere.',
-    author: 'Direzione lavori, progetto hospitality',
-    role: 'Hotel e spazi comuni',
-  },
-  {
-    quote: 'Comunicazione chiara, squadra presente e finiture curate. Il locale è stato consegnato nei tempi.',
-    author: 'Responsabile retail, Verona',
-    role: 'Boutique Centro',
-  },
-  {
-    quote: 'La differenza si vede nella gestione: meno confusione, più controllo e un risultato finale più pulito.',
-    author: 'Facility manager, uffici direzionali',
-    role: 'Riorganizzazione interna',
-  },
-]
+export const testimonials = []
+export const partners = []
+export const leadership = []
+export const contactCards = []
 
-export const partners = ['Studio tecnico', 'Direzione lavori', 'General contractor', 'Fornitori certificati', 'Facility manager', 'Interior designer', 'Impiantisti', 'Amministratori immobili']
-
-export const leadership = [
-  { name: 'Gianni Europa', role: 'Direzione operativa', text: 'Coordina sopralluoghi, priorità di cantiere, squadre e qualità finale delle lavorazioni.' },
-  { name: 'Sara Costa', role: 'Amministrazione e controllo', text: 'Segue documenti, avanzamenti, richieste cliente e tracciabilità operativa.' },
-  { name: 'Marco Ferri', role: 'Responsabile squadre', text: 'Gestisce posa, ordine di cantiere, verifiche intermedie e consegne per zona.' },
-]
-
-export const contactCards = [
-  { title: 'Telefono', value: '+39 045 000 0000', text: 'Per urgenze, sopralluoghi, prime valutazioni e richieste operative.' },
-  { title: 'Email', value: 'info@europaservice.example', text: 'Per inviare planimetrie, capitolati, foto, richieste e documentazione.' },
-  { title: 'Sede operativa', value: 'Verona, Veneto', text: 'Cantieri in Veneto, Lombardia, Roma e Nord Italia in base al progetto.' },
-  { title: 'Orari', value: 'Lun-Ven 8:00-18:00', text: 'Sabato su appuntamento per sopralluoghi e urgenze programmate.' },
-]
-
-export const mainHeroImage = heroImages.main.src
-export const teamImage = teamImages.squadra.src
+export const mainHeroImage = heroImages.contact.src
+export const teamImage = heroImages.about.src
+export const servicesHeroImage = heroImages.services.src
+export const projectsHeroImage = heroImages.projects.src
+export const homeHeroImage = heroImages.home.src
+export const caseStudyHeroImage = heroImages.caseStudy.src
+export { heroImages, projectImages, serviceImages, teamImages }
