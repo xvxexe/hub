@@ -179,6 +179,110 @@
 .accounting-alert-list > article { min-height: auto; border-radius: .95rem; }
 .accounting-alert-list .data-card-row:nth-child(n+6) { display: none; }
 
+.accounting-linked-documents-section {
+  overflow: hidden;
+}
+
+.accounting-linked-documents-section > .internal-filter-grid {
+  width: 100%;
+  margin-top: 0;
+  box-shadow: none;
+}
+
+.accounting-linked-list {
+  display: grid;
+  gap: .58rem;
+}
+
+.accounting-linked-card.internal-data-card-row {
+  grid-template-columns: auto minmax(0, 1fr) minmax(8rem, auto);
+  align-items: start;
+  min-height: auto;
+  padding: .72rem;
+  overflow: hidden;
+}
+
+.accounting-linked-card .internal-data-card-main-link,
+.accounting-linked-card .internal-data-card-main {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.accounting-linked-card .internal-data-card-titleline {
+  align-items: flex-start;
+}
+
+.accounting-linked-card .internal-data-card-titleline strong,
+.accounting-linked-card .internal-data-card-main > p {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accounting-linked-card .internal-data-card-titleline .status-badge {
+  flex: 0 0 auto;
+}
+
+.accounting-linked-card .internal-data-card-meta {
+  grid-template-columns: repeat(4, minmax(5.5rem, 1fr));
+}
+
+.accounting-linked-card .internal-data-card-action {
+  align-self: start;
+  min-width: 8rem;
+  max-width: 8.8rem;
+}
+
+.accounting-linked-actions {
+  width: 100%;
+}
+
+.linked-document-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: .1rem;
+}
+
+.linked-document-chips a {
+  display: inline-flex;
+  align-items: center;
+  gap: .28rem;
+  max-width: min(100%, 24rem);
+  padding: .28rem .42rem;
+  border: 1px solid rgba(214, 224, 232, .92);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .82);
+  color: var(--dash-title, #17212b);
+  font-size: .72rem;
+  font-weight: 650;
+  line-height: 1.1;
+  text-decoration: none;
+}
+
+.linked-document-chips a:hover {
+  border-color: rgba(37, 99, 235, .32);
+  background: rgba(239, 246, 255, .92);
+}
+
+.linked-document-chips strong {
+  flex: 0 0 auto;
+  color: #2563eb;
+  font-size: .66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.linked-document-chips span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .accounting-alert {
   display: grid;
   gap: .34rem;
@@ -484,6 +588,36 @@
   .real-summary-grid .stat-card {
     min-height: 4.05rem;
     padding: .68rem;
+  }
+
+  .accounting-linked-card.internal-data-card-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .accounting-linked-card .internal-data-card-action {
+    grid-column: 2;
+    justify-self: stretch;
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  .accounting-linked-card .internal-data-card-titleline {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .accounting-linked-card .internal-data-card-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .linked-document-chips {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .linked-document-chips a {
+    max-width: 100%;
   }
 
   .accounting-table-wrap { display: none; }
