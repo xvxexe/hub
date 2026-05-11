@@ -28,12 +28,39 @@ function getInitialPublicTheme() {
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
+function getInitialMediaMatch(query) {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia?.(query).matches ?? false
+}
+
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => getInitialMediaMatch(query))
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia?.(query)
+    if (!mediaQuery) return undefined
+
+    const onChange = (event) => setMatches(event.matches)
+    setMatches(mediaQuery.matches)
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', onChange)
+      return () => mediaQuery.removeEventListener('change', onChange)
+    }
+
+    mediaQuery.addListener(onChange)
+    return () => mediaQuery.removeListener(onChange)
+  }, [query])
+
+  return matches
+}
+
 function BrandLogo({ className = '', variant = 'default' }) {
   const logoUrl = variant === 'footer' ? europaServiceFooterLogoUrl : europaServiceLogoUrl
   return <img className={`brand-logo ${className}`.trim()} src={logoUrl} alt="EuropaService" />
 }
 
-function PublicThemeToggle({ isDarkTheme, onToggle, className = '' }) {
+function PublicThemeToggle({ isDarkTheme, onToggle, className = '', style }) {
   return (
     <button
       className={`public-theme-toggle ${className}`.trim()}
@@ -41,6 +68,7 @@ function PublicThemeToggle({ isDarkTheme, onToggle, className = '' }) {
       aria-label={isDarkTheme ? 'Attiva modalità chiara' : 'Attiva modalità scura'}
       aria-pressed={isDarkTheme}
       onClick={onToggle}
+      style={style}
     >
       <span aria-hidden="true">{isDarkTheme ? '☀' : '☾'}</span>
       <small>{isDarkTheme ? 'Chiara' : 'Scura'}</small>
@@ -443,9 +471,21 @@ function getPublicLabel(item) {
 function PublicHeader({ currentPath }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [publicTheme, setPublicTheme] = useState(getInitialPublicTheme)
+  const isMobileHeader = useMediaQuery('(max-width: 900px)')
   const isDarkTheme = publicTheme === 'dark'
   const readableLogoUrl = isDarkTheme ? europaServiceFooterLogoUrl : europaServiceLogoUrl
   const togglePublicTheme = () => setPublicTheme((current) => (current === 'dark' ? 'light' : 'dark'))
+  const mobileThemeToggleStyle = {
+    position: 'fixed',
+    right: 'max(0.85rem, env(safe-area-inset-right))',
+    bottom: 'max(0.85rem, env(safe-area-inset-bottom))',
+    zIndex: 10040,
+    width: '3.65rem',
+    height: '3.65rem',
+    minWidth: '3.65rem',
+    pointerEvents: 'auto',
+    boxShadow: '0 18px 44px rgba(7, 87, 184, 0.24), 0 14px 30px rgba(15, 23, 42, 0.18)',
+  }
 
   const menuPanelStyle = {
     position: 'fixed',
@@ -543,16 +583,19 @@ function PublicHeader({ currentPath }) {
         {primaryPublicNav.map((item) => <a aria-current={isActive(currentPath, item.path) ? 'page' : undefined} href={`#${item.path}`} key={item.path}>{getPublicLabel(item)}</a>)}
         <a aria-current={isActive(currentPath, '/chi-siamo') ? 'page' : undefined} href="#/chi-siamo">Azienda</a>
         {secondaryPublicNav.map((item) => <a aria-current={isActive(currentPath, item.path) ? 'page' : undefined} href={`#${item.path}`} key={item.path}>{getPublicLabel(item)}</a>)}
-        <PublicThemeToggle isDarkTheme={isDarkTheme} onToggle={togglePublicTheme} />
+        {!isMobileHeader ? <PublicThemeToggle isDarkTheme={isDarkTheme} onToggle={togglePublicTheme} /> : null}
         <a className="nav-private" aria-current={isActive(currentPath, '/dashboard/login') ? 'page' : undefined} href="#/dashboard/login">Area privata</a>
         <a className="nav-cta" aria-current={isActive(currentPath, '/preventivo') ? 'page' : undefined} href="#/preventivo">Richiedi preventivo</a>
       </nav>
 
-      <PublicThemeToggle
-        isDarkTheme={isDarkTheme}
-        onToggle={togglePublicTheme}
-        className="public-theme-toggle-floating-mobile"
-      />
+      {isMobileHeader ? (
+        <PublicThemeToggle
+          isDarkTheme={isDarkTheme}
+          onToggle={togglePublicTheme}
+          className="public-theme-toggle-floating-mobile"
+          style={mobileThemeToggleStyle}
+        />
+      ) : null}
 
       <div className={isMenuOpen ? 'mobile-menu-backdrop open' : 'mobile-menu-backdrop'} onClick={() => setIsMenuOpen(false)} />
       <nav aria-label="Menu principale mobile" id="public-mobile-menu" style={menuPanelStyle}>
