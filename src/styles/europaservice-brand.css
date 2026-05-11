@@ -26,10 +26,8 @@
 }
 
 .public-theme-toggle {
-  position: fixed !important;
-  right: max(1.15rem, env(safe-area-inset-right)) !important;
-  bottom: max(1.15rem, env(safe-area-inset-bottom)) !important;
-  z-index: 10040 !important;
+  position: static;
+  z-index: auto;
   display: inline-grid !important;
   width: 2.65rem;
   height: 2.65rem;
@@ -92,13 +90,19 @@
   }
 
   .desktop-public-nav .public-theme-toggle {
+    position: fixed !important;
+    right: max(1.05rem, env(safe-area-inset-right)) !important;
+    bottom: max(1.05rem, env(safe-area-inset-bottom)) !important;
+    z-index: 10040 !important;
+    width: 3.65rem;
+    height: 3.65rem;
+    min-width: 3.65rem;
     pointer-events: auto !important;
+    box-shadow: 0 18px 44px rgba(7, 87, 184, 0.24), 0 14px 30px rgba(15, 23, 42, 0.18);
   }
 
-  .public-theme-toggle {
-    right: auto !important;
-    left: max(1rem, env(safe-area-inset-left)) !important;
-    bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+  .desktop-public-nav .public-theme-toggle span {
+    font-size: 1.32rem;
   }
 }
 
@@ -109,13 +113,12 @@
     max-width: calc(100vw - 6.75rem);
   }
 
-  .public-theme-toggle {
-    left: max(0.85rem, env(safe-area-inset-left)) !important;
-    right: auto !important;
+  .desktop-public-nav .public-theme-toggle {
+    right: max(0.85rem, env(safe-area-inset-right)) !important;
     bottom: max(0.85rem, env(safe-area-inset-bottom)) !important;
-    width: 2.65rem;
-    height: 2.65rem;
-    min-width: 2.65rem;
+    width: 3.65rem;
+    height: 3.65rem;
+    min-width: 3.65rem;
   }
 }
 
