@@ -26,42 +26,47 @@
 }
 
 .public-theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.42rem;
-  min-height: 2.45rem;
-  border: 1px solid rgba(17, 24, 39, 0.12);
+  display: inline-grid;
+  width: 2.18rem;
+  height: 2.18rem;
+  min-width: 2.18rem;
+  place-items: center;
+  border: 1px solid rgba(17, 24, 39, 0.1);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.72);
   color: #111827;
-  font-weight: 900;
-  padding: 0.55rem 0.78rem;
+  padding: 0;
   cursor: pointer;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+  box-shadow: none;
+  backdrop-filter: blur(14px) saturate(140%);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .public-theme-toggle:hover {
   transform: translateY(-1px);
+  border-color: rgba(184, 100, 43, 0.28);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .public-theme-toggle span {
   display: inline-grid;
-  width: 1.32rem;
-  height: 1.32rem;
+  width: auto;
+  height: auto;
   place-items: center;
-  border-radius: 999px;
-  background: #111827;
-  color: #ffffff;
-  font-size: 0.82rem;
+  border-radius: 0;
+  background: transparent;
+  color: currentColor;
+  font-size: 0.94rem;
   line-height: 1;
 }
 
 .public-theme-toggle small {
-  color: currentColor;
-  font-size: 0.78rem;
-  font-weight: 900;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 @media (max-width: 900px) {
@@ -69,13 +74,10 @@
     width: 11rem;
   }
 
-  .public-theme-toggle small {
-    display: none;
-  }
-
   .public-theme-toggle {
-    min-width: 2.55rem;
-    padding-inline: 0.55rem;
+    width: 2.35rem;
+    height: 2.35rem;
+    min-width: 2.35rem;
   }
 }
 
@@ -83,7 +85,7 @@
   .site-brand-logo {
     width: auto;
     height: 3.15rem;
-    max-width: calc(100vw - 9.8rem);
+    max-width: calc(100vw - 9.2rem);
   }
 }
 
@@ -129,15 +131,20 @@
 }
 
 :root[data-public-theme='dark'] .public-theme-toggle {
-  border-color: rgba(148, 163, 184, 0.24) !important;
-  background: rgba(15, 23, 42, 0.72) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+  background: rgba(15, 23, 42, 0.52) !important;
   color: #f8fafc !important;
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24) !important;
+  box-shadow: none !important;
+}
+
+:root[data-public-theme='dark'] .public-theme-toggle:hover {
+  border-color: rgba(214, 138, 75, 0.4) !important;
+  background: rgba(214, 138, 75, 0.12) !important;
 }
 
 :root[data-public-theme='dark'] .public-theme-toggle span {
-  background: linear-gradient(135deg, #d68a4b 0%, #b8642b 100%) !important;
-  color: #111827 !important;
+  background: transparent !important;
+  color: currentColor !important;
 }
 
 :root[data-public-theme='dark'] .nav-private {
