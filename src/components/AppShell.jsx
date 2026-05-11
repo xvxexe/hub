@@ -470,7 +470,7 @@ function PublicHeader({ currentPath }) {
 
   const menuHeaderStyle = {
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr) auto',
+    gridTemplateColumns: 'minmax(0, 1fr)',
     alignItems: 'start',
     justifyItems: 'start',
     gap: '0.75rem',
@@ -548,6 +548,12 @@ function PublicHeader({ currentPath }) {
         <a className="nav-cta" aria-current={isActive(currentPath, '/preventivo') ? 'page' : undefined} href="#/preventivo">Richiedi preventivo</a>
       </nav>
 
+      <PublicThemeToggle
+        isDarkTheme={isDarkTheme}
+        onToggle={togglePublicTheme}
+        className="public-theme-toggle-floating-mobile"
+      />
+
       <div className={isMenuOpen ? 'mobile-menu-backdrop open' : 'mobile-menu-backdrop'} onClick={() => setIsMenuOpen(false)} />
       <nav aria-label="Menu principale mobile" id="public-mobile-menu" style={menuPanelStyle}>
         <div style={menuHeaderStyle}>
@@ -557,7 +563,6 @@ function PublicHeader({ currentPath }) {
             </a>
             <small style={{ color: isDarkTheme ? '#a8b5c5' : '#64748b', fontSize: '0.86rem', fontWeight: 850, letterSpacing: '0.02em' }}>Menu principale</small>
           </div>
-          <PublicThemeToggle isDarkTheme={isDarkTheme} onToggle={togglePublicTheme} className="public-theme-toggle-mobile" />
         </div>
 
         <div style={menuLinksStyle}>
