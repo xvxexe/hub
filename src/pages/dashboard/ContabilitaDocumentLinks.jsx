@@ -113,6 +113,7 @@ export function ContabilitaDocumentLinks({ store }) {
       <div className="document-card-list accounting-linked-list">
         {filteredRows.slice(0, 80).map((row) => (
           <DataCardRow
+            className="accounting-linked-card"
             key={row.id}
             icon={row.documentStatus === 'Da collegare' ? 'warning' : 'file'}
             warning={row.documentStatus !== 'Completo'}
@@ -127,12 +128,7 @@ export function ContabilitaDocumentLinks({ store }) {
               { label: 'Allegati', value: row.linkedDocuments.length ? `${row.linkedDocuments.length} file` : 'Nessuno' },
             ]}
             action={(
-              <ActionList>
-                {row.linkedDocuments.slice(0, 3).map((document) => (
-                  <a className="button button-secondary button-small" href={document.url} target="_blank" rel="noreferrer" key={document.fileId}>
-                    {document.type}
-                  </a>
-                ))}
+              <ActionList className="accounting-linked-actions">
                 <a className="button button-primary button-small" href={`#/dashboard/contabilita/${row.id}`}>Apri scheda</a>
               </ActionList>
             )}
@@ -140,8 +136,9 @@ export function ContabilitaDocumentLinks({ store }) {
             {row.linkedDocuments.length ? (
               <div className="linked-document-chips">
                 {row.linkedDocuments.map((document) => (
-                  <a href={document.url} target="_blank" rel="noreferrer" key={`${row.id}-${document.fileId}`}>
-                    {document.type}: {document.fileName}
+                  <a href={document.url} target="_blank" rel="noreferrer" key={`${row.id}-${document.fileId}`} title={document.fileName}>
+                    <strong>{document.type}</strong>
+                    <span>{document.fileName}</span>
                   </a>
                 ))}
               </div>
