@@ -12,6 +12,7 @@ import { StatusBadge } from '../../components/StatusBadge'
 import { findDuplicateMovements, hasAmountWarning } from '../../lib/accountingChecks'
 import { buildOperationalCantiereOptions } from '../../lib/cantiereOptions'
 import { getOfficialMasterTotals, preferOfficialCategoryTotals, preferOfficialTotals } from '../../lib/masterTotals'
+import { ContabilitaDocumentLinks } from './ContabilitaDocumentLinks'
 
 const defaultCategories = ['Materiali', 'Manodopera', 'Non materiali', 'Extra / Altro', 'Vitto', 'Alloggi', 'FIR / Rifiuti', 'Bonifici / Pagamenti', 'Noleggi / Servizi']
 const defaultStatuses = ['Da verificare', 'Confermato', 'Incompleto', 'Possibile duplicato', 'Scartato']
@@ -79,6 +80,7 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
         description="Numeri ufficiali letti dal master Google Sheets. Le righe sotto sono dettagli operativi filtrabili per tab/lavorazione."
       >
         <DataModeBadge>{officialMaster ? 'Totali ufficiali master' : 'Dati reali Supabase'}</DataModeBadge>
+        <a className="button button-secondary button-small" href="#/dashboard/drive-documenti">Documenti Drive</a>
         <a className="button button-secondary button-small" href="#/dashboard/report">Report</a>
       </DashboardHeader>
 
@@ -88,6 +90,7 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
 
       <AccountingFilters filters={filters} onChange={updateFilter} sites={sites} tabs={tabs} categories={categories} statuses={statuses} docTypes={docTypes} />
       <AccountingSummaryCards totals={totals} rowsCount={filteredRows.length} mathWarnings={mathWarnings} officialMaster={officialMaster} />
+      <ContabilitaDocumentLinks store={{ ...store, movements: filteredRows }} />
       <AccountingAlerts alerts={alerts} />
       <AccountingTable rows={filteredRows} duplicateIds={duplicateIds} />
       <CantiereAccountingSummary summaries={siteSummaries} />
