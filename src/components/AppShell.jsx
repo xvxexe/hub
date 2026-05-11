@@ -479,7 +479,7 @@ function PublicHeader({ currentPath }) {
     position: 'fixed',
     top: 'auto',
     right: 'max(0.85rem, env(safe-area-inset-right))',
-    bottom: 'calc(env(safe-area-inset-bottom, 0px) + 5.75rem)',
+    bottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)',
     left: 'auto',
     zIndex: 10040,
     width: '3.65rem',
