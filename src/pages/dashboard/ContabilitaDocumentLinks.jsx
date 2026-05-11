@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react'
 import {
-  ActionList,
-  DataCardRow,
   FilterGrid,
   KpiCard,
   KpiStrip,
 } from '../../components/InternalLayout'
+import { InternalIcon } from '../../components/InternalIcons'
 import { MoneyValue } from '../../components/MoneyValue'
 import { StatusBadge } from '../../components/StatusBadge'
 import { orderedDriveDocuments } from '../../data/orderedDriveDocuments'
@@ -112,40 +111,41 @@ export function ContabilitaDocumentLinks({ store }) {
 
       <div className="document-card-list accounting-linked-list">
         {filteredRows.slice(0, 80).map((row) => (
-          <DataCardRow
-            className="accounting-linked-card"
-            key={row.id}
-            icon={row.documentStatus === 'Da collegare' ? 'warning' : 'file'}
-            warning={row.documentStatus !== 'Completo'}
-            title={`${row.fornitore} · ${row.numeroDocumento}`}
-            description={`${row.descrizione} · ${row.sheetTab}`}
-            status={row.documentStatus}
-            href={`#/dashboard/contabilita/${row.id}`}
-            meta={[
-              { label: 'Data', value: formatDate(row.data) },
-              { label: 'Categoria', value: row.categoria },
-              { label: 'Totale', value: <MoneyValue value={row.totale} /> },
-              { label: 'Allegati', value: row.linkedDocuments.length ? `${row.linkedDocuments.length} file` : 'Nessuno' },
-            ]}
-            action={(
-              <ActionList className="accounting-linked-actions">
-                <a className="button button-primary button-small" href={`#/dashboard/contabilita/${row.id}`}>Apri scheda</a>
-              </ActionList>
-            )}
-          >
-            {row.linkedDocuments.length ? (
-              <div className="linked-document-chips">
-                {row.linkedDocuments.map((document) => (
-                  <a href={document.url} target="_blank" rel="noreferrer" key={`${row.id}-${document.fileId}`} title={document.fileName}>
-                    <strong>{document.type}</strong>
-                    <span>{document.fileName}</span>
-                  </a>
-                ))}
+          <article className={`accounting-linked-card ${row.documentStatus !== 'Completo' ? 'is-warning' : ''}`.trim()} key={row.id}>
+            <span className="accounting-linked-icon"><InternalIcon name={row.documentStatus === 'Da collegare' ? 'warning' : 'file'} size={18} /></span>
+
+            <div className="accounting-linked-body">
+              <div className="accounting-linked-head">
+                <div>
+                  <h3>{row.fornitore} · {row.numeroDocumento}</h3>
+                  <p>{row.descrizione} · {row.sheetTab}</p>
+                </div>
+                <StatusBadge>{row.documentStatus}</StatusBadge>
               </div>
-            ) : (
-              <small>Nessun documento sicuro collegato: controlla Drive o il tab 02_FILE_DA_VERIFICARE.</small>
-            )}
-          </DataCardRow>
+
+              <dl className="accounting-linked-meta">
+                <div><dt>Data</dt><dd>{formatDate(row.data)}</dd></div>
+                <div><dt>Categoria</dt><dd>{row.categoria}</dd></div>
+                <div><dt>Totale</dt><dd><MoneyValue value={row.totale} /></dd></div>
+                <div><dt>Allegati</dt><dd>{row.linkedDocuments.length ? `${row.linkedDocuments.length} file` : 'Nessuno'}</dd></div>
+              </dl>
+
+              {row.linkedDocuments.length ? (
+                <div className="linked-document-chips">
+                  {row.linkedDocuments.map((document) => (
+                    <a href={document.url} target="_blank" rel="noreferrer" key={`${row.id}-${document.fileId}`} title={document.fileName}>
+                      <strong>{document.type}</strong>
+                      <span>{document.fileName}</span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <small>Nessun documento sicuro collegato: controlla Drive o il tab 02_FILE_DA_VERIFICARE.</small>
+              )}
+            </div>
+
+            <a className="button button-primary button-small accounting-linked-main-action" href={`#/dashboard/contabilita/${row.id}`}>Apri scheda</a>
+          </article>
         ))}
       </div>
     </section>
