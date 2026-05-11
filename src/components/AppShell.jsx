@@ -33,6 +33,21 @@ function BrandLogo({ className = '', variant = 'default' }) {
   return <img className={`brand-logo ${className}`.trim()} src={logoUrl} alt="EuropaService" />
 }
 
+function PublicThemeToggle({ isDarkTheme, onToggle, className = '' }) {
+  return (
+    <button
+      className={`public-theme-toggle ${className}`.trim()}
+      type="button"
+      aria-label={isDarkTheme ? 'Attiva modalità chiara' : 'Attiva modalità scura'}
+      aria-pressed={isDarkTheme}
+      onClick={onToggle}
+    >
+      <span aria-hidden="true">{isDarkTheme ? '☀' : '☾'}</span>
+      <small>{isDarkTheme ? 'Chiara' : 'Scura'}</small>
+    </button>
+  )
+}
+
 export function AppShell({ children, currentPath, session, onLogout, roles, dataStore }) {
   const isDashboard = currentPath.startsWith('/dashboard')
   const visibleDashboardNav = session ? getDashboardNavForRole(session.role) : []
@@ -430,6 +445,7 @@ function PublicHeader({ currentPath }) {
   const [publicTheme, setPublicTheme] = useState(getInitialPublicTheme)
   const isDarkTheme = publicTheme === 'dark'
   const readableLogoUrl = isDarkTheme ? europaServiceFooterLogoUrl : europaServiceLogoUrl
+  const togglePublicTheme = () => setPublicTheme((current) => (current === 'dark' ? 'light' : 'dark'))
 
   const menuPanelStyle = {
     position: 'fixed',
@@ -454,10 +470,10 @@ function PublicHeader({ currentPath }) {
 
   const menuHeaderStyle = {
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr)',
+    gridTemplateColumns: 'minmax(0, 1fr) auto',
     alignItems: 'start',
     justifyItems: 'start',
-    gap: '0.4rem',
+    gap: '0.75rem',
     padding: '0 3.75rem 0.85rem 0',
     borderBottom: isDarkTheme ? '1px solid rgba(148, 163, 184, 0.2)' : '1px solid #e2e8f0',
   }
@@ -511,17 +527,6 @@ function PublicHeader({ currentPath }) {
       </a>
 
       <button
-        className="public-theme-toggle"
-        type="button"
-        aria-label={isDarkTheme ? 'Attiva modalità chiara' : 'Attiva modalità scura'}
-        aria-pressed={isDarkTheme}
-        onClick={() => setPublicTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
-      >
-        <span aria-hidden="true">{isDarkTheme ? '☀' : '☾'}</span>
-        <small>{isDarkTheme ? 'Chiara' : 'Scura'}</small>
-      </button>
-
-      <button
         aria-controls="public-mobile-menu"
         aria-expanded={isMenuOpen}
         aria-label={isMenuOpen ? 'Chiudi menu principale' : 'Apri menu principale'}
@@ -538,6 +543,7 @@ function PublicHeader({ currentPath }) {
         {primaryPublicNav.map((item) => <a aria-current={isActive(currentPath, item.path) ? 'page' : undefined} href={`#${item.path}`} key={item.path}>{getPublicLabel(item)}</a>)}
         <a aria-current={isActive(currentPath, '/chi-siamo') ? 'page' : undefined} href="#/chi-siamo">Azienda</a>
         {secondaryPublicNav.map((item) => <a aria-current={isActive(currentPath, item.path) ? 'page' : undefined} href={`#${item.path}`} key={item.path}>{getPublicLabel(item)}</a>)}
+        <PublicThemeToggle isDarkTheme={isDarkTheme} onToggle={togglePublicTheme} />
         <a className="nav-private" aria-current={isActive(currentPath, '/dashboard/login') ? 'page' : undefined} href="#/dashboard/login">Area privata</a>
         <a className="nav-cta" aria-current={isActive(currentPath, '/preventivo') ? 'page' : undefined} href="#/preventivo">Richiedi preventivo</a>
       </nav>
@@ -545,10 +551,13 @@ function PublicHeader({ currentPath }) {
       <div className={isMenuOpen ? 'mobile-menu-backdrop open' : 'mobile-menu-backdrop'} onClick={() => setIsMenuOpen(false)} />
       <nav aria-label="Menu principale mobile" id="public-mobile-menu" style={menuPanelStyle}>
         <div style={menuHeaderStyle}>
-          <a href="#/" onClick={() => setIsMenuOpen(false)} aria-label="Vai alla home">
-            <img style={menuLogoStyle} src={readableLogoUrl} alt="EuropaService" />
-          </a>
-          <small style={{ color: isDarkTheme ? '#a8b5c5' : '#64748b', fontSize: '0.86rem', fontWeight: 850, letterSpacing: '0.02em' }}>Menu principale</small>
+          <div>
+            <a href="#/" onClick={() => setIsMenuOpen(false)} aria-label="Vai alla home">
+              <img style={menuLogoStyle} src={readableLogoUrl} alt="EuropaService" />
+            </a>
+            <small style={{ color: isDarkTheme ? '#a8b5c5' : '#64748b', fontSize: '0.86rem', fontWeight: 850, letterSpacing: '0.02em' }}>Menu principale</small>
+          </div>
+          <PublicThemeToggle isDarkTheme={isDarkTheme} onToggle={togglePublicTheme} className="public-theme-toggle-mobile" />
         </div>
 
         <div style={menuLinksStyle}>
