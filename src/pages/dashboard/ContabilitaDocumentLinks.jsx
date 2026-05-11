@@ -109,7 +109,7 @@ export function ContabilitaDocumentLinks({ store }) {
         </label>
       </FilterGrid>
 
-      <div className="document-card-list accounting-linked-list">
+      <div className="accounting-linked-list">
         {filteredRows.slice(0, 80).map((row) => (
           <article className={`accounting-linked-card ${row.documentStatus !== 'Completo' ? 'is-warning' : ''}`.trim()} key={row.id}>
             <span className="accounting-linked-icon"><InternalIcon name={row.documentStatus === 'Da collegare' ? 'warning' : 'file'} size={18} /></span>
@@ -131,7 +131,7 @@ export function ContabilitaDocumentLinks({ store }) {
               </dl>
 
               {row.linkedDocuments.length ? (
-                <div className="linked-document-chips">
+                <div className="accounting-document-list">
                   {row.linkedDocuments.map((document) => (
                     <a href={document.url} target="_blank" rel="noreferrer" key={`${row.id}-${document.fileId}`} title={document.fileName}>
                       <strong>{document.type}</strong>
@@ -140,7 +140,7 @@ export function ContabilitaDocumentLinks({ store }) {
                   ))}
                 </div>
               ) : (
-                <small>Nessun documento sicuro collegato: controlla Drive o il tab 02_FILE_DA_VERIFICARE.</small>
+                <small className="accounting-linked-empty">Nessun documento sicuro collegato: controlla Drive o il tab 02_FILE_DA_VERIFICARE.</small>
               )}
             </div>
 
