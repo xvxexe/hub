@@ -477,13 +477,16 @@ function PublicHeader({ currentPath }) {
   const togglePublicTheme = () => setPublicTheme((current) => (current === 'dark' ? 'light' : 'dark'))
   const mobileThemeToggleStyle = {
     position: 'fixed',
+    top: 'auto',
     right: 'max(0.85rem, env(safe-area-inset-right))',
-    bottom: 'max(0.85rem, env(safe-area-inset-bottom))',
+    bottom: 'calc(env(safe-area-inset-bottom, 0px) + 5.75rem)',
+    left: 'auto',
     zIndex: 10040,
     width: '3.65rem',
     height: '3.65rem',
     minWidth: '3.65rem',
     pointerEvents: 'auto',
+    transform: 'none',
     boxShadow: '0 18px 44px rgba(7, 87, 184, 0.24), 0 14px 30px rgba(15, 23, 42, 0.18)',
   }
 
