@@ -564,32 +564,80 @@ function PublicHeader({ currentPath }) {
   }, [currentPath])
 
   return (
-    <header className="site-header">
-      <a className="brand" href="#/" onClick={() => setIsMenuOpen(false)}>
-        <img className="brand-logo site-brand-logo" src={readableLogoUrl} alt="EuropaService" />
-      </a>
+    <>
+      <header className="site-header">
+        <a className="brand" href="#/" onClick={() => setIsMenuOpen(false)}>
+          <img className="brand-logo site-brand-logo" src={readableLogoUrl} alt="EuropaService" />
+        </a>
 
-      <button
-        aria-controls="public-mobile-menu"
-        aria-expanded={isMenuOpen}
-        aria-label={isMenuOpen ? 'Chiudi menu principale' : 'Apri menu principale'}
-        className={isMenuOpen ? 'mobile-menu-button open' : 'mobile-menu-button'}
-        type="button"
-        onClick={() => setIsMenuOpen((current) => !current)}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
+        <button
+          aria-controls="public-mobile-menu"
+          aria-expanded={isMenuOpen}
+          aria-label={isMenuOpen ? 'Chiudi menu principale' : 'Apri menu principale'}
+          className={isMenuOpen ? 'mobile-menu-button open' : 'mobile-menu-button'}
+          type="button"
+          onClick={() => setIsMenuOpen((current) => !current)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
 
-      <nav className="top-nav desktop-public-nav" aria-label="Navigazione principale">
-        {primaryPublicNav.map((item) => <a aria-current={isActive(currentPath, item.path) ? 'page' : undefined} href={`#${item.path}`} key={item.path}>{getPublicLabel(item)}</a>)}
-        <a aria-current={isActive(currentPath, '/chi-siamo') ? 'page' : undefined} href="#/chi-siamo">Azienda</a>
-        {secondaryPublicNav.map((item) => <a aria-current={isActive(currentPath, item.path) ? 'page' : undefined} href={`#${item.path}`} key={item.path}>{getPublicLabel(item)}</a>)}
-        {!isMobileHeader ? <PublicThemeToggle isDarkTheme={isDarkTheme} onToggle={togglePublicTheme} /> : null}
-        <a className="nav-private" aria-current={isActive(currentPath, '/dashboard/login') ? 'page' : undefined} href="#/dashboard/login">Area privata</a>
-        <a className="nav-cta" aria-current={isActive(currentPath, '/preventivo') ? 'page' : undefined} href="#/preventivo">Richiedi preventivo</a>
-      </nav>
+        <nav className="top-nav desktop-public-nav" aria-label="Navigazione principale">
+          {primaryPublicNav.map((item) => <a aria-current={isActive(currentPath, item.path) ? 'page' : undefined} href={`#${item.path}`} key={item.path}>{getPublicLabel(item)}</a>)}
+          <a aria-current={isActive(currentPath, '/chi-siamo') ? 'page' : undefined} href="#/chi-siamo">Azienda</a>
+          {secondaryPublicNav.map((item) => <a aria-current={isActive(currentPath, item.path) ? 'page' : undefined} href={`#${item.path}`} key={item.path}>{getPublicLabel(item)}</a>)}
+          {!isMobileHeader ? <PublicThemeToggle isDarkTheme={isDarkTheme} onToggle={togglePublicTheme} /> : null}
+          <a className="nav-private" aria-current={isActive(currentPath, '/dashboard/login') ? 'page' : undefined} href="#/dashboard/login">Area privata</a>
+          <a className="nav-cta" aria-current={isActive(currentPath, '/preventivo') ? 'page' : undefined} href="#/preventivo">Richiedi preventivo</a>
+        </nav>
+
+        <div className={isMenuOpen ? 'mobile-menu-backdrop open' : 'mobile-menu-backdrop'} onClick={() => setIsMenuOpen(false)} />
+        <nav aria-label="Menu principale mobile" id="public-mobile-menu" style={menuPanelStyle}>
+          <div style={menuHeaderStyle}>
+            <div>
+              <a href="#/" onClick={() => setIsMenuOpen(false)} aria-label="Vai alla home">
+                <img style={menuLogoStyle} src={readableLogoUrl} alt="EuropaService" />
+              </a>
+              <small style={{ color: isDarkTheme ? '#a8b5c5' : '#64748b', fontSize: '0.86rem', fontWeight: 850, letterSpacing: '0.02em' }}>Menu principale</small>
+            </div>
+          </div>
+
+          <div style={menuLinksStyle}>
+            {publicMobileNav.map((item) => {
+              const active = isActive(currentPath, item.path)
+              const privateLink = item.path.startsWith('/dashboard')
+              return (
+                <a
+                  aria-current={active ? 'page' : undefined}
+                  href={`#${item.path}`}
+                  key={item.path}
+                  onClick={() => setIsMenuOpen(false)}
+                  style={{
+                    display: 'grid',
+                    gap: '0.26rem',
+                    minHeight: '4.35rem',
+                    padding: '0.86rem 1rem',
+                    border: isDarkTheme
+                      ? active ? '1px solid rgba(214, 138, 75, 0.48)' : '1px solid rgba(148, 163, 184, 0.2)'
+                      : privateLink ? '1px solid #111827' : active ? '1px solid rgba(184, 100, 43, 0.32)' : '1px solid #e2e8f0',
+                    borderRadius: '1.05rem',
+                    background: isDarkTheme
+                      ? active ? 'rgba(214, 138, 75, 0.16)' : 'rgba(15, 23, 42, 0.78)'
+                      : privateLink ? '#111827' : active ? '#fff7ed' : '#fff',
+                    color: isDarkTheme ? '#f8fafc' : privateLink ? '#fff' : '#111827',
+                    textDecoration: 'none',
+                    boxShadow: active || privateLink || isDarkTheme ? '0 14px 30px rgba(15, 23, 42, 0.18)' : 'none',
+                  }}
+                >
+                  <span style={{ fontSize: '1.28rem', lineHeight: 1.05, fontWeight: 900 }}>{item.label}</span>
+                  <small style={{ color: isDarkTheme ? '#a8b5c5' : privateLink ? 'rgba(255,255,255,0.68)' : '#64748b', fontSize: '0.98rem', lineHeight: 1.28, fontWeight: 760 }}>{item.description}</small>
+                </a>
+              )
+            })}
+          </div>
+        </nav>
+      </header>
 
       {isMobileHeader ? (
         <PublicThemeToggle
@@ -599,52 +647,6 @@ function PublicHeader({ currentPath }) {
           style={mobileThemeToggleStyle}
         />
       ) : null}
-
-      <div className={isMenuOpen ? 'mobile-menu-backdrop open' : 'mobile-menu-backdrop'} onClick={() => setIsMenuOpen(false)} />
-      <nav aria-label="Menu principale mobile" id="public-mobile-menu" style={menuPanelStyle}>
-        <div style={menuHeaderStyle}>
-          <div>
-            <a href="#/" onClick={() => setIsMenuOpen(false)} aria-label="Vai alla home">
-              <img style={menuLogoStyle} src={readableLogoUrl} alt="EuropaService" />
-            </a>
-            <small style={{ color: isDarkTheme ? '#a8b5c5' : '#64748b', fontSize: '0.86rem', fontWeight: 850, letterSpacing: '0.02em' }}>Menu principale</small>
-          </div>
-        </div>
-
-        <div style={menuLinksStyle}>
-          {publicMobileNav.map((item) => {
-            const active = isActive(currentPath, item.path)
-            const privateLink = item.path.startsWith('/dashboard')
-            return (
-              <a
-                aria-current={active ? 'page' : undefined}
-                href={`#${item.path}`}
-                key={item.path}
-                onClick={() => setIsMenuOpen(false)}
-                style={{
-                  display: 'grid',
-                  gap: '0.26rem',
-                  minHeight: '4.35rem',
-                  padding: '0.86rem 1rem',
-                  border: isDarkTheme
-                    ? active ? '1px solid rgba(214, 138, 75, 0.48)' : '1px solid rgba(148, 163, 184, 0.2)'
-                    : privateLink ? '1px solid #111827' : active ? '1px solid rgba(184, 100, 43, 0.32)' : '1px solid #e2e8f0',
-                  borderRadius: '1.05rem',
-                  background: isDarkTheme
-                    ? active ? 'rgba(214, 138, 75, 0.16)' : 'rgba(15, 23, 42, 0.78)'
-                    : privateLink ? '#111827' : active ? '#fff7ed' : '#fff',
-                  color: isDarkTheme ? '#f8fafc' : privateLink ? '#fff' : '#111827',
-                  textDecoration: 'none',
-                  boxShadow: active || privateLink || isDarkTheme ? '0 14px 30px rgba(15, 23, 42, 0.18)' : 'none',
-                }}
-              >
-                <span style={{ fontSize: '1.28rem', lineHeight: 1.05, fontWeight: 900 }}>{item.label}</span>
-                <small style={{ color: isDarkTheme ? '#a8b5c5' : privateLink ? 'rgba(255,255,255,0.68)' : '#64748b', fontSize: '0.98rem', lineHeight: 1.28, fontWeight: 760 }}>{item.description}</small>
-              </a>
-            )
-          })}
-        </div>
-      </nav>
-    </header>
+    </>
   )
 }
