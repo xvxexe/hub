@@ -19,6 +19,15 @@ const publicMobileNav = [
   { path: '/dashboard/login', label: 'Area privata', description: 'Accesso riservato' },
 ]
 
+function getInitialPublicTheme() {
+  if (typeof window === 'undefined') return 'light'
+
+  const savedTheme = window.localStorage.getItem('europaservice-public-theme')
+  if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme
+
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
 function BrandLogo({ className = '', variant = 'default' }) {
   const logoUrl = variant === 'footer' ? europaServiceFooterLogoUrl : europaServiceLogoUrl
   return <img className={`brand-logo ${className}`.trim()} src={logoUrl} alt="EuropaService" />
@@ -418,6 +427,9 @@ function getPublicLabel(item) {
 
 function PublicHeader({ currentPath }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [publicTheme, setPublicTheme] = useState(getInitialPublicTheme)
+  const isDarkTheme = publicTheme === 'dark'
+  const readableLogoUrl = isDarkTheme ? europaServiceFooterLogoUrl : europaServiceLogoUrl
 
   const menuPanelStyle = {
     position: 'fixed',
@@ -432,8 +444,8 @@ function PublicHeader({ currentPath }) {
     padding: 'max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom))',
     overflowY: 'auto',
     overflowX: 'hidden',
-    background: '#fff',
-    color: '#111827',
+    background: isDarkTheme ? '#070c16' : '#fff',
+    color: isDarkTheme ? '#f8fafc' : '#111827',
     pointerEvents: isMenuOpen ? 'auto' : 'none',
     opacity: isMenuOpen ? 1 : 0,
     transform: isMenuOpen ? 'translateX(0)' : 'translateX(100%)',
@@ -447,7 +459,7 @@ function PublicHeader({ currentPath }) {
     justifyItems: 'start',
     gap: '0.4rem',
     padding: '0 3.75rem 0.85rem 0',
-    borderBottom: '1px solid #e2e8f0',
+    borderBottom: isDarkTheme ? '1px solid rgba(148, 163, 184, 0.2)' : '1px solid #e2e8f0',
   }
 
   const menuLogoStyle = {
@@ -464,6 +476,12 @@ function PublicHeader({ currentPath }) {
     gap: '0.7rem',
     padding: '0.25rem 0 1rem',
   }
+
+  useEffect(() => {
+    document.documentElement.dataset.publicTheme = publicTheme
+    document.documentElement.style.colorScheme = publicTheme
+    window.localStorage.setItem('europaservice-public-theme', publicTheme)
+  }, [publicTheme])
 
   useEffect(() => {
     if (!isMenuOpen) return undefined
@@ -489,8 +507,19 @@ function PublicHeader({ currentPath }) {
   return (
     <header className="site-header">
       <a className="brand" href="#/" onClick={() => setIsMenuOpen(false)}>
-        <BrandLogo className="site-brand-logo" />
+        <img className="brand-logo site-brand-logo" src={readableLogoUrl} alt="EuropaService" />
       </a>
+
+      <button
+        className="public-theme-toggle"
+        type="button"
+        aria-label={isDarkTheme ? 'Attiva modalità chiara' : 'Attiva modalità scura'}
+        aria-pressed={isDarkTheme}
+        onClick={() => setPublicTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
+      >
+        <span aria-hidden="true">{isDarkTheme ? '☀' : '☾'}</span>
+        <small>{isDarkTheme ? 'Chiara' : 'Scura'}</small>
+      </button>
 
       <button
         aria-controls="public-mobile-menu"
@@ -517,9 +546,9 @@ function PublicHeader({ currentPath }) {
       <nav aria-label="Menu principale mobile" id="public-mobile-menu" style={menuPanelStyle}>
         <div style={menuHeaderStyle}>
           <a href="#/" onClick={() => setIsMenuOpen(false)} aria-label="Vai alla home">
-            <img style={menuLogoStyle} src={europaServiceLogoUrl} alt="EuropaService" />
+            <img style={menuLogoStyle} src={readableLogoUrl} alt="EuropaService" />
           </a>
-          <small style={{ color: '#64748b', fontSize: '0.86rem', fontWeight: 850, letterSpacing: '0.02em' }}>Menu principale</small>
+          <small style={{ color: isDarkTheme ? '#a8b5c5' : '#64748b', fontSize: '0.86rem', fontWeight: 850, letterSpacing: '0.02em' }}>Menu principale</small>
         </div>
 
         <div style={menuLinksStyle}>
@@ -537,16 +566,20 @@ function PublicHeader({ currentPath }) {
                   gap: '0.26rem',
                   minHeight: '4.35rem',
                   padding: '0.86rem 1rem',
-                  border: privateLink ? '1px solid #111827' : active ? '1px solid rgba(184, 100, 43, 0.32)' : '1px solid #e2e8f0',
+                  border: isDarkTheme
+                    ? active ? '1px solid rgba(214, 138, 75, 0.48)' : '1px solid rgba(148, 163, 184, 0.2)'
+                    : privateLink ? '1px solid #111827' : active ? '1px solid rgba(184, 100, 43, 0.32)' : '1px solid #e2e8f0',
                   borderRadius: '1.05rem',
-                  background: privateLink ? '#111827' : active ? '#fff7ed' : '#fff',
-                  color: privateLink ? '#fff' : '#111827',
+                  background: isDarkTheme
+                    ? active ? 'rgba(214, 138, 75, 0.16)' : 'rgba(15, 23, 42, 0.78)'
+                    : privateLink ? '#111827' : active ? '#fff7ed' : '#fff',
+                  color: isDarkTheme ? '#f8fafc' : privateLink ? '#fff' : '#111827',
                   textDecoration: 'none',
-                  boxShadow: active || privateLink ? '0 14px 30px rgba(15, 23, 42, 0.08)' : 'none',
+                  boxShadow: active || privateLink || isDarkTheme ? '0 14px 30px rgba(15, 23, 42, 0.18)' : 'none',
                 }}
               >
                 <span style={{ fontSize: '1.28rem', lineHeight: 1.05, fontWeight: 900 }}>{item.label}</span>
-                <small style={{ color: privateLink ? 'rgba(255,255,255,0.68)' : '#64748b', fontSize: '0.98rem', lineHeight: 1.28, fontWeight: 760 }}>{item.description}</small>
+                <small style={{ color: isDarkTheme ? '#a8b5c5' : privateLink ? 'rgba(255,255,255,0.68)' : '#64748b', fontSize: '0.98rem', lineHeight: 1.28, fontWeight: 760 }}>{item.description}</small>
               </a>
             )
           })}
