@@ -2,7 +2,9 @@ const PUBLIC_VIEWPORT_STYLE_ID = 'europaservice-public-viewport-fix'
 
 function injectPublicViewportFix() {
   if (typeof document === 'undefined') return
-  if (document.getElementById(PUBLIC_VIEWPORT_STYLE_ID)) return
+
+  const existingStyle = document.getElementById(PUBLIC_VIEWPORT_STYLE_ID)
+  if (existingStyle) existingStyle.remove()
 
   const style = document.createElement('style')
   style.id = PUBLIC_VIEWPORT_STYLE_ID
@@ -10,7 +12,8 @@ function injectPublicViewportFix() {
     html,
     body,
     #root,
-    .app-shell {
+    .app-shell,
+    .public-main {
       width: 100% !important;
       min-width: 0 !important;
       max-width: none !important;
@@ -23,7 +26,7 @@ function injectPublicViewportFix() {
     }
 
     .app-shell,
-    .app-shell > main,
+    .public-main,
     .site-header,
     .premium-hero,
     .premium-section,
@@ -118,6 +121,17 @@ function injectPublicViewportFix() {
   document.head.appendChild(style)
 }
 
-injectPublicViewportFix()
+function schedulePublicViewportFix() {
+  if (typeof window === 'undefined') return
 
-export { injectPublicViewportFix }
+  injectPublicViewportFix()
+  window.requestAnimationFrame?.(injectPublicViewportFix)
+  window.setTimeout(injectPublicViewportFix, 0)
+  window.setTimeout(injectPublicViewportFix, 250)
+  window.addEventListener('resize', injectPublicViewportFix, { passive: true })
+  window.visualViewport?.addEventListener('resize', injectPublicViewportFix, { passive: true })
+}
+
+schedulePublicViewportFix()
+
+export { injectPublicViewportFix, schedulePublicViewportFix }
