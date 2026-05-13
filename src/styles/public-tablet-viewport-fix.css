@@ -1,26 +1,26 @@
-/* Tablet / Samsung DeX viewport stabilization.
-   Loaded last from App.jsx so it wins over public.css and brand refinements. */
+/* Tablet / Android viewport stabilization.
+   Loaded last from main.jsx. These rules intentionally beat public.css because public.css uses !important. */
 html,
 body,
 #root,
 .app-shell {
-  width: 100%;
-  min-width: 0;
-  max-width: none;
-  margin: 0;
-  padding: 0;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 body {
-  overflow-x: hidden;
+  overflow-x: hidden !important;
 }
 
 #root,
 .app-shell,
 .app-shell > main {
-  display: block;
-  inline-size: 100%;
-  max-inline-size: none;
+  display: block !important;
+  inline-size: 100% !important;
+  max-inline-size: none !important;
 }
 
 .site-header,
@@ -32,11 +32,13 @@ body {
 .premium-contact-layout,
 .premium-final-cta,
 .public-footer {
-  width: 100%;
-  min-width: 0;
-  max-width: none;
-  inline-size: 100%;
-  max-inline-size: none;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  inline-size: 100% !important;
+  max-inline-size: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 .premium-hero-copy,
@@ -57,9 +59,11 @@ body {
 .premium-sector-row,
 .premium-timeline,
 .premium-faq {
-  width: min(100%, var(--pub-max, 1180px));
-  max-width: var(--pub-max, 1180px);
-  margin-inline: auto;
+  width: min(100%, var(--pub-max, 1180px)) !important;
+  max-width: var(--pub-max, 1180px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  min-width: 0 !important;
 }
 
 @media (min-width: 561px) and (max-width: 1180px) {
@@ -69,8 +73,8 @@ body {
   .premium-case-split,
   .premium-contact-layout,
   .premium-final-cta {
-    padding-left: clamp(1rem, 3vw, 1.5rem);
-    padding-right: clamp(1rem, 3vw, 1.5rem);
+    padding-left: clamp(1rem, 3vw, 1.5rem) !important;
+    padding-right: clamp(1rem, 3vw, 1.5rem) !important;
   }
 
   .premium-service-grid,
@@ -82,7 +86,7 @@ body {
   .premium-gallery,
   .premium-stats,
   .premium-process {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
@@ -100,10 +104,10 @@ body {
   .premium-case-split,
   .premium-contact-layout,
   .premium-final-cta {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 
   .premium-image-split-reverse .premium-split-image {
-    order: initial;
+    order: initial !important;
   }
 }
