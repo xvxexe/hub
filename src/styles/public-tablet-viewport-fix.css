@@ -1,0 +1,109 @@
+/* Tablet / Samsung DeX viewport stabilization.
+   Loaded last from App.jsx so it wins over public.css and brand refinements. */
+html,
+body,
+#root,
+.app-shell {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+#root,
+.app-shell,
+.app-shell > main {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: none;
+}
+
+.site-header,
+.app-shell > main,
+.premium-hero,
+.premium-section,
+.premium-image-split,
+.premium-case-split,
+.premium-contact-layout,
+.premium-final-cta,
+.public-footer {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  inline-size: 100%;
+  max-inline-size: none;
+}
+
+.premium-hero-copy,
+.premium-section-heading,
+.premium-service-grid,
+.premium-project-grid,
+.premium-feature-grid,
+.premium-value-grid,
+.premium-testimonial-grid,
+.premium-contact-grid,
+.premium-gallery,
+.premium-stats,
+.premium-process,
+.premium-key-facts,
+.premium-featured-project,
+.premium-filter-pills,
+.premium-logo-row,
+.premium-sector-row,
+.premium-timeline,
+.premium-faq {
+  width: min(100%, var(--pub-max, 1180px));
+  max-width: var(--pub-max, 1180px);
+  margin-inline: auto;
+}
+
+@media (min-width: 561px) and (max-width: 1180px) {
+  .premium-hero,
+  .premium-section,
+  .premium-image-split,
+  .premium-case-split,
+  .premium-contact-layout,
+  .premium-final-cta {
+    padding-left: clamp(1rem, 3vw, 1.5rem);
+    padding-right: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .premium-service-grid,
+  .premium-project-grid,
+  .premium-feature-grid,
+  .premium-value-grid,
+  .premium-testimonial-grid,
+  .premium-contact-grid,
+  .premium-gallery,
+  .premium-stats,
+  .premium-process {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .premium-service-grid,
+  .premium-project-grid,
+  .premium-feature-grid,
+  .premium-value-grid,
+  .premium-testimonial-grid,
+  .premium-contact-grid,
+  .premium-gallery,
+  .premium-stats,
+  .premium-process,
+  .premium-image-split,
+  .premium-case-split,
+  .premium-contact-layout,
+  .premium-final-cta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .premium-image-split-reverse .premium-split-image {
+    order: initial;
+  }
+}
