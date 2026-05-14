@@ -35,6 +35,17 @@ const PUBLIC_CONTAINER_SELECTORS = [
   '.premium-faq',
 ]
 
+function setLightAsDefaultPublicTheme() {
+  if (typeof window === 'undefined') return
+
+  const savedTheme = window.localStorage.getItem('europaservice-public-theme')
+  if (savedTheme === 'dark' || savedTheme === 'light') return
+
+  window.localStorage.setItem('europaservice-public-theme', 'light')
+  document.documentElement.dataset.publicTheme = 'light'
+  document.documentElement.style.colorScheme = 'light'
+}
+
 function isPublicRoute() {
   if (typeof window === 'undefined') return false
   return !window.location.hash.startsWith('#/dashboard')
@@ -184,6 +195,7 @@ function applyRuntimePublicLayoutFix() {
 }
 
 function runPublicViewportFix() {
+  setLightAsDefaultPublicTheme()
   injectPublicViewportFix()
   applyRuntimePublicLayoutFix()
 }
