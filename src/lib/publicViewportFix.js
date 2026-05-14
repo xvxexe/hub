@@ -1,5 +1,45 @@
 const PUBLIC_VIEWPORT_STYLE_ID = 'europaservice-public-viewport-fix'
 
+const PUBLIC_LAYOUT_SELECTORS = [
+  '#root',
+  '.app-shell',
+  '.app-shell > main:not(.dashboard-main)',
+  '.site-header',
+  '.premium-hero',
+  '.premium-section',
+  '.premium-image-split',
+  '.premium-case-split',
+  '.premium-contact-layout',
+  '.premium-final-cta',
+  '.public-footer',
+]
+
+const PUBLIC_CONTAINER_SELECTORS = [
+  '.premium-hero-copy',
+  '.premium-section-heading',
+  '.premium-service-grid',
+  '.premium-project-grid',
+  '.premium-feature-grid',
+  '.premium-value-grid',
+  '.premium-testimonial-grid',
+  '.premium-contact-grid',
+  '.premium-gallery',
+  '.premium-stats',
+  '.premium-process',
+  '.premium-key-facts',
+  '.premium-featured-project',
+  '.premium-filter-pills',
+  '.premium-logo-row',
+  '.premium-sector-row',
+  '.premium-timeline',
+  '.premium-faq',
+]
+
+function isPublicRoute() {
+  if (typeof window === 'undefined') return false
+  return !window.location.hash.startsWith('#/dashboard')
+}
+
 function injectPublicViewportFix() {
   if (typeof document === 'undefined') return
 
@@ -13,21 +53,20 @@ function injectPublicViewportFix() {
     body,
     #root,
     .app-shell,
-    .public-main {
+    .app-shell > main:not(.dashboard-main) {
       width: 100% !important;
       min-width: 0 !important;
       max-width: none !important;
       margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    body {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
       overflow-x: hidden !important;
+      transform: none !important;
+      zoom: 1 !important;
     }
 
-    .app-shell,
-    .public-main,
     .site-header,
+    .app-shell > main:not(.dashboard-main),
     .premium-hero,
     .premium-section,
     .premium-image-split,
@@ -72,16 +111,6 @@ function injectPublicViewportFix() {
     }
 
     @media (min-width: 761px) and (max-width: 1180px) {
-      .premium-hero,
-      .premium-section,
-      .premium-image-split,
-      .premium-case-split,
-      .premium-contact-layout,
-      .premium-final-cta {
-        padding-left: clamp(1rem, 3vw, 1.5rem) !important;
-        padding-right: clamp(1rem, 3vw, 1.5rem) !important;
-      }
-
       .premium-service-grid,
       .premium-project-grid,
       .premium-feature-grid,
@@ -121,17 +150,57 @@ function injectPublicViewportFix() {
   document.head.appendChild(style)
 }
 
+function applyRuntimePublicLayoutFix() {
+  if (typeof document === 'undefined' || !isPublicRoute()) return
+
+  document.documentElement.style.width = '100%'
+  document.documentElement.style.maxWidth = 'none'
+  document.body.style.width = '100%'
+  document.body.style.maxWidth = 'none'
+  document.body.style.margin = '0'
+  document.body.style.overflowX = 'hidden'
+
+  PUBLIC_LAYOUT_SELECTORS.forEach((selector) => {
+    document.querySelectorAll(selector).forEach((node) => {
+      node.style.width = '100%'
+      node.style.minWidth = '0'
+      node.style.maxWidth = 'none'
+      node.style.marginLeft = '0'
+      node.style.marginRight = '0'
+      node.style.transform = 'none'
+      node.style.zoom = '1'
+    })
+  })
+
+  PUBLIC_CONTAINER_SELECTORS.forEach((selector) => {
+    document.querySelectorAll(selector).forEach((node) => {
+      node.style.width = 'min(100%, var(--pub-max, 1180px))'
+      node.style.maxWidth = 'var(--pub-max, 1180px)'
+      node.style.minWidth = '0'
+      node.style.marginLeft = 'auto'
+      node.style.marginRight = 'auto'
+    })
+  })
+}
+
+function runPublicViewportFix() {
+  injectPublicViewportFix()
+  applyRuntimePublicLayoutFix()
+}
+
 function schedulePublicViewportFix() {
   if (typeof window === 'undefined') return
 
-  injectPublicViewportFix()
-  window.requestAnimationFrame?.(injectPublicViewportFix)
-  window.setTimeout(injectPublicViewportFix, 0)
-  window.setTimeout(injectPublicViewportFix, 250)
-  window.addEventListener('resize', injectPublicViewportFix, { passive: true })
-  window.visualViewport?.addEventListener('resize', injectPublicViewportFix, { passive: true })
+  runPublicViewportFix()
+  window.requestAnimationFrame?.(runPublicViewportFix)
+  window.setTimeout(runPublicViewportFix, 0)
+  window.setTimeout(runPublicViewportFix, 150)
+  window.setTimeout(runPublicViewportFix, 500)
+  window.addEventListener('resize', runPublicViewportFix, { passive: true })
+  window.addEventListener('hashchange', () => window.setTimeout(runPublicViewportFix, 60), { passive: true })
+  window.visualViewport?.addEventListener('resize', runPublicViewportFix, { passive: true })
 }
 
 schedulePublicViewportFix()
 
-export { injectPublicViewportFix, schedulePublicViewportFix }
+export { injectPublicViewportFix, applyRuntimePublicLayoutFix, schedulePublicViewportFix }
