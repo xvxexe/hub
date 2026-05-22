@@ -103,6 +103,50 @@
   flex: 0 0 auto;
 }
 
+.dashboard-brand {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 8.5rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.62rem;
+  min-width: 0;
+}
+
+.dashboard-brand-logo {
+  width: 8.5rem;
+  max-width: 100%;
+}
+
+.dashboard-brand span {
+  min-width: 0;
+}
+
+.dashboard-brand strong,
+.dashboard-brand small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-managed-label {
+  display: none;
+}
+
+.dashboard-main > .dashboard-header.internal-header {
+  display: grid;
+  justify-items: start;
+  text-align: left;
+}
+
+.dashboard-main > .dashboard-header.internal-header > * {
+  justify-self: stretch;
+}
+
+.dashboard-main > .dashboard-header.internal-header h1,
+.dashboard-main > .dashboard-header.internal-header p:not(.eyebrow) {
+  margin-left: 0;
+  text-align: left;
+}
+
 @media (max-width: 767px) {
   .dashboard-main {
     padding-top: 2.35rem !important;
