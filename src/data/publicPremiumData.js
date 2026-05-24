@@ -52,7 +52,7 @@ export const premiumServices = [
     id: 'manutenzioni',
     title: 'Manutenzioni',
     icon: 'manutenzioni',
-    image: driveServiceImages.manutenzioni,
+    image: 'https://drive.google.com/thumbnail?id=1KH_k55sHvpyddWa-65IhD0PlQvJFqIwv&sz=w1800',
     fallbackImage: serviceImages.manutenzioni.src,
     alt: 'Foto reale di manutenzioni edili',
     summary: 'Ripristini rapidi e programmati per immobili, strutture ricettive, locali commerciali e uffici che devono restare operativi.',
