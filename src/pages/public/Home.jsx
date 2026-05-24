@@ -14,8 +14,7 @@ import {
   premiumServices,
   workMethod,
 } from '../../data/publicPremiumData'
-import { drivePublicProjects } from '../../data/driveProjectPhotos'
-import { heroImages, serviceImages } from '../../data/publicImages'
+import { driveHeroImages, drivePublicProjects } from '../../data/driveProjectPhotos'
 
 const visibleProjects = drivePublicProjects.filter((project) => project.status !== 'Da verificare')
 const featuredProject = visibleProjects[0]
@@ -42,8 +41,8 @@ export function Home() {
         eyebrow="Approccio"
         title="Un cantiere ben fatto si vede prima ancora della consegna."
         text="Protezione degli ambienti, materiali pronti, foto di avanzamento, referenti chiari e fasi controllate riducono ritardi, incomprensioni e lavorazioni rifatte. Il nostro obiettivo è rendere ogni intervento leggibile per cliente, direzione lavori e squadre operative."
-        image={heroImages.main.src}
-        imageAlt={heroImages.main.alt}
+        image={driveHeroImages.method}
+        imageAlt="Foto reale di lavorazioni in cantiere"
       >
         <div className="premium-tags">
           <small>Ordine</small>
@@ -85,8 +84,8 @@ export function Home() {
         eyebrow="Controllo operativo"
         title="Documentiamo le fasi per rendere il lavoro trasparente."
         text="Foto, note, aggiornamenti e verifiche sono parte della qualità. Il cliente capisce cosa è stato fatto, cosa manca e quali decisioni servono. Questo rende il cantiere più ordinato e professionale."
-        image={serviceImages.supportoCantieri.src}
-        imageAlt={serviceImages.supportoCantieri.alt}
+        image={driveHeroImages.documentation}
+        imageAlt="Foto reale di documentazione cantiere"
         reverse
       >
         <div className="premium-feature-grid">
