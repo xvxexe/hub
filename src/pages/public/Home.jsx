@@ -17,7 +17,8 @@ import {
 import { drivePublicProjects } from '../../data/driveProjectPhotos'
 import { heroImages, serviceImages } from '../../data/publicImages'
 
-const featuredProject = drivePublicProjects[0]
+const visibleProjects = drivePublicProjects.filter((project) => project.status !== 'Da verificare')
+const featuredProject = visibleProjects[0]
 
 export function Home() {
   return (
@@ -72,7 +73,7 @@ export function Home() {
         action={<a className="premium-button premium-button-secondary" href="#/cantieri">Apri i case study</a>}
       >
         <div className="premium-project-grid">
-          {drivePublicProjects.map((project) => <PremiumProjectCard featured={project.id === featuredProject.id} key={project.id} project={project} />)}
+          {visibleProjects.map((project) => <PremiumProjectCard featured={project.id === featuredProject.id} key={project.id} project={project} />)}
         </div>
       </PremiumSection>
 
