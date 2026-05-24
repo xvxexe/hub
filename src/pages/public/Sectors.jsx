@@ -9,15 +9,15 @@ import {
 import { PremiumChipMarquee } from '../../components/PremiumChipMarquee'
 import { SEO } from '../../components/SEO'
 import { mainHeroImage, sectorsServed, workMethod } from '../../data/publicPremiumData'
-import { sectorImages, serviceImages } from '../../data/publicImages'
+import { driveHeroImages, driveServiceImages } from '../../data/driveProjectPhotos'
 
 const sectorDetails = [
-  { title: 'Retail', text: 'Negozi e locali commerciali richiedono tempi certi, immagine curata, illuminazione integrata e consegne rapide.', image: sectorImages.negozi.src },
-  { title: 'Hospitality', text: 'Hotel e strutture ricettive hanno bisogno di pulizia, protezioni, fasi ordinate e attenzione agli ospiti o alle aree aperte.', image: sectorImages.hotel.src },
-  { title: 'Uffici', text: 'Gli spazi direzionali richiedono comfort acustico, distribuzione funzionale, finiture sobrie e riduzione dei disagi operativi.', image: sectorImages.aziende.src },
-  { title: 'Residenziale', text: 'Abitazioni e palazzine richiedono qualità percepibile, pulizia, dettagli curati e attenzione alla continuità degli ambienti.', image: sectorImages.privati.src },
-  { title: 'Spazi commerciali', text: 'Ambienti ad alta percorrenza hanno bisogno di materiali resistenti, dettagli solidi e manutenzioni semplici.', image: serviceImages.finitureInterne.src },
-  { title: 'Studi tecnici', text: 'Collaboriamo con progettisti e direzioni lavori per trasformare indicazioni tecniche in fasi operative ordinate.', image: sectorImages.studiTecnici.src },
+  { title: 'Retail', text: 'Negozi e locali commerciali richiedono tempi certi, immagine curata, illuminazione integrata e consegne rapide.' },
+  { title: 'Hospitality', text: 'Hotel e strutture ricettive hanno bisogno di pulizia, protezioni, fasi ordinate e attenzione agli ospiti o alle aree aperte.' },
+  { title: 'Uffici', text: 'Gli spazi direzionali richiedono comfort acustico, distribuzione funzionale, finiture sobrie e riduzione dei disagi operativi.' },
+  { title: 'Residenziale', text: 'Abitazioni e palazzine richiedono qualità percepibile, pulizia, dettagli curati e attenzione alla continuità degli ambienti.' },
+  { title: 'Spazi commerciali', text: 'Ambienti ad alta percorrenza hanno bisogno di materiali resistenti, dettagli solidi e manutenzioni semplici.' },
+  { title: 'Studi tecnici', text: 'Collaboriamo con progettisti e direzioni lavori per trasformare indicazioni tecniche in fasi operative ordinate.' },
 ]
 
 export function Sectors() {
@@ -52,8 +52,8 @@ export function Sectors() {
         eyebrow="Retail e hospitality"
         title="Quando l’immagine finale conta quanto il rispetto dei tempi."
         text="Negozi, hotel e spazi aperti al pubblico richiedono una gestione precisa: protezioni, pulizia, programmazione, finiture di qualità e riduzione dei tempi morti."
-        image={sectorImages.hotel.src}
-        imageAlt={sectorImages.hotel.alt}
+        image={driveHeroImages.projects}
+        imageAlt="Foto reale di cantiere hospitality"
       >
         <div className="premium-feature-grid">
           <PremiumTextCard title="Riaperture puntuali" text="Pianificazione serrata e fasi coordinate per ridurre il tempo fuori servizio." />
@@ -65,8 +65,8 @@ export function Sectors() {
         eyebrow="Uffici e residenziale"
         title="Comfort, funzionalità e ordine durante tutte le fasi."
         text="Negli uffici e negli immobili residenziali il cantiere deve rispettare ambienti, persone e tempi. Per questo curiamo comunicazione, protezioni e verifiche intermedie."
-        image={sectorImages.aziende.src}
-        imageAlt={sectorImages.aziende.alt}
+        image={driveServiceImages.finitureInterne}
+        imageAlt="Foto reale di finiture interne"
         reverse
       >
         <div className="premium-tags">
