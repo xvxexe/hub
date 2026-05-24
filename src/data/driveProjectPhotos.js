@@ -1,6 +1,13 @@
 const drivePhotoUrl = (id, size = 1800) => `https://drive.google.com/thumbnail?id=${id}&sz=w${size}`
 const driveFileUrl = (id) => `https://drive.google.com/file/d/${id}/view`
 
+const blockedDrivePhotoIds = new Set([
+  '1nQc02o36Be7vEBSpGYOWtN9A2WyA_tcz',
+  '17Iu1s5GscQWFC4LWbtXpHGDQev8xIa8o',
+  '1y3hMoR9rpAzOPTbRpA283aAi1_WUoa5-',
+  '1dW_WMZYswarzEcmmOhXcr6-KpNui2Il2',
+])
+
 function makePhoto({ id, fileName, project, area = 'DA VERIFICARE', index }) {
   return {
     id,
@@ -11,12 +18,18 @@ function makePhoto({ id, fileName, project, area = 'DA VERIFICARE', index }) {
     title: fileName,
     project,
     area,
-    qualityStatus: 'Da verificare visivamente su Drive',
+    qualityStatus: 'Selezionata per uso pubblico',
   }
 }
 
 function makeGallery(project, area, seed) {
-  return seed.map(([fileName, id], index) => makePhoto({ id, fileName, project, area, index }))
+  return seed
+    .filter(([, id]) => !blockedDrivePhotoIds.has(id))
+    .map(([fileName, id], index) => makePhoto({ id, fileName, project, area, index }))
+}
+
+function srcByName(gallery, fileName, fallbackIndex = 0) {
+  return gallery.find((photo) => photo.fileName === fileName)?.src ?? gallery[fallbackIndex]?.src
 }
 
 const barceloRomaSeed = [
@@ -169,23 +182,23 @@ export const allDriveProjectPhotos = [
 ]
 
 export const driveHeroImages = {
-  home: capriPalaceGallery[3]?.src ?? barceloRomaGallery[0].src,
-  services: barceloRomaGallery[10]?.src ?? barceloRomaGallery[0].src,
-  projects: capriPalaceGallery[0]?.src ?? barceloRomaGallery[0].src,
-  about: capriPalaceGallery[20]?.src ?? barceloRomaGallery[1].src,
-  contact: barceloRomaGallery[20]?.src ?? barceloRomaGallery[2].src,
-  caseStudy: capriPalaceGallery[10]?.src ?? barceloRomaGallery[3].src,
-  method: barceloRomaGallery[15]?.src ?? barceloRomaGallery[0].src,
-  documentation: capriPalaceGallery[25]?.src ?? capriPalaceGallery[0].src,
+  home: srcByName(capriPalaceGallery, 'IMG_8305.JPG', 0),
+  services: srcByName(barceloRomaGallery, 'IMG_7327.JPG', 0),
+  projects: srcByName(capriPalaceGallery, 'IMG_7940.JPG', 0),
+  about: srcByName(capriPalaceGallery, 'IMG_8330.JPG', 0),
+  contact: srcByName(barceloRomaGallery, 'IMG_7350.JPG', 0),
+  caseStudy: srcByName(capriPalaceGallery, 'IMG_8326.JPG', 0),
+  method: srcByName(barceloRomaGallery, 'IMG_7327.JPG', 0),
+  documentation: srcByName(capriPalaceGallery, 'IMG_8413.JPG', 0),
 }
 
 export const driveServiceImages = {
-  cartongesso: barceloRomaGallery[11]?.src ?? driveHeroImages.services,
-  ristrutturazioniTecniche: capriPalaceGallery[4]?.src ?? driveHeroImages.home,
-  finitureInterne: barceloRomaGallery[22]?.src ?? driveHeroImages.method,
-  gestioneCantiere: capriPalaceGallery[12]?.src ?? driveHeroImages.documentation,
-  manutenzioni: unassignedDriveGallery[0]?.src ?? driveHeroImages.services,
-  supportoOperativo: barceloRomaGallery[25]?.src ?? driveHeroImages.documentation,
+  cartongesso: srcByName(barceloRomaGallery, 'IMG_7328.JPG', 0),
+  ristrutturazioniTecniche: srcByName(capriPalaceGallery, 'IMG_8306.JPG', 0),
+  finitureInterne: srcByName(barceloRomaGallery, 'IMG_7366.JPG', 0),
+  gestioneCantiere: srcByName(capriPalaceGallery, 'IMG_8326.JPG', 0),
+  manutenzioni: srcByName(barceloRomaGallery, 'IMG_7344.JPG', 0),
+  supportoOperativo: srcByName(barceloRomaGallery, 'IMG_7406.JPG', 0),
 }
 
 export const drivePublicProjects = [
@@ -196,9 +209,9 @@ export const drivePublicProjects = [
     category: 'Hospitality',
     status: 'In corso',
     year: '2026',
-    image: barceloRomaGallery[0].src,
-    heroImage: barceloRomaGallery[5]?.src ?? barceloRomaGallery[0].src,
-    methodImage: barceloRomaGallery[12]?.src ?? barceloRomaGallery[0].src,
+    image: srcByName(barceloRomaGallery, 'IMG_7008.JPG', 0),
+    heroImage: srcByName(barceloRomaGallery, 'IMG_7219.JPG', 0),
+    methodImage: srcByName(barceloRomaGallery, 'IMG_7329.JPG', 0),
     alt: 'Foto reale del cantiere Barcelò Roma',
     summary: 'Intervento hospitality con lavorazioni interne, aree esterne, supporto operativo e finiture coordinate in una struttura complessa.',
     longText: 'Cantiere hospitality organizzato per aree e fasi, con documentazione fotografica collegata alle lavorazioni operative. Le foto sono state collegate al cantiere già presente senza creare strutture parallele.',
@@ -217,9 +230,9 @@ export const drivePublicProjects = [
     category: 'Hospitality',
     status: 'In corso',
     year: '2026',
-    image: capriPalaceGallery[3]?.src ?? capriPalaceGallery[0].src,
-    heroImage: capriPalaceGallery[0].src,
-    methodImage: capriPalaceGallery[18]?.src ?? capriPalaceGallery[0].src,
+    image: srcByName(capriPalaceGallery, 'IMG_8305.JPG', 0),
+    heroImage: srcByName(capriPalaceGallery, 'IMG_7940.JPG', 0),
+    methodImage: srcByName(capriPalaceGallery, 'IMG_8326.JPG', 0),
     alt: 'Foto reale del cantiere Capri Palace',
     summary: 'Nuovo cantiere hospitality collegato alle foto caricate in Drive, con galleria pubblica e scheda dedicata.',
     longText: 'Capri Palace è stato aggiunto come nuovo cantiere pubblico per raccogliere le foto operative caricate nella cartella EuropaService/Foto e renderle disponibili nel portfolio del sito.',
@@ -230,26 +243,5 @@ export const drivePublicProjects = [
     results: ['Nuovo cantiere creato', 'Foto ordinate per progetto', 'Portfolio aggiornato'],
     gallery: capriPalaceGallery,
     note: 'Attribuzione probabile in base al cantiere Capri Palace già aperto nel sistema e al blocco fotografico caricato.',
-  },
-  {
-    id: 'foto-da-classificare',
-    title: 'Foto cantieri da classificare',
-    city: 'DA VERIFICARE',
-    category: 'Archivio operativo',
-    status: 'Da verificare',
-    year: '2026',
-    image: unassignedDriveGallery[0]?.src ?? driveHeroImages.documentation,
-    heroImage: unassignedDriveGallery[1]?.src ?? driveHeroImages.documentation,
-    methodImage: unassignedDriveGallery[2]?.src ?? driveHeroImages.documentation,
-    alt: 'Foto cantiere da classificare',
-    summary: 'Raccolta provvisoria per foto senza cantiere riconoscibile dai dati Drive disponibili. Da controllare prima della pubblicazione definitiva.',
-    longText: 'Queste foto non avevano dati EXIF/luogo disponibili tramite Drive. Sono state tenute separate per evitare attribuzioni inventate e permettere una verifica manuale rapida.',
-    metrics: ['Da verificare', 'Cantieri multipli', `${unassignedDriveGallery.length} foto`],
-    services: ['Classificazione foto', 'Controllo qualità', 'Associazione cantiere'],
-    challenge: 'Evitare di collegare foto a un cantiere sbagliato quando il luogo non è leggibile dai metadati disponibili.',
-    solution: 'Creazione di un archivio separato e dichiarato come da verificare, senza mischiarlo con Barcelò Roma o Capri Palace.',
-    results: ['Nessuna attribuzione inventata', 'Foto comunque tracciate', 'Verifica finale più semplice'],
-    gallery: unassignedDriveGallery,
-    note: 'Prima della pubblicazione commerciale definitiva, controllare queste immagini su Drive e spostarle nel cantiere corretto.',
   },
 ]
