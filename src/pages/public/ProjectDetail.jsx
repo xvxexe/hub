@@ -9,11 +9,12 @@ import {
 import { SEO } from '../../components/SEO'
 import { SafeImage } from '../../components/SafeImage'
 import { caseStudyHeroImage, workMethod } from '../../data/publicPremiumData'
-import { realPublicProjects } from '../../data/publicRealData'
-import { projectImages, serviceImages } from '../../data/publicImages'
+import { drivePublicProjects } from '../../data/driveProjectPhotos'
+import { serviceImages } from '../../data/publicImages'
 
 export function ProjectDetail({ projectId }) {
-  const project = realPublicProjects.find((item) => item.id === projectId) ?? realPublicProjects[0]
+  const project = drivePublicProjects.find((item) => item.id === projectId) ?? drivePublicProjects[0]
+  const gallery = project.gallery ?? []
 
   return (
     <>
@@ -26,8 +27,8 @@ export function ProjectDetail({ projectId }) {
         eyebrow="Case study"
         title={project.title}
         text={project.longText ?? project.summary}
-        image={caseStudyHeroImage}
-        imageAlt="Foto reale di cantiere tecnico per case study"
+        image={project.heroImage ?? caseStudyHeroImage}
+        imageAlt={project.alt ?? 'Foto reale di cantiere tecnico per case study'}
         primaryLabel="Richiedi un lavoro simile"
         secondaryLabel="Torna al portfolio"
         secondaryHref="#/cantieri"
@@ -39,7 +40,7 @@ export function ProjectDetail({ projectId }) {
         <div className="premium-key-facts">
           <article><span>Settore</span><strong>{project.metrics[0]}</strong></article>
           <article><span>Ambito</span><strong>{project.metrics[1]}</strong></article>
-          <article><span>Focus</span><strong>{project.metrics[2]}</strong></article>
+          <article><span>Foto</span><strong>{project.metrics[2]}</strong></article>
           <article><span>Anno</span><strong>{project.year}</strong></article>
         </div>
       </PremiumSection>
@@ -53,25 +54,23 @@ export function ProjectDetail({ projectId }) {
         <article>
           <p className="premium-eyebrow">Soluzione</p>
           <h2>{project.solution}</h2>
-          <p>EuropaService organizza le fasi in modo progressivo, coordinando squadre, materiali e controlli per ottenere un risultato pulito e coerente.</p>
+          <p>{project.note ?? 'Le foto sono state collegate al cantiere per rendere il portfolio più concreto e verificabile.'}</p>
         </article>
       </section>
 
-      <PremiumSection eyebrow="Galleria" title="Wireframe provvisori del progetto" tone="soft">
-        <div className="premium-gallery">
-          {[
-            projectImages.barceloRomaDetail.src,
-            projectImages.barceloRomaGalleryOne.src,
-            projectImages.barceloRomaGalleryTwo.src,
-          ].map((src, index) => (
-            <SafeImage
-              alt={`${project.title} wireframe ${index + 1}`}
-              className="premium-gallery-image"
-              fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
-              key={`${src}-${index}`}
-              src={src}
-              title={`${project.title} wireframe provvisorio`}
-            />
+      <PremiumSection eyebrow="Galleria" title="Foto reali del cantiere" text="Immagini caricate da Drive e collegate alla scheda cantiere." tone="soft">
+        <div className="premium-gallery premium-drive-gallery">
+          {gallery.map((photo, index) => (
+            <a className="premium-drive-photo" href={photo.sourceUrl} key={photo.id} rel="noreferrer" target="_blank">
+              <SafeImage
+                alt={photo.alt}
+                className="premium-gallery-image"
+                fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
+                src={photo.src}
+                title={photo.title}
+              />
+              <span>{index + 1}. {photo.fileName}</span>
+            </a>
           ))}
         </div>
       </PremiumSection>
@@ -80,8 +79,9 @@ export function ProjectDetail({ projectId }) {
         eyebrow="Metodo applicato"
         title="Ogni fase viene coordinata per mantenere il cantiere pulito e leggibile."
         text="Dalla preparazione alla chiusura, l’intervento viene gestito con attenzione a materiali, sicurezza, lavorazioni collegate e qualità finale degli ambienti."
-        image={serviceImages.supportoCantieri.src}
-        imageAlt={serviceImages.supportoCantieri.alt}
+        image={project.methodImage ?? serviceImages.supportoCantieri.src}
+        imageAlt={project.alt ?? serviceImages.supportoCantieri.alt}
+        fallbackImage={serviceImages.supportoCantieri.src}
       >
         <div className="premium-tags">
           {project.services.map((service) => <small key={service}>{service}</small>)}
