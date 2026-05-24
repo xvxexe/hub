@@ -1,3 +1,4 @@
+import { driveHeroImages, driveServiceImages } from './driveProjectPhotos'
 import { heroImages, projectImages, serviceImages, teamImages } from './publicImages'
 
 export const premiumStats = []
@@ -7,8 +8,9 @@ export const premiumServices = [
     id: 'cartongesso',
     title: 'Cartongesso',
     icon: 'cartongesso',
-    image: serviceImages.cartongesso.src,
-    alt: serviceImages.cartongesso.alt,
+    image: driveServiceImages.cartongesso,
+    fallbackImage: serviceImages.cartongesso.src,
+    alt: 'Foto reale di lavorazioni in cartongesso',
     summary: 'Pareti, contropareti, velette, nicchie, rivestimenti e sistemi a secco per interni tecnici, commerciali e residenziali.',
     benefits: ['Strutture precise e allineate', 'Integrazione con impianti e illuminazione', 'Finiture pronte alla tinteggiatura'],
     deliverables: ['Pareti divisorie', 'Velette', 'Contropareti', 'Nicchie'],
@@ -17,8 +19,9 @@ export const premiumServices = [
     id: 'ristrutturazioni-tecniche',
     title: 'Ristrutturazioni tecniche',
     icon: 'ristrutturazioni-tecniche',
-    image: serviceImages.ediliGenerali.src,
-    alt: serviceImages.ediliGenerali.alt,
+    image: driveServiceImages.ristrutturazioniTecniche,
+    fallbackImage: serviceImages.ediliGenerali.src,
+    alt: 'Foto reale di ristrutturazione tecnica in cantiere',
     summary: 'Interventi coordinati su hotel, negozi, uffici, immobili residenziali e spazi ad alta percorrenza con fasi operative chiare.',
     benefits: ['Fasi pianificate prima dell’avvio', 'Assistenze edili coordinate', 'Riduzione interferenze con altri fornitori'],
     deliverables: ['Demolizioni leggere', 'Ripristini', 'Assistenze murarie', 'Consegna pulita'],
@@ -27,8 +30,9 @@ export const premiumServices = [
     id: 'finiture-interne',
     title: 'Finiture interne',
     icon: 'finiture-interne',
-    image: serviceImages.rasature.src,
-    alt: serviceImages.rasature.alt,
+    image: driveServiceImages.finitureInterne,
+    fallbackImage: serviceImages.rasature.src,
+    alt: 'Foto reale di finiture interne',
     summary: 'Rasature, ripristini, dettagli, superfici e chiusure finali curate per dare agli ambienti un aspetto ordinato e professionale.',
     benefits: ['Superfici uniformi', 'Dettagli puliti e leggibili', 'Controllo qualità prima della consegna'],
     deliverables: ['Rasature', 'Riprese', 'Stuccature', 'Dettagli finali'],
@@ -37,8 +41,9 @@ export const premiumServices = [
     id: 'gestione-cantiere',
     title: 'Gestione cantiere',
     icon: 'gestione-cantiere',
-    image: serviceImages.supportoCantieri.src,
-    alt: serviceImages.supportoCantieri.alt,
+    image: driveServiceImages.gestioneCantiere,
+    fallbackImage: serviceImages.supportoCantieri.src,
+    alt: 'Foto reale di gestione cantiere',
     summary: 'Coordinamento operativo, documentazione delle fasi, controllo accessi, priorità e avanzamento per lavorare senza caos.',
     benefits: ['Referente operativo unico', 'Aggiornamenti ordinati', 'Foto e note per ogni fase'],
     deliverables: ['Pianificazione', 'Controllo fasi', 'Report foto', 'Verifiche finali'],
@@ -47,8 +52,9 @@ export const premiumServices = [
     id: 'manutenzioni',
     title: 'Manutenzioni',
     icon: 'manutenzioni',
-    image: serviceImages.manutenzioni.src,
-    alt: serviceImages.manutenzioni.alt,
+    image: driveServiceImages.manutenzioni,
+    fallbackImage: serviceImages.manutenzioni.src,
+    alt: 'Foto reale di manutenzioni edili',
     summary: 'Ripristini rapidi e programmati per immobili, strutture ricettive, locali commerciali e uffici che devono restare operativi.',
     benefits: ['Interventi mirati', 'Disagi ridotti', 'Programmazione semplice e tracciabile'],
     deliverables: ['Ripristini', 'Piccoli interventi', 'Urgenze', 'Controlli periodici'],
@@ -57,8 +63,9 @@ export const premiumServices = [
     id: 'supporto-operativo',
     title: 'Supporto operativo',
     icon: 'supporto-operativo',
-    image: serviceImages.tools.src,
-    alt: serviceImages.tools.alt,
+    image: driveServiceImages.supportoOperativo,
+    fallbackImage: serviceImages.tools.src,
+    alt: 'Foto reale di supporto operativo in cantiere',
     summary: 'Squadre specializzate per imprese, studi tecnici e general contractor che cercano continuità, ordine e capacità esecutiva.',
     benefits: ['Pacchetti lavoro chiari', 'Coordinamento con DL e impresa', 'Documentazione ordinata'],
     deliverables: ['Squadre dedicate', 'Supporto imprese', 'Fasi extra', 'Presidio cantiere'],
@@ -121,10 +128,10 @@ export const partners = []
 export const leadership = []
 export const contactCards = []
 
-export const mainHeroImage = heroImages.contact.src
-export const teamImage = heroImages.about.src
-export const servicesHeroImage = heroImages.services.src
-export const projectsHeroImage = heroImages.projects.src
-export const homeHeroImage = heroImages.home.src
-export const caseStudyHeroImage = heroImages.caseStudy.src
+export const mainHeroImage = driveHeroImages.contact || heroImages.contact.src
+export const teamImage = driveHeroImages.about || heroImages.about.src
+export const servicesHeroImage = driveHeroImages.services || heroImages.services.src
+export const projectsHeroImage = driveHeroImages.projects || heroImages.projects.src
+export const homeHeroImage = driveHeroImages.home || heroImages.home.src
+export const caseStudyHeroImage = driveHeroImages.caseStudy || heroImages.caseStudy.src
 export { heroImages, projectImages, serviceImages, teamImages }
