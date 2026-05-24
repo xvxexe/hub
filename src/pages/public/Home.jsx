@@ -14,10 +14,10 @@ import {
   premiumServices,
   workMethod,
 } from '../../data/publicPremiumData'
-import { realPublicProjects } from '../../data/publicRealData'
+import { drivePublicProjects } from '../../data/driveProjectPhotos'
 import { heroImages, serviceImages } from '../../data/publicImages'
 
-const featuredProject = realPublicProjects[0]
+const featuredProject = drivePublicProjects[0]
 
 export function Home() {
   return (
@@ -66,13 +66,13 @@ export function Home() {
 
       <PremiumSection
         eyebrow="Portfolio"
-        title="Cantiere in evidenza"
-        text="Al momento mostriamo solo cantieri con informazioni operative disponibili e verificabili. Gli altri case study verranno aggiunti quando saranno pronti."
+        title="Cantieri in evidenza"
+        text="Foto reali collegate ai cantieri disponibili nel portfolio."
         tone="soft"
-        action={<a className="premium-button premium-button-secondary" href="#/cantieri">Apri il case study</a>}
+        action={<a className="premium-button premium-button-secondary" href="#/cantieri">Apri i case study</a>}
       >
         <div className="premium-project-grid">
-          <PremiumProjectCard featured project={featuredProject} />
+          {drivePublicProjects.map((project) => <PremiumProjectCard featured={project.id === featuredProject.id} key={project.id} project={project} />)}
         </div>
       </PremiumSection>
 
