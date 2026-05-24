@@ -8,11 +8,11 @@ import {
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import { projectsHeroImage } from '../../data/publicPremiumData'
-import { drivePublicProjects } from '../../data/driveProjectPhotos'
-import { serviceImages } from '../../data/publicImages'
+import { driveHeroImages, drivePublicProjects } from '../../data/driveProjectPhotos'
 
 export function Projects() {
-  const featured = drivePublicProjects[0]
+  const visibleProjects = drivePublicProjects.filter((project) => project.status !== 'Da verificare')
+  const featured = visibleProjects[0]
 
   return (
     <>
@@ -24,7 +24,7 @@ export function Projects() {
       <PremiumHero
         eyebrow="Cantieri"
         title="Cantieri documentati con attenzione a ordine e qualità"
-        text="Mostriamo interventi con informazioni operative e foto collegate. Le immagini senza attribuzione certa restano in un archivio separato da verificare."
+        text="Mostriamo interventi con informazioni operative e foto collegate. Le immagini senza attribuzione certa restano fuori dal portfolio pubblico."
         image={projectsHeroImage}
         imageAlt="Foto reale di cantiere edile per portfolio"
         primaryLabel="Richiedi un lavoro simile"
@@ -47,7 +47,7 @@ export function Projects() {
 
       <PremiumSection eyebrow="Case study" title="Cantieri pubblicati" text="Le schede raccolgono foto e contesto operativo per ogni cantiere riconoscibile.">
         <div className="premium-project-grid">
-          {drivePublicProjects.map((project) => <PremiumProjectCard key={project.id} project={project} />)}
+          {visibleProjects.map((project) => <PremiumProjectCard key={project.id} project={project} />)}
         </div>
       </PremiumSection>
 
@@ -55,8 +55,8 @@ export function Projects() {
         eyebrow="Approccio"
         title="Un buon risultato nasce da un cantiere ordinato."
         text="Organizziamo lavorazioni, materiali e priorità per ridurre interferenze e mantenere il controllo su qualità, sicurezza e pulizia. Ogni fase viene gestita con attenzione al contesto in cui si lavora."
-        image={serviceImages.finitureInterne.src}
-        imageAlt={serviceImages.finitureInterne.alt}
+        image={driveHeroImages.method}
+        imageAlt="Foto reale di cantiere ordinato"
         reverse
       >
         <div className="premium-feature-grid">
