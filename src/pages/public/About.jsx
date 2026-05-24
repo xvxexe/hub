@@ -14,7 +14,7 @@ import {
   teamImage,
   workMethod,
 } from '../../data/publicPremiumData'
-import { heroImages, serviceImages } from '../../data/publicImages'
+import { driveHeroImages, driveServiceImages } from '../../data/driveProjectPhotos'
 
 export function About() {
   return (
@@ -43,8 +43,8 @@ export function About() {
         eyebrow="Metodo"
         title="Da squadra di cantiere a struttura organizzata per interni complessi."
         text="Molti problemi nascono dalla mancanza di ordine: decisioni non tracciate, fornitori non coordinati, tempi poco chiari. Per questo lavoriamo con un metodo che aumenta controllo e qualità."
-        image={heroImages.planning.src}
-        imageAlt={heroImages.planning.alt}
+        image={driveHeroImages.method}
+        imageAlt="Foto reale di metodo operativo in cantiere"
       >
         <div className="premium-tags">
           <small>Metodo</small>
@@ -79,8 +79,8 @@ export function About() {
         eyebrow="Come lavoriamo"
         title="In cantiere servono ordine, sicurezza e comunicazione."
         text="Proteggiamo gli spazi, pianifichiamo accessi e materiali, documentiamo le fasi e manteniamo una comunicazione leggibile con cliente, direzione lavori e fornitori coinvolti."
-        image={serviceImages.uffici.src}
-        imageAlt={serviceImages.uffici.alt}
+        image={driveServiceImages.gestioneCantiere}
+        imageAlt="Foto reale di gestione operativa in cantiere"
         reverse
       >
         <PremiumTimeline items={operationalMethod} />
