@@ -8,11 +8,11 @@ import {
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import { projectsHeroImage } from '../../data/publicPremiumData'
-import { realPublicProjects } from '../../data/publicRealData'
-import { projectImages, serviceImages } from '../../data/publicImages'
+import { drivePublicProjects } from '../../data/driveProjectPhotos'
+import { serviceImages } from '../../data/publicImages'
 
 export function Projects() {
-  const featured = { ...realPublicProjects[0], image: projectImages.barceloRoma.src, alt: projectImages.barceloRoma.alt }
+  const featured = drivePublicProjects[0]
 
   return (
     <>
@@ -24,14 +24,14 @@ export function Projects() {
       <PremiumHero
         eyebrow="Cantieri"
         title="Cantieri documentati con attenzione a ordine e qualità"
-        text="Mostriamo solo interventi per cui abbiamo informazioni reali e utilizzabili. Altri case study verranno aggiunti quando saranno completi e pronti per la pubblicazione."
+        text="Mostriamo interventi con informazioni operative e foto collegate. Le immagini senza attribuzione certa restano in un archivio separato da verificare."
         image={projectsHeroImage}
         imageAlt="Foto reale di cantiere edile per portfolio"
         primaryLabel="Richiedi un lavoro simile"
         secondaryLabel="Apri case study"
         secondaryHref={`#/cantieri/${featured.id}`}
         variant="compact"
-        meta={['Hospitality', 'Roma', 'Lavorazioni coordinate']}
+        meta={['Hospitality', 'Roma', 'Capri', 'Foto reali']}
       />
 
       <PremiumSection eyebrow="Cantiere in evidenza" title={featured.title} text={featured.longText}>
@@ -42,6 +42,12 @@ export function Projects() {
             <p>{featured.summary}</p>
             <a className="premium-button premium-button-primary" href={`#/cantieri/${featured.id}`}>Apri case study</a>
           </div>
+        </div>
+      </PremiumSection>
+
+      <PremiumSection eyebrow="Case study" title="Cantieri pubblicati" text="Le schede raccolgono foto e contesto operativo per ogni cantiere riconoscibile.">
+        <div className="premium-project-grid">
+          {drivePublicProjects.map((project) => <PremiumProjectCard key={project.id} project={project} />)}
         </div>
       </PremiumSection>
 
