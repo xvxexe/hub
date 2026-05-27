@@ -55,6 +55,7 @@ export function AccountingMovementDetail({ movementId, session, store }) {
       ...form,
       cantiere: cantiere?.nome ?? form.cantiere,
       importoTotale: Number(form.totale || 0),
+      categoriaOriginale: form.categoriaOriginale ?? form.lavorazione ?? form.categoria,
     })
     setStatusMessage({ type: 'success', message: 'Movimento contabile salvato.' })
   }
@@ -77,6 +78,8 @@ export function AccountingMovementDetail({ movementId, session, store }) {
       storageBucket: document.storageBucket ?? 'documents',
       tipoDocumento: document.tipoDocumento ?? current.tipoDocumento,
       numeroDocumento: document.numeroDocumento ?? document.fileName ?? current.numeroDocumento,
+      lavorazione: current.lavorazione ?? document.lavorazione ?? document.categoriaOriginale ?? document.sheetTab,
+      categoriaOriginale: current.categoriaOriginale ?? document.categoriaOriginale ?? document.lavorazione,
     }))
     setStatusMessage({
       type: compatibilityWarnings.length ? 'warning' : 'success',
@@ -110,7 +113,7 @@ export function AccountingMovementDetail({ movementId, session, store }) {
       <DashboardHeader
         eyebrow="Dettaglio movimento contabile"
         title={`${movement.fornitore || 'Fornitore non indicato'} · ${movement.descrizione}`}
-        description="Scheda operativa separata dal documento: modifica spesa, pagamento, verifica e collegamento allegato."
+        description="Scheda operativa separata dal documento: categoria contabile, lavorazione e tab origine restano distinti."
       >
         <StatusBadge>{movement.statoVerifica}</StatusBadge>
         <DataModeBadge>{movement.documentId ? 'Documento collegato' : 'Da collegare'}</DataModeBadge>
@@ -139,7 +142,7 @@ export function AccountingMovementDetail({ movementId, session, store }) {
       {amountWarning ? (
         <section className="validation-alert-block">
           <strong>Importi da controllare</strong>
-          <p>Imponibile + IVA non coincide con il totale. Correggi il movimento prima di confermarlo.</p>
+          <p>Imponibile + IVA non coincide con il totale. Se è un bonifico, vitto o alloggio senza dettaglio IVA, usa le note qualità invece di inventare imponibili.</p>
         </section>
       ) : null}
 
@@ -166,7 +169,13 @@ export function AccountingMovementDetail({ movementId, session, store }) {
           <EditableField label="Cantiere" value={form.cantiereId ?? 'barcelo-roma'} onChange={(value) => update('cantiereId', value)} options={mockCantieri.map((item) => item.id)} disabled={!canEdit} />
           {canViewEconomics ? (
             <>
-              <EditableField label="Categoria" value={form.categoria ?? 'Extra / Altro'} onChange={(value) => update('categoria', value)} options={categorieContabili} disabled={!canEdit} />
+              <EditableField label="Categoria contabile" value={form.categoria ?? 'Extra / Altro'} onChange={(value) => update('categoria', value)} options={categorieContabili} disabled={!canEdit} />
+              <EditableField label="Lavorazione / voce" value={form.lavorazione ?? ''} onChange={(value) => update('lavorazione', value)} disabled={!canEdit} />
+              <EditableField label="Categoria originaria" value={form.categoriaOriginale ?? ''} onChange={(value) => update('categoriaOriginale', value)} disabled={!canEdit} />
+              <EditableField label="Tab origine" value={form.sheetTab ?? ''} onChange={(value) => update('sheetTab', value)} disabled />
+              <EditableField label="Controllo matematico" value={form.controlloMatematico ?? 'Da controllare'} onChange={(value) => update('controlloMatematico', value)} options={['OK', 'Non applicabile', 'Scarto da verificare', 'Da controllare']} disabled={!canEdit} />
+              <EditableField label="Stato collegamento" value={form.statoCollegamento ?? 'Collegato'} onChange={(value) => update('statoCollegamento', value)} options={['Collegato', 'Da collegare', 'Manuale']} disabled={!canEdit} />
+              <EditableField label="Qualità dati" value={form.qualitaDati ?? 'Da controllare'} onChange={(value) => update('qualitaDati', value)} options={['Pulito', 'Da verificare', 'Da controllare']} disabled={!canEdit} />
               <EditableField label="Imponibile" type="number" value={form.imponibile ?? 0} onChange={(value) => update('imponibile', value)} disabled={!canEdit} />
               <EditableField label="IVA" type="number" value={form.iva ?? 0} onChange={(value) => update('iva', value)} disabled={!canEdit} />
               <EditableField label="Totale" type="number" value={form.totale ?? 0} onChange={(value) => update('totale', value)} disabled={!canEdit} />
@@ -174,6 +183,7 @@ export function AccountingMovementDetail({ movementId, session, store }) {
               <EditableField label="Stato verifica" value={form.statoVerifica ?? 'Da verificare'} onChange={(value) => update('statoVerifica', value)} options={statiVerificaContabili} disabled={!canEdit} />
             </>
           ) : null}
+          <label className="form-wide">Note qualità<textarea rows="3" value={form.dataQualityNote ?? ''} onChange={(event) => update('dataQualityNote', event.target.value)} disabled={!canEdit} /></label>
           <label className="form-wide">Note<textarea rows="4" value={form.note ?? ''} onChange={(event) => update('note', event.target.value)} disabled={!canEdit} /></label>
           <button className="button button-primary" type="submit" disabled={!canEdit}>Salva movimento</button>
         </form>
@@ -183,7 +193,13 @@ export function AccountingMovementDetail({ movementId, session, store }) {
           <dl className="detail-list">
             <div><dt>Data</dt><dd>{formatDate(movement.data)}</dd></div>
             <div><dt>Fornitore</dt><dd>{movement.fornitore}</dd></div>
-            <div><dt>Categoria</dt><dd>{movement.categoria}</dd></div>
+            <div><dt>Categoria contabile</dt><dd>{movement.categoria}</dd></div>
+            <div><dt>Lavorazione / voce</dt><dd>{formatLabel(movement.lavorazione)}</dd></div>
+            <div><dt>Categoria originaria</dt><dd>{formatLabel(movement.categoriaOriginale)}</dd></div>
+            <div><dt>Tab origine</dt><dd>{formatLabel(movement.sheetTab)}</dd></div>
+            <div><dt>Controllo matematico</dt><dd><StatusBadge>{movement.controlloMatematico ?? 'Da controllare'}</StatusBadge></dd></div>
+            <div><dt>Stato collegamento</dt><dd>{movement.statoCollegamento ?? 'Collegato'}</dd></div>
+            <div><dt>Qualità dati</dt><dd>{movement.qualitaDati ?? 'Da controllare'}</dd></div>
             {canViewEconomics ? <div><dt>Imponibile</dt><dd><MoneyValue value={movement.imponibile} /></dd></div> : null}
             {canViewEconomics ? <div><dt>IVA</dt><dd><MoneyValue value={movement.iva} /></dd></div> : null}
             {canViewEconomics ? <div><dt>Totale</dt><dd><MoneyValue value={movement.totale} /></dd></div> : null}
@@ -260,8 +276,16 @@ function resolveMovement(movementId, store) {
     descrizione: document.descrizione ?? document.tipoDocumento ?? 'Documento',
     fornitore: document.fornitore,
     categoria: document.categoria,
+    categoriaOriginale: document.categoriaOriginale,
+    lavorazione: document.lavorazione,
+    qualitaDati: document.qualitaDati,
+    controlloMatematico: document.controlloMatematico,
+    naturaMovimento: document.naturaMovimento,
+    statoCollegamento: document.statoCollegamento,
+    dataQualityNote: document.dataQualityNote,
     tipoDocumento: document.tipoDocumento,
     numeroDocumento: document.numeroDocumento ?? document.fileName,
+    sheetTab: document.sheetTab,
     imponibile: document.imponibile,
     iva: document.iva,
     totale: document.totale ?? document.importoTotale,
@@ -284,8 +308,16 @@ function normalizeMovement(movement) {
     descrizione: movement.descrizione ?? 'Movimento contabile',
     fornitore: movement.fornitore ?? 'Non indicato',
     categoria: movement.categoria ?? 'Extra / Altro',
+    categoriaOriginale: movement.categoriaOriginale ?? movement.categoria_originale ?? null,
+    lavorazione: movement.lavorazione ?? movement.categoriaOriginale ?? movement.categoria_originale ?? movement.sheetTab ?? 'Senza lavorazione',
+    qualitaDati: movement.qualitaDati ?? movement.qualita_dati ?? 'Da controllare',
+    controlloMatematico: movement.controlloMatematico ?? movement.controllo_matematico ?? 'Da controllare',
+    naturaMovimento: movement.naturaMovimento ?? movement.natura_movimento ?? null,
+    statoCollegamento: movement.statoCollegamento ?? movement.stato_collegamento ?? 'Collegato',
+    dataQualityNote: movement.dataQualityNote ?? movement.data_quality_note ?? '',
     tipoDocumento: movement.tipoDocumento ?? 'Altro',
     numeroDocumento: movement.numeroDocumento ?? movement.fileName ?? movement.id,
+    sheetTab: movement.sheetTab ?? '',
     imponibile: Number(movement.imponibile || 0),
     iva: Number(movement.iva || 0),
     totale: Number(movement.totale || movement.importoTotale || 0),
@@ -305,10 +337,18 @@ function buildDocumentOptions(documents, movement) {
         document.dataDocumento ? formatDate(document.dataDocumento) : null,
         document.fornitore,
         document.tipoDocumento,
+        document.lavorazione,
         document.numeroDocumento ?? document.fileName,
         document.totale ? `€ ${Number(document.totale).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null,
       ].filter(Boolean).join(' · '),
     }))
+}
+
+function formatLabel(value) {
+  return String(value ?? '-')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || '-'
 }
 
 const numberFields = ['imponibile', 'iva', 'totale']
