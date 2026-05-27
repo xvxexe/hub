@@ -87,6 +87,11 @@ function scrollPublicRoute(path, behavior = 'auto') {
   window.scrollTo({ top: 0, left: 0, behavior })
 }
 
+function getDashboardAccountingRows(mockStore) {
+  const movements = Array.isArray(mockStore?.movements) ? mockStore.movements : []
+  return movements.length ? movements : mockStore?.documents ?? []
+}
+
 function renderRoute(path, session, selectedRole, handlers, mockStore) {
   if (path === '/') return <Home />
   if (path === '/servizi') return <Services />
@@ -131,7 +136,7 @@ function renderRoute(path, session, selectedRole, handlers, mockStore) {
         <DashboardHome
           session={session}
           documentUploads={mockStore.documentUploads}
-          documents={mockStore.documents}
+          documents={getDashboardAccountingRows(mockStore)}
           fotoUploads={mockStore.fotoUploads}
           activities={mockStore.activities}
           estimates={mockStore.estimates}
