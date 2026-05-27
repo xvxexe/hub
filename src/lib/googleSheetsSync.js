@@ -36,18 +36,26 @@ export async function importGoogleSheetsToSupabase(session = null) {
     return { ok: false, error: 'Risposta Google Sheets non valida: documents mancante.' }
   }
 
+  const normalizedImport = normalizeImportedStore(payload.store)
+  const importGuard = validateImportedStore(normalizedImport)
+  if (!importGuard.ok) {
+    return { ok: false, error: importGuard.error }
+  }
+
   const currentOperational = await fetchOperationalStore()
   if (currentOperational.error) return { ok: false, error: currentOperational.error.message }
 
-  const incomingStore = mergeOperationalData(
-    normalizeImportedStore(payload.store),
-    currentOperational.data,
-  )
+  const incomingStore = mergeOperationalData(normalizedImport, currentOperational.data)
   const deletedRecords = await fetchDeletedRecords()
   if (deletedRecords.error) return { ok: false, error: deletedRecords.error.message }
 
   const filteredStore = filterDeletedFromStore(incomingStore, deletedRecords.data)
-  const cleanup = await replaceGoogleSheetsSnapshot()
+  const filteredGuard = validateImportedStore(filteredStore)
+  if (!filteredGuard.ok) {
+    return { ok: false, error: `Import bloccato dopo filtro tombstone: ${filteredGuard.error}` }
+  }
+
+  const cleanup = await replaceGoogleSheetsSnapshot(filteredStore)
   if (!cleanup.ok) return { ok: false, error: cleanup.error }
 
   const savedOperational = await saveOperationalStore(filteredStore, session)
@@ -149,6 +157,27 @@ function normalizeImportedStore(store) {
   }
 }
 
+function validateImportedStore(store) {
+  const documents = Array.isArray(store?.documents) ? store.documents : []
+  const movements = Array.isArray(store?.movements) ? store.movements : []
+
+  if (!documents.length) {
+    return {
+      ok: false,
+      error: 'Import Google Sheets bloccato: il parser ha restituito 0 documenti. I dati esistenti non sono stati cancellati.',
+    }
+  }
+
+  if (!movements.length) {
+    return {
+      ok: false,
+      error: 'Import Google Sheets bloccato: il parser ha restituito 0 movimenti. I dati esistenti non sono stati cancellati.',
+    }
+  }
+
+  return { ok: true }
+}
+
 function mergeOperationalData(incomingStore, currentStore) {
   if (!currentStore) return incomingStore
 
@@ -160,6 +189,7 @@ function mergeOperationalData(incomingStore, currentStore) {
     notes: mergeById(incomingStore.notes, currentStore.notes),
     activities: mergeById(incomingStore.activities, currentStore.activities).slice(0, 250),
     deletedRecords: Array.isArray(currentStore.deletedRecords) ? currentStore.deletedRecords : [],
+    masterSheets: Array.isArray(currentStore.masterSheets) ? currentStore.masterSheets : [],
   }
 }
 
@@ -174,7 +204,10 @@ function mergeById(primary = [], secondary = []) {
   return [...map.values()]
 }
 
-async function replaceGoogleSheetsSnapshot() {
+async function replaceGoogleSheetsSnapshot(nextStore) {
+  const guard = validateImportedStore(nextStore)
+  if (!guard.ok) return { ok: false, error: guard.error }
+
   const existing = await supabaseRequest('documents?select=id,source&or=(source.eq.google-sheets-sync,source.eq.google-sheets-row-import,id.like.sheet-*)', { method: 'GET' })
   if (existing.error) return { ok: false, error: existing.error.message }
 
@@ -217,8 +250,11 @@ function documentToMovement(document) {
     descrizione: document.descrizione ?? document.tipoDocumento ?? 'Documento',
     fornitore: document.fornitore ?? 'Non indicato',
     categoria: document.categoria ?? 'Extra / Altro',
+    categoriaOriginale: document.categoriaOriginale,
+    lavorazione: document.lavorazione ?? document.categoriaOriginale ?? document.sheetTab,
     tipoDocumento: document.tipoDocumento ?? 'Altro',
     numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id,
+    sheetTab: document.sheetTab,
     imponibile: Number(document.imponibile || 0),
     iva: Number(document.iva || 0),
     totale: Number(document.totale || document.importoTotale || 0),
