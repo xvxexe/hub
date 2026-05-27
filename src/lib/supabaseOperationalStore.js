@@ -9,6 +9,7 @@ const EMPTY_OPERATIONAL_STORE = {
   notes: [],
   activities: [],
   deletedRecords: [],
+  masterSheets: [],
 }
 
 const ACTIVITY_LOGS_TABLE = 'activity_logs'
@@ -17,7 +18,7 @@ export async function fetchOperationalStore() {
   if (!isSupabaseConfigured) return { data: null, error: null, source: 'local' }
 
   try {
-    const [cantieri, documents, movements, photos, estimates, notes, activities, deletedRecords] = await Promise.all([
+    const [cantieri, documents, movements, photos, estimates, notes, activities, deletedRecords, masterSheets] = await Promise.all([
       supabaseRequest('cantieri?select=*&order=created_at.asc', { method: 'GET' }),
       supabaseRequest('documents?select=*,cantieri(nome)&order=data_documento.desc.nullslast,created_at.desc', { method: 'GET' }),
       supabaseRequest('accounting_movements?select=*,cantieri(nome),documents(file_name,storage_path,tipo_documento,numero_documento,sheet_tab)&order=data.desc.nullslast,created_at.desc', { method: 'GET' }),
@@ -26,14 +27,16 @@ export async function fetchOperationalStore() {
       supabaseRequest('notes?select=*&order=created_at.desc', { method: 'GET' }),
       supabaseRequest('activity_logs?select=*&order=created_at.desc&limit=100', { method: 'GET' }),
       supabaseRequest('deleted_records?select=*&order=deleted_at.desc&limit=100', { method: 'GET' }),
+      supabaseRequest('master_sheet_tabs?select=*&order=sheet_index.asc', { method: 'GET' }),
     ])
 
-    const firstError = [cantieri, documents, movements, photos, estimates, notes, activities, deletedRecords].find((result) => result.error)
+    const firstError = [cantieri, documents, movements, photos, estimates, notes, activities, deletedRecords, masterSheets].find((result) => result.error)
     if (firstError?.error) return { data: null, error: firstError.error, source: 'supabase-operational' }
 
     const documentRows = Array.isArray(documents.data) ? documents.data.map(fromDocumentRow) : []
     const movementRows = Array.isArray(movements.data) ? movements.data.map(fromAccountingMovementRow) : []
     const cantiereRows = Array.isArray(cantieri.data) ? cantieri.data.map(fromCantiereRow) : []
+    const masterSheetRows = Array.isArray(masterSheets.data) ? masterSheets.data.map(fromMasterSheetRow) : []
     const officialSource = buildOfficialSourceFromCantieri(cantieri.data)
 
     const store = {
@@ -46,6 +49,7 @@ export async function fetchOperationalStore() {
       notes: Array.isArray(notes.data) ? notes.data.map(fromNoteRow) : [],
       activities: Array.isArray(activities.data) ? activities.data.map(fromActivityRow) : [],
       deletedRecords: Array.isArray(deletedRecords.data) ? deletedRecords.data.map(fromDeletedRecordRow) : [],
+      masterSheets: masterSheetRows,
       source: officialSource,
     }
 
@@ -131,7 +135,8 @@ function hasOperationalData(store) {
       || store.estimates.length
       || store.notes.length
       || store.activities.length
-      || store.deletedRecords.length,
+      || store.deletedRecords.length
+      || store.masterSheets.length,
   )
 }
 
@@ -561,6 +566,23 @@ function fromDeletedRecordRow(row) {
     deletedBy: row.deleted_by,
     deletedAt: row.deleted_at,
     snapshot: row.snapshot,
+  }
+}
+
+function fromMasterSheetRow(row) {
+  return {
+    id: row.id,
+    spreadsheetId: row.spreadsheet_id,
+    sheetId: row.sheet_id,
+    title: row.title,
+    index: row.sheet_index,
+    hidden: Boolean(row.is_hidden),
+    detail: Boolean(row.is_detail),
+    system: Boolean(row.is_system),
+    operational: Boolean(row.is_operational),
+    rowCount: Number(row.row_count || 0),
+    columnCount: Number(row.column_count || 0),
+    updatedAt: row.updated_at,
   }
 }
 
