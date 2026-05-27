@@ -22,6 +22,7 @@ const defaultPayments = ['Non indicato', 'Bonifico', 'Carta', 'Contanti', 'Da co
 export function ContabilitaMock({ documents = [], store = null, session = null }) {
   const [filters, setFilters] = useState({
     cantiereId: 'tutti',
+    lavorazione: 'tutte',
     sheetTab: 'tutti',
     categoria: 'tutte',
     statoVerifica: 'tutti',
@@ -33,9 +34,11 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
     const movements = Array.isArray(store?.movements) ? store.movements : []
     return movements.length ? movements.map(normalizeAccountingRow) : documents.map(documentToAccountingRow)
   }, [documents, store?.movements])
+
   const officialMaster = getOfficialMasterTotals(store)
   const duplicateIds = useMemo(() => buildDuplicateIdSet(sourceRows), [sourceRows])
   const sites = useMemo(() => buildOperationalCantiereOptions({ store, rows: sourceRows }), [sourceRows, store?.cantieri, store?.documents, store?.movements])
+  const lavorazioni = useMemo(() => buildUniqueOptions(sourceRows, 'lavorazione', []), [sourceRows])
   const tabs = useMemo(() => buildUniqueOptions(sourceRows, 'sheetTab', []), [sourceRows])
   const categories = useMemo(() => buildUniqueOptions(sourceRows, 'categoria', defaultCategories), [sourceRows])
   const statuses = useMemo(() => buildUniqueOptions(sourceRows, 'statoVerifica', defaultStatuses), [sourceRows])
@@ -46,17 +49,18 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
 
     return sourceRows.filter((row) => {
       const matchesCantiere = filters.cantiereId === 'tutti' || row.cantiereId === filters.cantiereId
+      const matchesLavorazione = filters.lavorazione === 'tutte' || row.lavorazione === filters.lavorazione
       const matchesTab = filters.sheetTab === 'tutti' || row.sheetTab === filters.sheetTab
       const matchesCategoria = filters.categoria === 'tutte' || row.categoria === filters.categoria
       const matchesStato = filters.statoVerifica === 'tutti' || row.statoVerifica === filters.statoVerifica
       const matchesTipo = filters.tipoDocumento === 'tutti' || row.tipoDocumento === filters.tipoDocumento
-      const matchesSearch = search === '' || [row.descrizione, row.fornitore, row.numeroDocumento, row.note, row.cantiere, row.sheetTab]
+      const matchesSearch = search === '' || [row.descrizione, row.fornitore, row.numeroDocumento, row.note, row.cantiere, row.lavorazione, row.sheetTab, row.categoria]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
         .includes(search)
 
-      return matchesCantiere && matchesTab && matchesCategoria && matchesStato && matchesTipo && matchesSearch
+      return matchesCantiere && matchesLavorazione && matchesTab && matchesCategoria && matchesStato && matchesTipo && matchesSearch
     })
   }, [filters, sourceRows])
 
@@ -77,7 +81,7 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
       <DashboardHeader
         eyebrow="Contabilità reale"
         title="Contabilità"
-        description="Numeri ufficiali letti dal master Google Sheets. Le righe sotto sono dettagli operativi filtrabili per tab/lavorazione."
+        description="Categorie contabili, lavorazioni operative e tab origine sono separati per evitare inserimenti ambigui."
       >
         <DataModeBadge>{officialMaster ? 'Totali ufficiali master' : 'Dati reali Supabase'}</DataModeBadge>
         <a className="button button-secondary button-small" href="#/dashboard/drive-documenti">Documenti Drive</a>
@@ -85,10 +89,19 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
       </DashboardHeader>
 
       {store?.addDocumentUpload && session && session.role !== 'employee' ? (
-        <ManualExpenseForm store={store} session={session} sites={sites} categories={categories} />
+        <ManualExpenseForm store={store} session={session} sites={sites} categories={categories} lavorazioni={lavorazioni} />
       ) : null}
 
-      <AccountingFilters filters={filters} onChange={updateFilter} sites={sites} tabs={tabs} categories={categories} statuses={statuses} docTypes={docTypes} />
+      <AccountingFilters
+        filters={filters}
+        onChange={updateFilter}
+        sites={sites}
+        lavorazioni={lavorazioni}
+        tabs={tabs}
+        categories={categories}
+        statuses={statuses}
+        docTypes={docTypes}
+      />
       <AccountingSummaryCards totals={totals} rowsCount={filteredRows.length} mathWarnings={mathWarnings} officialMaster={officialMaster} />
       <ContabilitaDocumentLinks store={{ ...store, movements: filteredRows }} />
       <AccountingAlerts alerts={alerts} />
@@ -99,7 +112,7 @@ export function ContabilitaMock({ documents = [], store = null, session = null }
   )
 }
 
-function ManualExpenseForm({ store, session, sites, categories }) {
+function ManualExpenseForm({ store, session, sites, categories, lavorazioni }) {
   const defaultSite = sites[0] ?? { id: 'barcelo-roma', nome: 'Barcelò Roma' }
   const [isOpen, setIsOpen] = useState(false)
   const [status, setStatus] = useState(null)
@@ -110,6 +123,7 @@ function ManualExpenseForm({ store, session, sites, categories }) {
     descrizione: '',
     dataDocumento: todayIso(),
     categoria: categories[0] ?? 'Extra / Altro',
+    lavorazione: lavorazioni[0] ?? '',
     imponibile: '',
     iva: '',
     totale: '',
@@ -151,6 +165,8 @@ function ManualExpenseForm({ store, session, sites, categories }) {
       numeroDocumento: `manuale-${id}`,
       dataDocumento: form.dataDocumento,
       categoria: form.categoria,
+      lavorazione: form.lavorazione.trim() || form.descrizione.trim(),
+      categoriaOriginale: form.lavorazione.trim() || form.categoria,
       imponibile,
       iva,
       totale,
@@ -181,7 +197,7 @@ function ManualExpenseForm({ store, session, sites, categories }) {
       <div className="section-heading panel-title-row">
         <div>
           <h2>Inserimento spesa reale</h2>
-          <p>Crea un movimento/documento contabile persistente in Supabase. L’allegato può essere caricato dopo da Upload.</p>
+          <p>Categoria contabile e lavorazione sono separati: usa la lavorazione per voci come Generatore, Fase 2 solaio o Docce esterne.</p>
         </div>
         <button className="button button-primary button-small" type="button" onClick={() => setIsOpen((current) => !current)}>
           {isOpen ? 'Chiudi' : 'Nuova spesa'}
@@ -203,6 +219,8 @@ function ManualExpenseForm({ store, session, sites, categories }) {
           <label>Descrizione<input value={form.descrizione} onChange={(event) => update('descrizione', event.target.value)} placeholder="Es. Materiale cartongesso" /></label>
           <label>Data<input type="date" value={form.dataDocumento} onChange={(event) => update('dataDocumento', event.target.value)} /></label>
           <label>Categoria<select value={form.categoria} onChange={(event) => update('categoria', event.target.value)}>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select></label>
+          <label>Lavorazione / voce<input value={form.lavorazione} onChange={(event) => update('lavorazione', event.target.value)} placeholder="Es. Generatore, Piscina, Fase 2 solaio" list="lavorazioni-contabilita" /></label>
+          <datalist id="lavorazioni-contabilita">{lavorazioni.map((lavorazione) => <option key={lavorazione} value={lavorazione} />)}</datalist>
           <label>Imponibile<input type="number" min="0" step="0.01" value={form.imponibile} onChange={(event) => update('imponibile', event.target.value)} /></label>
           <label>IVA<input type="number" min="0" step="0.01" value={form.iva} onChange={(event) => update('iva', event.target.value)} /></label>
           <label>Totale<input type="number" min="0" step="0.01" value={form.totale} onChange={(event) => update('totale', event.target.value)} /></label>
@@ -216,6 +234,7 @@ function ManualExpenseForm({ store, session, sites, categories }) {
 }
 
 function normalizeAccountingRow(row) {
+  const lavorazione = row.lavorazione ?? row.categoriaOriginale ?? row.categoria_originale ?? row.sheetTab ?? 'Senza lavorazione'
   return {
     id: row.id,
     documentId: row.documentId,
@@ -225,6 +244,8 @@ function normalizeAccountingRow(row) {
     descrizione: row.descrizione ?? row.tipoDocumento ?? 'Movimento contabile',
     fornitore: row.fornitore ?? 'Non indicato',
     categoria: row.categoria ?? 'Extra / Altro',
+    categoriaOriginale: row.categoriaOriginale ?? row.categoria_originale ?? null,
+    lavorazione,
     tipoDocumento: row.tipoDocumento ?? 'Altro',
     numeroDocumento: row.numeroDocumento ?? row.fileName ?? row.documentId ?? row.id,
     sheetTab: row.sheetTab ?? 'Senza tab',
@@ -250,6 +271,8 @@ function documentToAccountingRow(document) {
     descrizione: document.descrizione ?? document.tipoDocumento ?? 'Documento',
     fornitore: document.fornitore ?? 'Non indicato',
     categoria: document.categoria ?? 'Extra / Altro',
+    categoriaOriginale: document.categoriaOriginale,
+    lavorazione: document.lavorazione,
     tipoDocumento: document.tipoDocumento ?? 'Altro',
     numeroDocumento: document.numeroDocumento ?? document.fileName ?? document.id,
     sheetTab: document.sheetTab ?? 'Senza tab',
@@ -265,15 +288,16 @@ function documentToAccountingRow(document) {
   })
 }
 
-function AccountingFilters({ filters, onChange, sites, tabs, categories, statuses, docTypes }) {
+function AccountingFilters({ filters, onChange, sites, lavorazioni, tabs, categories, statuses, docTypes }) {
   return (
     <FilterGrid className="real-accounting-filters" ariaLabel="Filtri contabilità">
       <label>Cantiere<select value={filters.cantiereId} onChange={(event) => onChange('cantiereId', event.target.value)}><option value="tutti">Tutti</option>{sites.map((cantiere) => <option key={cantiere.id} value={cantiere.id}>{cantiere.nome}</option>)}</select></label>
-      <label>Lavorazione / tab<select value={filters.sheetTab} onChange={(event) => onChange('sheetTab', event.target.value)}><option value="tutti">Tutte</option>{tabs.map((tab) => <option key={tab} value={tab}>{tab}</option>)}</select></label>
+      <label>Lavorazione / voce<select value={filters.lavorazione} onChange={(event) => onChange('lavorazione', event.target.value)}><option value="tutte">Tutte</option>{lavorazioni.map((lavorazione) => <option key={lavorazione} value={lavorazione}>{formatCategoryLabel(lavorazione)}</option>)}</select></label>
+      <label>Tab origine<select value={filters.sheetTab} onChange={(event) => onChange('sheetTab', event.target.value)}><option value="tutti">Tutti</option>{tabs.map((tab) => <option key={tab} value={tab}>{formatCategoryLabel(tab)}</option>)}</select></label>
       <label>Categoria<select value={filters.categoria} onChange={(event) => onChange('categoria', event.target.value)}><option value="tutte">Tutte</option>{categories.map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}</select></label>
       <label>Stato verifica<select value={filters.statoVerifica} onChange={(event) => onChange('statoVerifica', event.target.value)}><option value="tutti">Tutti</option>{statuses.map((stato) => <option key={stato} value={stato}>{stato}</option>)}</select></label>
       <label>Tipo documento<select value={filters.tipoDocumento} onChange={(event) => onChange('tipoDocumento', event.target.value)}><option value="tutti">Tutti</option>{docTypes.map((tipo) => <option key={tipo} value={tipo}>{tipo}</option>)}</select></label>
-      <label className="accounting-search">Ricerca<input type="search" value={filters.search} onChange={(event) => onChange('search', event.target.value)} placeholder="Descrizione, fornitore, documento, tab..." /></label>
+      <label className="accounting-search">Ricerca<input type="search" value={filters.search} onChange={(event) => onChange('search', event.target.value)} placeholder="Descrizione, fornitore, documento, lavorazione, tab..." /></label>
     </FilterGrid>
   )
 }
@@ -308,7 +332,7 @@ function AccountingAlerts({ alerts }) {
     <section className="accounting-section real-accounting-section accounting-alerts-section">
       <div className="section-heading panel-title-row"><div><h2>Controlli contabili</h2><p>Alert calcolati sulle righe operative, non sui totali ufficiali del master.</p></div><StatusBadge>{alerts.length ? `${alerts.length} alert` : 'Tutto ok'}</StatusBadge></div>
       <div className="document-card-list accounting-alert-list">
-        {alerts.length > 0 ? alerts.slice(0, 8).map((alert) => <DataCardRow key={alert.id} icon={alert.message === 'Duplicato reale' || alert.message === 'Duplicato' ? 'warning' : 'file'} title={alert.movimento.descrizione} description={`${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`} status={alert.message} href={`#/dashboard/contabilita/${alert.movimento.id}`} warning={alert.message !== 'Da controllare'} meta={[{ label: 'Tab', value: alert.movimento.sheetTab }, { label: 'Categoria', value: alert.movimento.categoria }, { label: 'Totale', value: <MoneyValue value={alert.movimento.totale} /> }, { label: 'Pagamento', value: alert.movimento.pagamento }]} />) : <article className="accounting-alert"><strong>Nessun alert sui filtri attuali</strong><small>I movimenti selezionati non hanno controlli aperti.</small></article>}
+        {alerts.length > 0 ? alerts.slice(0, 8).map((alert) => <DataCardRow key={alert.id} icon={alert.message === 'Duplicato reale' || alert.message === 'Duplicato' ? 'warning' : 'file'} title={alert.movimento.descrizione} description={`${alert.movimento.fornitore} · ${alert.movimento.numeroDocumento}`} status={alert.message} href={`#/dashboard/contabilita/${alert.movimento.id}`} warning={alert.message !== 'Da controllare'} meta={[{ label: 'Lavorazione', value: alert.movimento.lavorazione }, { label: 'Tab origine', value: alert.movimento.sheetTab }, { label: 'Categoria', value: alert.movimento.categoria }, { label: 'Totale', value: <MoneyValue value={alert.movimento.totale} /> }]} />) : <article className="accounting-alert"><strong>Nessun alert sui filtri attuali</strong><small>I movimenti selezionati non hanno controlli aperti.</small></article>}
       </div>
     </section>
   )
@@ -317,10 +341,40 @@ function AccountingAlerts({ alerts }) {
 function AccountingTable({ rows, duplicateIds }) {
   return (
     <section className="accounting-section real-accounting-section accounting-movements-section">
-      <div className="section-heading panel-title-row"><div><h2>Movimenti</h2><p>Righe operative importate dai tab del master: servono per leggere fornitore, documento, pagamento e note.</p></div><StatusBadge>{rows.length} righe</StatusBadge></div>
+      <div className="section-heading panel-title-row"><div><h2>Movimenti</h2><p>Righe operative importate dai tab del master: categoria, lavorazione e tab origine restano separati.</p></div><StatusBadge>{rows.length} righe</StatusBadge></div>
       {rows.length > 0 ? (
         <>
-          <div className="accounting-table-wrap"><table className="accounting-table real-accounting-table"><thead><tr><th>Data</th><th>Lavorazione</th><th>Descrizione</th><th>Fornitore</th><th>Categoria</th><th>Imponibile</th><th>IVA</th><th>Totale</th><th>Pagamento</th><th>Documento</th><th>Stato</th><th>Note</th><th>Azione</th></tr></thead><tbody>{rows.map((row) => { const warning = hasAmountWarning(row); const duplicate = duplicateIds.has(row.id); return <tr className={warning || duplicate ? 'accounting-warning-row' : undefined} key={row.id}><td>{formatDate(row.data)}</td><td>{row.sheetTab}</td><td>{row.descrizione}</td><td>{row.fornitore}</td><td>{row.categoria}</td><td><MoneyValue value={row.imponibile} /></td><td><MoneyValue value={row.iva} /></td><td><MoneyValue value={row.totale} /></td><td>{row.pagamento}</td><td>{row.documentoCollegato || row.numeroDocumento || 'Da collegare'}</td><td><StatusBadge>{warning ? 'Totale da verificare' : duplicate ? 'Possibile duplicato' : row.statoVerifica}</StatusBadge></td><td>{row.note}</td><td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td></tr> })}</tbody></table></div>
+          <div className="accounting-table-wrap">
+            <table className="accounting-table real-accounting-table">
+              <thead>
+                <tr><th>Data</th><th>Lavorazione / voce</th><th>Tab origine</th><th>Descrizione</th><th>Fornitore</th><th>Categoria</th><th>Imponibile</th><th>IVA</th><th>Totale</th><th>Pagamento</th><th>Documento</th><th>Stato</th><th>Note</th><th>Azione</th></tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const warning = hasAmountWarning(row)
+                  const duplicate = duplicateIds.has(row.id)
+                  return (
+                    <tr className={warning || duplicate ? 'accounting-warning-row' : undefined} key={row.id}>
+                      <td>{formatDate(row.data)}</td>
+                      <td>{formatCategoryLabel(row.lavorazione)}</td>
+                      <td>{formatCategoryLabel(row.sheetTab)}</td>
+                      <td>{row.descrizione}</td>
+                      <td>{row.fornitore}</td>
+                      <td>{row.categoria}</td>
+                      <td><MoneyValue value={row.imponibile} /></td>
+                      <td><MoneyValue value={row.iva} /></td>
+                      <td><MoneyValue value={row.totale} /></td>
+                      <td>{row.pagamento}</td>
+                      <td>{row.documentoCollegato || row.numeroDocumento || 'Da collegare'}</td>
+                      <td><StatusBadge>{warning ? 'Totale da verificare' : duplicate ? 'Possibile duplicato' : row.statoVerifica}</StatusBadge></td>
+                      <td>{row.note}</td>
+                      <td><a className="text-link" href={`#/dashboard/contabilita/${row.id}`}>Apri</a></td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
           <div className="accounting-mobile-list">{rows.map((row) => <AccountingMobileCard key={row.id} row={row} duplicate={duplicateIds.has(row.id)} />)}</div>
         </>
       ) : <EmptyState title="Nessun movimento trovato">Modifica filtri, cantiere o ricerca per visualizzare altri movimenti contabili.</EmptyState>}
@@ -330,7 +384,7 @@ function AccountingTable({ rows, duplicateIds }) {
 
 function AccountingMobileCard({ row, duplicate }) {
   const warning = hasAmountWarning(row)
-  return <DataCardRow className="accounting-mobile-card" icon={warning || duplicate ? 'warning' : 'wallet'} title={row.descrizione} description={`${row.fornitore} · ${row.sheetTab}`} status={warning ? 'Totale da verificare' : duplicate ? 'Possibile duplicato' : row.statoVerifica} href={`#/dashboard/contabilita/${row.id}`} warning={warning || duplicate} meta={[{ label: 'Data', value: formatDate(row.data) }, { label: 'Lavorazione', value: row.sheetTab }, { label: 'Categoria', value: row.categoria }, { label: 'Imponibile', value: <MoneyValue value={row.imponibile} /> }, { label: 'IVA', value: <MoneyValue value={row.iva} /> }, { label: 'Totale riga', value: <MoneyValue value={row.totale} /> }, { label: 'Pagamento', value: row.pagamento }, { label: 'Documento', value: row.documentoCollegato || 'Da collegare' }]}><small>{row.numeroDocumento} · {row.note}</small></DataCardRow>
+  return <DataCardRow className="accounting-mobile-card" icon={warning || duplicate ? 'warning' : 'wallet'} title={row.descrizione} description={`${row.fornitore} · ${formatCategoryLabel(row.lavorazione)}`} status={warning ? 'Totale da verificare' : duplicate ? 'Possibile duplicato' : row.statoVerifica} href={`#/dashboard/contabilita/${row.id}`} warning={warning || duplicate} meta={[{ label: 'Data', value: formatDate(row.data) }, { label: 'Lavorazione / voce', value: formatCategoryLabel(row.lavorazione) }, { label: 'Tab origine', value: formatCategoryLabel(row.sheetTab) }, { label: 'Categoria', value: row.categoria }, { label: 'Imponibile', value: <MoneyValue value={row.imponibile} /> }, { label: 'IVA', value: <MoneyValue value={row.iva} /> }, { label: 'Totale riga', value: <MoneyValue value={row.totale} /> }, { label: 'Pagamento', value: row.pagamento }, { label: 'Documento', value: row.documentoCollegato || 'Da collegare' }]}><small>{row.numeroDocumento} · {row.note}</small></DataCardRow>
 }
 
 function CantiereAccountingSummary({ summaries }) {
@@ -339,7 +393,7 @@ function CantiereAccountingSummary({ summaries }) {
       <div className="section-heading panel-title-row">
         <div>
           <h2>Riepilogo per cantiere</h2>
-          <p>Vista sintetica: i dettagli per tab sono nella sezione dedicata sotto.</p>
+          <p>Vista sintetica: i dettagli per lavorazione e tab sono nella sezione movimenti.</p>
         </div>
         <StatusBadge>{summaries.length} cantieri</StatusBadge>
       </div>
@@ -347,10 +401,7 @@ function CantiereAccountingSummary({ summaries }) {
         {summaries.map((summary) => (
           <article className="accounting-site-card" key={summary.cantiere.id}>
             <div className="accounting-site-card-head">
-              <div>
-                <span>Cantiere</span>
-                <h3>{summary.cantiere.nome}</h3>
-              </div>
+              <div><span>Cantiere</span><h3>{summary.cantiere.nome}</h3></div>
               <StatusBadge>{summary.movimenti.length} righe</StatusBadge>
             </div>
             <dl className="detail-list">
@@ -369,7 +420,7 @@ function CantiereAccountingSummary({ summaries }) {
 function CategoryBreakdown({ rows, total, compact = false, official = false }) {
   const visibleRows = rows.filter((row) => Number(row.totale || 0) > 0)
   const max = Math.max(...visibleRows.map((row) => row.totale), 1)
-  return <section className={compact ? 'category-breakdown compact-breakdown compact-category-card' : 'accounting-section real-accounting-section compact-category-card accounting-category-section'}>{!compact ? <div className="section-heading panel-title-row"><div><h2>Spese per tab / categoria</h2><p>{official ? 'Valori ufficiali letti dal tab Riepilogo del master.' : 'Distribuzione calcolata dalle righe operative.'}</p></div><StatusBadge>{visibleRows.length} voci</StatusBadge></div> : null}<div className="compact-category-grid">{visibleRows.map((row) => { const percent = total > 0 ? Math.round((row.totale / total) * 100) : 0; const width = Math.max(6, Math.round((row.totale / max) * 100)); return <article className="compact-category-item" key={row.categoria}><div className="compact-category-top"><strong>{formatCategoryLabel(row.categoria)}</strong><span><MoneyValue value={row.totale} /></span></div><div className="compact-category-bar"><span style={{ width: `${width}%` }} /></div><small>{percent}% del totale</small></article> })}</div></section>
+  return <section className={compact ? 'category-breakdown compact-breakdown compact-category-card' : 'accounting-section real-accounting-section compact-category-card accounting-category-section'}>{!compact ? <div className="section-heading panel-title-row"><div><h2>Spese per categoria</h2><p>{official ? 'Valori ufficiali letti dal tab Riepilogo del master.' : 'Distribuzione calcolata dalle righe operative.'}</p></div><StatusBadge>{visibleRows.length} voci</StatusBadge></div> : null}<div className="compact-category-grid">{visibleRows.map((row) => { const percent = total > 0 ? Math.round((row.totale / total) * 100) : 0; const width = Math.max(6, Math.round((row.totale / max) * 100)); return <article className="compact-category-item" key={row.categoria}><div className="compact-category-top"><strong>{formatCategoryLabel(row.categoria)}</strong><span><MoneyValue value={row.totale} /></span></div><div className="compact-category-bar"><span style={{ width: `${width}%` }} /></div><small>{percent}% del totale</small></article> })}</div></section>
 }
 
 function getAccountingTotals(rows, duplicateIds) {
