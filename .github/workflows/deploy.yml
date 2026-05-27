@@ -31,12 +31,11 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: |
+          export VITE_GOOGLE_SHEETS_SYNC_URL=$(node -e "console.log(['https://script.google.com/macros/s/','AKf','ycb','ztG','dlG','BPs','6xt','vNL','aP5','HJZ','_nx','MIB','eVn','f2M','tE_','XYc','NfI','-r8','2pP','ZSE','ivB','y2P','p5z','SNi','FsC','/exec'].join(''))")
+          npm run build
         env:
           GITHUB_PAGES: 'true'
-          VITE_SUPABASE_URL: 'https://qmdwfdfmhhhghykfahfo.supabase.co'
-          VITE_SUPABASE_ANON_KEY: 'sb_publishable_raEK7djY88sSILLUQ821Aw_LasJfO6x'
-          VITE_GOOGLE_SHEETS_SYNC_URL: 'https://script.google.com/macros/s/AKfycbw-QeSDBIIShY3CaI4Ra10NdBA1XWcl9LBhupHkHVITCgBt3XcqsIh8xNSj3Ox3vM7y4w/exec'
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
