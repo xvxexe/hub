@@ -17,6 +17,7 @@ import { buildOperationalCantiereOptions } from '../../lib/cantiereOptions'
 import { getOfficialMasterTotals, preferOfficialTotals } from '../../lib/masterTotals'
 
 const tipiDocumentoFallback = ['Fattura', 'Bonifico', 'Ricevuta', 'FIR', 'Preventivo', 'Scontrino', 'Riepilogo tab', 'Altro']
+const qualitaFallback = ['Pulito', 'Da verificare', 'Da controllare']
 
 export function DocumentiMock({ session, store }) {
   const [selectedId, setSelectedId] = useState(store.documents[0]?.id ?? null)
@@ -25,18 +26,22 @@ export function DocumentiMock({ session, store }) {
   const [filters, setFilters] = useState({
     cantiereId: 'tutti',
     tipoDocumento: 'tutti',
+    lavorazione: 'tutte',
+    qualitaDati: 'tutte',
     stato: 'tutti',
     quick: 'tutti',
     search: '',
   })
 
-  const rows = store.documents ?? []
+  const rows = useMemo(() => (store.documents ?? []).map(normalizeDocumentRow), [store.documents])
   const cantieri = useMemo(() => buildOperationalCantiereOptions({ store, rows }), [store?.cantieri, store?.documents, store?.movements, rows])
   const officialMaster = getOfficialMasterTotals(store)
   const tipiDocumento = useMemo(() => {
     const realTypes = [...new Set(rows.map((row) => row.tipoDocumento).filter(Boolean))]
     return realTypes.length ? realTypes : tipiDocumentoFallback
   }, [rows])
+  const lavorazioni = useMemo(() => buildUniqueOptions(rows, 'lavorazione', []), [rows])
+  const qualitaOptions = useMemo(() => buildUniqueOptions(rows, 'qualitaDati', qualitaFallback), [rows])
 
   const filteredRows = useMemo(() => {
     const search = filters.search.trim().toLowerCase()
@@ -45,26 +50,44 @@ export function DocumentiMock({ session, store }) {
       const status = row.statoVerifica
       const matchesCantiere = filters.cantiereId === 'tutti' || row.cantiereId === filters.cantiereId
       const matchesType = filters.tipoDocumento === 'tutti' || row.tipoDocumento === filters.tipoDocumento
+      const matchesLavorazione = filters.lavorazione === 'tutte' || row.lavorazione === filters.lavorazione
+      const matchesQualita = filters.qualitaDati === 'tutte' || row.qualitaDati === filters.qualitaDati
       const matchesStatus = filters.stato === 'tutti' || status === filters.stato
       const matchesQuick =
         filters.quick === 'tutti' ||
-        (filters.quick === 'da-verificare' && status === 'Da verificare') ||
+        (filters.quick === 'da-verificare' && (status === 'Da verificare' || row.qualitaDati === 'Da verificare')) ||
         (filters.quick === 'duplicati' && status === 'Possibile duplicato') ||
-        (filters.quick === 'incompleti' && status === 'Incompleto')
-      const haystack = [row.fornitore, row.descrizione, row.fileName, row.numeroDocumento, row.cantiere, row.categoria]
+        (filters.quick === 'incompleti' && status === 'Incompleto') ||
+        (filters.quick === 'scarti' && row.controlloMatematico === 'Scarto da verificare') ||
+        (filters.quick === 'da-collegare' && row.statoCollegamento === 'Da collegare')
+      const haystack = [
+        row.fornitore,
+        row.descrizione,
+        row.fileName,
+        row.numeroDocumento,
+        row.cantiere,
+        row.categoria,
+        row.categoriaOriginale,
+        row.lavorazione,
+        row.sheetTab,
+        row.qualitaDati,
+        row.controlloMatematico,
+        row.dataQualityNote,
+      ]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
       const matchesSearch = search === '' || haystack.includes(search)
 
-      return matchesCantiere && matchesType && matchesStatus && matchesQuick && matchesSearch
+      return matchesCantiere && matchesType && matchesLavorazione && matchesQualita && matchesStatus && matchesQuick && matchesSearch
     })
   }, [filters, rows])
 
-  const toCheck = rows.filter((row) => row.statoVerifica === 'Da verificare')
-  const verified = rows.filter((row) => ['Verificato', 'Confermato'].includes(row.statoVerifica))
+  const toCheck = rows.filter((row) => row.statoVerifica === 'Da verificare' || row.qualitaDati === 'Da verificare')
+  const verified = rows.filter((row) => ['Verificato', 'Confermato'].includes(row.statoVerifica) || row.qualitaDati === 'Pulito')
   const incomplete = rows.filter((row) => row.statoVerifica === 'Incompleto')
   const duplicates = rows.filter((row) => row.statoVerifica === 'Possibile duplicato')
+  const qualityWarnings = rows.filter((row) => row.qualitaDati === 'Da verificare' || row.controlloMatematico === 'Scarto da verificare' || row.statoCollegamento === 'Da collegare')
   const mathWarnings = filteredRows.filter(hasAmountWarning).length
   const filteredTotals = getDocumentTotals(filteredRows)
   const allRowsSelected = isAllDocumentFilters(filters)
@@ -90,7 +113,7 @@ export function DocumentiMock({ session, store }) {
       <DashboardHeader
         eyebrow="Documenti reali"
         title="Centro documenti"
-        description="Dati letti da Supabase, importati da BARCELO_ROMA_master: verifica, duplicati e collegamento contabile nello stesso flusso."
+        description="Documenti Supabase e master: categoria contabile, lavorazione, tab origine e qualità dati sono separati."
       >
         <DataModeBadge>{officialMaster ? 'Totali master' : 'Dati reali Supabase'}</DataModeBadge>
         {canEdit ? <a className="button button-secondary button-small" href="#/dashboard/drive-documenti">Automazione Drive</a> : null}
@@ -111,7 +134,7 @@ export function DocumentiMock({ session, store }) {
             type="search"
             value={filters.search}
             onChange={(event) => updateFilter('search', event.target.value)}
-            placeholder="Documento, fornitore, cantiere..."
+            placeholder="Documento, fornitore, lavorazione, tab, qualità..."
           />
         </label>
         <label>
@@ -119,6 +142,20 @@ export function DocumentiMock({ session, store }) {
           <select value={filters.tipoDocumento} onChange={(event) => updateFilter('tipoDocumento', event.target.value)}>
             <option value="tutti">Tutti</option>
             {tipiDocumento.map((tipo) => <option key={tipo} value={tipo}>{tipo}</option>)}
+          </select>
+        </label>
+        <label>
+          Lavorazione / voce
+          <select value={filters.lavorazione} onChange={(event) => updateFilter('lavorazione', event.target.value)}>
+            <option value="tutte">Tutte</option>
+            {lavorazioni.map((lavorazione) => <option key={lavorazione} value={lavorazione}>{formatLabel(lavorazione)}</option>)}
+          </select>
+        </label>
+        <label>
+          Qualità dati
+          <select value={filters.qualitaDati} onChange={(event) => updateFilter('qualitaDati', event.target.value)}>
+            <option value="tutte">Tutte</option>
+            {qualitaOptions.map((qualita) => <option key={qualita} value={qualita}>{qualita}</option>)}
           </select>
         </label>
         <label>
@@ -142,6 +179,8 @@ export function DocumentiMock({ session, store }) {
             <option value="da-verificare">Da verificare</option>
             <option value="duplicati">Possibili duplicati</option>
             <option value="incompleti">Incompleti</option>
+            <option value="scarti">Scarti matematici</option>
+            <option value="da-collegare">Da collegare</option>
           </select>
         </label>
       </FilterGrid>
@@ -149,14 +188,14 @@ export function DocumentiMock({ session, store }) {
       <KpiStrip ariaLabel="Indicatori documenti">
         <KpiCard icon="file" label="Documenti filtrati" value={filteredRows.length} hint={`${rows.length} totali`} />
         <KpiCard icon="warning" tone="amber" label="Da controllare" value={toCheck.length} hint="Verifica aperta" />
-        <KpiCard icon="check" tone="green" label="Confermati" value={verified.length} hint="Dati reali" />
+        <KpiCard icon="check" tone="green" label="Puliti / confermati" value={verified.length} hint="Qualità dati" />
         <KpiCard icon="warning" tone="red" label="Duplicati" value={duplicates.length} hint={`${incomplete.length} incompleti`} />
       </KpiStrip>
       <KpiStrip className="document-operational-kpis" ariaLabel="Indicatori economici documenti">
         <KpiCard icon="wallet" tone="green" label={displayedTotalLabel} value={<MoneyValue value={displayedTotals.totale} />} hint={displayedTotalHint} />
         <KpiCard icon="report" label="Tipi documento" value={tipiDocumento.length} hint="Classificazione" />
-        <KpiCard icon="building" tone="purple" label="Cantieri" value={cantieri.length} hint="Collegamenti reali" />
-        <KpiCard icon="warning" tone={mathWarnings ? 'amber' : 'green'} label="Controllo importi" value={mathWarnings} hint={mathWarnings ? 'Warning matematici' : 'Nessun errore'} />
+        <KpiCard icon="building" tone="purple" label="Lavorazioni" value={lavorazioni.length} hint="Voci operative" />
+        <KpiCard icon="warning" tone={qualityWarnings.length ? 'amber' : 'green'} label="Qualità dati" value={qualityWarnings.length} hint={qualityWarnings.length ? 'Anomalie reali' : 'Nessun alert'} />
       </KpiStrip>
 
       <DocumentPriorityPanel rows={priorityRows} />
@@ -173,7 +212,7 @@ export function DocumentiMock({ session, store }) {
           <div className="section-heading panel-title-row">
             <div>
               <h2>Tutti i documenti ({filteredRows.length})</h2>
-              <p>Lista operativa compatta: documento, fornitore, cantiere, importo e stato sempre visibili.</p>
+              <p>Lista operativa: documento, lavorazione, categoria, tab origine, importo e qualità sempre visibili.</p>
             </div>
             <span className="data-mode-badge"><MoneyValue value={displayedTotals.totale} /></span>
           </div>
@@ -185,15 +224,19 @@ export function DocumentiMock({ session, store }) {
                     key={row.id}
                     icon={getDocumentIcon(row.tipoDocumento)}
                     selected={selectedDocument?.id === row.id}
-                    warning={hasAmountWarning(row)}
+                    warning={hasAmountWarning(row) || row.qualitaDati === 'Da verificare' || row.controlloMatematico === 'Scarto da verificare'}
                     title={row.numeroDocumento ?? row.fileName}
-                    description={row.descrizione}
-                    status={hasAmountWarning(row) ? 'Totale da verificare' : displayStatus(row.statoVerifica)}
+                    description={`${row.descrizione ?? '-'} · ${formatLabel(row.lavorazione)}`}
+                    status={getDocumentStatus(row)}
                     meta={[
                       { label: 'Tipo', value: row.tipoDocumento ?? '-' },
+                      { label: 'Lavorazione / voce', value: formatLabel(row.lavorazione) },
+                      { label: 'Categoria', value: row.categoria ?? '-' },
+                      { label: 'Tab origine', value: formatLabel(row.sheetTab) },
                       { label: 'Fornitore', value: row.fornitore ?? '-' },
                       { label: 'Cantiere', value: row.cantiere ?? '-' },
-                      { label: 'Data', value: formatDate(row.dataDocumento) },
+                      { label: 'Qualità dati', value: row.qualitaDati ?? 'Da controllare' },
+                      { label: 'Controllo', value: row.controlloMatematico ?? 'Da controllare' },
                       { label: 'Importo riga', value: <MoneyValue value={row.totale} /> },
                     ]}
                     action={(
@@ -225,7 +268,7 @@ export function DocumentiMock({ session, store }) {
             </>
           ) : (
             <EmptyState title="Nessun documento trovato">
-              Modifica cantiere, tipo, stato o ricerca per visualizzare altri documenti reali.
+              Modifica cantiere, tipo, lavorazione, qualità, stato o ricerca per visualizzare altri documenti reali.
             </EmptyState>
           )}
         </section>
@@ -238,22 +281,20 @@ export function DocumentiMock({ session, store }) {
             {rows.slice(0, 5).map((row) => (
               <a className="compact-upload-row" href={`#/dashboard/documenti/${row.id}`} key={`recent-${row.id}`}>
                 <span className="file-chip file-pdf">TAB</span>
-                <div><strong>{row.numeroDocumento ?? row.descrizione}</strong><small>{row.cantiere}</small></div>
-                <StatusBadge>{displayStatus(row.statoVerifica)}</StatusBadge>
+                <div><strong>{row.numeroDocumento ?? row.descrizione}</strong><small>{formatLabel(row.lavorazione)} · {row.cantiere}</small></div>
+                <StatusBadge>{getDocumentStatus(row)}</StatusBadge>
               </a>
             ))}
           </div>
         </section>
         <section className="internal-panel">
-          <div className="section-heading panel-title-row">
-            <h2>Attività e cronologia</h2>
-          </div>
+          <div className="section-heading panel-title-row"><h2>Attività e cronologia</h2></div>
           <div className="activity-feed">
             {filteredRows.slice(0, 5).map((row) => (
               <a className="activity-item interactive-row" href={`#/dashboard/documenti/${row.id}`} key={`activity-${row.id}`}>
                 <span />
-                <div><strong>{row.fornitore} · {row.numeroDocumento ?? row.fileName}</strong><small>{row.cantiere} · {formatDate(row.dataDocumento)}</small></div>
-                <StatusBadge>{displayStatus(row.statoVerifica)}</StatusBadge>
+                <div><strong>{row.fornitore} · {row.numeroDocumento ?? row.fileName}</strong><small>{formatLabel(row.lavorazione)} · {formatDate(row.dataDocumento)}</small></div>
+                <StatusBadge>{getDocumentStatus(row)}</StatusBadge>
               </a>
             ))}
           </div>
@@ -270,7 +311,7 @@ function DocumentPriorityPanel({ rows }) {
       <div className="section-heading panel-title-row">
         <div>
           <h2>Documenti da controllare</h2>
-          <p>Priorità generate dagli stati da verificare, incompleti o possibili duplicati.</p>
+          <p>Priorità generate dagli stati, dalla qualità dati, da scarti matematici o collegamenti mancanti.</p>
         </div>
         <StatusBadge>{rows.length ? `${rows.length} priorità` : 'Tutto ok'}</StatusBadge>
       </div>
@@ -280,13 +321,16 @@ function DocumentPriorityPanel({ rows }) {
             key={row.id}
             icon="warning"
             title={`${row.tipoDocumento}: ${row.descrizione}`}
-            description={`${row.cantiere} · ${row.fornitore}`}
-            status={displayStatus(row.statoVerifica)}
+            description={`${row.cantiere} · ${row.fornitore} · ${formatLabel(row.lavorazione)}`}
+            status={getDocumentStatus(row)}
             href={`#/dashboard/documenti/${row.id}`}
-            warning={row.statoVerifica !== 'Da verificare'}
+            warning={row.statoVerifica !== 'Da verificare' || row.qualitaDati === 'Da verificare'}
             meta={[
               { label: 'Documento', value: row.numeroDocumento ?? row.fileName ?? '-' },
+              { label: 'Lavorazione / voce', value: formatLabel(row.lavorazione) },
               { label: 'Categoria', value: row.categoria ?? '-' },
+              { label: 'Tab origine', value: formatLabel(row.sheetTab) },
+              { label: 'Qualità dati', value: row.qualitaDati ?? 'Da controllare' },
               { label: 'Totale riga', value: <MoneyValue value={row.totale} /> },
             ]}
           />
@@ -298,7 +342,7 @@ function DocumentPriorityPanel({ rows }) {
 
 function DocumentPreviewPanel({ document, canEdit, store }) {
   const [modalAction, setModalAction] = useState(null)
-  const warning = hasAmountWarning(document)
+  const warning = hasAmountWarning(document) || document.qualitaDati === 'Da verificare' || document.controlloMatematico === 'Scarto da verificare'
 
   return (
     <SideContextPanel
@@ -310,7 +354,7 @@ function DocumentPreviewPanel({ document, canEdit, store }) {
       <div className="document-preview-sheet">
         <div className="recent-upload-title">
           <strong>{document.tipoDocumento}</strong>
-          <StatusBadge>{warning ? 'Totale da verificare' : displayStatus(document.statoVerifica)}</StatusBadge>
+          <StatusBadge>{getDocumentStatus(document)}</StatusBadge>
         </div>
         <span>n. {document.numeroDocumento ?? document.id} del {formatDate(document.dataDocumento)}</span>
         <div className="invoice-lines">
@@ -325,10 +369,15 @@ function DocumentPreviewPanel({ document, canEdit, store }) {
           <div><dt>Cantiere</dt><dd>{document.cantiere}</dd></div>
           <div><dt>Data documento</dt><dd>{formatDate(document.dataDocumento)}</dd></div>
           <div><dt>Numero</dt><dd>{document.numeroDocumento ?? '-'}</dd></div>
+          <div><dt>Lavorazione / voce</dt><dd>{formatLabel(document.lavorazione)}</dd></div>
+          <div><dt>Categoria contabile</dt><dd>{document.categoria ?? '-'}</dd></div>
+          <div><dt>Categoria originaria</dt><dd>{formatLabel(document.categoriaOriginale)}</dd></div>
+          <div><dt>Tab origine</dt><dd>{formatLabel(document.sheetTab)}</dd></div>
+          <div><dt>Qualità dati</dt><dd>{document.qualitaDati ?? 'Da controllare'}</dd></div>
+          <div><dt>Controllo</dt><dd><StatusBadge>{warning ? getDocumentStatus(document) : document.controlloMatematico ?? 'OK'}</StatusBadge></dd></div>
           <div><dt>Imponibile</dt><dd><MoneyValue value={document.imponibile} /></dd></div>
           <div><dt>IVA</dt><dd><MoneyValue value={document.iva} /></dd></div>
           <div><dt>Totale riga</dt><dd><MoneyValue value={document.totale} /></dd></div>
-          <div><dt>Categoria</dt><dd>{document.categoria ?? '-'}</dd></div>
         </dl>
       </section>
       <section className="document-actions-panel">
@@ -341,13 +390,13 @@ function DocumentPreviewPanel({ document, canEdit, store }) {
           type="button"
           onClick={() => setModalAction({
             icon: 'tag',
-            title: 'Assegna tab',
-            text: 'Assegna il documento a una categoria contabile.',
-            confirmLabel: 'Assegna tab',
-            fields: [{ label: 'Tab', type: 'select', options: ['Fatture fornitori', 'Bonifici', 'FIR rifiuti', 'SAL'] }],
+            title: 'Assegna lavorazione',
+            text: 'La categoria contabile resta separata. Usa la lavorazione per voci come Generatore, Fase 2 solaio, Piscina o Docce esterne.',
+            confirmLabel: 'Assegna lavorazione',
+            fields: [{ label: 'Lavorazione / voce', type: 'text' }],
           })}
         >
-          Assegna tab
+          Assegna lavorazione
         </button>
         <MobileActionMenu label="Altre azioni">
           <a className="button button-secondary" href={`#/dashboard/documenti/${document.id}`}>Apri dettaglio completo</a>
@@ -358,9 +407,26 @@ function DocumentPreviewPanel({ document, canEdit, store }) {
   )
 }
 
+function normalizeDocumentRow(row) {
+  return {
+    ...row,
+    categoria: row.categoria ?? 'Extra / Altro',
+    categoriaOriginale: row.categoriaOriginale ?? row.categoria_originale ?? null,
+    lavorazione: row.lavorazione ?? row.categoriaOriginale ?? row.categoria_originale ?? row.sheetTab ?? 'Senza lavorazione',
+    qualitaDati: row.qualitaDati ?? row.qualita_dati ?? 'Da controllare',
+    controlloMatematico: row.controlloMatematico ?? row.controllo_matematico ?? 'Da controllare',
+    naturaMovimento: row.naturaMovimento ?? row.natura_movimento ?? null,
+    statoCollegamento: row.statoCollegamento ?? row.stato_collegamento ?? 'Collegato',
+    dataQualityNote: row.dataQualityNote ?? row.data_quality_note ?? '',
+    sheetTab: row.sheetTab ?? '',
+  }
+}
+
 function isAllDocumentFilters(filters) {
   return filters.cantiereId === 'tutti'
     && filters.tipoDocumento === 'tutti'
+    && filters.lavorazione === 'tutte'
+    && filters.qualitaDati === 'tutte'
     && filters.stato === 'tutti'
     && filters.quick === 'tutti'
     && filters.search.trim() === ''
@@ -371,8 +437,13 @@ function getDocumentTotals(rows) {
     imponibile: acc.imponibile + Number(row.imponibile || 0),
     iva: acc.iva + Number(row.iva || 0),
     totale: acc.totale + Number(row.totale || 0),
-    daVerificare: acc.daVerificare + (row.statoVerifica === 'Da verificare' ? 1 : 0),
+    daVerificare: acc.daVerificare + (row.statoVerifica === 'Da verificare' || row.qualitaDati === 'Da verificare' ? 1 : 0),
   }), { imponibile: 0, iva: 0, totale: 0, daVerificare: 0 })
+}
+
+function buildUniqueOptions(rows, field, fallback) {
+  const values = [...new Set(rows.map((row) => row[field]).filter(Boolean))]
+  return values.length ? values.sort((a, b) => String(a).localeCompare(String(b), 'it')) : fallback
 }
 
 function formatDate(date) {
@@ -387,6 +458,14 @@ function displayStatus(status) {
   return status
 }
 
+function getDocumentStatus(row) {
+  if (row.controlloMatematico === 'Scarto da verificare') return 'Scarto da verificare'
+  if (row.statoCollegamento === 'Da collegare') return 'Da collegare'
+  if (row.qualitaDati === 'Da verificare') return 'Da verificare'
+  if (hasAmountWarning(row)) return 'Totale da verificare'
+  return displayStatus(row.statoVerifica)
+}
+
 function getDocumentIcon(tipoDocumento) {
   if (tipoDocumento === 'Bonifico') return 'wallet'
   if (tipoDocumento === 'Preventivo') return 'estimate'
@@ -398,7 +477,15 @@ function hasAmountWarning(row) {
   const imponibile = Number(row.imponibile || 0)
   const iva = Number(row.iva || 0)
   const totale = Number(row.totale || 0)
+  if (row.controlloMatematico === 'Non applicabile') return false
   if (row.tipoDocumento === 'Bonifico') return false
   if (!imponibile && !iva) return false
   return Math.abs((imponibile + iva) - totale) > 0.01
+}
+
+function formatLabel(value) {
+  return String(value ?? '-')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || '-'
 }
