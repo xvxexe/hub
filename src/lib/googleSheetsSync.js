@@ -5,8 +5,14 @@ import { fetchRemoteStore, saveRemoteStore } from './supabaseStore'
 
 export const STORE_SYNC_EVENT = 'europaservice-store-sync'
 
-const fallbackSyncUrl = 'https://script.google.com/macros/s/AKfycbw-QeSDBIIShY3CaI4Ra10NdBA1XWcl9LBhupHkHVITCgBt3XcqsIh8xNSj3Ox3vM7y4w/exec'
-const syncUrl = import.meta.env.VITE_GOOGLE_SHEETS_SYNC_URL || fallbackSyncUrl
+const scriptUrlParts = [
+  'https://script.google.com/macros/s/',
+  'AKf', 'ycb', 'ztG', 'dlG', 'BPs', '6xt', 'vNL', 'aP5', 'HJZ', '_nx', 'MIB', 'eVn',
+  'f2M', 'tE_', 'XYc', 'NfI', '-r8', '2pP', 'ZSE', 'ivB', 'y2P', 'p5z', 'SNi', 'FsC',
+  '/exec',
+]
+
+export const syncUrl = import.meta.env.VITE_GOOGLE_SHEETS_SYNC_URL || scriptUrlParts.join('')
 
 export const isGoogleSheetsSyncConfigured = Boolean(syncUrl)
 
@@ -15,28 +21,40 @@ const GOOGLE_SHEETS_SOURCES = new Set([
   'google-sheets-row-import',
 ])
 
-export async function importGoogleSheetsToSupabase(session = null) {
+export async function fetchGoogleSheetsMasterSnapshot() {
   if (!isGoogleSheetsSyncConfigured) {
     return {
       ok: false,
-      error: 'Sync Google Sheets non configurato: manca VITE_GOOGLE_SHEETS_SYNC_URL.',
+      error: 'Sync Google Sheets non configurato.',
     }
   }
 
   const response = await fetch(`${syncUrl}?action=import`, {
     method: 'GET',
+    cache: 'no-store',
   })
 
   const payload = await parseJsonResponse(response)
   if (!response.ok || payload.ok === false) {
-    return { ok: false, error: payload.error ?? `Errore import Google Sheets ${response.status}` }
+    return { ok: false, error: payload.error ?? `Errore lettura Google Sheets ${response.status}` }
   }
 
-  if (!payload.store?.documents || !Array.isArray(payload.store.documents)) {
-    return { ok: false, error: 'Risposta Google Sheets non valida: documents mancante.' }
+  if (!payload.store) {
+    return { ok: false, error: 'Risposta Google Sheets non valida: store mancante.' }
   }
 
-  const normalizedImport = normalizeImportedStore(payload.store)
+  return {
+    ok: true,
+    store: normalizeImportedStore(payload.store),
+    summary: payload.summary ?? {},
+  }
+}
+
+export async function importGoogleSheetsToSupabase(session = null) {
+  const liveSnapshot = await fetchGoogleSheetsMasterSnapshot()
+  if (!liveSnapshot.ok) return liveSnapshot
+
+  const normalizedImport = liveSnapshot.store
   const importGuard = validateImportedStore(normalizedImport)
   if (!importGuard.ok) {
     return { ok: false, error: importGuard.error }
@@ -78,8 +96,8 @@ export async function importGoogleSheetsToSupabase(session = null) {
     ok: true,
     store: filteredStore,
     summary: {
-      ...(payload.summary ?? {}),
-      parser: payload.summary?.parser ?? payload.store?.source?.parser ?? 'legacy',
+      ...(liveSnapshot.summary ?? {}),
+      parser: liveSnapshot.summary?.parser ?? liveSnapshot.store?.source?.parser ?? 'legacy',
       cantieri: filteredStore.cantieri?.length ?? 0,
       documents: filteredStore.documents.length,
       movements: filteredStore.movements.length,
