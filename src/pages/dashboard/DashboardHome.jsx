@@ -67,9 +67,11 @@ function AdminDashboard({ documentUploads, documents, activities, store }) {
   const sites = useMemo(() => buildSitesFromDocuments(documents, accountingTotals), [documents, accountingTotals.totale])
   const calculatedCategoryTotals = getCategoryTotals(accountingRows).filter((row) => row.totale > 0).slice(0, 6)
   const categoryTotals = preferOfficialCategoryTotals(store, calculatedCategoryTotals).filter((row) => row.totale > 0).slice(0, 6)
-  const pendingPayments = accountingRows
-    .filter((row) => row.pagamento?.toLowerCase().includes('da') || row.categoria?.toLowerCase().includes('bonifici'))
-    .reduce((total, row) => total + Number(row.totale || 0), 0)
+  const pendingPayments = officialMaster
+    ? Number(officialMaster.bonificiDaCollegare || 0)
+    : accountingRows
+      .filter((row) => row.pagamento?.toLowerCase().includes('da') || row.categoria?.toLowerCase().includes('bonifici'))
+      .reduce((total, row) => total + Number(row.totale || 0), 0)
 
   return (
     <>
@@ -113,10 +115,10 @@ function AdminDashboard({ documentUploads, documents, activities, store }) {
       </div>
 
       <div className="hub-kpi-strip" aria-label="Indicatori principali">
-        <MiniKpi icon="building" label="Cantieri" value={sites.length} hint="Fonte Supabase" />
+        <MiniKpi icon="building" label="Cantieri" value={sites.length} hint="Fonte master" />
         <MiniKpi icon="file" label="Da controllare" value={docsToCheck} hint={`${documents.length} righe operative`} tone="amber" />
-        <MiniKpi icon="wallet" label="Totale spese" value={<MoneyValue value={accountingTotals.totale} />} hint={officialMaster ? 'Da master' : 'Calcolato'} tone="green" />
-        <MiniKpi icon="calendar" label="Pagamenti" value={<MoneyValue value={pendingPayments} />} hint="Da classificare" tone="purple" />
+        <MiniKpi icon="wallet" label="Totale master" value={<MoneyValue value={accountingTotals.totale} />} hint={officialMaster ? 'Da Riepilogo' : 'Calcolato'} tone="green" />
+        <MiniKpi icon="calendar" label="Bonifici da collegare" value={<MoneyValue value={pendingPayments} />} hint="Da Riepilogo" tone="purple" />
       </div>
 
       <div className="hub-workspace-grid">
@@ -265,35 +267,57 @@ function MiniKpi({ icon, label, value, hint, tone = 'blue' }) {
 }
 
 function CostSummaryPanel({ total, categoryTotals, officialMaster }) {
+  const financialSummary = officialMaster?.financialSummary ?? null
+
   return (
     <section className="internal-panel cost-card-redesign">
       <div className="cost-card-head">
         <div>
           <span className="eyebrow">Spese</span>
           <h2>Riepilogo spese</h2>
-          <p>{officialMaster ? 'Totali ufficiali letti dal master Google Sheets.' : 'Vista compatta per capire subito dove stanno andando i costi.'}</p>
+          <p>{officialMaster ? 'Totali ufficiali letti dal tab Riepilogo del master.' : 'Vista compatta per capire subito dove stanno andando i costi.'}</p>
         </div>
         <a className="button button-secondary button-small" href="#/dashboard/contabilita">Dettaglio</a>
       </div>
 
       <div className="cost-summary cost-summary-redesign">
         <div className="cost-total-block">
-          <span>Totale costi</span>
+          <span>Totale master</span>
           <strong><MoneyValue value={total} /></strong>
-          <small className="positive-trend">{officialMaster ? 'Da tab Riepilogo' : 'Dati reali importati'}</small>
+          <small className="positive-trend">{officialMaster ? 'Spese + bonifici + commissioni da Riepilogo' : 'Dati reali importati'}</small>
         </div>
         <div className="donut-chart" aria-label="Ripartizione costi" />
       </div>
 
-      <div className="cost-legend cost-legend-redesign">
-        {categoryTotals.map((item) => (
-          <div key={item.categoria}>
+      {financialSummary ? (
+        <div className="cost-legend cost-legend-redesign">
+          <div>
             <span />
-            <strong>{item.categoria}</strong>
-            <small><MoneyValue value={item.totale} /></small>
+            <strong>Spese registrate</strong>
+            <small><MoneyValue value={financialSummary.speseRegistrate} /></small>
           </div>
-        ))}
-      </div>
+          <div>
+            <span />
+            <strong>Bonifici da collegare</strong>
+            <small><MoneyValue value={financialSummary.bonificiDaCollegare} /></small>
+          </div>
+          <div>
+            <span />
+            <strong>Commissioni bonifici</strong>
+            <small><MoneyValue value={financialSummary.commissioniBonifici} /></small>
+          </div>
+        </div>
+      ) : (
+        <div className="cost-legend cost-legend-redesign">
+          {categoryTotals.map((item) => (
+            <div key={item.categoria}>
+              <span />
+              <strong>{item.categoria}</strong>
+              <small><MoneyValue value={item.totale} /></small>
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   )
 }
@@ -319,7 +343,7 @@ function AccountingDashboard({ documentUploads, documents, store }) {
     <>
       <div className="stats-grid">
         <MiniKpi label="Fatture da verificare" value={documentsToCheck.length} />
-        <MiniKpi label="Bonifici da collegare" value={transfersToLink.length} />
+        <MiniKpi label="Bonifici da collegare" value={<MoneyValue value={totals.bonificiDaCollegare ?? 0} />} />
         <MiniKpi label="FIR incompleti" value={firIncomplete.length} />
         <MiniKpi label="Possibili duplicati" value={duplicates.length} />
         <MiniKpi label="IVA" value={<MoneyValue value={totals.iva} />} />
