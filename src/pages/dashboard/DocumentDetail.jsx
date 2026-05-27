@@ -13,7 +13,7 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
   const canViewEconomics = session.role !== 'employee'
   const canAddNote = canEdit || (session.role === 'employee' && document?.caricatoDa === session.name && document?.statoVerifica === 'Da verificare')
   const resolvedBackHref = session.role === 'employee' ? '#/dashboard/caricamenti' : backHref
-  const [form, setForm] = useState(document ?? {})
+  const [form, setForm] = useState(normalizeDocument(document) ?? {})
   const [deleteStatus, setDeleteStatus] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -25,7 +25,11 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
     )
   }
 
-  const amountWarning = canViewEconomics && Number(form.imponibile || 0) + Number(form.iva || 0) !== Number(form.totale || 0) && form.tipoDocumento !== 'Bonifico'
+  const normalizedDocument = normalizeDocument(document)
+  const amountWarning = canViewEconomics
+    && Number(form.imponibile || 0) + Number(form.iva || 0) !== Number(form.totale || 0)
+    && form.controlloMatematico !== 'Non applicabile'
+    && form.tipoDocumento !== 'Bonifico'
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: numberFields.includes(field) ? Number(value) : value }))
@@ -38,6 +42,7 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
       ...form,
       cantiere: cantiere?.nome ?? form.cantiere,
       importoTotale: Number(form.totale || 0),
+      categoriaOriginale: form.categoriaOriginale ?? form.lavorazione ?? form.categoria,
     })
   }
 
@@ -63,7 +68,7 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
       <DashboardHeader
         eyebrow="Dettaglio documento"
         title={`${document.tipoDocumento} · ${document.fornitore}`}
-        description="Dettaglio modificabile per verifica amministrativa, file reale e collegamento al cantiere."
+        description="Dettaglio modificabile: categoria contabile, lavorazione, tab origine e qualità dati restano separati."
       >
         <StatusBadge>{document.statoVerifica}</StatusBadge>
         <DataModeBadge>{document.storagePath ? 'File reale Storage' : 'Dato importato'}</DataModeBadge>
@@ -90,25 +95,33 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
       {amountWarning ? (
         <section className="validation-alert-block">
           <strong>Importi da controllare</strong>
-          <p>Imponibile + IVA non coincide con il totale. Correggi prima di confermare il documento.</p>
+          <p>Imponibile + IVA non coincide con il totale. Se il documento è bonifico, vitto o alloggio senza dettaglio IVA, usa “Non applicabile” invece di inventare valori fiscali.</p>
         </section>
       ) : null}
 
       <section className="detail-layout internal-padded">
         <form className="mock-form detail-edit-form" onSubmit={save}>
-          <EditableField label="Fornitore" value={form.fornitore} onChange={(value) => update('fornitore', value)} disabled={!canEdit} />
-          <EditableField label="Data documento" type="date" value={form.dataDocumento} onChange={(value) => update('dataDocumento', value)} disabled={!canEdit} />
-          <EditableField label="Numero documento" value={form.numeroDocumento} onChange={(value) => update('numeroDocumento', value)} disabled={!canEdit} />
-          <EditableField label="Cantiere" value={form.cantiereId} onChange={(value) => update('cantiereId', value)} options={mockCantieri.map((item) => item.id)} disabled={!canEdit} />
+          <EditableField label="Fornitore" value={form.fornitore ?? ''} onChange={(value) => update('fornitore', value)} disabled={!canEdit} />
+          <EditableField label="Data documento" type="date" value={form.dataDocumento ?? ''} onChange={(value) => update('dataDocumento', value)} disabled={!canEdit} />
+          <EditableField label="Numero documento" value={form.numeroDocumento ?? ''} onChange={(value) => update('numeroDocumento', value)} disabled={!canEdit} />
+          <EditableField label="Cantiere" value={form.cantiereId ?? 'barcelo-roma'} onChange={(value) => update('cantiereId', value)} options={mockCantieri.map((item) => item.id)} disabled={!canEdit} />
           {canViewEconomics ? (
             <>
-              <EditableField label="Categoria" value={form.categoria} onChange={(value) => update('categoria', value)} options={categorieContabili} disabled={!canEdit} />
-              <EditableField label="Imponibile" type="number" value={form.imponibile} onChange={(value) => update('imponibile', value)} disabled={!canEdit} />
-              <EditableField label="IVA" type="number" value={form.iva} onChange={(value) => update('iva', value)} disabled={!canEdit} />
-              <EditableField label="Totale" type="number" value={form.totale} onChange={(value) => update('totale', value)} disabled={!canEdit} />
-              <EditableField label="Pagamento" value={form.pagamento} onChange={(value) => update('pagamento', value)} options={metodiPagamentoContabili} disabled={!canEdit} />
+              <EditableField label="Categoria contabile" value={form.categoria ?? 'Extra / Altro'} onChange={(value) => update('categoria', value)} options={categorieContabili} disabled={!canEdit} />
+              <EditableField label="Lavorazione / voce" value={form.lavorazione ?? ''} onChange={(value) => update('lavorazione', value)} disabled={!canEdit} />
+              <EditableField label="Categoria originaria" value={form.categoriaOriginale ?? ''} onChange={(value) => update('categoriaOriginale', value)} disabled={!canEdit} />
+              <EditableField label="Tab origine" value={form.sheetTab ?? ''} onChange={(value) => update('sheetTab', value)} disabled />
+              <EditableField label="Controllo matematico" value={form.controlloMatematico ?? 'Da controllare'} onChange={(value) => update('controlloMatematico', value)} options={['OK', 'Non applicabile', 'Scarto da verificare', 'Da controllare']} disabled={!canEdit} />
+              <EditableField label="Stato collegamento" value={form.statoCollegamento ?? 'Collegato'} onChange={(value) => update('statoCollegamento', value)} options={['Collegato', 'Da collegare', 'Manuale']} disabled={!canEdit} />
+              <EditableField label="Qualità dati" value={form.qualitaDati ?? 'Da controllare'} onChange={(value) => update('qualitaDati', value)} options={['Pulito', 'Da verificare', 'Da controllare']} disabled={!canEdit} />
+              <EditableField label="Natura movimento" value={form.naturaMovimento ?? ''} onChange={(value) => update('naturaMovimento', value)} options={['Fattura', 'Bonifico / Pagamento', 'Ricevuta', 'Vitto', 'Alloggio', 'FIR / Rifiuti', 'Documento operativo', 'Nota credito / Reso']} disabled={!canEdit} />
+              <EditableField label="Imponibile" type="number" value={form.imponibile ?? 0} onChange={(value) => update('imponibile', value)} disabled={!canEdit} />
+              <EditableField label="IVA" type="number" value={form.iva ?? 0} onChange={(value) => update('iva', value)} disabled={!canEdit} />
+              <EditableField label="Totale" type="number" value={form.totale ?? 0} onChange={(value) => update('totale', value)} disabled={!canEdit} />
+              <EditableField label="Pagamento" value={form.pagamento ?? 'Non indicato'} onChange={(value) => update('pagamento', value)} options={metodiPagamentoContabili} disabled={!canEdit} />
             </>
           ) : null}
+          <label className="form-wide">Note qualità<textarea rows="3" value={form.dataQualityNote ?? ''} onChange={(event) => update('dataQualityNote', event.target.value)} disabled={!canEdit} /></label>
           <label className="form-wide">Note<textarea rows="4" value={form.note ?? ''} onChange={(event) => update('note', event.target.value)} disabled={!canEdit} /></label>
           <button className="button button-primary" type="submit" disabled={!canEdit}>Salva modifiche</button>
         </form>
@@ -119,6 +132,13 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
             <div><dt>Tipo</dt><dd>{document.tipoDocumento}</dd></div>
             <div><dt>Cantiere</dt><dd>{document.cantiere}</dd></div>
             <div><dt>Data</dt><dd>{formatDate(document.dataDocumento)}</dd></div>
+            <div><dt>Categoria contabile</dt><dd>{normalizedDocument.categoria}</dd></div>
+            <div><dt>Lavorazione / voce</dt><dd>{formatLabel(normalizedDocument.lavorazione)}</dd></div>
+            <div><dt>Categoria originaria</dt><dd>{formatLabel(normalizedDocument.categoriaOriginale)}</dd></div>
+            <div><dt>Tab origine</dt><dd>{formatLabel(normalizedDocument.sheetTab)}</dd></div>
+            <div><dt>Controllo matematico</dt><dd><StatusBadge>{normalizedDocument.controlloMatematico}</StatusBadge></dd></div>
+            <div><dt>Stato collegamento</dt><dd>{normalizedDocument.statoCollegamento}</dd></div>
+            <div><dt>Qualità dati</dt><dd>{normalizedDocument.qualitaDati}</dd></div>
             {canViewEconomics ? <div><dt>Totale</dt><dd><MoneyValue value={document.totale} /></dd></div> : null}
             <div><dt>Stato</dt><dd><StatusBadge>{document.statoVerifica}</StatusBadge></dd></div>
           </dl>
@@ -139,6 +159,29 @@ export function DocumentDetail({ documentId, session, store, backHref = '#/dashb
       </div>
     </>
   )
+}
+
+function normalizeDocument(document) {
+  if (!document) return null
+  return {
+    ...document,
+    categoria: document.categoria ?? 'Extra / Altro',
+    categoriaOriginale: document.categoriaOriginale ?? document.categoria_originale ?? null,
+    lavorazione: document.lavorazione ?? document.categoriaOriginale ?? document.categoria_originale ?? document.sheetTab ?? '',
+    qualitaDati: document.qualitaDati ?? document.qualita_dati ?? 'Da controllare',
+    controlloMatematico: document.controlloMatematico ?? document.controllo_matematico ?? 'Da controllare',
+    naturaMovimento: document.naturaMovimento ?? document.natura_movimento ?? '',
+    statoCollegamento: document.statoCollegamento ?? document.stato_collegamento ?? 'Collegato',
+    dataQualityNote: document.dataQualityNote ?? document.data_quality_note ?? '',
+    sheetTab: document.sheetTab ?? '',
+  }
+}
+
+function formatLabel(value) {
+  return String(value ?? '-')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || '-'
 }
 
 const numberFields = ['imponibile', 'iva', 'totale']
