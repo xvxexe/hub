@@ -1,3 +1,4 @@
+import '../styles/level3-shaders.css'
 import { Level3ShaderStage, withLevel3Class } from './Level3ShaderStage'
 import { SafeImage } from './SafeImage'
 
@@ -23,33 +24,13 @@ function handlePremiumLinkClick(event, href) {
   scrollToQuoteForm()
 }
 
-export function PremiumHero({
-  eyebrow,
-  title,
-  text,
-  image,
-  imageAlt,
-  primaryLabel = 'Richiedi preventivo',
-  primaryHref = '#/preventivo',
-  secondaryLabel = 'Scopri i servizi',
-  secondaryHref = '#/servizi',
-  meta = [],
-  variant = 'default',
-}) {
+export function PremiumHero({ eyebrow, title, text, image, imageAlt, primaryLabel = 'Richiedi preventivo', primaryHref = '#/preventivo', secondaryLabel = 'Scopri i servizi', secondaryHref = '#/servizi', meta = [], variant = 'default' }) {
   const marqueeItems = [...meta, ...meta]
 
   return (
     <section className={withLevel3Class(`premium-hero premium-hero-${variant}`)}>
       <Level3ShaderStage variant="hero" />
-      <SafeImage
-        alt={imageAlt || title}
-        className="premium-hero-bg"
-        fallbackSrc={image}
-        finalFallbackSrc={image}
-        loading="eager"
-        src={image}
-        title={title}
-      />
+      <SafeImage alt={imageAlt || title} className="premium-hero-bg" fallbackSrc={image} finalFallbackSrc={image} loading="eager" src={image} title={title} />
       <div className="premium-hero-overlay-layer" />
       <div className="premium-hero-copy">
         {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
@@ -88,46 +69,20 @@ export function PremiumSection({ eyebrow, title, text, children, tone = 'default
 }
 
 export function PremiumStats({ stats }) {
-  return (
-    <div className="premium-stats premium-stagger-group">
-      {stats.map((stat) => (
-        <article key={stat.label} className="premium-scroll-reveal">
-          <strong>{stat.value}</strong>
-          <span>{stat.label}</span>
-        </article>
-      ))}
-    </div>
-  )
+  return <div className="premium-stats premium-stagger-group">{stats.map((stat) => <article key={stat.label} className="premium-scroll-reveal"><strong>{stat.value}</strong><span>{stat.label}</span></article>)}</div>
 }
 
 export function PremiumServiceCard({ service, detailed = false }) {
   const fallback = service.fallbackImage || service.image
   return (
     <article className={detailed ? 'premium-card premium-service-card premium-service-card-detailed premium-scroll-reveal' : 'premium-card premium-service-card premium-scroll-reveal'}>
-      {service.image ? (
-        <SafeImage
-          alt={service.alt}
-          className="premium-service-image"
-          fallbackSrc={fallback}
-          finalFallbackSrc={fallback}
-          src={service.image}
-          title={service.title}
-        />
-      ) : null}
+      {service.image ? <SafeImage alt={service.alt} className="premium-service-image" fallbackSrc={fallback} finalFallbackSrc={fallback} src={service.image} title={service.title} /> : null}
       <div className="premium-service-copy">
         <PublicIcon name={service.icon ?? service.id} />
         <h3>{service.title}</h3>
         <p>{service.summary}</p>
-        {service.benefits?.length ? (
-          <ul className="premium-check-list">
-            {service.benefits.slice(0, 3).map((benefit) => <li key={benefit}>{benefit}</li>)}
-          </ul>
-        ) : null}
-        {service.deliverables?.length ? (
-          <div className="premium-tags">
-            {service.deliverables.slice(0, 4).map((item) => <small key={item}>{item}</small>)}
-          </div>
-        ) : null}
+        {service.benefits?.length ? <ul className="premium-check-list">{service.benefits.slice(0, 3).map((benefit) => <li key={benefit}>{benefit}</li>)}</ul> : null}
+        {service.deliverables?.length ? <div className="premium-tags">{service.deliverables.slice(0, 4).map((item) => <small key={item}>{item}</small>)}</div> : null}
         <a className="premium-card-arrow" aria-label={`Richiedi informazioni su ${service.title}`} href="#/preventivo">→</a>
       </div>
     </article>
@@ -138,21 +93,12 @@ export function PremiumProjectCard({ project, featured = false }) {
   const fallback = project.fallbackImage || project.image
   return (
     <article className={featured ? 'premium-project-card premium-project-featured premium-scroll-reveal' : 'premium-project-card premium-scroll-reveal'}>
-      <SafeImage
-        alt={project.alt}
-        className="premium-project-image"
-        fallbackSrc={fallback}
-        finalFallbackSrc={fallback}
-        src={project.image}
-        title={project.title}
-      />
+      <SafeImage alt={project.alt} className="premium-project-image" fallbackSrc={fallback} finalFallbackSrc={fallback} src={project.image} title={project.title} />
       <div className="premium-project-body">
         <span>{project.city} · {project.category}</span>
         <h3>{project.title}</h3>
         <p>{project.summary}</p>
-        <div className="premium-tags">
-          {project.services.slice(0, 3).map((service) => <small key={service}>{service}</small>)}
-        </div>
+        <div className="premium-tags">{project.services.slice(0, 3).map((service) => <small key={service}>{service}</small>)}</div>
         <a className="premium-button premium-button-secondary" href={`#/cantieri/${project.id}`}>Vedi case study</a>
       </div>
     </article>
@@ -160,28 +106,14 @@ export function PremiumProjectCard({ project, featured = false }) {
 }
 
 export function PremiumProcess({ steps }) {
-  return (
-    <div className="premium-process premium-stagger-group">
-      {steps.map((step) => (
-        <article key={step.step} className="premium-scroll-reveal">
-          <span>{step.step}</span>
-          <h3>{step.title}</h3>
-          <p>{step.text}</p>
-        </article>
-      ))}
-    </div>
-  )
+  return <div className="premium-process premium-stagger-group">{steps.map((step) => <article key={step.step} className="premium-scroll-reveal"><span>{step.step}</span><h3>{step.title}</h3><p>{step.text}</p></article>)}</div>
 }
 
 export function PremiumCTA({ title = 'Parliamo del tuo progetto', text = 'Raccontaci spazi, tempi e priorità. Ti aiutiamo a trasformare l’idea in un cantiere organizzato.' }) {
   return (
     <section className={withLevel3Class('premium-final-cta premium-scroll-reveal')}>
       <Level3ShaderStage variant="cta" />
-      <div>
-        <p className="premium-eyebrow">Prossimo passo</p>
-        <h2>{title}</h2>
-        <p>{text}</p>
-      </div>
+      <div><p className="premium-eyebrow">Prossimo passo</p><h2>{title}</h2><p>{text}</p></div>
       <div className="premium-actions">
         <a className="premium-button premium-button-primary" href="#/preventivo?form=1" onClick={(event) => handlePremiumLinkClick(event, '#/preventivo?form=1')}>Richiedi preventivo</a>
         <a className="premium-button premium-button-secondary" href="#/contatti">Parla con noi</a>
@@ -191,26 +123,11 @@ export function PremiumCTA({ title = 'Parliamo del tuo progetto', text = 'Raccon
 }
 
 export function PremiumFAQ({ items }) {
-  return (
-    <div className="premium-faq">
-      {items.map((item) => (
-        <details key={item.question} className="premium-scroll-reveal">
-          <summary>{item.question}</summary>
-          <p>{item.answer}</p>
-        </details>
-      ))}
-    </div>
-  )
+  return <div className="premium-faq">{items.map((item) => <details key={item.question} className="premium-scroll-reveal"><summary>{item.question}</summary><p>{item.answer}</p></details>)}</div>
 }
 
 export function TestimonialMock({ testimonial }) {
-  return (
-    <article className="premium-card premium-testimonial premium-scroll-reveal">
-      <p>“{testimonial.quote}”</p>
-      <strong>{testimonial.author}</strong>
-      {testimonial.role ? <span>{testimonial.role}</span> : null}
-    </article>
-  )
+  return <article className="premium-card premium-testimonial premium-scroll-reveal"><p>“{testimonial.quote}”</p><strong>{testimonial.author}</strong>{testimonial.role ? <span>{testimonial.role}</span> : null}</article>
 }
 
 export function PremiumTextCard({ title, text, eyebrow, items = [] }) {
@@ -219,11 +136,7 @@ export function PremiumTextCard({ title, text, eyebrow, items = [] }) {
       {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
       <h3>{title}</h3>
       <p>{text}</p>
-      {items.length ? (
-        <ul className="premium-check-list">
-          {items.slice(0, 4).map((item) => <li key={item}>{item}</li>)}
-        </ul>
-      ) : null}
+      {items.length ? <ul className="premium-check-list">{items.slice(0, 4).map((item) => <li key={item}>{item}</li>)}</ul> : null}
     </article>
   )
 }
@@ -233,14 +146,7 @@ export function PremiumImageSplit({ eyebrow, title, text, image, imageAlt, rever
   return (
     <section className={withLevel3Class(reverse ? 'premium-image-split premium-image-split-reverse' : 'premium-image-split')}>
       <Level3ShaderStage variant="split" />
-      <SafeImage
-        alt={imageAlt || title}
-        className="premium-split-image premium-scroll-reveal"
-        fallbackSrc={fallback}
-        finalFallbackSrc={fallback}
-        src={image}
-        title={title}
-      />
+      <SafeImage alt={imageAlt || title} className="premium-split-image premium-scroll-reveal" fallbackSrc={fallback} finalFallbackSrc={fallback} src={image} title={title} />
       <div className="premium-split-copy premium-scroll-reveal">
         {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
         <h2>{title}</h2>
@@ -252,19 +158,7 @@ export function PremiumImageSplit({ eyebrow, title, text, image, imageAlt, rever
 }
 
 export function PremiumTimeline({ items }) {
-  return (
-    <div className="premium-timeline premium-stagger-group">
-      {items.map((item) => (
-        <article key={item.title} className="premium-scroll-reveal">
-          <span>{item.step}</span>
-          <div>
-            <h3>{item.title}</h3>
-            <p>{item.text}</p>
-          </div>
-        </article>
-      ))}
-    </div>
-  )
+  return <div className="premium-timeline premium-stagger-group">{items.map((item) => <article key={item.title} className="premium-scroll-reveal"><span>{item.step}</span><div><h3>{item.title}</h3><p>{item.text}</p></div></article>)}</div>
 }
 
 function PublicIcon({ name }) {
@@ -278,11 +172,5 @@ function PublicIcon({ name }) {
     'supporto-operativo': <><path d="M12 3 4 7v6c0 5 3.4 7.6 8 9 4.6-1.4 8-4 8-9V7l-8-4Z" /><path d="m9 12 2 2 4-5" /></>,
   }
 
-  return (
-    <span className="premium-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" focusable="false">
-        {paths[name] ?? paths.cartongesso}
-      </svg>
-    </span>
-  )
+  return <span className="premium-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false">{paths[name] ?? paths.cartongesso}</svg></span>
 }
