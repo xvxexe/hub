@@ -266,6 +266,7 @@ function PublicIcon({ name }) {
   const paths = {
     cartongesso: <><path d="M4 9h16" /><path d="M4 15h16" /><path d="M8 5v14" /><path d="M16 5v14" /></>,
     'ristrutturazioni-tecniche': <><path d="M4 20h16" /><path d="M7 20V8l5-4 5 4v12" /><path d="M10 20v-6h4v6" /></>,
+    demolizioni: <><path d="M4 20h16" /><path d="M7 20 17 10" /><path d="m13 6 5 5" /><path d="M5 14h5" /><path d="M6 11h3" /><path d="M8 8h2" /></>,
     'finiture-interne': <><path d="M5 19h14" /><path d="M7 19V9l5-5 5 5v10" /><path d="M9 13h6" /></>,
     'gestione-cantiere': <><path d="M4 20h16" /><path d="M6 20V8h6v12" /><path d="M12 20V5h6v15" /><path d="M8 11h2M8 14h2M14 9h2M14 12h2" /></>,
     manutenzioni: <><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4" /><path d="m15 5 4 4" /></>,
