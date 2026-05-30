@@ -1,4 +1,13 @@
 /* Experimental Level 3 public-site shader system. Disable via src/config/visualEffects.js. */
+:root {
+  --level3-field: radial-gradient(circle at 14% 18%, rgba(184, 100, 43, 0.28), transparent 30%), radial-gradient(circle at 86% 20%, rgba(23, 50, 77, 0.28), transparent 34%), radial-gradient(circle at 48% 72%, rgba(184, 100, 43, 0.16), transparent 36%), linear-gradient(135deg, #f6f7f9 0%, #eef2f6 42%, #f8efe9 72%, #eef3f8 100%);
+}
+
+body:has(.level3-enabled) {
+  background: var(--level3-field);
+  background-attachment: fixed;
+}
+
 .level3-enabled {
   position: relative;
   isolation: isolate;
@@ -11,6 +20,28 @@
   z-index: 2;
 }
 
+.level3-enabled.premium-section,
+.level3-enabled.premium-image-split {
+  overflow: hidden;
+  border-top: 0;
+  background: transparent !important;
+}
+
+.level3-enabled.premium-section::before,
+.level3-enabled.premium-image-split::before {
+  position: absolute;
+  inset: -1px 0 auto;
+  z-index: 0;
+  height: 180px;
+  content: '';
+  background: linear-gradient(180deg, rgba(246, 247, 249, 0.0), rgba(246, 247, 249, 0.22), rgba(246, 247, 249, 0.0));
+  pointer-events: none;
+}
+
+.level3-enabled.premium-section-soft {
+  background: transparent !important;
+}
+
 .level3-shader-stage {
   position: absolute;
   inset: 0;
@@ -18,147 +49,144 @@
   overflow: hidden;
   pointer-events: none;
   mix-blend-mode: normal;
-  opacity: 0.78;
+  opacity: 0.92;
   contain: paint;
 }
 
 .level3-shader-stage::before,
 .level3-shader-stage::after {
   position: absolute;
-  inset: -18%;
+  inset: -24%;
   content: '';
   transform: translate3d(0, 0, 0);
-  will-change: transform, filter, opacity;
+  will-change: transform, opacity;
 }
 
 .level3-shader-stage::before {
   background:
-    radial-gradient(circle at 18% 24%, rgba(184, 100, 43, 0.42), transparent 26%),
-    radial-gradient(circle at 78% 20%, rgba(23, 50, 77, 0.42), transparent 32%),
-    radial-gradient(circle at 58% 82%, rgba(255, 255, 255, 0.22), transparent 24%),
-    conic-gradient(from 130deg at 50% 50%, rgba(184, 100, 43, 0.18), rgba(23, 50, 77, 0.08), rgba(255, 255, 255, 0.14), rgba(184, 100, 43, 0.18));
-  filter: blur(26px) saturate(1.22);
-  animation: level3FieldDrift 18s ease-in-out infinite alternate;
+    radial-gradient(circle at 15% 22%, rgba(184, 100, 43, 0.54), transparent 30%),
+    radial-gradient(circle at 78% 18%, rgba(23, 50, 77, 0.46), transparent 36%),
+    radial-gradient(circle at 52% 82%, rgba(255, 255, 255, 0.42), transparent 30%),
+    conic-gradient(from 130deg at 50% 50%, rgba(184, 100, 43, 0.24), rgba(23, 50, 77, 0.13), rgba(255, 255, 255, 0.26), rgba(184, 100, 43, 0.24));
+  filter: blur(22px) saturate(1.32);
+  animation: level3FieldDrift 32s ease-in-out infinite alternate;
 }
 
 .level3-shader-stage::after {
-  background:
-    linear-gradient(115deg, transparent 0 38%, rgba(255, 255, 255, 0.14) 48%, transparent 60% 100%),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 38px);
-  opacity: 0.42;
+  background: linear-gradient(115deg, transparent 0 38%, rgba(255, 255, 255, 0.22) 48%, transparent 60% 100%);
+  opacity: 0.58;
   transform: skewY(-6deg) translateX(-12%);
-  animation: level3PrismSweep 11s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  animation: level3PrismSweep 28s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
 .level3-orb {
   position: absolute;
-  width: clamp(16rem, 24vw, 28rem);
+  width: clamp(18rem, 30vw, 34rem);
   aspect-ratio: 1;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.24), rgba(184, 100, 43, 0.18) 34%, transparent 68%);
-  filter: blur(18px);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.36), rgba(184, 100, 43, 0.28) 34%, transparent 70%);
+  filter: blur(16px);
   transform: translate3d(0, 0, 55px);
   will-change: transform;
 }
 
 .level3-orb-a {
-  top: 8%;
-  left: -8%;
-  animation: level3OrbA 16s ease-in-out infinite alternate;
+  top: 2%;
+  left: -10%;
+  animation: level3OrbA 34s ease-in-out infinite alternate;
 }
 
 .level3-orb-b {
-  right: -10%;
-  bottom: 4%;
-  background: radial-gradient(circle, rgba(23, 50, 77, 0.3), rgba(255, 255, 255, 0.18) 38%, transparent 70%);
-  animation: level3OrbB 20s ease-in-out infinite alternate;
+  right: -12%;
+  bottom: -2%;
+  background: radial-gradient(circle, rgba(23, 50, 77, 0.36), rgba(255, 255, 255, 0.26) 40%, transparent 72%);
+  animation: level3OrbB 38s ease-in-out infinite alternate;
 }
 
 .level3-orb-c {
-  top: 34%;
-  right: 22%;
-  width: clamp(9rem, 15vw, 17rem);
-  background: radial-gradient(circle, rgba(184, 100, 43, 0.28), transparent 66%);
-  animation: level3OrbC 14s ease-in-out infinite alternate;
+  top: 30%;
+  right: 18%;
+  width: clamp(12rem, 18vw, 22rem);
+  background: radial-gradient(circle, rgba(184, 100, 43, 0.4), transparent 68%);
+  animation: level3OrbC 30s ease-in-out infinite alternate;
 }
 
 .level3-grid {
   position: absolute;
-  inset: -20% -10%;
-  opacity: 0.22;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px);
-  background-size: 54px 54px;
+  inset: -24% -12%;
+  opacity: 0.34;
+  background-image: linear-gradient(rgba(23, 50, 77, 0.13) 1px, transparent 1px), linear-gradient(90deg, rgba(23, 50, 77, 0.13) 1px, transparent 1px);
+  background-size: 68px 68px;
   transform: rotateX(62deg) rotateZ(-4deg) translateY(16%);
   transform-origin: center;
-  animation: level3GridFlow 12s linear infinite;
+  animation: level3GridFlow 36s linear infinite;
 }
 
 .level3-noise {
   position: absolute;
   inset: 0;
-  opacity: 0.08;
-  background-image:
-    radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 1px),
-    radial-gradient(circle at 70% 60%, #fff 0 1px, transparent 1px),
-    radial-gradient(circle at 42% 82%, #fff 0 1px, transparent 1px);
-  background-size: 19px 23px, 31px 29px, 43px 37px;
-  animation: level3Noise 0.8s steps(2) infinite;
+  opacity: 0.055;
+  background-image: radial-gradient(circle at 20% 30%, #17324d 0 1px, transparent 1px), radial-gradient(circle at 70% 60%, #b8642b 0 1px, transparent 1px), radial-gradient(circle at 42% 82%, #111827 0 1px, transparent 1px);
+  background-size: 29px 31px, 43px 41px, 59px 53px;
 }
 
 .level3-scan {
   position: absolute;
   inset: 0;
-  opacity: 0.18;
-  background: repeating-linear-gradient(0deg, transparent 0 9px, rgba(255, 255, 255, 0.08) 10px, transparent 11px 18px);
-  animation: level3Scan 7s linear infinite;
+  opacity: 0.08;
+  background: repeating-linear-gradient(0deg, transparent 0 14px, rgba(23, 50, 77, 0.07) 15px, transparent 16px 28px);
+  animation: level3Scan 24s linear infinite;
 }
 
 .level3-shader-hero {
   z-index: 1;
-  opacity: 0.92;
+  opacity: 1;
   mix-blend-mode: screen;
 }
 
 .level3-shader-hero .level3-grid {
-  opacity: 0.32;
+  opacity: 0.42;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.16) 1px, transparent 1px);
 }
 
 .level3-shader-section,
 .level3-shader-section-soft,
 .level3-shader-split {
   z-index: 0;
-  opacity: 0.45;
+  opacity: 0.88;
 }
 
 .level3-shader-section::before,
 .level3-shader-section-soft::before,
 .level3-shader-split::before {
-  filter: blur(34px) saturate(1.05);
+  filter: blur(28px) saturate(1.24);
 }
 
 .level3-shader-section .level3-grid,
 .level3-shader-section-soft .level3-grid,
 .level3-shader-split .level3-grid {
-  opacity: 0.12;
+  opacity: 0.2;
+}
+
+.level3-shader-section .level3-scan,
+.level3-shader-section-soft .level3-scan,
+.level3-shader-split .level3-scan {
+  display: none;
 }
 
 .level3-shader-cta {
-  opacity: 0.84;
+  opacity: 1;
   mix-blend-mode: screen;
 }
 
-.level3-enabled.premium-section,
-.level3-enabled.premium-image-split {
-  overflow: hidden;
-}
-
-.level3-enabled.premium-section-soft {
-  background:
-    radial-gradient(circle at 10% 10%, rgba(184, 100, 43, 0.08), transparent 30%),
-    radial-gradient(circle at 90% 20%, rgba(23, 50, 77, 0.08), transparent 32%),
-    var(--pub-bg) !important;
+.level3-enabled .premium-section-heading,
+.level3-enabled .premium-service-grid,
+.level3-enabled .premium-project-grid,
+.level3-enabled .premium-feature-grid,
+.level3-enabled .premium-process,
+.level3-enabled .premium-split-copy,
+.level3-enabled .premium-split-image {
+  z-index: 2;
 }
 
 .level3-enabled .premium-card,
@@ -167,7 +195,11 @@
 .level3-enabled .premium-process article,
 .level3-enabled .premium-text-card {
   transform-style: preserve-3d;
-  backdrop-filter: blur(16px) saturate(1.08);
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(226, 232, 240, 0.72) !important;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.12) !important;
+  backdrop-filter: blur(14px) saturate(1.12);
+  transition-duration: 1.6s !important;
 }
 
 .level3-enabled .premium-card:hover,
@@ -175,31 +207,31 @@
 .level3-enabled .premium-service-card:hover,
 .level3-enabled .premium-process article:hover,
 .level3-enabled .premium-text-card:hover {
-  transform: translateY(-10px) rotateX(2deg) rotateY(-2deg) scale(1.012) !important;
+  transform: translateY(-8px) rotateX(1.4deg) rotateY(-1.4deg) scale(1.008) !important;
 }
 
 .level3-enabled .premium-service-image,
 .level3-enabled .premium-project-image,
 .level3-enabled .premium-split-image {
-  transition: transform 1.2s var(--pub-ease), filter 1.2s var(--pub-ease) !important;
+  transition: transform 1.8s var(--pub-ease), filter 1.8s var(--pub-ease) !important;
   will-change: transform;
 }
 
 .level3-enabled .premium-service-card:hover .premium-service-image,
 .level3-enabled .premium-project-card:hover .premium-project-image,
 .level3-enabled .premium-split-image:hover {
-  filter: saturate(1.08) contrast(1.04) !important;
-  transform: scale(1.035) rotateZ(-0.55deg) !important;
+  filter: saturate(1.12) contrast(1.06) !important;
+  transform: scale(1.028) rotateZ(-0.35deg) !important;
 }
 
 .level3-enabled .premium-hero-bg {
-  filter: saturate(0.95) contrast(1.08) brightness(0.86) !important;
+  filter: saturate(0.95) contrast(1.1) brightness(0.78) !important;
   transform: scale(1.025) !important;
-  animation: level3HeroImage 18s ease-in-out infinite alternate !important;
+  animation: level3HeroImage 34s ease-in-out infinite alternate !important;
 }
 
 .level3-enabled .premium-hero-copy h1 {
-  text-shadow: 0 16px 48px rgba(0, 0, 0, 0.32), 0 0 38px rgba(184, 100, 43, 0.18);
+  text-shadow: 0 16px 48px rgba(0, 0, 0, 0.32), 0 0 42px rgba(184, 100, 43, 0.26);
 }
 
 .level3-enabled .premium-button,
@@ -210,55 +242,54 @@
 
 @keyframes level3FieldDrift {
   0% { transform: translate3d(-2%, -1%, 0) rotate(0deg) scale(1); }
-  50% { transform: translate3d(3%, 2%, 0) rotate(8deg) scale(1.08); }
-  100% { transform: translate3d(-1%, 3%, 0) rotate(-5deg) scale(1.03); }
+  50% { transform: translate3d(2.5%, 2%, 0) rotate(5deg) scale(1.06); }
+  100% { transform: translate3d(-1%, 2.5%, 0) rotate(-4deg) scale(1.03); }
 }
 
 @keyframes level3PrismSweep {
-  0% { transform: skewY(-6deg) translateX(-70%); opacity: 0; }
-  12% { opacity: 0.46; }
-  52% { opacity: 0.2; }
-  100% { transform: skewY(-6deg) translateX(70%); opacity: 0; }
+  0% { transform: skewY(-6deg) translateX(-80%); opacity: 0; }
+  16% { opacity: 0.58; }
+  58% { opacity: 0.22; }
+  100% { transform: skewY(-6deg) translateX(80%); opacity: 0; }
 }
 
 @keyframes level3OrbA {
-  from { transform: translate3d(-4%, 2%, 60px) scale(0.95); }
-  to { transform: translate3d(18%, 18%, 100px) scale(1.16); }
+  from { transform: translate3d(-4%, 2%, 60px) scale(0.96); }
+  to { transform: translate3d(14%, 14%, 100px) scale(1.13); }
 }
 
 @keyframes level3OrbB {
-  from { transform: translate3d(4%, 8%, 40px) scale(1.1); }
-  to { transform: translate3d(-16%, -10%, 90px) scale(0.92); }
+  from { transform: translate3d(4%, 8%, 40px) scale(1.08); }
+  to { transform: translate3d(-13%, -9%, 90px) scale(0.94); }
 }
 
 @keyframes level3OrbC {
-  from { transform: translate3d(0, -10%, 80px) scale(0.86); }
-  to { transform: translate3d(-22%, 14%, 120px) scale(1.2); }
+  from { transform: translate3d(0, -8%, 80px) scale(0.88); }
+  to { transform: translate3d(-18%, 12%, 120px) scale(1.16); }
 }
 
 @keyframes level3GridFlow {
   from { background-position: 0 0, 0 0; }
-  to { background-position: 54px 54px, 54px 54px; }
-}
-
-@keyframes level3Noise {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-2%, 1%, 0); }
+  to { background-position: 68px 68px, 68px 68px; }
 }
 
 @keyframes level3Scan {
-  from { transform: translateY(-18px); }
-  to { transform: translateY(18px); }
+  from { transform: translateY(-28px); }
+  to { transform: translateY(28px); }
 }
 
 @keyframes level3HeroImage {
   from { transform: scale(1.025) translate3d(0, 0, 0); }
-  to { transform: scale(1.07) translate3d(-1.2%, 0.8%, 0); }
+  to { transform: scale(1.055) translate3d(-0.9%, 0.6%, 0); }
 }
 
 @media (max-width: 760px) {
+  body:has(.level3-enabled) {
+    background-attachment: scroll;
+  }
+
   .level3-shader-stage {
-    opacity: 0.42;
+    opacity: 0.68;
   }
 
   .level3-shader-stage::after,
@@ -268,7 +299,16 @@
   }
 
   .level3-grid {
-    background-size: 72px 72px;
+    opacity: 0.16;
+    background-size: 88px 88px;
+  }
+
+  .level3-enabled .premium-card,
+  .level3-enabled .premium-project-card,
+  .level3-enabled .premium-service-card,
+  .level3-enabled .premium-process article,
+  .level3-enabled .premium-text-card {
+    backdrop-filter: none;
   }
 
   .level3-enabled .premium-card:hover,
@@ -276,7 +316,7 @@
   .level3-enabled .premium-service-card:hover,
   .level3-enabled .premium-process article:hover,
   .level3-enabled .premium-text-card:hover {
-    transform: translateY(-5px) scale(1.005) !important;
+    transform: translateY(-4px) scale(1.004) !important;
   }
 }
 
@@ -286,7 +326,6 @@
   .level3-shader-stage::after,
   .level3-orb,
   .level3-grid,
-  .level3-noise,
   .level3-scan,
   .level3-enabled .premium-hero-bg {
     animation: none !important;
