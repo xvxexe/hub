@@ -27,6 +27,17 @@ export const premiumServices = [
     deliverables: ['Demolizioni leggere', 'Ripristini', 'Assistenze murarie', 'Consegna pulita'],
   },
   {
+    id: 'demolizioni',
+    title: 'Demolizioni',
+    icon: 'demolizioni',
+    image: driveServiceImages.ristrutturazioniTecniche,
+    fallbackImage: serviceImages.ediliGenerali.src,
+    alt: 'Foto reale di demolizioni e preparazione cantiere',
+    summary: 'Demolizioni interne, rimozioni controllate, preparazione delle aree e gestione ordinata delle fasi preliminari prima delle nuove lavorazioni.',
+    benefits: ['Aree isolate e protette', 'Fasi coordinate con il resto del cantiere', 'Pulizia e preparazione per le lavorazioni successive'],
+    deliverables: ['Demolizioni interne', 'Rimozioni', 'Preparazione aree', 'Pulizia operativa'],
+  },
+  {
     id: 'finiture-interne',
     title: 'Finiture interne',
     icon: 'finiture-interne',
@@ -103,7 +114,7 @@ export const premiumValues = [
 export const serviceFaq = [
   {
     question: 'Gestite solo cartongesso o anche lavorazioni edili?',
-    answer: 'Gestiamo cartongesso, controsoffitti, finiture, manutenzioni, assistenze edili e supporto operativo. Il valore è coordinare queste lavorazioni con un metodo unico.',
+    answer: 'Gestiamo cartongesso, controsoffitti, finiture, demolizioni, manutenzioni, assistenze edili e supporto operativo. Il valore è coordinare queste lavorazioni con un metodo unico.',
   },
   {
     question: 'Lavorate con strutture già aperte al pubblico?',
@@ -119,7 +130,7 @@ export const serviceFaq = [
   },
   {
     question: 'Fornite documentazione fotografica?',
-    answer: 'La documentazione delle fasi è parte del metodo: aiuta il cliente a vedere avanzamento, problemi risolti e lavorazioni completate.',
+    answer: 'La documentazione delle fasi è parte del metodo: aiuta il cliente a vedere avanzamento, problemi risolti e lavorazioni completati.',
   },
 ]
 
