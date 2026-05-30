@@ -23,21 +23,21 @@ export function Services() {
   return (
     <>
       <SEO
-        title="Servizi per edilizia, cartongesso e finiture"
-        description="Servizi EuropaService: cartongesso, ristrutturazioni tecniche, finiture interne, gestione cantiere, manutenzioni e supporto operativo."
+        title="Servizi per edilizia, cartongesso, demolizioni e finiture"
+        description="Servizi EuropaService: cartongesso, demolizioni, ristrutturazioni tecniche, finiture interne, gestione cantiere, manutenzioni e supporto operativo."
       />
 
       <PremiumHero
         eyebrow="Servizi"
         title="Servizi coordinati per cantieri interni di qualità"
-        text="Cartongesso, finiture, manutenzioni e gestione operativa vengono organizzati dentro un unico metodo, così il cantiere resta leggibile e il risultato finale è coerente."
+        text="Cartongesso, demolizioni, finiture, manutenzioni e gestione operativa vengono organizzati dentro un unico metodo, così il cantiere resta leggibile e il risultato finale è coerente."
         image={servicesHeroImage}
         imageAlt="Foto reale di cantiere edile per servizi"
         primaryLabel="Richiedi preventivo"
         secondaryLabel="Guarda i cantieri"
         secondaryHref="#/cantieri"
         variant="page"
-        meta={['Cartongesso', 'Controsoffitti', 'Ristrutturazioni', 'Manutenzioni', 'Finiture']}
+        meta={['Cartongesso', 'Demolizioni', 'Controsoffitti', 'Ristrutturazioni', 'Manutenzioni', 'Finiture']}
       />
 
       <PremiumSection
@@ -66,13 +66,14 @@ export function Services() {
       <PremiumImageSplit
         eyebrow="Ristrutturazioni tecniche"
         title="Quando il cantiere è complesso serve una regia chiara."
-        text="Accessi, fornitori, pulizia, rumore e tempi di consegna sono variabili reali di ogni cantiere. La nostra gestione serve a trasformarle in un piano operativo leggibile."
+        text="Accessi, demolizioni, fornitori, pulizia, rumore e tempi di consegna sono variabili reali di ogni cantiere. La nostra gestione serve a trasformarle in un piano operativo leggibile."
         image={driveHeroImages.documentation}
         imageAlt="Foto reale di ristrutturazione tecnica"
         reverse
       >
         <div className="premium-tags">
           <small>Fasi programmate</small>
+          <small>Demolizioni</small>
           <small>Assistenze edili</small>
           <small>Ripristini</small>
           <small>Coordinamento</small>
