@@ -130,7 +130,7 @@ export const serviceFaq = [
   },
   {
     question: 'Fornite documentazione fotografica?',
-    answer: 'La documentazione delle fasi è parte del metodo: aiuta il cliente a vedere avanzamento, problemi risolti e lavorazioni completati.',
+    answer: 'La documentazione delle fasi è parte del metodo: aiuta il cliente a vedere avanzamento, problemi risolti e lavorazioni completate.',
   },
 ]
 
