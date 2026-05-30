@@ -1,3 +1,4 @@
+import { Level3ShaderStage, withLevel3Class } from './Level3ShaderStage'
 import { SafeImage } from './SafeImage'
 
 function scrollToQuoteForm() {
@@ -38,7 +39,8 @@ export function PremiumHero({
   const marqueeItems = [...meta, ...meta]
 
   return (
-    <section className={`premium-hero premium-hero-${variant}`}>
+    <section className={withLevel3Class(`premium-hero premium-hero-${variant}`)}>
+      <Level3ShaderStage variant="hero" />
       <SafeImage
         alt={imageAlt || title}
         className="premium-hero-bg"
@@ -72,7 +74,8 @@ export function PremiumHero({
 
 export function PremiumSection({ eyebrow, title, text, children, tone = 'default', action }) {
   return (
-    <section className={`premium-section premium-section-${tone}`}>
+    <section className={withLevel3Class(`premium-section premium-section-${tone}`)}>
+      <Level3ShaderStage variant={tone === 'soft' ? 'section-soft' : 'section'} />
       <div className="premium-section-heading premium-scroll-reveal">
         {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
         <h2>{title}</h2>
@@ -172,7 +175,8 @@ export function PremiumProcess({ steps }) {
 
 export function PremiumCTA({ title = 'Parliamo del tuo progetto', text = 'Raccontaci spazi, tempi e priorità. Ti aiutiamo a trasformare l’idea in un cantiere organizzato.' }) {
   return (
-    <section className="premium-final-cta premium-scroll-reveal">
+    <section className={withLevel3Class('premium-final-cta premium-scroll-reveal')}>
+      <Level3ShaderStage variant="cta" />
       <div>
         <p className="premium-eyebrow">Prossimo passo</p>
         <h2>{title}</h2>
@@ -227,7 +231,8 @@ export function PremiumTextCard({ title, text, eyebrow, items = [] }) {
 export function PremiumImageSplit({ eyebrow, title, text, image, imageAlt, reverse = false, children, fallbackImage }) {
   const fallback = fallbackImage || image
   return (
-    <section className={reverse ? 'premium-image-split premium-image-split-reverse' : 'premium-image-split'}>
+    <section className={withLevel3Class(reverse ? 'premium-image-split premium-image-split-reverse' : 'premium-image-split')}>
+      <Level3ShaderStage variant="split" />
       <SafeImage
         alt={imageAlt || title}
         className="premium-split-image premium-scroll-reveal"
