@@ -24,17 +24,17 @@ export function Home() {
     <>
       <SEO
         title="Costruiamo spazi di valore"
-        description="EuropaService realizza edilizia tecnica, cartongesso, ristrutturazioni, finiture interne e gestione cantieri con metodo professionale."
+        description="EuropaService realizza edilizia tecnica, cartongesso, demolizioni, ristrutturazioni, finiture interne e gestione cantieri con metodo professionale."
       />
 
       <PremiumHero
         eyebrow="EuropaService"
         title="Costruiamo spazi di valore"
-        text="Edilizia tecnica, cartongesso, ristrutturazioni e finiture interne per chi cerca un partner serio: organizzazione, presenza in cantiere, documentazione e un risultato finale pulito."
+        text="Edilizia tecnica, cartongesso, demolizioni, ristrutturazioni e finiture interne per chi cerca un partner serio: organizzazione, presenza in cantiere, documentazione e un risultato finale pulito."
         image={homeHeroImage}
         imageAlt="Foto reale di cantiere edile in lavorazione"
         variant="overlay"
-        meta={['Edilizia tecnica', 'Cartongesso', 'Finiture interne', 'Gestione cantieri']}
+        meta={['Edilizia tecnica', 'Cartongesso', 'Demolizioni', 'Finiture interne', 'Gestione cantieri']}
       />
 
       <PremiumImageSplit
