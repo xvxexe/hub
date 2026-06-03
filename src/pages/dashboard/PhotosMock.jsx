@@ -14,6 +14,7 @@ import {
 } from '../../components/InternalLayout'
 import { StatusBadge } from '../../components/StatusBadge'
 import { PhotoPlacementTool } from './PhotoPlacementTool'
+import '../../styles/dashboard-photo-placement-tool.css'
 
 export function PhotosMock({ session, store }) {
   const [filters, setFilters] = useState({
