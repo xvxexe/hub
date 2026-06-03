@@ -150,6 +150,7 @@
 .nav-cta[aria-current='page'] {
   border-color: #17324d !important;
   background: #17324d !important;
+  color: #ffffff !important;
   transform: translateY(-1px) !important;
   box-shadow: 0 16px 34px rgba(15, 23, 42, 0.2) !important;
 }
@@ -369,17 +370,23 @@
   grid-column: 1 / -1 !important;
   display: block !important;
   width: 100vw !important;
+  min-height: clamp(14rem, 24vw, 22rem) !important;
   margin-left: calc(50% - 50vw) !important;
   margin-right: calc(50% - 50vw) !important;
-  padding: clamp(2.2rem, 4vw, 3.4rem) max(1rem, calc((100vw - var(--shell-max)) / 2)) !important;
+  overflow: hidden !important;
+  padding: clamp(2.4rem, 5vw, 4.2rem) max(1rem, calc((100vw - var(--shell-max)) / 2)) !important;
   border: 0 !important;
-  background: linear-gradient(135deg, #111827 0%, #17324d 100%) !important;
+  background:
+    linear-gradient(90deg, rgba(9, 14, 23, 0.92) 0%, rgba(17, 24, 39, 0.76) 48%, rgba(23, 50, 77, 0.58) 100%),
+    linear-gradient(180deg, rgba(9, 14, 23, 0.18) 0%, rgba(9, 14, 23, 0.64) 100%),
+    url('https://drive.google.com/thumbnail?id=1Z_lvjLM5a0p5ac70zybaBkDw3E6WPqHF&sz=w1800') center / cover no-repeat #111827 !important;
   color: #ffffff !important;
 }
 
 .footer-cta-band > div {
   display: flex !important;
   width: min(100%, var(--shell-max)) !important;
+  min-height: clamp(9rem, 14vw, 14rem) !important;
   max-width: var(--shell-max) !important;
   margin-inline: auto !important;
   align-items: center !important;
@@ -393,6 +400,7 @@
   font-size: clamp(1.7rem, 3vw, 2.8rem) !important;
   line-height: 1.05 !important;
   letter-spacing: -0.035em !important;
+  text-wrap: balance !important;
 }
 
 .public-footer > .footer-brand,
@@ -509,8 +517,7 @@
   color: #a8b5c5 !important;
 }
 
-:root[data-public-theme='dark'] .public-footer,
-:root[data-public-theme='dark'] .public-footer > .footer-cta-band {
+:root[data-public-theme='dark'] .public-footer {
   background: linear-gradient(135deg, #050914 0%, #0f172a 58%, #0757b8 100%) !important;
   color: #f8fafc !important;
 }
@@ -554,15 +561,18 @@
   }
 
   .public-footer > .footer-cta-band {
+    min-height: 15rem !important;
     margin-left: -1rem !important;
     margin-right: -1rem !important;
     width: calc(100% + 2rem) !important;
     padding-inline: 1rem !important;
+    background-position: center !important;
   }
 
   .footer-cta-band > div {
     display: grid !important;
     justify-items: start !important;
+    min-height: 10rem !important;
   }
 
   .public-footer .button,
