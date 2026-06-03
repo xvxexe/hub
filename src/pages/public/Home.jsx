@@ -1,3 +1,4 @@
+import './public-services-carousel.css'
 import {
   PremiumCTA,
   PremiumHero,
@@ -18,6 +19,7 @@ import { driveHeroImages, drivePublicProjects } from '../../data/driveProjectPho
 
 const visibleProjects = drivePublicProjects.filter((project) => project.status !== 'Da verificare')
 const featuredProject = visibleProjects[0]
+const serviceCarouselItems = [...premiumServices, ...premiumServices]
 
 export function Home() {
   return (
@@ -57,10 +59,16 @@ export function Home() {
         title="Una struttura operativa per interni complessi"
         text="Ogni servizio è pensato per integrarsi con gli altri: meno dispersione, più controllo, più coerenza tra progetto, cantiere e risultato finale."
         tone="soft"
-        action={<a className="premium-button premium-button-secondary" href="#/servizi">Scopri tutti i servizi</a>}
+        action={<a className="premium-button premium-button-primary premium-services-cta" href="#/servizi">Scopri tutti i servizi</a>}
       >
-        <div className="premium-service-grid">
-          {premiumServices.map((service) => <PremiumServiceCard key={service.id} service={service} />)}
+        <div className="premium-services-carousel" aria-label="Servizi principali">
+          <div className="premium-services-carousel-track">
+            {serviceCarouselItems.map((service, index) => (
+              <div className="premium-services-carousel-item" key={`${service.id}-${index}`}>
+                <PremiumServiceCard service={service} />
+              </div>
+            ))}
+          </div>
         </div>
       </PremiumSection>
 
