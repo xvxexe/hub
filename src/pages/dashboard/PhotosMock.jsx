@@ -12,8 +12,8 @@ import {
   SideContextPanel,
   WorkspaceLayout,
 } from '../../components/InternalLayout'
-import { InternalIcon } from '../../components/InternalIcons'
 import { StatusBadge } from '../../components/StatusBadge'
+import { PhotoPlacementTool } from './PhotoPlacementTool'
 
 export function PhotosMock({ session, store }) {
   const [filters, setFilters] = useState({
@@ -70,6 +70,8 @@ export function PhotosMock({ session, store }) {
         <DataModeBadge>Dati reali Supabase</DataModeBadge>
         <a className="button button-primary button-small" href="#/dashboard/upload">Carica foto</a>
       </DashboardHeader>
+
+      {canPublish ? <PhotoPlacementTool store={store} /> : null}
 
       <FilterGrid ariaLabel="Filtri foto cantiere">
         <label>
