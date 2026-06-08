@@ -214,6 +214,23 @@
   height: 1.05rem;
 }
 
+.photo-placement-card-select {
+  min-width: 0;
+}
+
+.photo-placement-card-select select {
+  width: 100%;
+  min-height: 2.4rem;
+  padding: 0 0.75rem;
+}
+
+.photo-placement-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: end;
+}
+
 .photo-placement-meta {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -292,10 +309,151 @@
 
 .photo-placement-usage-details {
   display: grid;
-  gap: 0.45rem;
-  padding: 0.62rem 0.7rem;
-  border-radius: 0.9rem;
+  gap: 0.55rem;
+  padding: 0.72rem 0.8rem;
+  border-radius: 0.95rem;
   background: var(--surface-soft, rgba(15, 23, 42, 0.04));
+}
+
+.photo-placement-desired-panel {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.photo-placement-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.photo-placement-section-head h4 {
+  margin: 0;
+  font-size: 0.84rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted, #64748b);
+}
+
+.photo-placement-section-head .button {
+  flex-shrink: 0;
+}
+
+.photo-placement-usage-details h4 {
+  margin: 0;
+  font-size: 0.84rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted, #64748b);
+}
+
+.photo-placement-usage-item,
+.photo-placement-desired-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: end;
+}
+
+.photo-placement-usage-item {
+  padding: 0.6rem 0.65rem;
+  border-radius: 0.9rem;
+  background: var(--surface-raised, #ffffff);
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.1));
+}
+
+.photo-placement-usage-list {
+  list-style: none;
+  padding: 0;
+}
+
+.photo-placement-usage-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.photo-placement-usage-copy strong {
+  font-size: 0.88rem;
+  color: var(--text, #0f172a);
+}
+
+.photo-placement-usage-copy span,
+.photo-placement-usage-copy small {
+  min-width: 0;
+  color: var(--muted, #64748b);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.photo-placement-usage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.photo-placement-desired-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.photo-placement-desired-row {
+  padding: 0.65rem;
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.1));
+  border-radius: 0.95rem;
+  background: var(--surface-raised, #ffffff);
+}
+
+.photo-placement-desired-row label {
+  min-width: 0;
+}
+
+.photo-placement-desired-row select,
+.photo-placement-desired-row input {
+  width: 100%;
+  min-height: 2.35rem;
+  padding: 0 0.72rem;
+}
+
+.photo-placement-desired-note {
+  grid-column: 1 / -1;
+}
+
+.photo-placement-remove-row {
+  white-space: nowrap;
+}
+
+.photo-placement-usage-empty {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--muted, #64748b);
+}
+
+.photo-placement-preview-fallback,
+.photo-placement-preview-frame {
+  min-width: 0;
+}
+
+.photo-placement-title-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.photo-placement-title-badges h3 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.photo-placement-inline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.84rem;
+  color: var(--muted, #64748b);
 }
 
 .photo-placement-usage-details summary {
@@ -303,25 +461,6 @@
   font-size: 0.82rem;
   font-weight: 800;
   color: var(--text, #0f172a);
-}
-
-.photo-placement-usage-list {
-  margin: 0;
-  padding-left: 1rem;
-  display: grid;
-  gap: 0.35rem;
-  font-size: 0.82rem;
-  color: var(--muted, #64748b);
-}
-
-.photo-placement-usage-list strong {
-  color: var(--text, #0f172a);
-}
-
-.photo-placement-usage-empty {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--muted, #64748b);
 }
 
 .photo-placement-source-link {
@@ -375,7 +514,9 @@
 
   .photo-placement-row-main,
   .photo-placement-meta,
-  .photo-placement-compact-controls {
+  .photo-placement-compact-controls,
+  .photo-placement-usage-item,
+  .photo-placement-desired-row {
     grid-template-columns: 1fr;
   }
 
@@ -402,5 +543,15 @@
   .photo-placement-preview-frame,
   .photo-placement-preview-fallback {
     max-width: 100%;
+  }
+
+  .photo-placement-usage-actions {
+    justify-content: stretch;
+  }
+
+  .photo-placement-usage-actions .button,
+  .photo-placement-quick-actions .button,
+  .photo-placement-desired-row .button {
+    width: 100%;
   }
 }

@@ -7,7 +7,10 @@ import { StatusBadge } from '../../components/StatusBadge'
 import { placeholderImages } from '../../data/publicImages'
 import { siteImages } from '../../data/siteImages'
 
-const placementOptions = [
+const placementOptions = buildPlacementOptions()
+
+function buildPlacementOptions() {
+  const options = [
   'Home · Hero principale',
   'Home · Sezione approccio',
   'Home · Card servizi / carousel',
@@ -32,7 +35,11 @@ const placementOptions = [
   'Archivio interno',
   'Non usare sul sito',
   'Altro / DA VERIFICARE',
-]
+  ]
+
+  const usageOptions = siteImages.flatMap((photo) => (Array.isArray(photo.usageLocations) ? photo.usageLocations : []).map(usageToDestinationLabel))
+  return [...new Set([...options, ...usageOptions])]
+}
 
 const categoryOptions = [
   'Hero / immagine forte',
@@ -47,6 +54,31 @@ const categoryOptions = [
 
 const priorityOptions = ['Alta', 'Media', 'Bassa']
 const hiddenStorageKey = 'europaservice-hidden-site-photo-ids'
+
+function usageToDestinationLabel(usage) {
+  return [usage?.pagina, usage?.sezione].filter(Boolean).join(' · ') || 'Altro / DA VERIFICARE'
+}
+
+function makePlacementId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  return `placement-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function createDesiredPlacement(overrides = {}) {
+  return {
+    id: makePlacementId(),
+    destination: 'Altro / DA VERIFICARE',
+    action: 'aggiungi',
+    priority: 'Media',
+    note: '',
+    ...overrides,
+  }
+}
+
+function normalizeDesiredPlacements(desiredPlacements = []) {
+  if (!Array.isArray(desiredPlacements)) return []
+  return desiredPlacements.map((placement) => createDesiredPlacement(placement))
+}
 
 export function PhotoPlacementTool({ store }) {
   const photos = Array.isArray(store?.photos) ? store.photos : []
@@ -124,19 +156,26 @@ export function PhotoPlacementTool({ store }) {
 
   function patchPhoto(photoId, patch) {
     setCopyState('')
-    setSelection((current) => ({
-      ...current,
-      [photoId]: {
+    setSelection((current) => {
+      const currentDraft = current[photoId] ?? {}
+      const nextDraft = {
         selected: false,
-        placement: placementOptions[0],
-        customPosition: '',
+        desiredPlacements: [],
         category: categoryOptions[1],
-        priority: 'Media',
         note: '',
-        ...(current[photoId] ?? {}),
+        ...currentDraft,
         ...patch,
-      },
-    }))
+      }
+
+      nextDraft.desiredPlacements = normalizeDesiredPlacements(
+        patch.desiredPlacements ?? currentDraft.desiredPlacements ?? [],
+      )
+
+      return {
+        ...current,
+        [photoId]: nextDraft,
+      }
+    })
   }
 
   function discardPhoto(photoId) {
@@ -160,10 +199,8 @@ export function PhotoPlacementTool({ store }) {
       activeRows.forEach((photo) => {
         next[photo.id] = {
           selected: true,
-          placement: next[photo.id]?.placement ?? placementOptions[0],
-          customPosition: next[photo.id]?.customPosition ?? '',
+          desiredPlacements: normalizeDesiredPlacements(next[photo.id]?.desiredPlacements),
           category: next[photo.id]?.category ?? categoryOptions[1],
-          priority: next[photo.id]?.priority ?? 'Media',
           note: next[photo.id]?.note ?? '',
         }
       })
@@ -177,10 +214,8 @@ export function PhotoPlacementTool({ store }) {
       activeRows.forEach((photo) => {
         next[photo.id] = {
           selected: false,
-          placement: next[photo.id]?.placement ?? placementOptions[0],
-          customPosition: next[photo.id]?.customPosition ?? '',
+          desiredPlacements: normalizeDesiredPlacements(next[photo.id]?.desiredPlacements),
           category: next[photo.id]?.category ?? categoryOptions[1],
-          priority: next[photo.id]?.priority ?? 'Media',
           note: next[photo.id]?.note ?? '',
         }
       })
@@ -197,6 +232,134 @@ export function PhotoPlacementTool({ store }) {
   function resetDiscarded() {
     if (typeof window !== 'undefined' && !window.confirm('Vuoi davvero ripristinare tutte le foto scartate dal tool?')) return
     setHiddenIds([])
+  }
+
+  function addDesiredPlacement(photo, placementPatch = {}) {
+    setCopyState('')
+    setSelection((current) => {
+      const currentDraft = current[photo.id] ?? {}
+      const nextPlacements = normalizeDesiredPlacements(currentDraft.desiredPlacements)
+      nextPlacements.push(createDesiredPlacement(placementPatch))
+
+      return {
+        ...current,
+        [photo.id]: {
+          ...currentDraft,
+          selected: true,
+          desiredPlacements: nextPlacements,
+        },
+      }
+    })
+  }
+
+  function upsertDesiredPlacement(photo, placementPatch = {}) {
+    setCopyState('')
+    setSelection((current) => {
+      const currentDraft = current[photo.id] ?? {}
+      const nextPlacements = normalizeDesiredPlacements(currentDraft.desiredPlacements)
+      const draftPlacement = createDesiredPlacement(placementPatch)
+      const matchIndex = nextPlacements.findIndex((placement) => placement.destination === draftPlacement.destination && placement.action === draftPlacement.action)
+      if (matchIndex >= 0) {
+        nextPlacements[matchIndex] = {
+          ...nextPlacements[matchIndex],
+          ...draftPlacement,
+          id: nextPlacements[matchIndex].id,
+        }
+      } else {
+        nextPlacements.push(draftPlacement)
+      }
+
+      return {
+        ...current,
+        [photo.id]: {
+          ...currentDraft,
+          selected: true,
+          desiredPlacements: nextPlacements,
+        },
+      }
+    })
+  }
+
+  function updateDesiredPlacement(photo, placementId, patch) {
+    setCopyState('')
+    setSelection((current) => {
+      const currentDraft = current[photo.id] ?? {}
+      const nextPlacements = normalizeDesiredPlacements(currentDraft.desiredPlacements).map((placement) => (
+        placement.id === placementId ? { ...placement, ...patch } : placement
+      ))
+      return {
+        ...current,
+        [photo.id]: {
+          ...currentDraft,
+          desiredPlacements: nextPlacements,
+          selected: true,
+        },
+      }
+    })
+  }
+
+  function removeDesiredPlacement(photo, placementId) {
+    setCopyState('')
+    setSelection((current) => {
+      const currentDraft = current[photo.id] ?? {}
+      return {
+        ...current,
+        [photo.id]: {
+          ...currentDraft,
+          desiredPlacements: normalizeDesiredPlacements(currentDraft.desiredPlacements).filter((placement) => placement.id !== placementId),
+        },
+      }
+    })
+  }
+
+  function addDestinationRow(photo) {
+    addDesiredPlacement(photo, { destination: 'Altro / DA VERIFICARE', action: 'aggiungi', priority: 'Media', note: '' })
+  }
+
+  function applyUsageAction(photo, usage, action) {
+    const destination = usageToDestinationLabel(usage)
+    upsertDesiredPlacement(photo, {
+      destination,
+      action,
+      priority: action === 'rimuovi' ? 'Alta' : 'Media',
+      note: action === 'sostituisci' ? 'Sostituire in questa posizione' : '',
+    })
+  }
+
+  function applyAllCurrentUsages(photo, action) {
+    const usages = Array.isArray(photo.usageLocations) ? photo.usageLocations : []
+    if (!usages.length) {
+      addDestinationRow(photo)
+      return
+    }
+
+    usages.forEach((usage) => {
+      applyUsageAction(photo, usage, action)
+    })
+  }
+
+  function requestDoNotUse(photo) {
+    if (isUsedInSite(photo) && !window.confirm('Questa foto è già usata nel sito. Vuoi chiedere la rimozione da tutte le posizioni pubbliche?')) return
+
+    setCopyState('')
+    setSelection((current) => {
+      const currentDraft = current[photo.id] ?? {}
+      return {
+        ...current,
+        [photo.id]: {
+          ...currentDraft,
+          selected: true,
+          desiredPlacements: [
+            createDesiredPlacement({
+              destination: 'Non usare sul sito',
+              action: 'rimuovi',
+              priority: 'Alta',
+              note: 'Richiesta: rimuovere da tutte le posizioni pubbliche',
+            }),
+          ],
+        },
+      }
+    })
   }
 
   function markPreviewFailed(photoId) {
@@ -307,6 +470,12 @@ export function PhotoPlacementTool({ store }) {
                   onDiscard={discardPhoto}
                   onPatch={patchPhoto}
                   onPreviewError={markPreviewFailed}
+                  onAddDesiredPlacement={addDesiredPlacement}
+                  onUpdateDesiredPlacement={updateDesiredPlacement}
+                  onRemoveDesiredPlacement={removeDesiredPlacement}
+                  onUsageAction={applyUsageAction}
+                  onAllUsageAction={applyAllCurrentUsages}
+                  onDoNotUse={requestDoNotUse}
                 />
               ))}
             </div>
@@ -334,6 +503,12 @@ export function PhotoPlacementTool({ store }) {
                       onPatch={patchPhoto}
                       onPreviewError={markPreviewFailed}
                       onRestore={restorePhoto}
+                      onAddDesiredPlacement={addDesiredPlacement}
+                      onUpdateDesiredPlacement={updateDesiredPlacement}
+                      onRemoveDesiredPlacement={removeDesiredPlacement}
+                      onUsageAction={applyUsageAction}
+                      onAllUsageAction={applyAllCurrentUsages}
+                      onDoNotUse={requestDoNotUse}
                     />
                   ))}
                 </div>
@@ -378,12 +553,19 @@ function PhotoPlacementCard({
   onPatch,
   onPreviewError,
   onRestore,
+  onAddDesiredPlacement,
+  onUpdateDesiredPlacement,
+  onRemoveDesiredPlacement,
+  onUsageAction,
+  onAllUsageAction,
+  onDoNotUse,
 }) {
-  const placementValue = draft.placement ?? placementOptions[0]
-  const showCustomPosition = placementValue === 'Altro / DA VERIFICARE'
   const usageLocations = Array.isArray(photo.usageLocations) ? photo.usageLocations : []
   const usageCount = usageLocations.length
+  const desiredPlacements = normalizeDesiredPlacements(draft.desiredPlacements)
   const usedInSite = isUsedInSite(photo)
+  const hasManyUses = usageCount > 2
+  const hasTooManyDesiredPlacements = desiredPlacements.length > 3
   const previewStatus = isPreviewBroken ? 'Non disponibile' : 'OK'
 
   return (
@@ -399,6 +581,8 @@ function PhotoPlacementCard({
               <h3>{photo.fileName}</h3>
               <StatusBadge>{photo.origin}</StatusBadge>
               <StatusBadge>{usedInSite ? `Usata nel sito (${usageCount})` : 'Non usata nel sito'}</StatusBadge>
+              {hasManyUses ? <StatusBadge>Usata in più punti</StatusBadge> : null}
+              {hasTooManyDesiredPlacements ? <StatusBadge tone="amber">Rischio ripetizione visiva</StatusBadge> : null}
               <StatusBadge>{photo.pubblicabile === 'si' ? 'Pubblicabile' : displayPublicable(photo.pubblicabile)}</StatusBadge>
               <StatusBadge>{previewStatus === 'OK' ? 'Preview OK' : 'Preview non disponibile'}</StatusBadge>
               {isDiscarded ? <StatusBadge>Scartata</StatusBadge> : null}
@@ -410,34 +594,7 @@ function PhotoPlacementCard({
             </div>
           </div>
 
-          <div className="photo-placement-compact-controls">
-            <label>
-              Dove metterla
-              <select
-                value={placementValue}
-                onChange={(event) => onPatch(photo.id, { placement: event.target.value, selected: true })}
-              >
-                {placementOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-              </select>
-            </label>
-            <label>
-              Categoria
-              <select
-                value={draft.category ?? categoryOptions[1]}
-                onChange={(event) => onPatch(photo.id, { category: event.target.value, selected: true })}
-              >
-                {categoryOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-              </select>
-            </label>
-            <label>
-              Priorità
-              <select
-                value={draft.priority ?? 'Media'}
-                onChange={(event) => onPatch(photo.id, { priority: event.target.value, selected: true })}
-              >
-                {priorityOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-              </select>
-            </label>
+          <div className="photo-placement-quick-actions">
             <label className="photo-placement-check">
               <input
                 type="checkbox"
@@ -446,17 +603,31 @@ function PhotoPlacementCard({
               />
               Usa
             </label>
-            {showCustomPosition ? (
-              <label className="photo-placement-custom-position">
-                Posizione personalizzata
-                <input
-                  type="text"
-                  value={draft.customPosition ?? ''}
-                  onChange={(event) => onPatch(photo.id, { customPosition: event.target.value, selected: true })}
-                  placeholder="Es. Hero mobile, galleria, card 2..."
-                />
-              </label>
-            ) : null}
+            <label className="photo-placement-card-select">
+              Categoria
+              <select
+                value={draft.category ?? categoryOptions[1]}
+                onChange={(event) => onPatch(photo.id, { category: event.target.value, selected: true })}
+              >
+                {categoryOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </label>
+            {usedInSite ? (
+              <>
+                <button className="button button-secondary button-small" type="button" onClick={() => onAllUsageAction(photo, 'mantieni')}>Mantieni tutti</button>
+                <button className="button button-secondary button-small" type="button" onClick={() => onAllUsageAction(photo, 'rimuovi')}>Rimuovi da tutto</button>
+                <button className="button button-secondary button-small" type="button" onClick={() => onAddDesiredPlacement(photo, { action: 'aggiungi', priority: 'Media', note: '' })}>
+                  Usa anche in…
+                </button>
+                <button className="button button-secondary button-small" type="button" onClick={() => onDoNotUse(photo)}>
+                  Non usare sul sito
+                </button>
+              </>
+            ) : (
+              <button className="button button-secondary button-small" type="button" onClick={() => onAddDesiredPlacement(photo, { action: 'aggiungi', priority: 'Media', note: '' })}>
+                Aggiungi destinazione
+              </button>
+            )}
             {isDiscarded && onRestore ? (
               <button className="button button-primary button-small photo-placement-discard-button" type="button" onClick={() => onRestore(photo.id)}>
                 Ripristina
@@ -484,21 +655,99 @@ function PhotoPlacementCard({
             <div><dt>Stato preview</dt><dd>{previewStatus}</dd></div>
           </dl>
 
-          <details className="photo-placement-usage-details" open={usageCount > 0}>
-            <summary>Usata in {usageCount} posizioni</summary>
-            {usageCount > 0 ? (
+          <section className="photo-placement-usage-details">
+            <div className="photo-placement-section-head">
+              <h4>Utilizzi attuali</h4>
+              <StatusBadge>{usedInSite ? `Sì · ${usageCount}` : 'No'}</StatusBadge>
+            </div>
+
+            {usedInSite ? (
               <ul className="photo-placement-usage-list">
                 {usageLocations.map((usage, index) => (
-                  <li key={`${photo.id}-${usage.route}-${usage.pagina}-${usage.sezione}-${usage.componente}-${usage.slot}-${index}`}>
-                    <strong>{usage.pagina}</strong> · {usage.sezione} · {usage.componente} · {usage.slot}
-                    {usage.route ? <span> ({usage.route})</span> : null}
+                  <li className="photo-placement-usage-item" key={`${photo.id}-${usage.route}-${usage.pagina}-${usage.sezione}-${usage.componente}-${usage.slot}-${index}`}>
+                    <div className="photo-placement-usage-copy">
+                      <strong>{usage.pagina}</strong>
+                      <span>{usage.sezione}</span>
+                      <small>{usage.componente} · {usage.slot} · {usage.route}</small>
+                    </div>
+                    <div className="photo-placement-usage-actions">
+                      <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'mantieni')}>Mantieni</button>
+                      <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'rimuovi')}>Rimuovi</button>
+                      <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'sostituisci')}>Sostituisci</button>
+                    </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="photo-placement-usage-empty">Non ci sono utilizzi attuali nel sito pubblico.</p>
+              <p className="photo-placement-usage-empty">Non usata nel sito</p>
             )}
-          </details>
+          </section>
+
+          <section className="photo-placement-desired-panel">
+            <div className="photo-placement-section-head">
+              <h4>Destinazioni desiderate</h4>
+              <button className="button button-secondary button-small" type="button" onClick={() => onAddDesiredPlacement(photo, { action: 'aggiungi', priority: 'Media', note: '' })}>
+                + Aggiungi destinazione
+              </button>
+            </div>
+
+            {desiredPlacements.length > 0 ? (
+              <div className="photo-placement-desired-list">
+                {desiredPlacements.map((placement) => (
+                  <div className="photo-placement-desired-row" key={placement.id}>
+                    <label>
+                      Destinazione
+                      <select
+                        value={placement.destination}
+                        onChange={(event) => {
+                          const value = event.target.value
+                          if (value === 'Non usare sul sito' && usedInSite && !window.confirm('Questa foto è già usata nel sito. Vuoi chiedere la rimozione da tutte le posizioni pubbliche?')) return
+                          onUpdateDesiredPlacement(photo, placement.id, { destination: value, selected: true })
+                        }}
+                      >
+                        {placementOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                      </select>
+                    </label>
+                    <label>
+                      Azione
+                      <select
+                        value={placement.action}
+                        onChange={(event) => onUpdateDesiredPlacement(photo, placement.id, { action: event.target.value, selected: true })}
+                      >
+                        <option value="mantieni">Mantieni</option>
+                        <option value="aggiungi">Aggiungi</option>
+                        <option value="sostituisci">Sostituisci</option>
+                        <option value="rimuovi">Rimuovi</option>
+                      </select>
+                    </label>
+                    <label>
+                      Priorità
+                      <select
+                        value={placement.priority}
+                        onChange={(event) => onUpdateDesiredPlacement(photo, placement.id, { priority: event.target.value, selected: true })}
+                      >
+                        {priorityOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                      </select>
+                    </label>
+                    <label className="photo-placement-desired-note">
+                      Nota
+                      <input
+                        type="text"
+                        value={placement.note}
+                        onChange={(event) => onUpdateDesiredPlacement(photo, placement.id, { note: event.target.value, selected: true })}
+                        placeholder="Nota breve..."
+                      />
+                    </label>
+                    <button className="button button-secondary button-small photo-placement-remove-row" type="button" onClick={() => onRemoveDesiredPlacement(photo, placement.id)}>
+                      Rimuovi riga
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="photo-placement-usage-empty">Nessuna destinazione desiderata ancora impostata.</p>
+            )}
+          </section>
 
           {photo.sourceUrl ? (
             <a className="photo-placement-source-link" href={photo.sourceUrl} target="_blank" rel="noreferrer noopener">
@@ -507,7 +756,7 @@ function PhotoPlacementCard({
           ) : null}
 
           <label className="photo-placement-note">
-            Note
+            Note generali
             <textarea
               value={draft.note ?? ''}
               onChange={(event) => onPatch(photo.id, { note: event.target.value, selected: true })}
@@ -572,6 +821,11 @@ function buildExportText(photos, selection, previewErrors) {
     const draft = selection[photo.id] ?? {}
     const usageLocations = Array.isArray(photo.usageLocations) ? photo.usageLocations : []
     const usageCount = usageLocations.length
+    const desiredPlacements = normalizeDesiredPlacements(draft.desiredPlacements)
+    const duplicateWarning = usageCount > 2 ? 'Usata in più punti' : ''
+    const repeatWarning = desiredPlacements.length > 3 ? 'Rischio ripetizione visiva' : ''
+    const removalRequest = desiredPlacements.some((placement) => placement.destination === 'Non usare sul sito')
+      || (usedInSite(photo) && desiredPlacements.length > 0 && desiredPlacements.every((placement) => placement.action === 'rimuovi'))
     const previewStatus = isPreviewMissing(photo, previewErrors) ? 'Non disponibile' : 'OK'
 
     lines.push(
@@ -580,23 +834,36 @@ function buildExportText(photos, selection, previewErrors) {
       `- Origine: ${photo.origin || 'DA VERIFICARE'}`,
       `- Area attuale: ${photo.areaAttuale || photo.area || photo.cantiere || 'DA VERIFICARE'}`,
       `- Posizione attuale: ${photo.posizioneAttuale || photo.posizione || 'DA VERIFICARE'}`,
+      `- Source URL / Drive URL: ${photo.sourceUrl || 'non disponibile'}`,
       `- Usata nel sito: ${(photo.usataNelSito || usageCount > 0) ? 'Sì' : 'No'}`,
       `- Numero utilizzi attuali: ${usageCount}`,
-      `- Utilizzi attuali: ${formatUsageLocations(usageLocations).join(' | ') || 'Nessuno'}`,
-      `- Nuova destinazione: ${draft.placement || 'DA VERIFICARE'}`,
-      `- Categoria: ${draft.category || 'DA VERIFICARE'}`,
-      `- Priorità: ${draft.priority || 'DA VERIFICARE'}`,
-      `- Pubblicabile: ${displayPublicable(photo.pubblicabile)}`,
-      `- Stato preview: ${previewStatus}`,
-      `- Note: ${draft.note?.trim() || photo.note || 'Nessuna nota'}`,
+      `- Utilizzi attuali: ${usageLocations.length ? formatUsageLocations(usageLocations).join(' | ') : 'Nessuno'}`,
+      '- Piano richiesto:',
     )
 
-    if (draft.customPosition?.trim()) {
-      lines.push(`- Posizione custom: ${draft.customPosition.trim()}`)
+    if (desiredPlacements.length > 0) {
+      desiredPlacements.forEach((placement, placementIndex) => {
+        lines.push(
+          `  ${placementIndex + 1}. azione: ${placement.action}`,
+          `     destinazione: ${placement.destination}`,
+          `     priorità: ${placement.priority}`,
+          `     note: ${placement.note?.trim() || 'Nessuna nota'}`,
+        )
+      })
+    } else {
+      lines.push('  Nessuna destinazione ancora impostata.')
     }
 
-    if (photo.sourceUrl) {
-      lines.push(`- URL sorgente: ${photo.sourceUrl}`)
+    lines.push(
+      `- Categoria: ${draft.category || 'DA VERIFICARE'}`,
+      `- Pubblicabile: ${displayPublicable(photo.pubblicabile)}`,
+      `- Stato preview: ${previewStatus}`,
+      `- Note generali: ${draft.note?.trim() || photo.note || 'Nessuna nota'}`,
+      `- Warning doppioni: ${[duplicateWarning, repeatWarning].filter(Boolean).join(' · ') || 'Nessuno'}`,
+    )
+
+    if (removalRequest && (photo.usataNelSito || usageCount > 0)) {
+      lines.push('- Richiesta: rimuovere da tutte le posizioni pubbliche')
     }
 
     lines.push('')
