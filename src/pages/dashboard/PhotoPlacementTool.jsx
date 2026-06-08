@@ -80,7 +80,13 @@ function createDesiredPlacement(overrides = {}) {
 
 function normalizeDesiredPlacements(desiredPlacements = []) {
   if (!Array.isArray(desiredPlacements)) return []
-  return desiredPlacements.map((placement) => createDesiredPlacement(placement))
+  return desiredPlacements
+    .filter(Boolean)
+    .map((placement) => (
+      typeof placement === 'object' && placement !== null
+        ? createDesiredPlacement(placement)
+        : createDesiredPlacement()
+    ))
 }
 
 export function PhotoPlacementTool({ store }) {
@@ -97,6 +103,12 @@ export function PhotoPlacementTool({ store }) {
   const [copyState, setCopyState] = useState('')
   const metadataLoadedRef = useRef(new Set())
   const metadataInFlightRef = useRef(new Set())
+  const defaultPhotoMetadata = useMemo(() => ({
+    status: 'idle',
+    latitude: null,
+    longitude: null,
+    error: '',
+  }), [])
 
   const privatePhotos = useMemo(() => photos.map(normalizePrivatePhoto), [photos])
   const publicPhotos = useMemo(() => siteImages.map(normalizeSitePhoto), [])
@@ -232,6 +244,7 @@ export function PhotoPlacementTool({ store }) {
   }, [hiddenIds])
 
   function patchPhoto(photoId, patch) {
+    if (!photoId) return
     setCopyState('')
     setSelection((current) => {
       const currentDraft = current[photoId] ?? {}
@@ -256,6 +269,7 @@ export function PhotoPlacementTool({ store }) {
   }
 
   function discardPhoto(photoId) {
+    if (!photoId) return
     setHiddenIds((current) => (current.includes(photoId) ? current : [...current, photoId]))
     setSelection((current) => ({
       ...current,
@@ -267,6 +281,7 @@ export function PhotoPlacementTool({ store }) {
   }
 
   function restorePhoto(photoId) {
+    if (!photoId) return
     setHiddenIds((current) => current.filter((id) => id !== photoId))
   }
 
@@ -312,6 +327,7 @@ export function PhotoPlacementTool({ store }) {
   }
 
   function addDesiredPlacement(photo, placementPatch = {}) {
+    if (!photo?.id) return
     setCopyState('')
     setSelection((current) => {
       const currentDraft = current[photo.id] ?? {}
@@ -330,6 +346,7 @@ export function PhotoPlacementTool({ store }) {
   }
 
   function upsertDesiredPlacement(photo, placementPatch = {}) {
+    if (!photo?.id) return
     setCopyState('')
     setSelection((current) => {
       const currentDraft = current[photo.id] ?? {}
@@ -358,6 +375,7 @@ export function PhotoPlacementTool({ store }) {
   }
 
   function updateDesiredPlacement(photo, placementId, patch) {
+    if (!photo?.id || !placementId) return
     setCopyState('')
     setSelection((current) => {
       const currentDraft = current[photo.id] ?? {}
@@ -376,6 +394,7 @@ export function PhotoPlacementTool({ store }) {
   }
 
   function removeDesiredPlacement(photo, placementId) {
+    if (!photo?.id || !placementId) return
     setCopyState('')
     setSelection((current) => {
       const currentDraft = current[photo.id] ?? {}
@@ -390,10 +409,12 @@ export function PhotoPlacementTool({ store }) {
   }
 
   function addDestinationRow(photo) {
+    if (!photo?.id) return
     addDesiredPlacement(photo, { destination: 'Altro / DA VERIFICARE', action: 'aggiungi', priority: 'Media', note: '' })
   }
 
   function applyUsageAction(photo, usage, action) {
+    if (!photo?.id) return
     const destination = usageToDestinationLabel(usage)
     upsertDesiredPlacement(photo, {
       destination,
@@ -404,7 +425,8 @@ export function PhotoPlacementTool({ store }) {
   }
 
   function applyAllCurrentUsages(photo, action) {
-    const usages = Array.isArray(photo.usageLocations) ? photo.usageLocations : []
+    if (!photo?.id) return
+    const usages = Array.isArray(photo.usageLocations) ? photo.usageLocations.filter(Boolean) : []
     if (!usages.length) {
       addDestinationRow(photo)
       return
@@ -416,6 +438,7 @@ export function PhotoPlacementTool({ store }) {
   }
 
   function requestDoNotUse(photo) {
+    if (!photo?.id) return
     if (isUsedInSite(photo) && !window.confirm('Questa foto è già usata nel sito. Vuoi chiedere la rimozione da tutte le posizioni pubbliche?')) return
 
     setCopyState('')
@@ -440,6 +463,7 @@ export function PhotoPlacementTool({ store }) {
   }
 
   function markPreviewFailed(photoId) {
+    if (!photoId) return
     setPreviewErrors((current) => (current[photoId] ? current : { ...current, [photoId]: true }))
   }
 
@@ -644,90 +668,99 @@ function PhotoPlacementCard({
   onDoNotUse,
 }) {
   useEffect(() => {
-    onEnsureGpsMetadata(photo)
+    if (photo?.id) onEnsureGpsMetadata(photo)
   }, [onEnsureGpsMetadata, photo])
 
-  const usageLocations = Array.isArray(photo.usageLocations) ? photo.usageLocations : []
+  const safePhoto = photo && typeof photo === 'object' ? photo : {}
+  const safeDraft = draft && typeof draft === 'object' ? draft : {}
+  const metadataState = metadata && typeof metadata === 'object' ? metadata : null
+  const usageLocations = Array.isArray(safePhoto.usageLocations) ? safePhoto.usageLocations.filter(Boolean) : []
   const usageCount = usageLocations.length
-  const desiredPlacements = normalizeDesiredPlacements(draft.desiredPlacements)
-  const usedInSite = isUsedInSite(photo)
+  const desiredPlacements = normalizeDesiredPlacements(safeDraft.desiredPlacements)
+  const usedInSite = isUsedInSite(safePhoto)
   const hasManyUses = usageCount > 2
   const hasTooManyDesiredPlacements = desiredPlacements.length > 3
   const previewStatus = isPreviewBroken ? 'Non disponibile' : 'OK'
-  const gpsStatus = getGpsStatusLabel(metadata)
-  const gpsMapsUrl = metadata?.status === 'found' && Number.isFinite(metadata.latitude) && Number.isFinite(metadata.longitude)
-    ? buildMapsUrl(metadata.latitude, metadata.longitude)
+  const gpsStatus = getGpsStatusLabel(metadataState ?? defaultPhotoMetadata)
+  const gpsMapsUrl = metadataState?.status === 'found' && Number.isFinite(metadataState.latitude) && Number.isFinite(metadataState.longitude)
+    ? buildMapsUrl(metadataState.latitude, metadataState.longitude)
     : ''
 
   return (
-    <article className={composeCardClassName({ isSelected: Boolean(draft.selected), isDiscarded })} key={photo.id}>
+    <article className={composeCardClassName({ isSelected: Boolean(safeDraft.selected), isDiscarded })} key={safePhoto.id || 'photo-card'}>
       <div className="photo-placement-row-main">
         <div className="photo-placement-preview">
-          <PhotoPreview photo={photo} isPreviewBroken={isPreviewBroken} onPreviewError={onPreviewError} />
+          <PhotoPreview photo={safePhoto} isPreviewBroken={isPreviewBroken} onPreviewError={onPreviewError} />
         </div>
 
         <div className="photo-placement-main">
           <div className="photo-placement-topline">
             <div className="photo-placement-title-badges">
-              <h3>{photo.fileName}</h3>
-              <StatusBadge>{photo.origin}</StatusBadge>
+              <h3>{safePhoto.fileName}</h3>
+              <StatusBadge>{safePhoto.origin}</StatusBadge>
               <StatusBadge>{usedInSite ? `Usata nel sito (${usageCount})` : 'Non usata nel sito'}</StatusBadge>
               {hasManyUses ? <StatusBadge>Usata in più punti</StatusBadge> : null}
               {hasTooManyDesiredPlacements ? <StatusBadge tone="amber">Rischio ripetizione visiva</StatusBadge> : null}
-              <StatusBadge>{photo.pubblicabile === 'si' ? 'Pubblicabile' : displayPublicable(photo.pubblicabile)}</StatusBadge>
+              <StatusBadge>{safePhoto.pubblicabile === 'si' ? 'Pubblicabile' : displayPublicable(safePhoto.pubblicabile)}</StatusBadge>
               <StatusBadge>{previewStatus === 'OK' ? 'Preview OK' : 'Preview non disponibile'}</StatusBadge>
               {isDiscarded ? <StatusBadge>Scartata</StatusBadge> : null}
             </div>
             <div className="photo-placement-inline-meta">
-              <span>{photo.areaAttuale || photo.area || 'Area DA VERIFICARE'}</span>
-              <span>{photo.posizioneAttuale || photo.posizione || 'Posizione DA VERIFICARE'}</span>
-              <span>{photo.cantiere || 'Cantiere DA VERIFICARE'}</span>
+              <span>{safePhoto.areaAttuale || safePhoto.area || 'Area DA VERIFICARE'}</span>
+              <span>{safePhoto.posizioneAttuale || safePhoto.posizione || 'Posizione DA VERIFICARE'}</span>
+              <span>{safePhoto.cantiere || 'Cantiere DA VERIFICARE'}</span>
             </div>
           </div>
 
           <div className="photo-placement-quick-actions">
             <label className="photo-placement-check">
-              <input
-                type="checkbox"
-                checked={Boolean(draft.selected)}
-                onChange={(event) => onPatch(photo.id, { selected: event.target.checked })}
-              />
+                <input
+                  type="checkbox"
+                  checked={Boolean(safeDraft.selected)}
+                  onChange={(event) => {
+                    if (!safePhoto.id) return
+                    onPatch(safePhoto.id, { selected: event.target.checked })
+                  }}
+                />
               Usa
             </label>
             <label className="photo-placement-card-select">
               Categoria
               <select
-                value={draft.category ?? categoryOptions[1]}
-                onChange={(event) => onPatch(photo.id, { category: event.target.value, selected: true })}
+                value={safeDraft.category ?? categoryOptions[1]}
+                onChange={(event) => {
+                  if (!safePhoto.id) return
+                  onPatch(safePhoto.id, { category: event.target.value, selected: true })
+                }}
               >
                 {categoryOptions.map((option) => <option key={option} value={option}>{option}</option>)}
               </select>
             </label>
             {usedInSite ? (
               <>
-                <button className="button button-secondary button-small" type="button" onClick={() => onAllUsageAction(photo, 'mantieni')}>Mantieni tutti</button>
-                <button className="button button-secondary button-small" type="button" onClick={() => onAllUsageAction(photo, 'rimuovi')}>Rimuovi da tutto</button>
-                <button className="button button-secondary button-small" type="button" onClick={() => onAddDesiredPlacement(photo, { action: 'aggiungi', priority: 'Media', note: '' })}>
+                <button className="button button-secondary button-small" type="button" onClick={() => onAllUsageAction(safePhoto, 'mantieni')}>Mantieni tutti</button>
+                <button className="button button-secondary button-small" type="button" onClick={() => onAllUsageAction(safePhoto, 'rimuovi')}>Rimuovi da tutto</button>
+                <button className="button button-secondary button-small" type="button" onClick={() => onAddDesiredPlacement(safePhoto, { action: 'aggiungi', priority: 'Media', note: '' })}>
                   Usa anche in…
                 </button>
-                <button className="button button-secondary button-small" type="button" onClick={() => onDoNotUse(photo)}>
+                <button className="button button-secondary button-small" type="button" onClick={() => onDoNotUse(safePhoto)}>
                   Non usare sul sito
                 </button>
               </>
             ) : (
-              <button className="button button-secondary button-small" type="button" onClick={() => onAddDesiredPlacement(photo, { action: 'aggiungi', priority: 'Media', note: '' })}>
+              <button className="button button-secondary button-small" type="button" onClick={() => onAddDesiredPlacement(safePhoto, { action: 'aggiungi', priority: 'Media', note: '' })}>
                 Aggiungi destinazione
               </button>
             )}
             {isDiscarded && onRestore ? (
-              <button className="button button-primary button-small photo-placement-discard-button" type="button" onClick={() => onRestore(photo.id)}>
+              <button className="button button-primary button-small photo-placement-discard-button" type="button" onClick={() => onRestore(safePhoto.id)}>
                 Ripristina
               </button>
             ) : (
               <button
                 className="button button-secondary button-small photo-placement-discard-button"
                 type="button"
-                onClick={() => onDiscard(photo.id)}
+                onClick={() => onDiscard(safePhoto.id)}
               >
                 Scarta
               </button>
@@ -735,14 +768,14 @@ function PhotoPlacementCard({
           </div>
 
           <dl className="photo-placement-meta photo-placement-meta-site">
-            <div><dt>ID</dt><dd>{photo.id}</dd></div>
-            <div><dt>File</dt><dd>{photo.fileName || 'DA VERIFICARE'}</dd></div>
-            <div><dt>Origine</dt><dd>{photo.origin || 'DA VERIFICARE'}</dd></div>
-            <div><dt>Area attuale</dt><dd>{photo.areaAttuale || photo.area || photo.cantiere || 'DA VERIFICARE'}</dd></div>
-            <div><dt>Posizione attuale</dt><dd>{photo.posizioneAttuale || photo.posizione || 'DA VERIFICARE'}</dd></div>
+            <div><dt>ID</dt><dd>{safePhoto.id || 'DA VERIFICARE'}</dd></div>
+            <div><dt>File</dt><dd>{safePhoto.fileName || 'DA VERIFICARE'}</dd></div>
+            <div><dt>Origine</dt><dd>{safePhoto.origin || 'DA VERIFICARE'}</dd></div>
+            <div><dt>Area attuale</dt><dd>{safePhoto.areaAttuale || safePhoto.area || safePhoto.cantiere || 'DA VERIFICARE'}</dd></div>
+            <div><dt>Posizione attuale</dt><dd>{safePhoto.posizioneAttuale || safePhoto.posizione || 'DA VERIFICARE'}</dd></div>
             <div><dt>Usata nel sito</dt><dd>{usedInSite ? `Sì (${usageCount})` : 'No'}</dd></div>
-            <div><dt>Categoria</dt><dd>{photo.categoria || 'DA VERIFICARE'}</dd></div>
-            <div><dt>Pubblicabile</dt><dd>{displayPublicable(photo.pubblicabile)}</dd></div>
+            <div><dt>Categoria</dt><dd>{safePhoto.categoria || 'DA VERIFICARE'}</dd></div>
+            <div><dt>Pubblicabile</dt><dd>{displayPublicable(safePhoto.pubblicabile)}</dd></div>
             <div><dt>Stato preview</dt><dd>{previewStatus}</dd></div>
             <div><dt>GPS</dt><dd>{gpsStatus}</dd></div>
           </dl>
@@ -757,11 +790,11 @@ function PhotoPlacementCard({
               <p className="photo-placement-gps-message">Posizione: caricamento…</p>
             ) : null}
 
-            {metadata?.status === 'found' ? (
+            {metadataState?.status === 'found' ? (
               <div className="photo-placement-gps-found">
                 <div className="photo-placement-gps-coords">
-                  <span>Latitudine: {formatGpsCoordinate(metadata.latitude)}</span>
-                  <span>Longitudine: {formatGpsCoordinate(metadata.longitude)}</span>
+                  <span>Latitudine: {formatGpsCoordinate(metadataState.latitude)}</span>
+                  <span>Longitudine: {formatGpsCoordinate(metadataState.longitude)}</span>
                 </div>
                 <a className="photo-placement-source-link" href={gpsMapsUrl} target="_blank" rel="noreferrer noopener">
                   Apri Maps
@@ -769,12 +802,12 @@ function PhotoPlacementCard({
               </div>
             ) : null}
 
-            {metadata?.status === 'no-gps' ? (
+            {metadataState?.status === 'no-gps' ? (
               <p className="photo-placement-gps-message">GPS non presente nei metadata</p>
             ) : null}
 
-            {metadata?.status === 'error' ? (
-              <p className="photo-placement-gps-message is-error">{metadata.error || gpsUnreadableMessage}</p>
+            {metadataState?.status === 'error' ? (
+              <p className="photo-placement-gps-message is-error">{metadataState.error || gpsUnreadableMessage}</p>
             ) : null}
           </section>
 
@@ -794,11 +827,11 @@ function PhotoPlacementCard({
                       <small>{usage.componente} · {usage.slot} · {usage.route}</small>
                     </div>
                     <div className="photo-placement-usage-actions">
-                      <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'mantieni')}>Mantieni</button>
-                      <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'rimuovi')}>Rimuovi</button>
-                      <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'sostituisci')}>Sostituisci</button>
-                    </div>
-                  </li>
+                    <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'mantieni')}>Mantieni</button>
+                    <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'rimuovi')}>Rimuovi</button>
+                    <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'sostituisci')}>Sostituisci</button>
+                  </div>
+                </li>
                 ))}
               </ul>
             ) : (
@@ -821,11 +854,12 @@ function PhotoPlacementCard({
                     <label>
                       Destinazione
                       <select
-                        value={placement.destination}
+                        value={placement.destination || ''}
                         onChange={(event) => {
                           const value = event.target.value
+                          if (!safePhoto.id || !placement?.id) return
                           if (value === 'Non usare sul sito' && usedInSite && !window.confirm('Questa foto è già usata nel sito. Vuoi chiedere la rimozione da tutte le posizioni pubbliche?')) return
-                          onUpdateDesiredPlacement(photo, placement.id, { destination: value, selected: true })
+                          onUpdateDesiredPlacement(safePhoto, placement.id, { destination: value, selected: true })
                         }}
                       >
                         {placementOptions.map((option) => <option key={option} value={option}>{option}</option>)}
@@ -834,8 +868,11 @@ function PhotoPlacementCard({
                     <label>
                       Azione
                       <select
-                        value={placement.action}
-                        onChange={(event) => onUpdateDesiredPlacement(photo, placement.id, { action: event.target.value, selected: true })}
+                        value={placement.action || 'aggiungi'}
+                        onChange={(event) => {
+                          if (!safePhoto.id || !placement?.id) return
+                          onUpdateDesiredPlacement(safePhoto, placement.id, { action: event.target.value, selected: true })
+                        }}
                       >
                         <option value="mantieni">Mantieni</option>
                         <option value="aggiungi">Aggiungi</option>
@@ -846,8 +883,11 @@ function PhotoPlacementCard({
                     <label>
                       Priorità
                       <select
-                        value={placement.priority}
-                        onChange={(event) => onUpdateDesiredPlacement(photo, placement.id, { priority: event.target.value, selected: true })}
+                        value={placement.priority || 'Media'}
+                        onChange={(event) => {
+                          if (!safePhoto.id || !placement?.id) return
+                          onUpdateDesiredPlacement(safePhoto, placement.id, { priority: event.target.value, selected: true })
+                        }}
                       >
                         {priorityOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                       </select>
@@ -856,12 +896,15 @@ function PhotoPlacementCard({
                       Nota
                       <input
                         type="text"
-                        value={placement.note}
-                        onChange={(event) => onUpdateDesiredPlacement(photo, placement.id, { note: event.target.value, selected: true })}
+                        value={placement.note || ''}
+                        onChange={(event) => {
+                          if (!safePhoto.id || !placement?.id) return
+                          onUpdateDesiredPlacement(safePhoto, placement.id, { note: event.target.value, selected: true })
+                        }}
                         placeholder="Nota breve..."
                       />
                     </label>
-                    <button className="button button-secondary button-small photo-placement-remove-row" type="button" onClick={() => onRemoveDesiredPlacement(photo, placement.id)}>
+                    <button className="button button-secondary button-small photo-placement-remove-row" type="button" onClick={() => (safePhoto.id && placement?.id ? onRemoveDesiredPlacement(safePhoto, placement.id) : undefined)}>
                       Rimuovi riga
                     </button>
                   </div>
@@ -872,8 +915,8 @@ function PhotoPlacementCard({
             )}
           </section>
 
-          {photo.sourceUrl ? (
-            <a className="photo-placement-source-link" href={photo.sourceUrl} target="_blank" rel="noreferrer noopener">
+          {safePhoto.sourceUrl ? (
+            <a className="photo-placement-source-link" href={safePhoto.sourceUrl} target="_blank" rel="noreferrer noopener">
               Apri su Drive
             </a>
           ) : null}
@@ -881,8 +924,11 @@ function PhotoPlacementCard({
           <label className="photo-placement-note">
             Note generali
             <textarea
-              value={draft.note ?? ''}
-              onChange={(event) => onPatch(photo.id, { note: event.target.value, selected: true })}
+              value={safeDraft.note ?? ''}
+              onChange={(event) => {
+                if (!safePhoto.id) return
+                onPatch(safePhoto.id, { note: event.target.value, selected: true })
+              }}
               placeholder="Note rapide..."
               rows="2"
             />
@@ -894,13 +940,14 @@ function PhotoPlacementCard({
 }
 
 function PhotoPreview({ photo, isPreviewBroken, onPreviewError }) {
-  if (!photo.previewSrc || isPreviewBroken) {
-    if (photo.originKey === 'private') {
+  const safePhoto = photo && typeof photo === 'object' ? photo : {}
+  if (!safePhoto.previewSrc || isPreviewBroken) {
+    if (safePhoto.originKey === 'private') {
       return (
         <FilePreviewMock
-          fileName={photo.fileName}
-          storageBucket={photo.storageBucket}
-          storagePath={photo.storagePath}
+          fileName={safePhoto.fileName}
+          storageBucket={safePhoto.storageBucket}
+          storagePath={safePhoto.storagePath}
           type="image"
         />
       )
@@ -908,7 +955,7 @@ function PhotoPreview({ photo, isPreviewBroken, onPreviewError }) {
 
     return (
       <div className="photo-placement-preview-fallback">
-        <img alt={photo.fileName} className="photo-placement-site-image is-broken" src={placeholderImages.project.src} />
+        <img alt={safePhoto.fileName} className="photo-placement-site-image is-broken" src={placeholderImages.project.src} />
         <div className="photo-placement-preview-fallback-copy">
           <strong>Preview non disponibile</strong>
           <span>Il file non risponde più bene come thumbnail.</span>
@@ -920,12 +967,12 @@ function PhotoPreview({ photo, isPreviewBroken, onPreviewError }) {
   return (
     <div className="photo-placement-preview-frame">
       <img
-        alt={photo.fileName}
+        alt={safePhoto.fileName}
         className="photo-placement-site-image"
         loading="lazy"
-        onError={() => onPreviewError(photo.id)}
-        src={photo.previewSrc}
-        title={photo.fileName}
+        onError={() => onPreviewError(safePhoto.id)}
+        src={safePhoto.previewSrc}
+        title={safePhoto.fileName}
       />
     </div>
   )
