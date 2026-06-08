@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { gps as readGps } from 'exifr'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { EmptyState } from '../../components/EmptyState'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
@@ -6,6 +7,7 @@ import { InternalIcon } from '../../components/InternalIcons'
 import { StatusBadge } from '../../components/StatusBadge'
 import { placeholderImages } from '../../data/publicImages'
 import { siteImages } from '../../data/siteImages'
+import { createSignedFileUrl } from '../../lib/supabaseStorage'
 
 const placementOptions = buildPlacementOptions()
 
@@ -54,6 +56,7 @@ const categoryOptions = [
 
 const priorityOptions = ['Alta', 'Media', 'Bassa']
 const hiddenStorageKey = 'europaservice-hidden-site-photo-ids'
+const gpsUnreadableMessage = 'Metadata non leggibili dal browser: verificare accesso al file originale'
 
 function usageToDestinationLabel(usage) {
   return [usage?.pagina, usage?.sezione].filter(Boolean).join(' · ') || 'Altro / DA VERIFICARE'
@@ -90,7 +93,10 @@ export function PhotoPlacementTool({ store }) {
   const [selection, setSelection] = useState(() => ({}))
   const [hiddenIds, setHiddenIds] = useState(() => loadHiddenPhotoIds())
   const [previewErrors, setPreviewErrors] = useState(() => ({}))
+  const [photoMetadataById, setPhotoMetadataById] = useState(() => ({}))
   const [copyState, setCopyState] = useState('')
+  const metadataLoadedRef = useRef(new Set())
+  const metadataInFlightRef = useRef(new Set())
 
   const privatePhotos = useMemo(() => photos.map(normalizePrivatePhoto), [photos])
   const publicPhotos = useMemo(() => siteImages.map(normalizeSitePhoto), [])
@@ -147,7 +153,78 @@ export function PhotoPlacementTool({ store }) {
   const discardedRows = useMemo(() => filteredCatalog.filter((photo) => hiddenIdSet.has(photo.id)), [filteredCatalog, hiddenIdSet])
   const revealDiscarded = showDiscarded || usageFilter === 'discarded'
   const selectedRows = activeRows.filter((photo) => selection[photo.id]?.selected)
-  const exportText = buildExportText(selectedRows, selection, previewErrors)
+  const exportText = buildExportText(selectedRows, selection, previewErrors, photoMetadataById)
+
+  const ensureGpsMetadata = useCallback(async (photo) => {
+    if (!photo?.id) return
+    if (metadataLoadedRef.current.has(photo.id) || metadataInFlightRef.current.has(photo.id)) return
+
+    metadataInFlightRef.current.add(photo.id)
+    setPhotoMetadataById((current) => ({
+      ...current,
+      [photo.id]: {
+        status: 'loading',
+        latitude: null,
+        longitude: null,
+        error: '',
+      },
+    }))
+
+    try {
+      const originalUrl = await resolveOriginalPhotoUrl(photo)
+      if (!originalUrl) {
+        throw new Error(gpsUnreadableMessage)
+      }
+
+      const response = await fetch(originalUrl, { method: 'GET', mode: 'cors', credentials: 'omit' })
+      if (!response.ok) {
+        throw new Error(gpsUnreadableMessage)
+      }
+
+      const fileBlob = await response.blob()
+      const gps = await readGps(fileBlob)
+      if (Number.isFinite(gps?.latitude) && Number.isFinite(gps?.longitude)) {
+        const latitude = Number(gps.latitude)
+        const longitude = Number(gps.longitude)
+        metadataLoadedRef.current.add(photo.id)
+        setPhotoMetadataById((current) => ({
+          ...current,
+          [photo.id]: {
+            status: 'found',
+            latitude,
+            longitude,
+            error: '',
+          },
+        }))
+        return
+      }
+
+      metadataLoadedRef.current.add(photo.id)
+      setPhotoMetadataById((current) => ({
+        ...current,
+        [photo.id]: {
+          status: 'no-gps',
+          latitude: null,
+          longitude: null,
+          error: '',
+        },
+      }))
+    } catch (error) {
+      metadataLoadedRef.current.add(photo.id)
+      setPhotoMetadataById((current) => ({
+        ...current,
+        [photo.id]: {
+          status: 'error',
+          latitude: null,
+          longitude: null,
+          error: gpsUnreadableMessage,
+        },
+      }))
+      console.error('Errore lettura GPS foto', photo.id, error)
+    } finally {
+      metadataInFlightRef.current.delete(photo.id)
+    }
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -467,9 +544,11 @@ export function PhotoPlacementTool({ store }) {
                   draft={selection[photo.id] ?? {}}
                   isDiscarded={false}
                   isPreviewBroken={isPreviewMissing(photo, previewErrors)}
+                  metadata={photoMetadataById[photo.id]}
                   onDiscard={discardPhoto}
                   onPatch={patchPhoto}
                   onPreviewError={markPreviewFailed}
+                  onEnsureGpsMetadata={ensureGpsMetadata}
                   onAddDesiredPlacement={addDesiredPlacement}
                   onUpdateDesiredPlacement={updateDesiredPlacement}
                   onRemoveDesiredPlacement={removeDesiredPlacement}
@@ -499,10 +578,12 @@ export function PhotoPlacementTool({ store }) {
                       draft={selection[photo.id] ?? {}}
                       isDiscarded
                       isPreviewBroken={isPreviewMissing(photo, previewErrors)}
+                      metadata={photoMetadataById[photo.id]}
                       onDiscard={discardPhoto}
                       onPatch={patchPhoto}
                       onPreviewError={markPreviewFailed}
                       onRestore={restorePhoto}
+                      onEnsureGpsMetadata={ensureGpsMetadata}
                       onAddDesiredPlacement={addDesiredPlacement}
                       onUpdateDesiredPlacement={updateDesiredPlacement}
                       onRemoveDesiredPlacement={removeDesiredPlacement}
@@ -549,10 +630,12 @@ function PhotoPlacementCard({
   draft,
   isDiscarded,
   isPreviewBroken,
+  metadata,
   onDiscard,
   onPatch,
   onPreviewError,
   onRestore,
+  onEnsureGpsMetadata,
   onAddDesiredPlacement,
   onUpdateDesiredPlacement,
   onRemoveDesiredPlacement,
@@ -560,6 +643,10 @@ function PhotoPlacementCard({
   onAllUsageAction,
   onDoNotUse,
 }) {
+  useEffect(() => {
+    onEnsureGpsMetadata(photo)
+  }, [onEnsureGpsMetadata, photo])
+
   const usageLocations = Array.isArray(photo.usageLocations) ? photo.usageLocations : []
   const usageCount = usageLocations.length
   const desiredPlacements = normalizeDesiredPlacements(draft.desiredPlacements)
@@ -567,6 +654,10 @@ function PhotoPlacementCard({
   const hasManyUses = usageCount > 2
   const hasTooManyDesiredPlacements = desiredPlacements.length > 3
   const previewStatus = isPreviewBroken ? 'Non disponibile' : 'OK'
+  const gpsStatus = getGpsStatusLabel(metadata)
+  const gpsMapsUrl = metadata?.status === 'found' && Number.isFinite(metadata.latitude) && Number.isFinite(metadata.longitude)
+    ? buildMapsUrl(metadata.latitude, metadata.longitude)
+    : ''
 
   return (
     <article className={composeCardClassName({ isSelected: Boolean(draft.selected), isDiscarded })} key={photo.id}>
@@ -653,7 +744,39 @@ function PhotoPlacementCard({
             <div><dt>Categoria</dt><dd>{photo.categoria || 'DA VERIFICARE'}</dd></div>
             <div><dt>Pubblicabile</dt><dd>{displayPublicable(photo.pubblicabile)}</dd></div>
             <div><dt>Stato preview</dt><dd>{previewStatus}</dd></div>
+            <div><dt>GPS</dt><dd>{gpsStatus}</dd></div>
           </dl>
+
+          <section className="photo-placement-gps">
+            <div className="photo-placement-section-head">
+              <h4>Leggi posizione</h4>
+              <StatusBadge>{gpsStatus}</StatusBadge>
+            </div>
+
+            {metadata?.status === 'loading' || !metadata ? (
+              <p className="photo-placement-gps-message">Posizione: caricamento…</p>
+            ) : null}
+
+            {metadata?.status === 'found' ? (
+              <div className="photo-placement-gps-found">
+                <div className="photo-placement-gps-coords">
+                  <span>Latitudine: {formatGpsCoordinate(metadata.latitude)}</span>
+                  <span>Longitudine: {formatGpsCoordinate(metadata.longitude)}</span>
+                </div>
+                <a className="photo-placement-source-link" href={gpsMapsUrl} target="_blank" rel="noreferrer noopener">
+                  Apri Maps
+                </a>
+              </div>
+            ) : null}
+
+            {metadata?.status === 'no-gps' ? (
+              <p className="photo-placement-gps-message">GPS non presente nei metadata</p>
+            ) : null}
+
+            {metadata?.status === 'error' ? (
+              <p className="photo-placement-gps-message is-error">{metadata.error || gpsUnreadableMessage}</p>
+            ) : null}
+          </section>
 
           <section className="photo-placement-usage-details">
             <div className="photo-placement-section-head">
@@ -808,7 +931,7 @@ function PhotoPreview({ photo, isPreviewBroken, onPreviewError }) {
   )
 }
 
-function buildExportText(photos, selection, previewErrors) {
+function buildExportText(photos, selection, previewErrors, photoMetadataById) {
   if (!photos.length) return ''
 
   const lines = [
@@ -824,6 +947,13 @@ function buildExportText(photos, selection, previewErrors) {
     const desiredPlacements = normalizeDesiredPlacements(draft.desiredPlacements)
     const duplicateWarning = usageCount > 2 ? 'Usata in più punti' : ''
     const repeatWarning = desiredPlacements.length > 3 ? 'Rischio ripetizione visiva' : ''
+    const gpsMetadata = photoMetadataById?.[photo.id] ?? { status: 'loading', latitude: null, longitude: null, error: '' }
+    const gpsStatus = getGpsStatusLabel(gpsMetadata)
+    const gpsLatitude = Number.isFinite(gpsMetadata.latitude) ? gpsMetadata.latitude : 'null'
+    const gpsLongitude = Number.isFinite(gpsMetadata.longitude) ? gpsMetadata.longitude : 'null'
+    const mapsUrl = gpsMetadata.status === 'found' && Number.isFinite(gpsMetadata.latitude) && Number.isFinite(gpsMetadata.longitude)
+      ? buildMapsUrl(gpsMetadata.latitude, gpsMetadata.longitude)
+      : 'null'
     const removalRequest = desiredPlacements.some((placement) => placement.destination === 'Non usare sul sito')
       || (usedInSite(photo) && desiredPlacements.length > 0 && desiredPlacements.every((placement) => placement.action === 'rimuovi'))
     const previewStatus = isPreviewMissing(photo, previewErrors) ? 'Non disponibile' : 'OK'
@@ -858,6 +988,10 @@ function buildExportText(photos, selection, previewErrors) {
       `- Categoria: ${draft.category || 'DA VERIFICARE'}`,
       `- Pubblicabile: ${displayPublicable(photo.pubblicabile)}`,
       `- Stato preview: ${previewStatus}`,
+      `- gpsStatus: ${gpsStatus}`,
+      `- gpsLatitude: ${gpsLatitude}`,
+      `- gpsLongitude: ${gpsLongitude}`,
+      `- mapsUrl: ${mapsUrl}`,
       `- Note generali: ${draft.note?.trim() || photo.note || 'Nessuna nota'}`,
       `- Warning doppioni: ${[duplicateWarning, repeatWarning].filter(Boolean).join(' · ') || 'Nessuno'}`,
     )
@@ -905,6 +1039,30 @@ function normalizeSitePhoto(photo) {
     previewSrc: photo.src ?? null,
     usataNelSito: photo.usataNelSito ?? (Array.isArray(photo.usageLocations) && photo.usageLocations.length > 0),
   }
+}
+
+async function resolveOriginalPhotoUrl(photo) {
+  if (photo?.originKey === 'private') {
+    if (!photo.storageBucket || !photo.storagePath) return null
+    const { data, error } = await createSignedFileUrl({
+      bucket: photo.storageBucket,
+      storagePath: photo.storagePath,
+      expiresIn: 900,
+    })
+    if (error) return null
+    return data?.signedUrl ?? null
+  }
+
+  if (photo?.sourceUrl) {
+    const driveDownloadUrl = buildDriveDownloadUrl(photo.sourceUrl)
+    return driveDownloadUrl || photo.sourceUrl
+  }
+
+  if (photo?.src && !String(photo.src).includes('drive.google.com/thumbnail')) {
+    return photo.src
+  }
+
+  return null
 }
 
 function isUsedInSite(photo) {
@@ -967,4 +1125,28 @@ function displayPublicable(value) {
   if (value === 'no') return 'No'
   if (value === 'da valutare') return 'Da valutare'
   return value ?? 'DA VERIFICARE'
+}
+
+function buildDriveDownloadUrl(sourceUrl) {
+  if (!sourceUrl) return null
+  const match = String(sourceUrl).match(/\/file\/d\/([^/]+)\//) || String(sourceUrl).match(/[?&]id=([^&]+)/)
+  const fileId = match?.[1]
+  if (!fileId) return sourceUrl
+  return `https://drive.google.com/uc?export=download&id=${fileId}`
+}
+
+function buildMapsUrl(latitude, longitude) {
+  return `https://www.google.com/maps?q=${encodeURIComponent(`${latitude},${longitude}`)}`
+}
+
+function formatGpsCoordinate(value) {
+  if (!Number.isFinite(value)) return 'DA VERIFICARE'
+  return value.toFixed(6)
+}
+
+function getGpsStatusLabel(metadata) {
+  if (!metadata || metadata.status === 'idle' || metadata.status === 'loading') return 'Caricamento…'
+  if (metadata.status === 'found') return 'GPS trovato'
+  if (metadata.status === 'no-gps') return 'GPS non presente nei metadata'
+  return metadata.error || gpsUnreadableMessage
 }
