@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Component, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { gps as readGps } from 'exifr'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { EmptyState } from '../../components/EmptyState'
@@ -57,6 +57,12 @@ const categoryOptions = [
 const priorityOptions = ['Alta', 'Media', 'Bassa']
 const hiddenStorageKey = 'europaservice-hidden-site-photo-ids'
 const gpsUnreadableMessage = 'Metadata non leggibili dal browser: verificare accesso al file originale'
+const defaultPhotoMetadata = {
+  status: 'idle',
+  latitude: null,
+  longitude: null,
+  error: '',
+}
 
 function usageToDestinationLabel(usage) {
   return [usage?.pagina, usage?.sezione].filter(Boolean).join(' · ') || 'Altro / DA VERIFICARE'
@@ -82,11 +88,20 @@ function normalizeDesiredPlacements(desiredPlacements = []) {
   if (!Array.isArray(desiredPlacements)) return []
   return desiredPlacements
     .filter(Boolean)
-    .map((placement) => (
-      typeof placement === 'object' && placement !== null
-        ? createDesiredPlacement(placement)
-        : createDesiredPlacement()
-    ))
+    .map((placement) => normalizeDesiredPlacement(placement))
+    .filter(Boolean)
+}
+
+function normalizeDesiredPlacement(placement) {
+  if (!placement || typeof placement !== 'object') return createDesiredPlacement()
+
+  return {
+    id: typeof placement.id === 'string' && placement.id ? placement.id : makePlacementId(),
+    destination: typeof placement.destination === 'string' ? placement.destination : 'Altro / DA VERIFICARE',
+    action: ['mantieni', 'aggiungi', 'sostituisci', 'rimuovi'].includes(placement.action) ? placement.action : 'aggiungi',
+    priority: ['Alta', 'Media', 'Bassa'].includes(placement.priority) ? placement.priority : 'Media',
+    note: typeof placement.note === 'string' ? placement.note : '',
+  }
 }
 
 export function PhotoPlacementTool({ store }) {
@@ -103,12 +118,6 @@ export function PhotoPlacementTool({ store }) {
   const [copyState, setCopyState] = useState('')
   const metadataLoadedRef = useRef(new Set())
   const metadataInFlightRef = useRef(new Set())
-  const defaultPhotoMetadata = useMemo(() => ({
-    status: 'idle',
-    latitude: null,
-    longitude: null,
-    error: '',
-  }), [])
 
   const privatePhotos = useMemo(() => photos.map(normalizePrivatePhoto), [photos])
   const publicPhotos = useMemo(() => siteImages.map(normalizeSitePhoto), [])
@@ -332,7 +341,7 @@ export function PhotoPlacementTool({ store }) {
     setSelection((current) => {
       const currentDraft = current[photo.id] ?? {}
       const nextPlacements = normalizeDesiredPlacements(currentDraft.desiredPlacements)
-      nextPlacements.push(createDesiredPlacement(placementPatch))
+      nextPlacements.push(normalizeDesiredPlacement(placementPatch))
 
       return {
         ...current,
@@ -351,7 +360,7 @@ export function PhotoPlacementTool({ store }) {
     setSelection((current) => {
       const currentDraft = current[photo.id] ?? {}
       const nextPlacements = normalizeDesiredPlacements(currentDraft.desiredPlacements)
-      const draftPlacement = createDesiredPlacement(placementPatch)
+      const draftPlacement = normalizeDesiredPlacement(placementPatch)
       const matchIndex = nextPlacements.findIndex((placement) => placement.destination === draftPlacement.destination && placement.action === draftPlacement.action)
       if (matchIndex >= 0) {
         nextPlacements[matchIndex] = {
@@ -379,9 +388,14 @@ export function PhotoPlacementTool({ store }) {
     setCopyState('')
     setSelection((current) => {
       const currentDraft = current[photo.id] ?? {}
-      const nextPlacements = normalizeDesiredPlacements(currentDraft.desiredPlacements).map((placement) => (
-        placement.id === placementId ? { ...placement, ...patch } : placement
-      ))
+      const nextPlacements = Array.isArray(currentDraft.desiredPlacements)
+        ? currentDraft.desiredPlacements
+            .filter(Boolean)
+            .map((placement) => {
+              const safePlacement = normalizeDesiredPlacement(placement)
+              return safePlacement.id === placementId ? normalizeDesiredPlacement({ ...safePlacement, ...patch, id: safePlacement.id }) : safePlacement
+            })
+        : []
       return {
         ...current,
         [photo.id]: {
@@ -398,11 +412,14 @@ export function PhotoPlacementTool({ store }) {
     setCopyState('')
     setSelection((current) => {
       const currentDraft = current[photo.id] ?? {}
+      const nextPlacements = Array.isArray(currentDraft.desiredPlacements)
+        ? currentDraft.desiredPlacements.filter((placement) => placement && placement.id !== placementId)
+        : []
       return {
         ...current,
         [photo.id]: {
           ...currentDraft,
-          desiredPlacements: normalizeDesiredPlacements(currentDraft.desiredPlacements).filter((placement) => placement.id !== placementId),
+          desiredPlacements: nextPlacements,
         },
       }
     })
@@ -479,7 +496,8 @@ export function PhotoPlacementTool({ store }) {
   }
 
   return (
-    <>
+    <PhotoPlacementErrorBoundary>
+      <>
       <DashboardHeader
         eyebrow="Tool sito pubblico"
         title="Selezione foto per sito"
@@ -645,7 +663,8 @@ export function PhotoPlacementTool({ store }) {
           />
         </aside>
       </div>
-    </>
+      </>
+    </PhotoPlacementErrorBoundary>
   )
 }
 
@@ -786,7 +805,7 @@ function PhotoPlacementCard({
               <StatusBadge>{gpsStatus}</StatusBadge>
             </div>
 
-            {metadata?.status === 'loading' || !metadata ? (
+            {metadataState?.status === 'loading' || !metadataState ? (
               <p className="photo-placement-gps-message">Posizione: caricamento…</p>
             ) : null}
 
@@ -820,18 +839,18 @@ function PhotoPlacementCard({
             {usedInSite ? (
               <ul className="photo-placement-usage-list">
                 {usageLocations.map((usage, index) => (
-                  <li className="photo-placement-usage-item" key={`${photo.id}-${usage.route}-${usage.pagina}-${usage.sezione}-${usage.componente}-${usage.slot}-${index}`}>
+                  <li className="photo-placement-usage-item" key={`${safePhoto.id}-${usage.route}-${usage.pagina}-${usage.sezione}-${usage.componente}-${usage.slot}-${index}`}>
                     <div className="photo-placement-usage-copy">
-                      <strong>{usage.pagina}</strong>
-                      <span>{usage.sezione}</span>
-                      <small>{usage.componente} · {usage.slot} · {usage.route}</small>
+                      <strong>{usage?.pagina || 'DA VERIFICARE'}</strong>
+                      <span>{usage?.sezione || 'DA VERIFICARE'}</span>
+                      <small>{usage?.componente || 'DA VERIFICARE'} · {usage?.slot || 'DA VERIFICARE'} · {usage?.route || 'DA VERIFICARE'}</small>
                     </div>
                     <div className="photo-placement-usage-actions">
-                    <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'mantieni')}>Mantieni</button>
-                    <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'rimuovi')}>Rimuovi</button>
-                    <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(photo, usage, 'sostituisci')}>Sostituisci</button>
-                  </div>
-                </li>
+                      <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(safePhoto, usage, 'mantieni')}>Mantieni</button>
+                      <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(safePhoto, usage, 'rimuovi')}>Rimuovi</button>
+                      <button className="button button-secondary button-small" type="button" onClick={() => onUsageAction(safePhoto, usage, 'sostituisci')}>Sostituisci</button>
+                    </div>
+                  </li>
                 ))}
               </ul>
             ) : (
@@ -842,7 +861,7 @@ function PhotoPlacementCard({
           <section className="photo-placement-desired-panel">
             <div className="photo-placement-section-head">
               <h4>Destinazioni desiderate</h4>
-              <button className="button button-secondary button-small" type="button" onClick={() => onAddDesiredPlacement(photo, { action: 'aggiungi', priority: 'Media', note: '' })}>
+              <button className="button button-secondary button-small" type="button" onClick={() => onAddDesiredPlacement(safePhoto, { action: 'aggiungi', priority: 'Media', note: '' })}>
                 + Aggiungi destinazione
               </button>
             </div>
@@ -1001,8 +1020,9 @@ function buildExportText(photos, selection, previewErrors, photoMetadataById) {
     const mapsUrl = gpsMetadata.status === 'found' && Number.isFinite(gpsMetadata.latitude) && Number.isFinite(gpsMetadata.longitude)
       ? buildMapsUrl(gpsMetadata.latitude, gpsMetadata.longitude)
       : 'null'
+    const isUsedInSite = photo.usataNelSito || usageCount > 0
     const removalRequest = desiredPlacements.some((placement) => placement.destination === 'Non usare sul sito')
-      || (usedInSite(photo) && desiredPlacements.length > 0 && desiredPlacements.every((placement) => placement.action === 'rimuovi'))
+      || (isUsedInSite && desiredPlacements.length > 0 && desiredPlacements.every((placement) => placement.action === 'rimuovi'))
     const previewStatus = isPreviewMissing(photo, previewErrors) ? 'Non disponibile' : 'OK'
 
     lines.push(
@@ -1172,6 +1192,36 @@ function displayPublicable(value) {
   if (value === 'no') return 'No'
   if (value === 'da valutare') return 'Da valutare'
   return value ?? 'DA VERIFICARE'
+}
+
+class PhotoPlacementErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error) {
+    console.error('PhotoPlacementTool crashed', error)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <section className="internal-panel photo-placement-error">
+          <div className="section-heading">
+            <h2>Tool foto non disponibile</h2>
+            <p>Si è verificato un errore nel pannello foto. Ricarica la pagina per riprovare.</p>
+          </div>
+        </section>
+      )
+    }
+
+    return this.props.children
+  }
 }
 
 function buildDriveDownloadUrl(sourceUrl) {
