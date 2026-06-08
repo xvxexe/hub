@@ -1,35 +1,110 @@
-import { heroImages } from './publicImages'
-import { allDriveProjectPhotos, driveHeroImages, driveServiceImages } from './driveProjectPhotos'
+import { heroImages, serviceImages } from './publicImages'
+import { allDriveProjectPhotos, driveHeroImages, drivePublicProjects, driveServiceImages } from './driveProjectPhotos'
 
-function makeImageEntry({
+const drivePhotoBySrc = new Map(allDriveProjectPhotos.map((photo) => [photo.src, photo]))
+
+function usageLocation({ route, pagina, sezione, componente, slot }) {
+  return { route, pagina, sezione, componente, slot }
+}
+
+function uniqueUsageLocations(locations = []) {
+  const seen = new Set()
+  return locations.filter((location) => {
+    const key = `${location.route}|${location.pagina}|${location.sezione}|${location.componente}|${location.slot}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function baseEntry({
   id,
   fileName,
   src,
-  area,
-  posizione,
-  categoria,
-  cantiere,
-  usataNelSito = true,
+  sourceUrl = null,
+  origine = 'Sito pubblico',
+  cantiere = 'DA VERIFICARE',
+  areaAttuale = 'DA VERIFICARE',
+  posizioneAttuale = 'DA VERIFICARE',
+  categoria = 'DA VERIFICARE',
   pubblicabile = 'si',
+  usataNelSito = false,
+  usageLocations = [],
   note = '',
 }) {
   return {
     id,
     fileName,
     src,
-    area,
-    posizione,
-    categoria,
+    sourceUrl,
+    origine,
     cantiere,
-    usataNelSito,
+    areaAttuale,
+    posizioneAttuale,
+    categoria,
     pubblicabile,
+    usataNelSito,
+    usageLocations: uniqueUsageLocations(usageLocations),
     note,
-    origin: 'Sito pubblico',
   }
 }
 
-function joinUnique(values) {
-  return [...new Set(values.filter(Boolean))].join(' · ')
+function fromDriveSrc({
+  id,
+  src,
+  fileName,
+  cantiere,
+  areaAttuale,
+  posizioneAttuale,
+  categoria,
+  pubblicabile = 'si',
+  usataNelSito = true,
+  usageLocations = [],
+  note = '',
+}) {
+  const driveMeta = drivePhotoBySrc.get(src)
+  return baseEntry({
+    id,
+    fileName: fileName || driveMeta?.fileName || 'DA VERIFICARE',
+    src,
+    sourceUrl: driveMeta?.sourceUrl ?? null,
+    cantiere,
+    areaAttuale,
+    posizioneAttuale,
+    categoria,
+    pubblicabile,
+    usataNelSito,
+    usageLocations,
+    note,
+  })
+}
+
+function fromPublicAsset({
+  id,
+  fileName,
+  src,
+  cantiere,
+  areaAttuale,
+  posizioneAttuale,
+  categoria,
+  pubblicabile = 'si',
+  usataNelSito = true,
+  usageLocations = [],
+  note = '',
+}) {
+  return baseEntry({
+    id,
+    fileName,
+    src,
+    cantiere,
+    areaAttuale,
+    posizioneAttuale,
+    categoria,
+    pubblicabile,
+    usataNelSito,
+    usageLocations,
+    note,
+  })
 }
 
 function mergeEntries(entries) {
@@ -38,258 +113,474 @@ function mergeEntries(entries) {
   entries.forEach((entry) => {
     const existing = map.get(entry.src)
     if (!existing) {
-      map.set(entry.src, { ...entry })
+      map.set(entry.src, { ...entry, usageLocations: [...entry.usageLocations] })
       return
     }
 
-    existing.area = joinUnique([existing.area, entry.area])
-    existing.posizione = joinUnique([existing.posizione, entry.posizione])
-    existing.categoria = joinUnique([existing.categoria, entry.categoria])
+    existing.fileName = existing.fileName || entry.fileName
+    existing.sourceUrl = existing.sourceUrl || entry.sourceUrl
+    existing.origine = existing.origine || entry.origine
     existing.cantiere = joinUnique([existing.cantiere, entry.cantiere])
-    existing.note = joinUnique([existing.note, entry.note])
+    existing.areaAttuale = joinUnique([existing.areaAttuale, entry.areaAttuale])
+    existing.posizioneAttuale = joinUnique([existing.posizioneAttuale, entry.posizioneAttuale])
+    existing.categoria = joinUnique([existing.categoria, entry.categoria])
+    existing.pubblicabile = existing.pubblicabile || entry.pubblicabile
     existing.usataNelSito = existing.usataNelSito || entry.usataNelSito
-    if (existing.pubblicabile !== 'si' && entry.pubblicabile === 'si') {
-      existing.pubblicabile = entry.pubblicabile
-    }
+    existing.usageLocations = uniqueUsageLocations([...existing.usageLocations, ...entry.usageLocations])
+    existing.note = joinUnique([existing.note, entry.note])
   })
 
   return [...map.values()]
 }
 
-function publicHeroFallbackEntries() {
+function joinUnique(values) {
+  return [...new Set(values.filter((value) => Boolean(value) && value !== 'DA VERIFICARE'))].join(' · ') || 'DA VERIFICARE'
+}
+
+function driveProjectUsage(projectId, section, slot, component = 'PremiumProjectCard') {
   return [
-    makeImageEntry({
-      id: 'public-hero-home-fallback',
-      fileName: 'home-hero-unsplash.jpg',
-      src: heroImages.home.src,
-      area: 'Home',
-      posizione: 'Hero principale',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'DA VERIFICARE',
-      note: 'Fallback pubblico usato se il Drive non risponde.',
-    }),
-    makeImageEntry({
-      id: 'public-hero-services-fallback',
-      fileName: 'services-hero-unsplash.jpg',
-      src: heroImages.services.src,
-      area: 'Servizi',
-      posizione: 'Hero principale',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'DA VERIFICARE',
-      note: 'Fallback pubblico usato se il Drive non risponde.',
-    }),
-    makeImageEntry({
-      id: 'public-hero-projects-fallback',
-      fileName: 'projects-hero-unsplash.jpg',
-      src: heroImages.projects.src,
-      area: 'Cantieri',
-      posizione: 'Hero principale',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'DA VERIFICARE',
-      note: 'Fallback pubblico usato se il Drive non risponde.',
-    }),
-    makeImageEntry({
-      id: 'public-hero-about-fallback',
-      fileName: 'about-hero-unsplash.jpg',
-      src: heroImages.about.src,
-      area: 'Chi siamo',
-      posizione: 'Hero principale',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'DA VERIFICARE',
-      note: 'Fallback pubblico usato se il Drive non risponde.',
-    }),
-    makeImageEntry({
-      id: 'public-hero-contact-fallback',
-      fileName: 'contact-hero-unsplash.jpg',
-      src: heroImages.contact.src,
-      area: 'Contatti',
-      posizione: 'Hero principale',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'DA VERIFICARE',
-      note: 'Fallback pubblico usato anche per le pagine Contatti e Settori.',
-    }),
-    makeImageEntry({
-      id: 'public-hero-case-study-fallback',
-      fileName: 'case-study-hero-unsplash.jpg',
-      src: heroImages.caseStudy.src,
-      area: 'Cantieri',
-      posizione: 'Hero dettaglio',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'DA VERIFICARE',
-      note: 'Fallback pubblico usato se il Drive non risponde.',
-    }),
+    usageLocation({ route: '#/', pagina: 'Home', sezione: 'Portfolio / cantieri in evidenza', componente: component, slot }),
+    usageLocation({ route: '#/cantieri', pagina: 'Cantieri', sezione: 'Cantiere in evidenza', componente: component, slot }),
+    usageLocation({ route: '#/cantieri', pagina: 'Cantieri', sezione: 'Griglia case study', componente: component, slot }),
+    usageLocation({ route: `#/cantieri/${projectId}`, pagina: 'Dettaglio cantiere', sezione: section, componente: 'PremiumHero', slot }),
   ]
 }
 
-function driveHeroEntries() {
+function driveProjectSplitUsage(projectId, section, component = 'PremiumImageSplit') {
   return [
-    makeImageEntry({
-      id: 'drive-hero-home',
-      fileName: 'IMG_8305.JPG',
-      src: driveHeroImages.home,
-      area: 'Home',
-      posizione: 'Hero principale',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'Capri Palace',
-      note: 'Usata come immagine hero nella Home.',
-    }),
-    makeImageEntry({
-      id: 'drive-hero-services',
-      fileName: 'IMG_7327.JPG',
-      src: driveHeroImages.services,
-      area: 'Servizi',
-      posizione: 'Hero principale',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'Barcelò Roma',
-      note: 'Usata come immagine hero nella pagina Servizi e come immagine di metodo.',
-    }),
-    makeImageEntry({
-      id: 'drive-hero-projects',
-      fileName: 'IMG_7940.JPG',
-      src: driveHeroImages.projects,
-      area: 'Cantieri',
-      posizione: 'Hero principale',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'Capri Palace',
-      note: 'Usata come hero della pagina Cantieri.',
-    }),
-    makeImageEntry({
-      id: 'drive-hero-about',
-      fileName: 'IMG_8330.JPG',
-      src: driveHeroImages.about,
-      area: 'Chi siamo',
-      posizione: 'Hero principale',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'Capri Palace',
-      note: 'Usata come hero della pagina Chi siamo.',
-    }),
-    makeImageEntry({
-      id: 'drive-hero-contact',
-      fileName: 'IMG_7350.JPG',
-      src: driveHeroImages.contact,
-      area: 'Contatti',
-      posizione: 'Hero principale',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'Barcelò Roma',
-      note: 'Usata come hero della pagina Contatti e come hero di supporto in altre sezioni.',
-    }),
-    makeImageEntry({
-      id: 'drive-hero-case-study',
-      fileName: 'IMG_8326.JPG',
-      src: driveHeroImages.caseStudy,
-      area: 'Cantieri',
-      posizione: 'Hero dettaglio',
-      categoria: 'Hero / immagine forte',
-      cantiere: 'Capri Palace',
-      note: 'Usata come hero del dettaglio cantiere.',
-    }),
-    makeImageEntry({
-      id: 'drive-hero-method',
-      fileName: 'IMG_7327.JPG',
-      src: driveHeroImages.method,
-      area: 'Home · Servizi · Chi siamo',
-      posizione: 'Sezione approccio / metodo',
-      categoria: 'Lavorazione in corso',
-      cantiere: 'Barcelò Roma',
-      note: 'Usata nelle sezioni sul metodo operativo.',
-    }),
-    makeImageEntry({
-      id: 'drive-hero-documentation',
-      fileName: 'IMG_8413.JPG',
-      src: driveHeroImages.documentation,
-      area: 'Home · Servizi',
-      posizione: 'Sezione documentazione / controllo operativo',
-      categoria: 'Dettaglio tecnico',
-      cantiere: 'Capri Palace',
-      note: 'Usata nelle sezioni dedicate a documentazione e controllo operativo.',
-    }),
+    usageLocation({ route: `#/cantieri/${projectId}`, pagina: 'Dettaglio cantiere', sezione: section, componente, slot: 'image' }),
   ]
 }
 
-function driveServiceEntries() {
+function galleryUsage(projectId) {
   return [
-    makeImageEntry({
-      id: 'drive-service-cartongesso',
-      fileName: 'IMG_7328.JPG',
-      src: driveServiceImages.cartongesso,
-      area: 'Servizi',
-      posizione: 'Card / sezione cartongesso',
-      categoria: 'Lavorazione in corso',
-      cantiere: 'Barcelò Roma',
-      note: 'Immagine usata per il servizio cartongesso.',
-    }),
-    makeImageEntry({
-      id: 'drive-service-ristrutturazioni-tecniche',
-      fileName: 'IMG_8306.JPG',
-      src: driveServiceImages.ristrutturazioniTecniche,
-      area: 'Servizi',
-      posizione: 'Card / sezione ristrutturazioni tecniche',
-      categoria: 'Lavorazione in corso',
-      cantiere: 'Capri Palace',
-      note: 'Immagine usata per il servizio ristrutturazioni tecniche.',
-    }),
-    makeImageEntry({
-      id: 'drive-service-finiture-interne',
-      fileName: 'IMG_7366.JPG',
-      src: driveServiceImages.finitureInterne,
-      area: 'Servizi · Settori',
-      posizione: 'Sezione finiture interne',
-      categoria: 'Risultato finito',
-      cantiere: 'Barcelò Roma',
-      note: 'Immagine usata per finiture interne e spazi in lavorazione.',
-    }),
-    makeImageEntry({
-      id: 'drive-service-gestione-cantiere',
-      fileName: 'IMG_8326.JPG',
-      src: driveServiceImages.gestioneCantiere,
-      area: 'Servizi · Chi siamo',
-      posizione: 'Sezione gestione cantiere',
-      categoria: 'Squadra / operatività',
-      cantiere: 'Capri Palace',
-      note: 'Immagine usata per la gestione cantiere.',
-    }),
-    makeImageEntry({
-      id: 'drive-service-manutenzioni',
-      fileName: 'IMG_7344.JPG',
-      src: driveServiceImages.manutenzioni,
-      area: 'Servizi',
-      posizione: 'Sezione manutenzioni',
-      categoria: 'Materiali / attrezzatura',
-      cantiere: 'Barcelò Roma',
-      note: 'Immagine usata per il servizio manutenzioni.',
-    }),
-    makeImageEntry({
-      id: 'drive-service-supporto-operativo',
-      fileName: 'IMG_7406.JPG',
-      src: driveServiceImages.supportoOperativo,
-      area: 'Servizi · Chi siamo',
-      posizione: 'Sezione supporto operativo',
-      categoria: 'Squadra / operatività',
-      cantiere: 'Barcelò Roma',
-      note: 'Immagine usata per il supporto operativo.',
-    }),
+    usageLocation({ route: `#/cantieri/${projectId}`, pagina: 'Dettaglio cantiere', sezione: 'Galleria', componente: 'SafeImage', slot: 'src' }),
   ]
 }
 
-function driveProjectEntries() {
-  return allDriveProjectPhotos.map((photo) => makeImageEntry({
-    id: `drive-photo-${photo.id}`,
-    fileName: photo.fileName,
-    src: photo.src,
-    area: photo.area,
-    posizione: 'Galleria / portfolio pubblico',
-    categoria: 'Portfolio / foto reale',
-    cantiere: photo.project,
-    note: photo.project === 'Foto cantieri da classificare'
-      ? 'Foto già presente nel portfolio pubblico ma ancora da classificare meglio.'
-      : 'Foto già pubblicata nel portfolio pubblico.',
-  }))
+function heroUsage(route, pagina, sezione, slot = 'image') {
+  return [usageLocation({ route, pagina, sezione, componente: 'PremiumHero', slot })]
 }
 
-export const siteImages = mergeEntries([
-  ...publicHeroFallbackEntries(),
-  ...driveHeroEntries(),
-  ...driveServiceEntries(),
-  ...driveProjectEntries(),
+function splitUsage(route, pagina, sezione, component = 'PremiumImageSplit', slot = 'image') {
+  return [usageLocation({ route, pagina, sezione, componente: component, slot })]
+}
+
+function serviceCardUsage(route, pagina, serviceTitle, slot = 'fallbackImage') {
+  return [usageLocation({ route, pagina, sezione: `Card servizio / ${serviceTitle}`, componente: 'PremiumServiceCard', slot })]
+}
+
+function serviceSplitUsage(route, pagina, section, slot = 'image') {
+  return [usageLocation({ route, pagina, sezione: section, componente: 'PremiumImageSplit', slot })]
+}
+
+function fallbackUsage(route, pagina, section, component, slot = 'fallbackImage') {
+  return [usageLocation({ route, pagina, sezione: section, componente: component, slot })]
+}
+
+const siteImages = mergeEntries([
+  fromDriveSrc({
+    id: 'drive-home-hero',
+    src: driveHeroImages.home,
+    cantiere: 'Capri Palace',
+    areaAttuale: 'Home',
+    posizioneAttuale: 'Hero principale',
+    categoria: 'Hero / immagine forte',
+    usataNelSito: true,
+    usageLocations: heroUsage('#/', 'Home', 'Hero principale'),
+    note: 'Hero principale della home.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-home-hero',
+    fileName: 'home-hero-unsplash.jpg',
+    src: heroImages.home.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Home',
+    posizioneAttuale: 'Hero principale',
+    categoria: 'Hero / immagine forte',
+    usageLocations: heroUsage('#/', 'Home', 'Hero principale', 'fallbackSrc'),
+    note: 'Fallback hero home se il Drive non risponde.',
+  }),
+  fromDriveSrc({
+    id: 'drive-services-hero',
+    src: driveHeroImages.services,
+    cantiere: 'Barcelò Roma',
+    areaAttuale: 'Servizi',
+    posizioneAttuale: 'Hero pagina',
+    categoria: 'Hero / immagine forte',
+    usataNelSito: true,
+    usageLocations: heroUsage('#/servizi', 'Servizi', 'Hero pagina'),
+    note: 'Hero principale della pagina servizi.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-services-hero',
+    fileName: 'services-hero-unsplash.jpg',
+    src: heroImages.services.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Servizi',
+    posizioneAttuale: 'Hero pagina',
+    categoria: 'Hero / immagine forte',
+    usageLocations: heroUsage('#/servizi', 'Servizi', 'Hero pagina', 'fallbackSrc'),
+    note: 'Fallback hero servizi se il Drive non risponde.',
+  }),
+  fromDriveSrc({
+    id: 'drive-projects-hero',
+    src: driveHeroImages.projects,
+    cantiere: 'Capri Palace',
+    areaAttuale: 'Cantieri',
+    posizioneAttuale: 'Hero pagina',
+    categoria: 'Hero / immagine forte',
+    usageLocations: heroUsage('#/cantieri', 'Cantieri', 'Hero pagina'),
+    note: 'Hero principale della pagina cantieri.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-projects-hero',
+    fileName: 'projects-hero-unsplash.jpg',
+    src: heroImages.projects.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Cantieri',
+    posizioneAttuale: 'Hero pagina',
+    categoria: 'Hero / immagine forte',
+    usageLocations: heroUsage('#/cantieri', 'Cantieri', 'Hero pagina', 'fallbackSrc'),
+    note: 'Fallback hero cantieri se il Drive non risponde.',
+  }),
+  fromDriveSrc({
+    id: 'drive-about-hero',
+    src: driveHeroImages.about,
+    cantiere: 'Capri Palace',
+    areaAttuale: 'Chi siamo',
+    posizioneAttuale: 'Hero pagina',
+    categoria: 'Hero / immagine forte',
+    usageLocations: heroUsage('#/chi-siamo', 'Chi siamo', 'Hero pagina'),
+    note: 'Hero principale della pagina chi siamo.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-about-hero',
+    fileName: 'about-hero-unsplash.jpg',
+    src: heroImages.about.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Chi siamo',
+    posizioneAttuale: 'Hero pagina',
+    categoria: 'Hero / immagine forte',
+    usageLocations: heroUsage('#/chi-siamo', 'Chi siamo', 'Hero pagina', 'fallbackSrc'),
+    note: 'Fallback hero chi siamo se il Drive non risponde.',
+  }),
+  fromDriveSrc({
+    id: 'drive-contact-hero',
+    src: driveHeroImages.contact,
+    cantiere: 'Barcelò Roma',
+    areaAttuale: 'Contatti',
+    posizioneAttuale: 'Hero pagina',
+    categoria: 'Hero / immagine forte',
+    usageLocations: heroUsage('#/contatti', 'Contatti', 'Hero pagina'),
+    note: 'Hero principale della pagina contatti.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-contact-hero',
+    fileName: 'contact-hero-unsplash.jpg',
+    src: heroImages.contact.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Contatti',
+    posizioneAttuale: 'Hero pagina',
+    categoria: 'Hero / immagine forte',
+    usageLocations: heroUsage('#/contatti', 'Contatti', 'Hero pagina', 'fallbackSrc'),
+    note: 'Fallback hero contatti se il Drive non risponde.',
+  }),
+  fromDriveSrc({
+    id: 'drive-case-study-hero',
+    src: driveHeroImages.caseStudy,
+    cantiere: 'Capri Palace',
+    areaAttuale: 'Dettaglio cantiere',
+    posizioneAttuale: 'Hero',
+    categoria: 'Hero / immagine forte',
+    usageLocations: heroUsage('#/cantieri/:projectId', 'Dettaglio cantiere', 'Hero'),
+    note: 'Hero del dettaglio cantiere se presente.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-case-study-hero',
+    fileName: 'case-study-hero-unsplash.jpg',
+    src: heroImages.caseStudy.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Dettaglio cantiere',
+    posizioneAttuale: 'Hero',
+    categoria: 'Hero / immagine forte',
+    usageLocations: heroUsage('#/cantieri/:projectId', 'Dettaglio cantiere', 'Hero', 'fallbackSrc'),
+    note: 'Fallback hero dettaglio cantiere se il Drive non risponde.',
+  }),
+  fromDriveSrc({
+    id: 'drive-home-approach',
+    src: driveHeroImages.method,
+    cantiere: 'Barcelò Roma',
+    areaAttuale: 'Home · Chi siamo',
+    posizioneAttuale: 'Sezione approccio / metodo',
+    categoria: 'Lavorazione in corso',
+    usageLocations: [
+      ...splitUsage('#/', 'Home', 'Sezione approccio'),
+      ...splitUsage('#/chi-siamo', 'Chi siamo', 'Sezione metodo'),
+    ],
+    note: 'Immagine usata nelle sezioni sull’approccio e sul metodo.',
+  }),
+  fromDriveSrc({
+    id: 'drive-home-documentation',
+    src: driveHeroImages.documentation,
+    cantiere: 'Capri Palace',
+    areaAttuale: 'Home · Servizi',
+    posizioneAttuale: 'Sezione documentazione / controllo operativo',
+    categoria: 'Dettaglio tecnico',
+    usageLocations: [
+      ...splitUsage('#/', 'Home', 'Sezione documentazione'),
+      ...splitUsage('#/servizi', 'Servizi', 'Sezione ristrutturazioni / demolizioni'),
+    ],
+    note: 'Immagine usata nelle sezioni di documentazione e controllo.',
+  }),
+  fromDriveSrc({
+    id: 'drive-service-cartongesso',
+    src: driveServiceImages.cartongesso,
+    cantiere: 'Barcelò Roma',
+    areaAttuale: 'Servizi',
+    posizioneAttuale: 'Card servizio / sezione cartongesso',
+    categoria: 'Lavorazione in corso',
+    usageLocations: [
+      ...serviceCardUsage('#/', 'Home', 'Cartongesso', 'image'),
+      ...serviceCardUsage('#/servizi', 'Servizi', 'Cartongesso', 'image'),
+      ...serviceSplitUsage('#/servizi', 'Servizi', 'Sezione cartongesso'),
+    ],
+    note: 'Immagine usata nel carousel home, nelle card servizi e nella sezione cartongesso.',
+  }),
+  fromDriveSrc({
+    id: 'drive-service-ristrutturazioni',
+    src: driveServiceImages.ristrutturazioniTecniche,
+    cantiere: 'Capri Palace',
+    areaAttuale: 'Servizi',
+    posizioneAttuale: 'Card servizio / sezione ristrutturazioni',
+    categoria: 'Lavorazione in corso',
+    usageLocations: [
+      ...serviceCardUsage('#/', 'Home', 'Ristrutturazioni tecniche', 'image'),
+      ...serviceCardUsage('#/', 'Home', 'Demolizioni', 'image'),
+      ...serviceCardUsage('#/servizi', 'Servizi', 'Ristrutturazioni tecniche', 'image'),
+      ...serviceCardUsage('#/servizi', 'Servizi', 'Demolizioni', 'image'),
+    ],
+    note: 'Usata in quattro card di servizio tra home e pagina servizi.',
+  }),
+  fromDriveSrc({
+    id: 'drive-service-finiture-interne',
+    src: driveServiceImages.finitureInterne,
+    cantiere: 'Barcelò Roma',
+    areaAttuale: 'Servizi · Settori',
+    posizioneAttuale: 'Sezione finiture interne',
+    categoria: 'Risultato finito',
+    usageLocations: [
+      ...serviceCardUsage('#/', 'Home', 'Finiture interne', 'image'),
+      ...serviceCardUsage('#/servizi', 'Servizi', 'Finiture interne', 'image'),
+      usageLocation({ route: '#/settori', pagina: 'Settori', sezione: 'Uffici e residenziale', componente: 'PremiumImageSplit', slot: 'image' }),
+    ],
+    note: 'Usata per finiture interne e per la sezione settori.',
+  }),
+  fromDriveSrc({
+    id: 'drive-service-gestione-cantiere',
+    src: driveServiceImages.gestioneCantiere,
+    cantiere: 'Capri Palace',
+    areaAttuale: 'Servizi · Chi siamo',
+    posizioneAttuale: 'Sezione gestione cantiere',
+    categoria: 'Squadra / operatività',
+    usageLocations: [
+      ...serviceCardUsage('#/', 'Home', 'Gestione cantiere', 'image'),
+      ...serviceCardUsage('#/servizi', 'Servizi', 'Gestione cantiere', 'image'),
+      ...splitUsage('#/chi-siamo', 'Chi siamo', 'Sezione come lavoriamo'),
+    ],
+    note: 'Usata come card di servizio e in chi siamo.',
+  }),
+  fromDriveSrc({
+    id: 'drive-service-manutenzioni',
+    src: driveServiceImages.manutenzioni,
+    cantiere: 'Barcelò Roma',
+    areaAttuale: 'Servizi',
+    posizioneAttuale: 'Sezione manutenzioni',
+    categoria: 'Materiali / attrezzatura',
+    usageLocations: [
+      ...serviceCardUsage('#/', 'Home', 'Manutenzioni', 'image'),
+      ...serviceCardUsage('#/servizi', 'Servizi', 'Manutenzioni', 'image'),
+    ],
+    note: 'Usata come card di servizio in home e in servizi.',
+  }),
+  fromDriveSrc({
+    id: 'drive-service-supporto-operativo',
+    src: driveServiceImages.supportoOperativo,
+    cantiere: 'Barcelò Roma',
+    areaAttuale: 'Servizi · Chi siamo',
+    posizioneAttuale: 'Sezione supporto operativo',
+    categoria: 'Squadra / operatività',
+    usageLocations: [
+      ...serviceCardUsage('#/', 'Home', 'Supporto operativo', 'image'),
+      ...serviceCardUsage('#/servizi', 'Servizi', 'Supporto operativo', 'image'),
+    ],
+    note: 'Usata come card di servizio in home e in servizi.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-service-cartongesso',
+    fileName: 'service-cartongesso.svg',
+    src: serviceImages.cartongesso.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Servizi',
+    posizioneAttuale: 'Fallback card servizio',
+    categoria: 'Hero / immagine forte',
+    usageLocations: [
+      ...fallbackUsage('#/', 'Home', 'Card servizi / carousel', 'PremiumServiceCard', 'fallbackImage'),
+      ...fallbackUsage('#/servizi', 'Servizi', 'Card servizio', 'PremiumServiceCard', 'fallbackImage'),
+    ],
+    note: 'Fallback delle card servizio cartongesso.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-service-edili-generali',
+    fileName: 'service-edili-generali.svg',
+    src: serviceImages.ediliGenerali.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Servizi',
+    posizioneAttuale: 'Fallback card servizio',
+    categoria: 'Lavorazione in corso',
+    usageLocations: [
+      ...fallbackUsage('#/', 'Home', 'Card servizi / carousel', 'PremiumServiceCard', 'fallbackImage'),
+      ...fallbackUsage('#/servizi', 'Servizi', 'Card servizio', 'PremiumServiceCard', 'fallbackImage'),
+    ],
+    note: 'Fallback delle card servizi ristrutturazioni e demolizioni.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-service-rasature',
+    fileName: 'service-rasature.svg',
+    src: serviceImages.rasature.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Servizi',
+    posizioneAttuale: 'Fallback card servizio',
+    categoria: 'Risultato finito',
+    usageLocations: [
+      ...fallbackUsage('#/', 'Home', 'Card servizi / carousel', 'PremiumServiceCard', 'fallbackImage'),
+      ...fallbackUsage('#/servizi', 'Servizi', 'Card servizio', 'PremiumServiceCard', 'fallbackImage'),
+    ],
+    note: 'Fallback delle card finiture interne.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-service-supporto-cantieri',
+    fileName: 'service-supporto-cantieri.svg',
+    src: serviceImages.supportoCantieri.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Servizi',
+    posizioneAttuale: 'Fallback card servizio',
+    categoria: 'Squadra / operatività',
+    usageLocations: [
+      ...fallbackUsage('#/', 'Home', 'Card servizi / carousel', 'PremiumServiceCard', 'fallbackImage'),
+      ...fallbackUsage('#/servizi', 'Servizi', 'Card servizio', 'PremiumServiceCard', 'fallbackImage'),
+      ...fallbackUsage('#/cantieri/:projectId', 'Dettaglio cantiere', 'Metodo applicato', 'PremiumImageSplit', 'fallbackImage'),
+    ],
+    note: 'Fallback delle card supporto operativo e del metodo applicato nel dettaglio cantiere.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-service-manutenzioni',
+    fileName: 'service-manutenzioni.svg',
+    src: serviceImages.manutenzioni.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Servizi',
+    posizioneAttuale: 'Fallback card servizio',
+    categoria: 'Materiali / attrezzatura',
+    usageLocations: [
+      ...fallbackUsage('#/', 'Home', 'Card servizi / carousel', 'PremiumServiceCard', 'fallbackImage'),
+      ...fallbackUsage('#/servizi', 'Servizi', 'Card servizio', 'PremiumServiceCard', 'fallbackImage'),
+    ],
+    note: 'Fallback delle card manutenzioni.',
+  }),
+  fromPublicAsset({
+    id: 'fallback-service-tools',
+    fileName: 'service-tools.svg',
+    src: serviceImages.tools.src,
+    cantiere: 'DA VERIFICARE',
+    areaAttuale: 'Servizi',
+    posizioneAttuale: 'Fallback card servizio',
+    categoria: 'Materiali / attrezzatura',
+    usageLocations: [
+      ...fallbackUsage('#/', 'Home', 'Card servizi / carousel', 'PremiumServiceCard', 'fallbackImage'),
+      ...fallbackUsage('#/servizi', 'Servizi', 'Card servizio', 'PremiumServiceCard', 'fallbackImage'),
+    ],
+    note: 'Fallback delle card supporto operativo.',
+  }),
+  ...drivePublicProjects.map((project) => {
+    const imageMeta = drivePhotoBySrc.get(project.image)
+    const heroMeta = drivePhotoBySrc.get(project.heroImage)
+    const methodMeta = drivePhotoBySrc.get(project.methodImage)
+
+    return [
+      baseEntry({
+        id: `project-${project.id}-image`,
+        fileName: imageMeta?.fileName ?? project.title,
+        src: project.image,
+        sourceUrl: imageMeta?.sourceUrl ?? null,
+        origine: 'Sito pubblico',
+        cantiere: project.title,
+        areaAttuale: 'Home · Cantieri',
+        posizioneAttuale: 'Cantiere in evidenza / griglia case study',
+        categoria: 'Portfolio / progetto',
+        pubblicabile: 'si',
+        usataNelSito: true,
+        usageLocations: driveProjectUsage(project.id, 'Hero', 'image'),
+        note: `Immagine principale del progetto ${project.title}.`,
+      }),
+      baseEntry({
+        id: `project-${project.id}-hero`,
+        fileName: heroMeta?.fileName ?? project.title,
+        src: project.heroImage,
+        sourceUrl: heroMeta?.sourceUrl ?? null,
+        origine: 'Sito pubblico',
+        cantiere: project.title,
+        areaAttuale: 'Dettaglio cantiere',
+        posizioneAttuale: 'Hero',
+        categoria: 'Hero / immagine forte',
+        pubblicabile: 'si',
+        usataNelSito: true,
+        usageLocations: driveProjectSplitUsage(project.id, 'Hero'),
+        note: `Hero del dettaglio cantiere ${project.title}.`,
+      }),
+      baseEntry({
+        id: `project-${project.id}-method`,
+        fileName: methodMeta?.fileName ?? project.title,
+        src: project.methodImage,
+        sourceUrl: methodMeta?.sourceUrl ?? null,
+        origine: 'Sito pubblico',
+        cantiere: project.title,
+        areaAttuale: 'Dettaglio cantiere',
+        posizioneAttuale: 'Metodo applicato',
+        categoria: 'Dettaglio tecnico',
+        pubblicabile: 'si',
+        usataNelSito: true,
+        usageLocations: driveProjectSplitUsage(project.id, 'Metodo applicato'),
+        note: `Immagine del metodo applicato per ${project.title}.`,
+      }),
+    ]
+  }).flat(),
+  ...allDriveProjectPhotos.map((photo) => {
+    const project = drivePublicProjects.find((item) => item.gallery?.some((galleryPhoto) => galleryPhoto.src === photo.src))
+    const isUsedInProject = Boolean(project)
+    const galleryUsageLocations = project
+      ? galleryUsage(project.id)
+      : []
+
+    return baseEntry({
+      id: `gallery-${photo.id}`,
+      fileName: photo.fileName,
+      src: photo.src,
+      sourceUrl: photo.sourceUrl,
+      origine: 'Sito pubblico',
+      cantiere: photo.project,
+      areaAttuale: photo.area,
+      posizioneAttuale: 'Galleria / portfolio pubblico',
+      categoria: 'Portfolio / foto reale',
+      pubblicabile: 'si',
+      usataNelSito: isUsedInProject,
+      usageLocations: galleryUsageLocations,
+      note: isUsedInProject
+        ? `Foto già collegata al progetto ${photo.project}.`
+        : 'Foto presente nel catalogo Drive ma non ancora usata nel sito.',
+    })
+  }),
 ])
+
+export { heroImages, serviceImages }
+export { siteImages }
 

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { SafeImage } from '../../components/SafeImage'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { EmptyState } from '../../components/EmptyState'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
 import { InternalIcon } from '../../components/InternalIcons'
 import { StatusBadge } from '../../components/StatusBadge'
+import { placeholderImages } from '../../data/publicImages'
 import { siteImages } from '../../data/siteImages'
 
 const placementOptions = [
@@ -45,7 +45,7 @@ const categoryOptions = [
   'DA VERIFICARE',
 ]
 
-const priorityOptions = ['Alta', 'Media', 'Bassa', 'Scartata']
+const priorityOptions = ['Alta', 'Media', 'Bassa']
 const hiddenStorageKey = 'europaservice-hidden-site-photo-ids'
 
 export function PhotoPlacementTool({ store }) {
@@ -53,13 +53,16 @@ export function PhotoPlacementTool({ store }) {
   const [search, setSearch] = useState('')
   const [siteFilter, setSiteFilter] = useState('tutti')
   const [originFilter, setOriginFilter] = useState('tutti')
+  const [usageFilter, setUsageFilter] = useState('tutti')
   const [showDiscarded, setShowDiscarded] = useState(false)
   const [selection, setSelection] = useState(() => ({}))
   const [hiddenIds, setHiddenIds] = useState(() => loadHiddenPhotoIds())
+  const [previewErrors, setPreviewErrors] = useState(() => ({}))
   const [copyState, setCopyState] = useState('')
 
   const privatePhotos = useMemo(() => photos.map(normalizePrivatePhoto), [photos])
-  const catalogPhotos = useMemo(() => [...privatePhotos, ...normalizedSiteImages], [privatePhotos])
+  const publicPhotos = useMemo(() => siteImages.map(normalizeSitePhoto), [])
+  const catalogPhotos = useMemo(() => [...privatePhotos, ...publicPhotos], [privatePhotos, publicPhotos])
   const hiddenIdSet = useMemo(() => new Set(hiddenIds), [hiddenIds])
   const hiddenCount = hiddenIds.length
 
@@ -72,33 +75,47 @@ export function PhotoPlacementTool({ store }) {
     return [...map.entries()].map(([id, name]) => ({ id, name }))
   }, [catalogPhotos])
 
-  const rows = useMemo(() => catalogPhotos.filter((photo) => {
+  const filteredCatalog = useMemo(() => {
     const term = search.trim().toLowerCase()
-    const matchesSite = siteFilter === 'tutti' || photo.cantiere === siteFilter
-    const matchesOrigin = originFilter === 'tutti' || photo.originKey === originFilter
-    const isHidden = hiddenIdSet.has(photo.id)
-    const matchesHidden = showDiscarded ? isHidden : !isHidden
-    const haystack = [
-      photo.origin,
-      photo.area,
-      photo.posizione,
-      photo.categoria,
-      photo.cantiere,
-      photo.fileName,
-      photo.note,
-      photo.zona,
-      photo.lavorazione,
-      photo.caricatoDa,
-      photo.stato,
-      photo.pubblicabile,
-    ].filter(Boolean).join(' ').toLowerCase()
-    return matchesSite && matchesOrigin && matchesHidden && (!term || haystack.includes(term))
-  }), [search, siteFilter, originFilter, catalogPhotos, hiddenIdSet, showDiscarded])
 
-  const selectedRows = rows.filter((photo) => selection[photo.id]?.selected && !hiddenIdSet.has(photo.id))
-  const exportText = buildExportText(selectedRows, selection)
-  const visibleRows = rows.filter((photo) => !hiddenIdSet.has(photo.id))
-  const discardedRows = useMemo(() => catalogPhotos.filter((photo) => hiddenIdSet.has(photo.id)), [catalogPhotos, hiddenIdSet])
+    return catalogPhotos
+      .filter((photo) => {
+        const matchesSite = siteFilter === 'tutti' || photo.cantiere === siteFilter
+        const matchesOrigin = originFilter === 'tutti' || photo.originKey === originFilter
+        const isHidden = hiddenIdSet.has(photo.id)
+        const matchesUsage = usageFilter === 'tutti'
+          || (usageFilter === 'used' && isUsedInSite(photo))
+          || (usageFilter === 'unused' && !isUsedInSite(photo))
+          || (usageFilter === 'preview-missing' && isPreviewMissing(photo, previewErrors))
+          || (usageFilter === 'discarded' && isHidden)
+
+        const haystack = [
+          photo.id,
+          photo.origin,
+          photo.area,
+          photo.posizione,
+          photo.categoria,
+          photo.cantiere,
+          photo.fileName,
+          photo.note,
+          photo.zona,
+          photo.lavorazione,
+          photo.caricatoDa,
+          photo.stato,
+          photo.pubblicabile,
+          formatUsageLocations(photo.usageLocations).join(' '),
+        ].filter(Boolean).join(' ').toLowerCase()
+
+        return matchesSite && matchesOrigin && matchesUsage && (!term || haystack.includes(term))
+      })
+      .sort((a, b) => compareCatalogPhotos(a, b, previewErrors))
+  }, [catalogPhotos, hiddenIdSet, originFilter, previewErrors, search, siteFilter, usageFilter])
+
+  const activeRows = useMemo(() => filteredCatalog.filter((photo) => !hiddenIdSet.has(photo.id)), [filteredCatalog, hiddenIdSet])
+  const discardedRows = useMemo(() => filteredCatalog.filter((photo) => hiddenIdSet.has(photo.id)), [filteredCatalog, hiddenIdSet])
+  const revealDiscarded = showDiscarded || usageFilter === 'discarded'
+  const selectedRows = activeRows.filter((photo) => selection[photo.id]?.selected)
+  const exportText = buildExportText(selectedRows, selection, previewErrors)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -109,21 +126,28 @@ export function PhotoPlacementTool({ store }) {
     setCopyState('')
     setSelection((current) => ({
       ...current,
-        [photoId]: {
-          selected: false,
-          placement: placementOptions[0],
-          customPosition: '',
-          category: categoryOptions[1],
-          priority: 'Media',
-          note: '',
-          ...(current[photoId] ?? {}),
-          ...patch,
-        },
-      }))
+      [photoId]: {
+        selected: false,
+        placement: placementOptions[0],
+        customPosition: '',
+        category: categoryOptions[1],
+        priority: 'Media',
+        note: '',
+        ...(current[photoId] ?? {}),
+        ...patch,
+      },
+    }))
   }
 
   function discardPhoto(photoId) {
     setHiddenIds((current) => (current.includes(photoId) ? current : [...current, photoId]))
+    setSelection((current) => ({
+      ...current,
+      [photoId]: {
+        ...(current[photoId] ?? {}),
+        selected: false,
+      },
+    }))
   }
 
   function restorePhoto(photoId) {
@@ -133,7 +157,7 @@ export function PhotoPlacementTool({ store }) {
   function selectAllVisible() {
     setSelection((current) => {
       const next = { ...current }
-      visibleRows.forEach((photo) => {
+      activeRows.forEach((photo) => {
         next[photo.id] = {
           selected: true,
           placement: next[photo.id]?.placement ?? placementOptions[0],
@@ -150,7 +174,7 @@ export function PhotoPlacementTool({ store }) {
   function deselectAllVisible() {
     setSelection((current) => {
       const next = { ...current }
-      visibleRows.forEach((photo) => {
+      activeRows.forEach((photo) => {
         next[photo.id] = {
           selected: false,
           placement: next[photo.id]?.placement ?? placementOptions[0],
@@ -165,7 +189,7 @@ export function PhotoPlacementTool({ store }) {
   }
 
   function hideUnselectedVisible() {
-    const idsToHide = visibleRows.filter((photo) => !selection[photo.id]?.selected).map((photo) => photo.id)
+    const idsToHide = activeRows.filter((photo) => !selection[photo.id]?.selected).map((photo) => photo.id)
     if (!idsToHide.length) return
     setHiddenIds((current) => [...new Set([...current, ...idsToHide])])
   }
@@ -173,6 +197,10 @@ export function PhotoPlacementTool({ store }) {
   function resetDiscarded() {
     if (typeof window !== 'undefined' && !window.confirm('Vuoi davvero ripristinare tutte le foto scartate dal tool?')) return
     setHiddenIds([])
+  }
+
+  function markPreviewFailed(photoId) {
+    setPreviewErrors((current) => (current[photoId] ? current : { ...current, [photoId]: true }))
   }
 
   async function copyOutput() {
@@ -191,7 +219,7 @@ export function PhotoPlacementTool({ store }) {
       <DashboardHeader
         eyebrow="Tool sito pubblico"
         title="Selezione foto per sito"
-        description="Scegli le foto migliori, assegna dove devono andare nel sito e genera un output ordinato da passare per la modifica del codice."
+        description="Scegli le foto migliori, verifica dove sono già usate e genera un output ordinato da passare per la modifica del codice."
       >
         <DataModeBadge>Tool operativo</DataModeBadge>
       </DashboardHeader>
@@ -221,6 +249,16 @@ export function PhotoPlacementTool({ store }) {
             <option value="private">Area privata / Supabase</option>
           </select>
         </label>
+        <label>
+          Uso nel sito
+          <select value={usageFilter} onChange={(event) => setUsageFilter(event.target.value)}>
+            <option value="tutti">Tutte</option>
+            <option value="used">Già usate nel sito</option>
+            <option value="unused">Non usate nel sito</option>
+            <option value="preview-missing">Preview non disponibile</option>
+            <option value="discarded">Scartate</option>
+          </select>
+        </label>
         <label className="photo-placement-toggle">
           <span>Mostra scartate</span>
           <button className="button button-secondary button-small" type="button" onClick={() => setShowDiscarded((current) => !current)}>
@@ -241,8 +279,8 @@ export function PhotoPlacementTool({ store }) {
         <section className="internal-panel photo-placement-list">
           <div className="section-heading panel-title-row">
             <div>
-              <h2>Immagini disponibili ({rows.length})</h2>
-              <p>Spunta solo le immagini utili per il sito. Le immagini scartate restano fuori dall’output.</p>
+              <h2>Immagini disponibili ({activeRows.length})</h2>
+              <p>Le foto già usate nel sito sono evidenziate con il loro conteggio e con la lista delle posizioni attuali.</p>
             </div>
             <StatusBadge>{originFilter === 'tutti' ? 'Tutte le origini' : originFilter === 'site' ? 'Sito pubblico' : 'Area privata / Supabase'}</StatusBadge>
           </div>
@@ -257,201 +295,53 @@ export function PhotoPlacementTool({ store }) {
             <button className="button button-secondary button-small" type="button" onClick={resetDiscarded}>Reset scartate</button>
           </div>
 
-          {rows.length > 0 ? (
+          {activeRows.length > 0 ? (
             <div className="photo-placement-grid">
-              {rows.map((photo) => {
-                const draft = selection[photo.id] ?? {}
-                const isSelected = Boolean(draft.selected)
-                const isSiteImage = photo.originKey === 'site'
-                const isDiscarded = hiddenIdSet.has(photo.id)
-                const placementValue = draft.placement ?? placementOptions[0]
-                const showCustomPosition = placementValue === 'Altro / DA VERIFICARE'
-
-                return (
-                  <article className={composeCardClassName({ isSelected, isDiscarded })} key={photo.id}>
-                    <div className="photo-placement-row-main">
-                      <div className="photo-placement-preview">
-                        {isSiteImage ? (
-                          <SafeImage
-                            alt={photo.fileName}
-                            className="photo-placement-site-image"
-                            fallbackSrc={photo.src}
-                            finalFallbackSrc={photo.src}
-                            loading="lazy"
-                            src={photo.src}
-                            title={photo.fileName}
-                          />
-                        ) : (
-                          <FilePreviewMock fileName={photo.fileName} storageBucket={photo.storageBucket} storagePath={photo.storagePath} type="image" />
-                        )}
-                      </div>
-                      <div className="photo-placement-main">
-                        <div className="photo-placement-topline">
-                          <div className="photo-placement-title-badges">
-                            <h3>{photo.fileName}</h3>
-                            <StatusBadge>{isSiteImage ? 'Sito pubblico' : 'Area privata / Supabase'}</StatusBadge>
-                            {isDiscarded ? <StatusBadge>Scartata</StatusBadge> : null}
-                          </div>
-                          <div className="photo-placement-inline-meta">
-                            <span>{isSiteImage ? photo.area ?? 'Area DA VERIFICARE' : photo.cantiere ?? 'Cantiere DA VERIFICARE'}</span>
-                            <span>{isSiteImage ? photo.posizione ?? 'Posizione DA VERIFICARE' : photo.zona ?? 'Zona DA VERIFICARE'}</span>
-                          </div>
-                        </div>
-
-                        <div className="photo-placement-compact-controls">
-                          <label>
-                            Dove metterla
-                            <select
-                              value={placementValue}
-                              onChange={(event) => patchPhoto(photo.id, { placement: event.target.value, selected: true })}
-                            >
-                              {placementOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                            </select>
-                          </label>
-                          <label>
-                            Categoria
-                            <select
-                              value={draft.category ?? categoryOptions[1]}
-                              onChange={(event) => patchPhoto(photo.id, { category: event.target.value, selected: true })}
-                            >
-                              {categoryOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                            </select>
-                          </label>
-                          <label>
-                            Priorità
-                            <select
-                              value={draft.priority ?? 'Media'}
-                              onChange={(event) => patchPhoto(photo.id, { priority: event.target.value, selected: true })}
-                            >
-                              {priorityOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                            </select>
-                          </label>
-                          <label className="photo-placement-check">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={(event) => patchPhoto(photo.id, { selected: event.target.checked })}
-                            />
-                            Usa
-                          </label>
-                          <button
-                            className="button button-secondary button-small photo-placement-discard-button"
-                            type="button"
-                            onClick={() => discardPhoto(photo.id)}
-                          >
-                            Scarta
-                          </button>
-                          {showCustomPosition ? (
-                            <label className="photo-placement-custom-position">
-                              Posizione personalizzata
-                              <input
-                                type="text"
-                                value={draft.customPosition ?? ''}
-                                onChange={(event) => patchPhoto(photo.id, { customPosition: event.target.value, selected: true })}
-                                placeholder="Es. Hero mobile, galleria, card 2..."
-                              />
-                            </label>
-                          ) : null}
-                        </div>
-
-                        <dl className={isSiteImage ? 'photo-placement-meta photo-placement-meta-site' : 'photo-placement-meta'}>
-                          {isSiteImage ? (
-                            <>
-                              <div><dt>Origine</dt><dd>Sito pubblico</dd></div>
-                              <div><dt>Area attuale</dt><dd>{photo.area || 'DA VERIFICARE'}</dd></div>
-                              <div><dt>Posizione attuale</dt><dd>{photo.posizione || 'DA VERIFICARE'}</dd></div>
-                              <div><dt>Categoria</dt><dd>{photo.categoria || 'DA VERIFICARE'}</dd></div>
-                              <div><dt>Pubblicabile</dt><dd>{displayPublicable(photo.pubblicabile)}</dd></div>
-                            </>
-                          ) : (
-                            <>
-                              <div><dt>Origine</dt><dd>Area privata / Supabase</dd></div>
-                              <div><dt>Area attuale</dt><dd>{photo.cantiere || 'DA VERIFICARE'}</dd></div>
-                              <div><dt>Posizione attuale</dt><dd>{photo.posizione || 'DA VERIFICARE'}</dd></div>
-                              <div><dt>Stato</dt><dd>{photo.stato || 'DA VERIFICARE'}</dd></div>
-                              <div><dt>Pubblicabile</dt><dd>{displayPublicable(photo.pubblicabile)}</dd></div>
-                            </>
-                          )}
-                        </dl>
-
-                        <label className="photo-placement-note">
-                          Note
-                          <textarea
-                            value={draft.note ?? ''}
-                            onChange={(event) => patchPhoto(photo.id, { note: event.target.value, selected: true })}
-                            placeholder="Note rapide..."
-                            rows="2"
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  </article>
-                )
-              })}
+              {activeRows.map((photo) => (
+                <PhotoPlacementCard
+                  key={photo.id}
+                  photo={photo}
+                  draft={selection[photo.id] ?? {}}
+                  isDiscarded={false}
+                  isPreviewBroken={isPreviewMissing(photo, previewErrors)}
+                  onDiscard={discardPhoto}
+                  onPatch={patchPhoto}
+                  onPreviewError={markPreviewFailed}
+                />
+              ))}
             </div>
-          ) : showDiscarded && discardedRows.length > 0 ? (
-            <div className="photo-placement-grid">
-              {discardedRows.map((photo) => {
-                const draft = selection[photo.id] ?? {}
-                const isSiteImage = photo.originKey === 'site'
+          ) : !revealDiscarded ? (
+            <EmptyState title="Nessuna foto trovata">Modifica ricerca, origine, uso nel sito o filtro cantiere.</EmptyState>
+          ) : null}
 
-                return (
-                  <article className="photo-placement-card is-discarded" key={photo.id}>
-                    <div className="photo-placement-row-main">
-                      <div className="photo-placement-preview">
-                        {isSiteImage ? (
-                          <SafeImage
-                            alt={photo.fileName}
-                            className="photo-placement-site-image"
-                            fallbackSrc={photo.src}
-                            finalFallbackSrc={photo.src}
-                            loading="lazy"
-                            src={photo.src}
-                            title={photo.fileName}
-                          />
-                        ) : (
-                          <FilePreviewMock fileName={photo.fileName} storageBucket={photo.storageBucket} storagePath={photo.storagePath} type="image" />
-                        )}
-                      </div>
-                      <div className="photo-placement-main">
-                        <div className="photo-placement-topline">
-                          <div className="photo-placement-title-badges">
-                            <h3>{photo.fileName}</h3>
-                            <StatusBadge>{isSiteImage ? 'Sito pubblico' : 'Area privata / Supabase'}</StatusBadge>
-                            <StatusBadge>Scartata</StatusBadge>
-                          </div>
-                          <div className="photo-placement-inline-meta">
-                            <span>{isSiteImage ? photo.area ?? 'Area DA VERIFICARE' : photo.cantiere ?? 'Cantiere DA VERIFICARE'}</span>
-                            <span>{isSiteImage ? photo.posizione ?? 'Posizione DA VERIFICARE' : photo.zona ?? 'Zona DA VERIFICARE'}</span>
-                          </div>
-                        </div>
-                        <div className="photo-placement-compact-controls">
-                          <button className="button button-primary button-small photo-placement-discard-button" type="button" onClick={() => restorePhoto(photo.id)}>
-                            Ripristina
-                          </button>
-                          <span className="photo-placement-discard-hint">Non entra nell’output finché resta scartata.</span>
-                        </div>
-                        <dl className="photo-placement-meta photo-placement-meta-site">
-                          <div><dt>ID</dt><dd>{photo.id}</dd></div>
-                          <div><dt>File</dt><dd>{photo.fileName || 'DA VERIFICARE'}</dd></div>
-                          <div><dt>Origine</dt><dd>{photo.origin || 'DA VERIFICARE'}</dd></div>
-                          <div><dt>Area attuale</dt><dd>{photo.area || photo.cantiere || 'DA VERIFICARE'}</dd></div>
-                          <div><dt>Posizione attuale</dt><dd>{photo.posizione || 'DA VERIFICARE'}</dd></div>
-                          <div><dt>Categoria</dt><dd>{photo.categoria || photo.stato || 'DA VERIFICARE'}</dd></div>
-                        </dl>
-                        <label className="photo-placement-note">
-                          Note
-                          <textarea readOnly value={draft.note ?? ''} rows="2" />
-                        </label>
-                      </div>
-                    </div>
-                  </article>
-                )
-              })}
+          {revealDiscarded ? (
+            <div className="photo-placement-discarded-section">
+              <div className="section-heading">
+                <h2>Foto scartate ({discardedRows.length})</h2>
+                <p>Restano nel catalogo, ma non entrano nell’output finché non le ripristini.</p>
+              </div>
+
+              {discardedRows.length > 0 ? (
+                <div className="photo-placement-grid">
+                  {discardedRows.map((photo) => (
+                    <PhotoPlacementCard
+                      key={photo.id}
+                      photo={photo}
+                      draft={selection[photo.id] ?? {}}
+                      isDiscarded
+                      isPreviewBroken={isPreviewMissing(photo, previewErrors)}
+                      onDiscard={discardPhoto}
+                      onPatch={patchPhoto}
+                      onPreviewError={markPreviewFailed}
+                      onRestore={restorePhoto}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState title="Nessuna foto scartata">Usa il pulsante Scarta sulla riga di una foto per nasconderla dal catalogo operativo.</EmptyState>
+              )}
             </div>
-          ) : (
-            <EmptyState title="Nessuna foto trovata">Modifica ricerca o filtro cantiere.</EmptyState>
-          )}
+          ) : null}
         </section>
 
         <aside className="internal-panel photo-placement-output">
@@ -479,7 +369,197 @@ export function PhotoPlacementTool({ store }) {
   )
 }
 
-function buildExportText(photos, selection) {
+function PhotoPlacementCard({
+  photo,
+  draft,
+  isDiscarded,
+  isPreviewBroken,
+  onDiscard,
+  onPatch,
+  onPreviewError,
+  onRestore,
+}) {
+  const placementValue = draft.placement ?? placementOptions[0]
+  const showCustomPosition = placementValue === 'Altro / DA VERIFICARE'
+  const usageLocations = Array.isArray(photo.usageLocations) ? photo.usageLocations : []
+  const usageCount = usageLocations.length
+  const usedInSite = isUsedInSite(photo)
+  const previewStatus = isPreviewBroken ? 'Non disponibile' : 'OK'
+
+  return (
+    <article className={composeCardClassName({ isSelected: Boolean(draft.selected), isDiscarded })} key={photo.id}>
+      <div className="photo-placement-row-main">
+        <div className="photo-placement-preview">
+          <PhotoPreview photo={photo} isPreviewBroken={isPreviewBroken} onPreviewError={onPreviewError} />
+        </div>
+
+        <div className="photo-placement-main">
+          <div className="photo-placement-topline">
+            <div className="photo-placement-title-badges">
+              <h3>{photo.fileName}</h3>
+              <StatusBadge>{photo.origin}</StatusBadge>
+              <StatusBadge>{usedInSite ? `Usata nel sito (${usageCount})` : 'Non usata nel sito'}</StatusBadge>
+              <StatusBadge>{photo.pubblicabile === 'si' ? 'Pubblicabile' : displayPublicable(photo.pubblicabile)}</StatusBadge>
+              <StatusBadge>{previewStatus === 'OK' ? 'Preview OK' : 'Preview non disponibile'}</StatusBadge>
+              {isDiscarded ? <StatusBadge>Scartata</StatusBadge> : null}
+            </div>
+            <div className="photo-placement-inline-meta">
+              <span>{photo.areaAttuale || photo.area || 'Area DA VERIFICARE'}</span>
+              <span>{photo.posizioneAttuale || photo.posizione || 'Posizione DA VERIFICARE'}</span>
+              <span>{photo.cantiere || 'Cantiere DA VERIFICARE'}</span>
+            </div>
+          </div>
+
+          <div className="photo-placement-compact-controls">
+            <label>
+              Dove metterla
+              <select
+                value={placementValue}
+                onChange={(event) => onPatch(photo.id, { placement: event.target.value, selected: true })}
+              >
+                {placementOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </label>
+            <label>
+              Categoria
+              <select
+                value={draft.category ?? categoryOptions[1]}
+                onChange={(event) => onPatch(photo.id, { category: event.target.value, selected: true })}
+              >
+                {categoryOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </label>
+            <label>
+              Priorità
+              <select
+                value={draft.priority ?? 'Media'}
+                onChange={(event) => onPatch(photo.id, { priority: event.target.value, selected: true })}
+              >
+                {priorityOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </label>
+            <label className="photo-placement-check">
+              <input
+                type="checkbox"
+                checked={Boolean(draft.selected)}
+                onChange={(event) => onPatch(photo.id, { selected: event.target.checked })}
+              />
+              Usa
+            </label>
+            {showCustomPosition ? (
+              <label className="photo-placement-custom-position">
+                Posizione personalizzata
+                <input
+                  type="text"
+                  value={draft.customPosition ?? ''}
+                  onChange={(event) => onPatch(photo.id, { customPosition: event.target.value, selected: true })}
+                  placeholder="Es. Hero mobile, galleria, card 2..."
+                />
+              </label>
+            ) : null}
+            {isDiscarded && onRestore ? (
+              <button className="button button-primary button-small photo-placement-discard-button" type="button" onClick={() => onRestore(photo.id)}>
+                Ripristina
+              </button>
+            ) : (
+              <button
+                className="button button-secondary button-small photo-placement-discard-button"
+                type="button"
+                onClick={() => onDiscard(photo.id)}
+              >
+                Scarta
+              </button>
+            )}
+          </div>
+
+          <dl className="photo-placement-meta photo-placement-meta-site">
+            <div><dt>ID</dt><dd>{photo.id}</dd></div>
+            <div><dt>File</dt><dd>{photo.fileName || 'DA VERIFICARE'}</dd></div>
+            <div><dt>Origine</dt><dd>{photo.origin || 'DA VERIFICARE'}</dd></div>
+            <div><dt>Area attuale</dt><dd>{photo.areaAttuale || photo.area || photo.cantiere || 'DA VERIFICARE'}</dd></div>
+            <div><dt>Posizione attuale</dt><dd>{photo.posizioneAttuale || photo.posizione || 'DA VERIFICARE'}</dd></div>
+            <div><dt>Usata nel sito</dt><dd>{usedInSite ? `Sì (${usageCount})` : 'No'}</dd></div>
+            <div><dt>Categoria</dt><dd>{photo.categoria || 'DA VERIFICARE'}</dd></div>
+            <div><dt>Pubblicabile</dt><dd>{displayPublicable(photo.pubblicabile)}</dd></div>
+            <div><dt>Stato preview</dt><dd>{previewStatus}</dd></div>
+          </dl>
+
+          <details className="photo-placement-usage-details" open={usageCount > 0}>
+            <summary>Usata in {usageCount} posizioni</summary>
+            {usageCount > 0 ? (
+              <ul className="photo-placement-usage-list">
+                {usageLocations.map((usage, index) => (
+                  <li key={`${photo.id}-${usage.route}-${usage.pagina}-${usage.sezione}-${usage.componente}-${usage.slot}-${index}`}>
+                    <strong>{usage.pagina}</strong> · {usage.sezione} · {usage.componente} · {usage.slot}
+                    {usage.route ? <span> ({usage.route})</span> : null}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="photo-placement-usage-empty">Non ci sono utilizzi attuali nel sito pubblico.</p>
+            )}
+          </details>
+
+          {photo.sourceUrl ? (
+            <a className="photo-placement-source-link" href={photo.sourceUrl} target="_blank" rel="noreferrer noopener">
+              Apri su Drive
+            </a>
+          ) : null}
+
+          <label className="photo-placement-note">
+            Note
+            <textarea
+              value={draft.note ?? ''}
+              onChange={(event) => onPatch(photo.id, { note: event.target.value, selected: true })}
+              placeholder="Note rapide..."
+              rows="2"
+            />
+          </label>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function PhotoPreview({ photo, isPreviewBroken, onPreviewError }) {
+  if (!photo.previewSrc || isPreviewBroken) {
+    if (photo.originKey === 'private') {
+      return (
+        <FilePreviewMock
+          fileName={photo.fileName}
+          storageBucket={photo.storageBucket}
+          storagePath={photo.storagePath}
+          type="image"
+        />
+      )
+    }
+
+    return (
+      <div className="photo-placement-preview-fallback">
+        <img alt={photo.fileName} className="photo-placement-site-image is-broken" src={placeholderImages.project.src} />
+        <div className="photo-placement-preview-fallback-copy">
+          <strong>Preview non disponibile</strong>
+          <span>Il file non risponde più bene come thumbnail.</span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="photo-placement-preview-frame">
+      <img
+        alt={photo.fileName}
+        className="photo-placement-site-image"
+        loading="lazy"
+        onError={() => onPreviewError(photo.id)}
+        src={photo.previewSrc}
+        title={photo.fileName}
+      />
+    </div>
+  )
+}
+
+function buildExportText(photos, selection, previewErrors) {
   if (!photos.length) return ''
 
   const lines = [
@@ -490,33 +570,40 @@ function buildExportText(photos, selection) {
 
   photos.forEach((photo, index) => {
     const draft = selection[photo.id] ?? {}
+    const usageLocations = Array.isArray(photo.usageLocations) ? photo.usageLocations : []
+    const usageCount = usageLocations.length
+    const previewStatus = isPreviewMissing(photo, previewErrors) ? 'Non disponibile' : 'OK'
+
     lines.push(
       `${index + 1}. ${photo.fileName || 'FILE DA VERIFICARE'}`,
       `- ID: ${photo.id}`,
       `- Origine: ${photo.origin || 'DA VERIFICARE'}`,
-      `- Area attuale: ${photo.originKey === 'site' ? (photo.area || 'DA VERIFICARE') : (photo.cantiere || 'DA VERIFICARE')}`,
-      `- Posizione attuale: ${photo.originKey === 'site' ? (photo.posizione || 'DA VERIFICARE') : (photo.zona || 'DA VERIFICARE')} ${photo.originKey === 'private' ? ` / ${photo.lavorazione || 'DA VERIFICARE'}` : ''}`,
+      `- Area attuale: ${photo.areaAttuale || photo.area || photo.cantiere || 'DA VERIFICARE'}`,
+      `- Posizione attuale: ${photo.posizioneAttuale || photo.posizione || 'DA VERIFICARE'}`,
+      `- Usata nel sito: ${(photo.usataNelSito || usageCount > 0) ? 'Sì' : 'No'}`,
+      `- Numero utilizzi attuali: ${usageCount}`,
+      `- Utilizzi attuali: ${formatUsageLocations(usageLocations).join(' | ') || 'Nessuno'}`,
       `- Nuova destinazione: ${draft.placement || 'DA VERIFICARE'}`,
       `- Categoria: ${draft.category || 'DA VERIFICARE'}`,
       `- Priorità: ${draft.priority || 'DA VERIFICARE'}`,
       `- Pubblicabile: ${displayPublicable(photo.pubblicabile)}`,
-      '',
+      `- Stato preview: ${previewStatus}`,
+      `- Note: ${draft.note?.trim() || photo.note || 'Nessuna nota'}`,
     )
+
     if (draft.customPosition?.trim()) {
       lines.push(`- Posizione custom: ${draft.customPosition.trim()}`)
     }
-    lines.push(`- Note: ${draft.note?.trim() || 'Nessuna nota'}`, '')
+
+    if (photo.sourceUrl) {
+      lines.push(`- URL sorgente: ${photo.sourceUrl}`)
+    }
+
+    lines.push('')
   })
 
   lines.push('AZIONE RICHIESTA: usa questa selezione per aggiornare immagini, posizioni e testi del sito pubblico direttamente nel codice.')
   return lines.join('\n')
-}
-
-function displayPublicable(value) {
-  if (value === 'si') return 'Sì'
-  if (value === 'no') return 'No'
-  if (value === 'da valutare') return 'Da valutare'
-  return value ?? 'DA VERIFICARE'
 }
 
 function normalizePrivatePhoto(photo) {
@@ -524,13 +611,17 @@ function normalizePrivatePhoto(photo) {
     id: photo.id,
     fileName: photo.fileName || 'DA VERIFICARE',
     src: photo.src ?? null,
+    previewSrc: photo.src ?? null,
     origin: 'Area privata / Supabase',
     originKey: 'private',
     area: photo.cantiere ?? 'DA VERIFICARE',
+    areaAttuale: photo.cantiere ?? 'DA VERIFICARE',
     posizione: [photo.zona, photo.lavorazione].filter(Boolean).join(' · ') || 'DA VERIFICARE',
+    posizioneAttuale: [photo.zona, photo.lavorazione].filter(Boolean).join(' · ') || 'DA VERIFICARE',
     categoria: photo.lavorazione ?? photo.tipoDocumento ?? 'DA VERIFICARE',
     cantiere: photo.cantiere ?? 'DA VERIFICARE',
     usataNelSito: false,
+    usageLocations: [],
     pubblicabile: photo.pubblicabile ?? 'da valutare',
     note: photo.descrizionePubblica ?? photo.note ?? '',
     stato: photo.stato ?? 'DA VERIFICARE',
@@ -539,12 +630,50 @@ function normalizePrivatePhoto(photo) {
   }
 }
 
-const normalizedSiteImages = siteImages.map((photo) => ({
-  ...photo,
-  originKey: 'site',
-  origin: 'Sito pubblico',
-  usataNelSito: true,
-}))
+function normalizeSitePhoto(photo) {
+  return {
+    ...photo,
+    originKey: 'site',
+    origin: 'Sito pubblico',
+    previewSrc: photo.src ?? null,
+    usataNelSito: photo.usataNelSito ?? (Array.isArray(photo.usageLocations) && photo.usageLocations.length > 0),
+  }
+}
+
+function isUsedInSite(photo) {
+  return Boolean(photo.usataNelSito || (Array.isArray(photo.usageLocations) && photo.usageLocations.length > 0))
+}
+
+function isPreviewMissing(photo, previewErrors) {
+  return !photo.previewSrc || Boolean(previewErrors[photo.id])
+}
+
+function compareCatalogPhotos(a, b, previewErrors) {
+  const rankA = photoRank(a, previewErrors)
+  const rankB = photoRank(b, previewErrors)
+  if (rankA !== rankB) return rankA - rankB
+
+  const usageDiff = (Array.isArray(a.usageLocations) ? a.usageLocations.length : 0) - (Array.isArray(b.usageLocations) ? b.usageLocations.length : 0)
+  if (usageDiff !== 0) return usageDiff
+
+  return (a.fileName || '').localeCompare(b.fileName || '', 'it', { sensitivity: 'base' })
+}
+
+function photoRank(photo, previewErrors) {
+  if (isPreviewMissing(photo, previewErrors)) return 3
+  const usageCount = Array.isArray(photo.usageLocations) ? photo.usageLocations.length : 0
+  const used = isUsedInSite(photo)
+  if (!used || usageCount === 0) return 0
+  if (usageCount === 1) return 1
+  return 2
+}
+
+function formatUsageLocations(usageLocations = []) {
+  return usageLocations.map((usage) => {
+    const parts = [usage.pagina, usage.sezione, usage.componente, usage.slot].filter(Boolean)
+    return parts.join(' · ')
+  })
+}
 
 function loadHiddenPhotoIds() {
   if (typeof window === 'undefined') return []
@@ -564,4 +693,11 @@ function composeCardClassName({ isSelected, isDiscarded }) {
     isSelected ? 'is-selected' : '',
     isDiscarded ? 'is-discarded' : '',
   ].filter(Boolean).join(' ')
+}
+
+function displayPublicable(value) {
+  if (value === 'si') return 'Sì'
+  if (value === 'no') return 'No'
+  if (value === 'da valutare') return 'Da valutare'
+  return value ?? 'DA VERIFICARE'
 }
