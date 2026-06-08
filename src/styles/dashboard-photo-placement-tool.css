@@ -111,6 +111,28 @@
 
 .photo-placement-preview {
   min-width: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.photo-placement-site-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.12));
+  border-radius: 1rem;
+  background: var(--surface-soft, rgba(15, 23, 42, 0.04));
+}
+
+.photo-placement-title-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.photo-placement-title-badges h3 {
+  margin: 0;
 }
 
 .photo-placement-main {
@@ -155,6 +177,10 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.6rem;
   margin: 0;
+}
+
+.photo-placement-meta-site {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 }
 
 .photo-placement-meta div {

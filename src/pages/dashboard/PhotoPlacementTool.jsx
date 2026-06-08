@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
+import { SafeImage } from '../../components/SafeImage'
 import { DashboardHeader, DataModeBadge } from '../../components/InternalComponents'
 import { EmptyState } from '../../components/EmptyState'
 import { FilePreviewMock } from '../../components/FilePreviewMock'
 import { InternalIcon } from '../../components/InternalIcons'
 import { StatusBadge } from '../../components/StatusBadge'
+import { siteImages } from '../../data/siteImages'
 
 const placementOptions = [
   'Home · Hero principale',
@@ -34,32 +36,42 @@ export function PhotoPlacementTool({ store }) {
   const photos = Array.isArray(store?.photos) ? store.photos : []
   const [search, setSearch] = useState('')
   const [siteFilter, setSiteFilter] = useState('tutti')
+  const [originFilter, setOriginFilter] = useState('tutti')
   const [selection, setSelection] = useState(() => ({}))
   const [copyState, setCopyState] = useState('')
 
+  const privatePhotos = useMemo(() => photos.map(normalizePrivatePhoto), [photos])
+  const catalogPhotos = useMemo(() => [...privatePhotos, ...normalizedSiteImages], [privatePhotos])
+
   const cantieri = useMemo(() => {
     const map = new Map()
-    photos.forEach((photo) => {
-      if (!photo.cantiereId) return
-      map.set(photo.cantiereId, photo.cantiere ?? photo.cantiereId)
+    catalogPhotos.forEach((photo) => {
+      if (!photo.cantiere || photo.cantiere === 'DA VERIFICARE') return
+      map.set(photo.cantiere, photo.cantiere)
     })
     return [...map.entries()].map(([id, name]) => ({ id, name }))
-  }, [photos])
+  }, [catalogPhotos])
 
-  const rows = useMemo(() => photos.filter((photo) => {
+  const rows = useMemo(() => catalogPhotos.filter((photo) => {
     const term = search.trim().toLowerCase()
-    const matchesSite = siteFilter === 'tutti' || photo.cantiereId === siteFilter
+    const matchesSite = siteFilter === 'tutti' || photo.cantiere === siteFilter
+    const matchesOrigin = originFilter === 'tutti' || photo.originKey === originFilter
     const haystack = [
+      photo.origin,
+      photo.area,
+      photo.posizione,
+      photo.categoria,
       photo.cantiere,
+      photo.fileName,
+      photo.note,
       photo.zona,
       photo.lavorazione,
-      photo.fileName,
       photo.caricatoDa,
       photo.stato,
       photo.pubblicabile,
     ].filter(Boolean).join(' ').toLowerCase()
-    return matchesSite && (!term || haystack.includes(term))
-  }), [photos, search, siteFilter])
+    return matchesSite && matchesOrigin && (!term || haystack.includes(term))
+  }), [search, siteFilter, originFilter, catalogPhotos])
 
   const selectedRows = rows.filter((photo) => selection[photo.id]?.selected)
   const exportText = buildExportText(selectedRows, selection)
@@ -68,16 +80,16 @@ export function PhotoPlacementTool({ store }) {
     setCopyState('')
     setSelection((current) => ({
       ...current,
-      [photoId]: {
-        selected: false,
-        placement: placementOptions[0],
-        category: categoryOptions[1],
-        priority: 'Media',
-        note: '',
-        ...(current[photoId] ?? {}),
-        ...patch,
-      },
-    }))
+        [photoId]: {
+          selected: false,
+          placement: placementOptions[0],
+          category: categoryOptions[1],
+          priority: 'Media',
+          note: '',
+          ...(current[photoId] ?? {}),
+          ...patch,
+        },
+      }))
   }
 
   async function copyOutput() {
@@ -118,6 +130,14 @@ export function PhotoPlacementTool({ store }) {
             {cantieri.map((cantiere) => <option key={cantiere.id} value={cantiere.id}>{cantiere.name}</option>)}
           </select>
         </label>
+        <label>
+          Origine
+          <select value={originFilter} onChange={(event) => setOriginFilter(event.target.value)}>
+            <option value="tutti">Tutte</option>
+            <option value="site">Sito pubblico</option>
+            <option value="private">Area privata / Supabase</option>
+          </select>
+        </label>
         <div className="photo-placement-stats" aria-label="Riepilogo selezione">
           <strong>{selectedRows.length}</strong>
           <span>foto selezionate</span>
@@ -128,10 +148,10 @@ export function PhotoPlacementTool({ store }) {
         <section className="internal-panel photo-placement-list">
           <div className="section-heading panel-title-row">
             <div>
-              <h2>Foto disponibili ({rows.length})</h2>
-              <p>Spunta solo le foto utili per il sito. Le foto scartate restano fuori dall’output.</p>
+              <h2>Immagini disponibili ({rows.length})</h2>
+              <p>Spunta solo le immagini utili per il sito. Le immagini scartate restano fuori dall’output.</p>
             </div>
-            <StatusBadge>{siteFilter === 'tutti' ? 'Tutti' : cantieri.find((item) => item.id === siteFilter)?.name}</StatusBadge>
+            <StatusBadge>{originFilter === 'tutti' ? 'Tutte le origini' : originFilter === 'site' ? 'Sito pubblico' : 'Area privata / Supabase'}</StatusBadge>
           </div>
 
           {rows.length > 0 ? (
@@ -139,17 +159,38 @@ export function PhotoPlacementTool({ store }) {
               {rows.map((photo) => {
                 const draft = selection[photo.id] ?? {}
                 const isSelected = Boolean(draft.selected)
+                const isSiteImage = photo.originKey === 'site'
 
                 return (
                   <article className={isSelected ? 'photo-placement-card is-selected' : 'photo-placement-card'} key={photo.id}>
                     <div className="photo-placement-preview">
-                      <FilePreviewMock fileName={photo.fileName} type="image" />
+                      {isSiteImage ? (
+                        <SafeImage
+                          alt={photo.fileName}
+                          className="photo-placement-site-image"
+                          fallbackSrc={photo.src}
+                          finalFallbackSrc={photo.src}
+                          loading="lazy"
+                          src={photo.src}
+                          title={photo.fileName}
+                        />
+                      ) : (
+                        <FilePreviewMock fileName={photo.fileName} storageBucket={photo.storageBucket} storagePath={photo.storagePath} type="image" />
+                      )}
                     </div>
                     <div className="photo-placement-main">
                       <div className="photo-placement-title-row">
                         <div>
-                          <h3>{photo.cantiere ?? 'Cantiere non indicato'}</h3>
-                          <p>{photo.zona ?? 'Zona DA VERIFICARE'} · {photo.lavorazione ?? 'Lavorazione DA VERIFICARE'}</p>
+                          <div className="photo-placement-title-badges">
+                            <h3>{isSiteImage ? photo.fileName : (photo.cantiere ?? 'Cantiere non indicato')}</h3>
+                            <StatusBadge>{isSiteImage ? 'Sito pubblico' : 'Area privata / Supabase'}</StatusBadge>
+                          </div>
+                          <p>
+                            {isSiteImage
+                              ? `${photo.area ?? 'Area DA VERIFICARE'} · ${photo.posizione ?? 'Posizione DA VERIFICARE'}`
+                              : `${photo.zona ?? 'Zona DA VERIFICARE'} · ${photo.lavorazione ?? 'Lavorazione DA VERIFICARE'}`
+                            }
+                          </p>
                         </div>
                         <label className="photo-placement-check">
                           <input
@@ -161,10 +202,22 @@ export function PhotoPlacementTool({ store }) {
                         </label>
                       </div>
 
-                      <dl className="photo-placement-meta">
-                        <div><dt>File</dt><dd>{photo.fileName || 'DA VERIFICARE'}</dd></div>
-                        <div><dt>Stato</dt><dd>{photo.stato || 'DA VERIFICARE'}</dd></div>
-                        <div><dt>Pubblicabile</dt><dd>{displayPublicable(photo.pubblicabile)}</dd></div>
+                      <dl className={isSiteImage ? 'photo-placement-meta photo-placement-meta-site' : 'photo-placement-meta'}>
+                        {isSiteImage ? (
+                          <>
+                            <div><dt>Area</dt><dd>{photo.area || 'DA VERIFICARE'}</dd></div>
+                            <div><dt>Posizione</dt><dd>{photo.posizione || 'DA VERIFICARE'}</dd></div>
+                            <div><dt>File</dt><dd>{photo.fileName || 'DA VERIFICARE'}</dd></div>
+                            <div><dt>Categoria</dt><dd>{photo.categoria || 'DA VERIFICARE'}</dd></div>
+                            <div><dt>Pubblicabile</dt><dd>{displayPublicable(photo.pubblicabile)}</dd></div>
+                          </>
+                        ) : (
+                          <>
+                            <div><dt>File</dt><dd>{photo.fileName || 'DA VERIFICARE'}</dd></div>
+                            <div><dt>Stato</dt><dd>{photo.stato || 'DA VERIFICARE'}</dd></div>
+                            <div><dt>Pubblicabile</dt><dd>{displayPublicable(photo.pubblicabile)}</dd></div>
+                          </>
+                        )}
                       </dl>
 
                       <div className="photo-placement-controls">
@@ -253,14 +306,25 @@ function buildExportText(photos, selection) {
     const draft = selection[photo.id] ?? {}
     lines.push(
       `${index + 1}. ${photo.fileName || 'FILE DA VERIFICARE'}`,
+      `- Origine: ${photo.origin || 'DA VERIFICARE'}`,
       `- ID foto: ${photo.id}`,
-      `- Cantiere: ${photo.cantiere || 'DA VERIFICARE'}`,
-      `- Zona/lavorazione: ${photo.zona || 'DA VERIFICARE'} / ${photo.lavorazione || 'DA VERIFICARE'}`,
+      ...(photo.originKey === 'site'
+        ? [
+            `- Area attuale: ${photo.area || 'DA VERIFICARE'}`,
+            `- Posizione attuale: ${photo.posizione || 'DA VERIFICARE'}`,
+            `- Cantiere: ${photo.cantiere || 'DA VERIFICARE'}`,
+            `- Categoria: ${photo.categoria || 'DA VERIFICARE'}`,
+            `- Pubblicabile: ${displayPublicable(photo.pubblicabile)}`,
+          ]
+        : [
+            `- Cantiere: ${photo.cantiere || 'DA VERIFICARE'}`,
+            `- Zona/lavorazione: ${photo.zona || 'DA VERIFICARE'} / ${photo.lavorazione || 'DA VERIFICARE'}`,
+            `- Stato interno: ${photo.stato || 'DA VERIFICARE'}`,
+            `- Pubblicabile: ${displayPublicable(photo.pubblicabile)}`,
+          ]),
       `- Dove metterla: ${draft.placement || 'DA VERIFICARE'}`,
       `- Categoria visiva: ${draft.category || 'DA VERIFICARE'}`,
       `- Priorità: ${draft.priority || 'DA VERIFICARE'}`,
-      `- Pubblicabile: ${displayPublicable(photo.pubblicabile)}`,
-      `- Stato interno: ${photo.stato || 'DA VERIFICARE'}`,
       `- Note: ${draft.note?.trim() || 'Nessuna nota'}`,
       '',
     )
@@ -276,3 +340,30 @@ function displayPublicable(value) {
   if (value === 'da valutare') return 'Da valutare'
   return value ?? 'DA VERIFICARE'
 }
+
+function normalizePrivatePhoto(photo) {
+  return {
+    id: photo.id,
+    fileName: photo.fileName || 'DA VERIFICARE',
+    src: photo.src ?? null,
+    origin: 'Area privata / Supabase',
+    originKey: 'private',
+    area: photo.cantiere ?? 'DA VERIFICARE',
+    posizione: [photo.zona, photo.lavorazione].filter(Boolean).join(' · ') || 'DA VERIFICARE',
+    categoria: photo.lavorazione ?? photo.tipoDocumento ?? 'DA VERIFICARE',
+    cantiere: photo.cantiere ?? 'DA VERIFICARE',
+    usataNelSito: false,
+    pubblicabile: photo.pubblicabile ?? 'da valutare',
+    note: photo.descrizionePubblica ?? photo.note ?? '',
+    stato: photo.stato ?? 'DA VERIFICARE',
+    storagePath: photo.storagePath,
+    storageBucket: photo.storageBucket,
+  }
+}
+
+const normalizedSiteImages = siteImages.map((photo) => ({
+  ...photo,
+  originKey: 'site',
+  origin: 'Sito pubblico',
+  usataNelSito: true,
+}))
