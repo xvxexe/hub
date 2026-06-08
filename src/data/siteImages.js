@@ -148,7 +148,7 @@ function driveProjectUsage(projectId, section, slot, component = 'PremiumProject
 
 function driveProjectSplitUsage(projectId, section, component = 'PremiumImageSplit') {
   return [
-    usageLocation({ route: `#/cantieri/${projectId}`, pagina: 'Dettaglio cantiere', sezione: section, componente, slot: 'image' }),
+    usageLocation({ route: `#/cantieri/${projectId}`, pagina: 'Dettaglio cantiere', sezione: section, componente: component, slot: 'image' }),
   ]
 }
 
@@ -583,4 +583,3 @@ const siteImages = mergeEntries([
 
 export { heroImages, serviceImages }
 export { siteImages }
-
