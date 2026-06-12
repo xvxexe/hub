@@ -89,9 +89,10 @@ export function PremiumHero({ eyebrow, title, text, image, imageAlt, heroVideo, 
           muted
           playsInline
           preload="auto"
-          src={heroVideo.src}
           style={heroVideoStyle}
-        />
+        >
+          <source src={heroVideo.src} type="video/mp4" />
+        </video>
       ) : (
         <SafeImage alt={imageAlt || title} className="premium-hero-bg" fallbackSrc={image} finalFallbackSrc={image} loading="eager" src={image} title={title} />
       )}
