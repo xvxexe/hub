@@ -1,7 +1,5 @@
-import { useRef, useState } from 'react'
-
-function videoSourceUrl(id) {
-  return `https://drive.google.com/uc?export=download&id=${id}`
+function previewUrl(id) {
+  return `https://drive.google.com/file/d/${id}/preview`
 }
 
 const frameStyle = {
@@ -14,35 +12,12 @@ const frameStyle = {
   boxShadow: '0 22px 58px rgba(15, 23, 42, 0.14)',
 }
 
-const mediaStyle = {
+const iframeStyle = {
   display: 'block',
   width: '100%',
   height: '100%',
-  objectFit: 'cover',
-  cursor: 'pointer',
-}
-
-const buttonStyle = {
-  position: 'absolute',
-  right: '0.85rem',
-  bottom: '0.85rem',
-  zIndex: 2,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  minWidth: '4.25rem',
-  minHeight: '2.35rem',
-  border: '1px solid rgba(255, 255, 255, 0.32)',
-  borderRadius: '999px',
-  background: 'rgba(15, 23, 42, 0.72)',
-  color: '#ffffff',
-  fontSize: '0.78rem',
-  fontWeight: 900,
-  lineHeight: 1,
-  padding: '0.65rem 0.85rem',
-  cursor: 'pointer',
-  backdropFilter: 'blur(14px) saturate(140%)',
-  WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+  border: 0,
+  background: '#0f172a',
 }
 
 const gridStyle = {
@@ -86,47 +61,20 @@ const textStyle = {
 }
 
 export function PublicVideo({ video, ratio = '16 / 10' }) {
-  const videoRef = useRef(null)
-  const [isPlaying, setIsPlaying] = useState(false)
-
   if (!video?.id) return null
-
-  const togglePlayback = async () => {
-    const element = videoRef.current
-    if (!element) return
-
-    if (element.paused) {
-      try {
-        await element.play()
-        setIsPlaying(true)
-      } catch {
-        setIsPlaying(false)
-      }
-      return
-    }
-
-    element.pause()
-    setIsPlaying(false)
-  }
 
   return (
     <div style={{ ...frameStyle, aspectRatio: ratio }}>
-      <video
+      <iframe
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen={false}
         aria-label={video.alt ?? video.title}
-        loop
-        muted
-        onClick={togglePlayback}
-        onPause={() => setIsPlaying(false)}
-        onPlay={() => setIsPlaying(true)}
-        playsInline
-        preload="metadata"
-        ref={videoRef}
-        src={video.src ?? videoSourceUrl(video.id)}
-        style={mediaStyle}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        src={previewUrl(video.id)}
+        style={iframeStyle}
+        title={video.title ?? 'Video cantiere'}
       />
-      <button style={buttonStyle} type="button" onClick={togglePlayback} aria-label={isPlaying ? 'Pausa video' : 'Riproduci video'}>
-        {isPlaying ? 'Pausa' : 'Play'}
-      </button>
     </div>
   )
 }
