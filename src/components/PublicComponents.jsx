@@ -61,41 +61,14 @@ export function useDragScroll() {
   }
 }
 
-const heroVideoStyle = {
-  position: 'absolute',
-  inset: 0,
-  zIndex: 0,
-  width: '100%',
-  height: '100%',
-  objectFit: 'cover',
-  objectPosition: 'center center',
-  filter: 'saturate(1.03) contrast(1.04)',
-  background: '#0f172a',
-}
-
-export function PremiumHero({ eyebrow, title, text, image, imageAlt, heroVideo, primaryLabel = 'Richiedi preventivo', primaryHref = '#/preventivo', secondaryLabel = 'Scopri i servizi', secondaryHref = '#/servizi', meta = [], variant = 'default' }) {
+export function PremiumHero({ eyebrow, title, text, image, imageAlt, primaryLabel = 'Richiedi preventivo', primaryHref = '#/preventivo', secondaryLabel = 'Scopri i servizi', secondaryHref = '#/servizi', meta = [], variant = 'default' }) {
   const marqueeItems = [...meta, ...meta]
   const heroMetaDrag = useDragScroll()
 
   return (
     <section className={withLevel3Class(`premium-hero premium-hero-${variant}`)}>
       <Level3ShaderStage variant="hero" />
-      {heroVideo?.src ? (
-        <video
-          aria-label={heroVideo.alt ?? imageAlt ?? title}
-          autoPlay
-          className="premium-hero-bg"
-          loop
-          muted
-          playsInline
-          preload="auto"
-          style={heroVideoStyle}
-        >
-          <source src={heroVideo.src} type="video/mp4" />
-        </video>
-      ) : (
-        <SafeImage alt={imageAlt || title} className="premium-hero-bg" fallbackSrc={image} finalFallbackSrc={image} loading="eager" src={image} title={title} />
-      )}
+      <SafeImage alt={imageAlt || title} className="premium-hero-bg" fallbackSrc={image} finalFallbackSrc={image} loading="eager" src={image} title={title} />
       <div className="premium-hero-overlay-layer" />
       <div className="premium-hero-copy">
         {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
