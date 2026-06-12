@@ -12,6 +12,22 @@ import { caseStudyHeroImage, workMethod } from '../../data/publicPremiumData'
 import { drivePublicProjects } from '../../data/driveProjectPhotos'
 import { serviceImages } from '../../data/publicImages'
 
+const centeredCardGridStyle = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
+  alignItems: 'stretch',
+  gap: '1rem',
+  width: 'min(100%, var(--pub-max))',
+  marginInline: 'auto',
+}
+
+const centeredCardItemStyle = {
+  flex: '1 1 min(100%, 320px)',
+  maxWidth: '386px',
+  display: 'flex',
+}
+
 export function ProjectDetail({ projectId }) {
   const project = drivePublicProjects.find((item) => item.id === projectId) ?? drivePublicProjects[0]
   const gallery = project.gallery ?? []
@@ -87,20 +103,25 @@ export function ProjectDetail({ projectId }) {
       </PremiumImageSplit>
 
       <PremiumSection eyebrow="Servizi realizzati" title="Lavorazioni coinvolte">
-        <div className="premium-feature-grid premium-feature-grid-centered">
+        <div style={centeredCardGridStyle}>
           {project.services.map((service) => (
-            <PremiumTextCard
-              key={service}
-              title={service}
-              text={project.serviceDetails?.[service] ?? 'Attività inserita nel piano di lavoro del cantiere.'}
-            />
+            <div key={service} style={centeredCardItemStyle}>
+              <PremiumTextCard
+                title={service}
+                text={project.serviceDetails?.[service] ?? 'Attività inserita nel piano di lavoro del cantiere.'}
+              />
+            </div>
           ))}
         </div>
       </PremiumSection>
 
       <PremiumSection eyebrow="Risultati" title="Cosa è stato ottenuto" tone="soft">
-        <div className="premium-feature-grid premium-feature-grid-centered">
-          {project.results.map((result) => <PremiumTextCard key={result} title={result} text={project.resultDetails?.[result] ?? 'Risultato collegato alle lavorazioni effettive del cantiere.'} />)}
+        <div style={centeredCardGridStyle}>
+          {project.results.map((result) => (
+            <div key={result} style={centeredCardItemStyle}>
+              <PremiumTextCard title={result} text={project.resultDetails?.[result] ?? 'Risultato collegato alle lavorazioni effettive del cantiere.'} />
+            </div>
+          ))}
         </div>
       </PremiumSection>
 
