@@ -17,7 +17,6 @@ import {
   workMethod,
 } from '../../data/publicPremiumData'
 import { driveHeroImages, drivePublicProjects } from '../../data/driveProjectPhotos'
-import { publicFeaturedVideos } from '../../data/driveProjectVideos'
 
 const visibleProjects = drivePublicProjects.filter((project) => project.status !== 'Da verificare')
 const featuredProject = visibleProjects[0]
@@ -39,7 +38,6 @@ export function Home() {
         text="Edilizia tecnica, cartongesso, demolizioni, ristrutturazioni e finiture interne per chi cerca un partner serio: organizzazione, presenza in cantiere, documentazione e un risultato finale pulito."
         image={homeHeroImage}
         imageAlt="Foto reale di cantiere edile in lavorazione"
-        heroVideo={publicFeaturedVideos.home}
         variant="overlay"
         meta={['Edilizia tecnica', 'Cartongesso', 'Demolizioni', 'Finiture interne', 'Gestione cantieri']}
       />
