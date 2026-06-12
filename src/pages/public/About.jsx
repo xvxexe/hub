@@ -15,6 +15,7 @@ import {
   workMethod,
 } from '../../data/publicPremiumData'
 import { driveHeroImages, driveServiceImages } from '../../data/driveProjectPhotos'
+import { publicFeaturedVideos } from '../../data/driveProjectVideos'
 
 export function About() {
   return (
@@ -30,6 +31,7 @@ export function About() {
         text="EuropaService nasce dall’esperienza diretta nei cantieri. Il nostro lavoro unisce presenza operativa, responsabilità, pianificazione e cura dei dettagli."
         image={teamImage}
         imageAlt="Foto reale di cantiere per pagina azienda"
+        heroVideo={publicFeaturedVideos.about}
         primaryLabel="Parla con noi"
         primaryHref="#/contatti"
         secondaryLabel="Scopri i servizi"
