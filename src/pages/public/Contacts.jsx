@@ -8,6 +8,7 @@ import {
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import { mainHeroImage } from '../../data/publicPremiumData'
+import { publicFeaturedVideos } from '../../data/driveProjectVideos'
 import { realContactCards } from '../../data/publicRealData'
 
 const initialForm = {
@@ -74,6 +75,7 @@ export function Contacts() {
         text="Siamo a disposizione per informazioni, sopralluoghi e preventivi. Raccontaci il progetto: ti aiuteremo a definire lavorazioni, priorità e prossimi passaggi."
         image={mainHeroImage}
         imageAlt="Cantiere interno per richiesta preventivo"
+        heroVideo={publicFeaturedVideos.contact}
         primaryLabel="Compila il modulo"
         primaryHref="#/preventivo?form=1"
         secondaryLabel="Scopri i servizi"
