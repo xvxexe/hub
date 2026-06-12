@@ -14,7 +14,7 @@ import { serviceImages } from '../../data/publicImages'
 
 const servicesGridStyle = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 470px), 1fr))',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
   justifyContent: 'center',
   alignItems: 'stretch',
   gap: '1rem',
@@ -25,6 +25,13 @@ const servicesGridStyle = {
 const fullWidthCardWrapperStyle = {
   display: 'flex',
   minWidth: 0,
+  width: '100%',
+  height: '100%',
+}
+
+const equalCardStyle = {
+  width: '100%',
+  minHeight: '100%',
 }
 
 const resultsGridStyle = {
@@ -124,6 +131,7 @@ export function ProjectDetail({ projectId }) {
               <PremiumTextCard
                 title={service}
                 text={project.serviceDetails?.[service] ?? 'Attività inserita nel piano di lavoro del cantiere.'}
+                style={equalCardStyle}
               />
             </div>
           ))}
