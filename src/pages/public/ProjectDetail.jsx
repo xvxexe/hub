@@ -6,12 +6,10 @@ import {
   PremiumSection,
   PremiumTextCard,
 } from '../../components/PublicComponents'
-import { PublicVideoGrid } from '../../components/PublicVideo'
 import { SEO } from '../../components/SEO'
 import { SafeImage } from '../../components/SafeImage'
 import { caseStudyHeroImage, workMethod } from '../../data/publicPremiumData'
 import { drivePublicProjects } from '../../data/driveProjectPhotos'
-import { projectVideosById } from '../../data/driveProjectVideos'
 import { serviceImages } from '../../data/publicImages'
 
 const servicesGridStyle = {
@@ -55,7 +53,6 @@ const resultCardItemStyle = {
 export function ProjectDetail({ projectId }) {
   const project = drivePublicProjects.find((item) => item.id === projectId) ?? drivePublicProjects[0]
   const gallery = project.gallery ?? []
-  const videos = projectVideosById[project.id] ?? []
 
   return (
     <>
@@ -113,12 +110,6 @@ export function ProjectDetail({ projectId }) {
           ))}
         </div>
       </section>
-
-      {videos.length ? (
-        <PremiumSection eyebrow="Video cantiere" title="Fasi in movimento" text="Clip selezionate dalla stessa cartella Drive del cantiere, integrate in modo fluido nella scheda." tone="soft">
-          <PublicVideoGrid videos={videos} />
-        </PremiumSection>
-      ) : null}
 
       <PremiumImageSplit
         eyebrow="Metodo applicato"
