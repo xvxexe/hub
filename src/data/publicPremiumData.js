@@ -30,7 +30,7 @@ export const premiumServices = [
     id: 'demolizioni',
     title: 'Demolizioni',
     icon: 'demolizioni',
-    image: driveServiceImages.ristrutturazioniTecniche,
+    image: driveHeroImages.documentation,
     fallbackImage: serviceImages.ediliGenerali.src,
     alt: 'Foto reale di demolizioni e preparazione cantiere',
     summary: 'Demolizioni interne, rimozioni controllate, preparazione delle aree e gestione ordinata delle fasi preliminari prima delle nuove lavorazioni.',
