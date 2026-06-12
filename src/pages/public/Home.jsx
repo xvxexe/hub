@@ -10,7 +10,6 @@ import {
   PremiumTextCard,
   useDragScroll,
 } from '../../components/PublicComponents'
-import { PublicVideoFeature } from '../../components/PublicVideo'
 import { SEO } from '../../components/SEO'
 import {
   homeHeroImage,
@@ -40,6 +39,7 @@ export function Home() {
         text="Edilizia tecnica, cartongesso, demolizioni, ristrutturazioni e finiture interne per chi cerca un partner serio: organizzazione, presenza in cantiere, documentazione e un risultato finale pulito."
         image={homeHeroImage}
         imageAlt="Foto reale di cantiere edile in lavorazione"
+        heroVideo={publicFeaturedVideos.home}
         variant="overlay"
         meta={['Edilizia tecnica', 'Cartongesso', 'Demolizioni', 'Finiture interne', 'Gestione cantieri']}
       />
@@ -58,13 +58,6 @@ export function Home() {
           <small>Consegna pulita</small>
         </div>
       </PremiumImageSplit>
-
-      <PublicVideoFeature
-        eyebrow="Video operativo"
-        title="Il lavoro si capisce anche in movimento."
-        text="Alcune fasi vengono mostrate con clip brevi e pulite, senza appesantire la navigazione: play, pausa e video adattato al layout."
-        video={publicFeaturedVideos.home}
-      />
 
       <PremiumSection
         eyebrow="Servizi"
