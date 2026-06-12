@@ -12,7 +12,22 @@ import { caseStudyHeroImage, workMethod } from '../../data/publicPremiumData'
 import { drivePublicProjects } from '../../data/driveProjectPhotos'
 import { serviceImages } from '../../data/publicImages'
 
-const centeredCardGridStyle = {
+const servicesGridStyle = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 470px), 1fr))',
+  justifyContent: 'center',
+  alignItems: 'stretch',
+  gap: '1rem',
+  width: 'min(100%, var(--pub-max))',
+  marginInline: 'auto',
+}
+
+const fullWidthCardWrapperStyle = {
+  display: 'flex',
+  minWidth: 0,
+}
+
+const resultsGridStyle = {
   display: 'flex',
   flexWrap: 'wrap',
   justifyContent: 'center',
@@ -22,7 +37,7 @@ const centeredCardGridStyle = {
   marginInline: 'auto',
 }
 
-const centeredCardItemStyle = {
+const resultCardItemStyle = {
   flex: '1 1 min(100%, 320px)',
   maxWidth: '386px',
   display: 'flex',
@@ -103,9 +118,9 @@ export function ProjectDetail({ projectId }) {
       </PremiumImageSplit>
 
       <PremiumSection eyebrow="Servizi realizzati" title="Lavorazioni coinvolte">
-        <div style={centeredCardGridStyle}>
+        <div style={servicesGridStyle}>
           {project.services.map((service) => (
-            <div key={service} style={centeredCardItemStyle}>
+            <div key={service} style={fullWidthCardWrapperStyle}>
               <PremiumTextCard
                 title={service}
                 text={project.serviceDetails?.[service] ?? 'Attività inserita nel piano di lavoro del cantiere.'}
@@ -116,9 +131,9 @@ export function ProjectDetail({ projectId }) {
       </PremiumSection>
 
       <PremiumSection eyebrow="Risultati" title="Cosa è stato ottenuto" tone="soft">
-        <div style={centeredCardGridStyle}>
+        <div style={resultsGridStyle}>
           {project.results.map((result) => (
-            <div key={result} style={centeredCardItemStyle}>
+            <div key={result} style={resultCardItemStyle}>
               <PremiumTextCard title={result} text={project.resultDetails?.[result] ?? 'Risultato collegato alle lavorazioni effettive del cantiere.'} />
             </div>
           ))}
