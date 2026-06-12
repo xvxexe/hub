@@ -9,6 +9,7 @@ import {
 import { SEO } from '../../components/SEO'
 import { projectsHeroImage } from '../../data/publicPremiumData'
 import { driveHeroImages, drivePublicProjects } from '../../data/driveProjectPhotos'
+import { publicFeaturedVideos } from '../../data/driveProjectVideos'
 
 export function Projects() {
   const visibleProjects = drivePublicProjects.filter((project) => project.status !== 'Da verificare')
@@ -27,6 +28,7 @@ export function Projects() {
         text="Mostriamo interventi con informazioni operative e foto collegate. Le immagini senza attribuzione certa restano fuori dal portfolio pubblico."
         image={projectsHeroImage}
         imageAlt="Foto reale di cantiere edile per portfolio"
+        heroVideo={publicFeaturedVideos.projects}
         primaryLabel="Richiedi un lavoro simile"
         secondaryLabel="Apri case study"
         secondaryHref={`#/cantieri/${featured.id}`}
