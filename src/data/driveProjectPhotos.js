@@ -50,7 +50,6 @@ const capriSeed = [
   ['IMG_8835.JPG', '19Xv0PRUItIa3-Zsq7CfDBkWpU078BPy6'],
   ['IMG_8850.JPG', '1nBCjANCii8ydzbPDmJpiWofnrMgvzcqs'],
   ['IMG_8849.JPG', '1AcX_MZfn7bGxeH37boIu5ldsHPXV6kf3'],
-  ['IMG_8843.JPG', '1gRS1ny1t3Vaw9ADGuBVLsTOtVrfxcNaW'],
   ['IMG_8851.JPG', '1iVjrQZRVmLQllAZ4o0wNui2webplncF9'],
 ]
 
@@ -163,7 +162,7 @@ export const drivePublicProjects = [
     folderUrl: driveFolderUrl(projectFolders.capri),
     image: srcByName(capriGallery, 'IMG_8816.JPG', 0),
     heroImage: srcByName(capriGallery, 'IMG_8834.JPG', 0),
-    methodImage: srcByName(capriGallery, 'IMG_8843.JPG', 0),
+    methodImage: srcByName(capriGallery, 'IMG_8849.JPG', 0),
     alt: 'Foto reale del cantiere Capri',
     summary: 'Lavorazioni hospitality a Capri con preparazione aree, passaggi impiantistici, chiusure e finiture interne.',
     longText: 'Scheda dedicata alla località Capri, con immagini di cantiere selezionate dalla cartella Drive già categorizzata. Il lavoro viene presentato come intervento hospitality su ambienti interni, preparazioni e finiture coordinate.',
