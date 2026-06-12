@@ -58,9 +58,9 @@ export function ProjectDetail({ projectId }) {
         </article>
       </section>
 
-      <PremiumSection eyebrow="Galleria" title="Foto reali del cantiere" text="Immagini caricate da Drive e collegate alla scheda cantiere." tone="soft">
+      <section className="premium-section premium-section-soft">
         <div className="premium-gallery">
-          {gallery.map((photo, index) => (
+          {gallery.map((photo) => (
             <article className="premium-card" key={photo.id}>
               <SafeImage
                 alt={photo.alt}
@@ -69,12 +69,10 @@ export function ProjectDetail({ projectId }) {
                 src={photo.src}
                 title={photo.title}
               />
-              <p className="premium-eyebrow">Foto {index + 1}</p>
-              <h3>{photo.fileName}</h3>
             </article>
           ))}
         </div>
-      </PremiumSection>
+      </section>
 
       <PremiumImageSplit
         eyebrow="Metodo applicato"
