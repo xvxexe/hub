@@ -40,21 +40,20 @@ export function ProjectDetail({ projectId }) {
         <div className="premium-key-facts">
           <article><span>Settore</span><strong>{project.metrics[0]}</strong></article>
           <article><span>Ambito</span><strong>{project.metrics[1]}</strong></article>
-          <article><span>Foto</span><strong>{project.metrics[2]}</strong></article>
           <article><span>Anno</span><strong>{project.year}</strong></article>
         </div>
       </PremiumSection>
 
       <section className="premium-case-split">
         <article>
-          <p className="premium-eyebrow">Sfida</p>
+          <p className="premium-eyebrow">Contesto operativo</p>
           <h2>{project.challenge}</h2>
-          <p>In contesti ricettivi e tecnici serve lavorare con precisione, rispettando accessi, tempi, pulizia e continuità degli spazi.</p>
+          <p>{project.contextNote ?? 'Intervento organizzato in base ad accessi, aree disponibili, interferenze e priorità operative.'}</p>
         </article>
         <article>
-          <p className="premium-eyebrow">Soluzione</p>
+          <p className="premium-eyebrow">Lavorazioni eseguite</p>
           <h2>{project.solution}</h2>
-          <p>{project.note ?? 'Le foto sono state collegate al cantiere per rendere il portfolio più concreto e verificabile.'}</p>
+          <p>{project.workNote ?? project.note ?? 'Documentazione fotografica collegata alla scheda cantiere.'}</p>
         </article>
       </section>
 
@@ -88,20 +87,20 @@ export function ProjectDetail({ projectId }) {
       </PremiumImageSplit>
 
       <PremiumSection eyebrow="Servizi realizzati" title="Lavorazioni coinvolte">
-        <div className="premium-feature-grid">
+        <div className="premium-feature-grid premium-feature-grid-centered">
           {project.services.map((service) => (
             <PremiumTextCard
               key={service}
               title={service}
-              text="Attività integrata nel piano di lavoro con attenzione a ordine, coordinamento e finitura finale."
+              text={project.serviceDetails?.[service] ?? 'Attività inserita nel piano di lavoro del cantiere.'}
             />
           ))}
         </div>
       </PremiumSection>
 
       <PremiumSection eyebrow="Risultati" title="Cosa è stato ottenuto" tone="soft">
-        <div className="premium-feature-grid">
-          {project.results.map((result) => <PremiumTextCard key={result} title={result} text="Un risultato concreto per rendere l’intervento più ordinato, funzionale e coerente con gli obiettivi del cliente." />)}
+        <div className="premium-feature-grid premium-feature-grid-centered">
+          {project.results.map((result) => <PremiumTextCard key={result} title={result} text={project.resultDetails?.[result] ?? 'Risultato collegato alle lavorazioni effettive del cantiere.'} />)}
         </div>
       </PremiumSection>
 
