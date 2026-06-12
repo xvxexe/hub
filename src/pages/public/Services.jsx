@@ -18,7 +18,6 @@ import {
   workMethod,
 } from '../../data/publicPremiumData'
 import { driveHeroImages, driveServiceImages } from '../../data/driveProjectPhotos'
-import { publicFeaturedVideos } from '../../data/driveProjectVideos'
 
 export function Services() {
   return (
@@ -34,7 +33,6 @@ export function Services() {
         text="Cartongesso, demolizioni, finiture, manutenzioni e gestione operativa vengono organizzati dentro un unico metodo, così il cantiere resta leggibile e il risultato finale è coerente."
         image={servicesHeroImage}
         imageAlt="Foto reale di cantiere edile per servizi"
-        heroVideo={publicFeaturedVideos.services}
         primaryLabel="Richiedi preventivo"
         secondaryLabel="Guarda i cantieri"
         secondaryHref="#/cantieri"
