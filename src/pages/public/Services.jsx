@@ -9,7 +9,6 @@ import {
   PremiumTextCard,
   PremiumTimeline,
 } from '../../components/PublicComponents'
-import { PublicVideoFeature } from '../../components/PublicVideo'
 import { SEO } from '../../components/SEO'
 import {
   operationalMethod,
@@ -35,6 +34,7 @@ export function Services() {
         text="Cartongesso, demolizioni, finiture, manutenzioni e gestione operativa vengono organizzati dentro un unico metodo, così il cantiere resta leggibile e il risultato finale è coerente."
         image={servicesHeroImage}
         imageAlt="Foto reale di cantiere edile per servizi"
+        heroVideo={publicFeaturedVideos.services}
         primaryLabel="Richiedi preventivo"
         secondaryLabel="Guarda i cantieri"
         secondaryHref="#/cantieri"
@@ -51,13 +51,6 @@ export function Services() {
           {premiumServices.map((service) => <PremiumServiceCard detailed key={service.id} service={service} />)}
         </div>
       </PremiumSection>
-
-      <PublicVideoFeature
-        eyebrow="Fasi reali"
-        title="Clip leggere dentro il racconto dei servizi."
-        text="I video restano integrati nel layout e servono solo a mostrare ritmo, spazio e avanzamento delle lavorazioni, con comandi essenziali di play e pausa."
-        video={publicFeaturedVideos.services}
-      />
 
       <PremiumImageSplit
         eyebrow="Cartongesso e sistemi a secco"
