@@ -9,6 +9,7 @@ import {
   PremiumTextCard,
   PremiumTimeline,
 } from '../../components/PublicComponents'
+import { PublicVideoFeature } from '../../components/PublicVideo'
 import { SEO } from '../../components/SEO'
 import {
   operationalMethod,
@@ -18,6 +19,7 @@ import {
   workMethod,
 } from '../../data/publicPremiumData'
 import { driveHeroImages, driveServiceImages } from '../../data/driveProjectPhotos'
+import { publicFeaturedVideos } from '../../data/driveProjectVideos'
 
 export function Services() {
   return (
@@ -49,6 +51,13 @@ export function Services() {
           {premiumServices.map((service) => <PremiumServiceCard detailed key={service.id} service={service} />)}
         </div>
       </PremiumSection>
+
+      <PublicVideoFeature
+        eyebrow="Fasi reali"
+        title="Clip leggere dentro il racconto dei servizi."
+        text="I video restano integrati nel layout e servono solo a mostrare ritmo, spazio e avanzamento delle lavorazioni, con comandi essenziali di play e pausa."
+        video={publicFeaturedVideos.services}
+      />
 
       <PremiumImageSplit
         eyebrow="Cartongesso e sistemi a secco"
