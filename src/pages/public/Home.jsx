@@ -10,6 +10,7 @@ import {
   PremiumTextCard,
   useDragScroll,
 } from '../../components/PublicComponents'
+import { PublicVideoFeature } from '../../components/PublicVideo'
 import { SEO } from '../../components/SEO'
 import {
   homeHeroImage,
@@ -17,6 +18,7 @@ import {
   workMethod,
 } from '../../data/publicPremiumData'
 import { driveHeroImages, drivePublicProjects } from '../../data/driveProjectPhotos'
+import { publicFeaturedVideos } from '../../data/driveProjectVideos'
 
 const visibleProjects = drivePublicProjects.filter((project) => project.status !== 'Da verificare')
 const featuredProject = visibleProjects[0]
@@ -56,6 +58,13 @@ export function Home() {
           <small>Consegna pulita</small>
         </div>
       </PremiumImageSplit>
+
+      <PublicVideoFeature
+        eyebrow="Video operativo"
+        title="Il lavoro si capisce anche in movimento."
+        text="Alcune fasi vengono mostrate con clip brevi e pulite, senza appesantire la navigazione: play, pausa e video adattato al layout."
+        video={publicFeaturedVideos.home}
+      />
 
       <PremiumSection
         eyebrow="Servizi"
