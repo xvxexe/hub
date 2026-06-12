@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import '../styles/level3-shaders.css'
 import { Level3ShaderStage, withLevel3Class } from './Level3ShaderStage'
 import { SafeImage } from './SafeImage'
@@ -24,8 +25,45 @@ function handlePremiumLinkClick(event, href) {
   scrollToQuoteForm()
 }
 
+export function useDragScroll() {
+  const dragState = useRef({ active: false, startX: 0, scrollLeft: 0 })
+
+  return {
+    onPointerDown: (event) => {
+      if (event.button !== undefined && event.button !== 0) return
+      const element = event.currentTarget
+      dragState.current = {
+        active: true,
+        startX: event.clientX,
+        scrollLeft: element.scrollLeft,
+      }
+      element.setPointerCapture?.(event.pointerId)
+      element.dataset.dragging = 'true'
+    },
+    onPointerMove: (event) => {
+      if (!dragState.current.active) return
+      const element = event.currentTarget
+      const delta = event.clientX - dragState.current.startX
+      element.scrollLeft = dragState.current.scrollLeft - delta
+    },
+    onPointerUp: (event) => {
+      dragState.current.active = false
+      event.currentTarget.dataset.dragging = 'false'
+    },
+    onPointerCancel: (event) => {
+      dragState.current.active = false
+      event.currentTarget.dataset.dragging = 'false'
+    },
+    onMouseLeave: (event) => {
+      dragState.current.active = false
+      event.currentTarget.dataset.dragging = 'false'
+    },
+  }
+}
+
 export function PremiumHero({ eyebrow, title, text, image, imageAlt, primaryLabel = 'Richiedi preventivo', primaryHref = '#/preventivo', secondaryLabel = 'Scopri i servizi', secondaryHref = '#/servizi', meta = [], variant = 'default' }) {
   const marqueeItems = [...meta, ...meta]
+  const heroMetaDrag = useDragScroll()
 
   return (
     <section className={withLevel3Class(`premium-hero premium-hero-${variant}`)}>
@@ -41,7 +79,7 @@ export function PremiumHero({ eyebrow, title, text, image, imageAlt, primaryLabe
           <a className="premium-button premium-button-secondary" href={secondaryHref} onClick={(event) => handlePremiumLinkClick(event, secondaryHref)}>{secondaryLabel}</a>
         </div>
         {meta.length > 0 ? (
-          <div className="premium-hero-meta" aria-label="Settori e servizi principali">
+          <div className="premium-hero-meta" aria-label="Settori e servizi principali" {...heroMetaDrag}>
             <div className="premium-hero-meta-track">
               {marqueeItems.map((item, index) => <span key={`${item}-${index}`}>{item}</span>)}
             </div>
