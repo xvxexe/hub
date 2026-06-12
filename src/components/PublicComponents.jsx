@@ -70,6 +70,7 @@ const heroVideoStyle = {
   objectFit: 'cover',
   objectPosition: 'center center',
   filter: 'saturate(1.03) contrast(1.04)',
+  background: '#0f172a',
 }
 
 export function PremiumHero({ eyebrow, title, text, image, imageAlt, heroVideo, primaryLabel = 'Richiedi preventivo', primaryHref = '#/preventivo', secondaryLabel = 'Scopri i servizi', secondaryHref = '#/servizi', meta = [], variant = 'default' }) {
@@ -87,8 +88,7 @@ export function PremiumHero({ eyebrow, title, text, image, imageAlt, heroVideo, 
           loop
           muted
           playsInline
-          poster={image}
-          preload="metadata"
+          preload="auto"
           src={heroVideo.src}
           style={heroVideoStyle}
         />
