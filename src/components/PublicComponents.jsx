@@ -168,9 +168,9 @@ export function TestimonialMock({ testimonial }) {
   return <article className="premium-card premium-testimonial premium-scroll-reveal"><p>“{testimonial.quote}”</p><strong>{testimonial.author}</strong>{testimonial.role ? <span>{testimonial.role}</span> : null}</article>
 }
 
-export function PremiumTextCard({ title, text, eyebrow, items = [] }) {
+export function PremiumTextCard({ title, text, eyebrow, items = [], style }) {
   return (
-    <article className="premium-card premium-text-card premium-scroll-reveal">
+    <article className="premium-card premium-text-card premium-scroll-reveal" style={style}>
       {eyebrow ? <p className="premium-eyebrow">{eyebrow}</p> : null}
       <h3>{title}</h3>
       <p>{text}</p>
