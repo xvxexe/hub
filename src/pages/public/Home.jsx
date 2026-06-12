@@ -8,6 +8,7 @@ import {
   PremiumSection,
   PremiumServiceCard,
   PremiumTextCard,
+  useDragScroll,
 } from '../../components/PublicComponents'
 import { SEO } from '../../components/SEO'
 import {
@@ -22,6 +23,8 @@ const featuredProject = visibleProjects[0]
 const serviceCarouselItems = [...premiumServices, ...premiumServices]
 
 export function Home() {
+  const servicesCarouselDrag = useDragScroll()
+
   return (
     <>
       <SEO
@@ -61,7 +64,7 @@ export function Home() {
         tone="soft"
         action={<a className="premium-button premium-button-primary premium-services-cta" href="#/servizi">Scopri tutti i servizi</a>}
       >
-        <div className="premium-services-carousel" aria-label="Servizi principali">
+        <div className="premium-services-carousel" aria-label="Servizi principali" {...servicesCarouselDrag}>
           <div className="premium-services-carousel-track">
             {serviceCarouselItems.map((service, index) => (
               <div className="premium-services-carousel-item" key={`${service.id}-${index}`}>
