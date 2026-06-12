@@ -10,6 +10,7 @@ import { PremiumChipMarquee } from '../../components/PremiumChipMarquee'
 import { SEO } from '../../components/SEO'
 import { mainHeroImage, sectorsServed, workMethod } from '../../data/publicPremiumData'
 import { driveHeroImages, driveServiceImages } from '../../data/driveProjectPhotos'
+import { publicFeaturedVideos } from '../../data/driveProjectVideos'
 
 const sectorDetails = [
   { title: 'Retail', text: 'Negozi e locali commerciali richiedono tempi certi, immagine curata, illuminazione integrata e consegne rapide.' },
@@ -33,6 +34,7 @@ export function Sectors() {
         text="Ogni settore ha priorità diverse: tempi, pulizia, accessi, sicurezza, estetica, continuità operativa. Il nostro metodo resta costante: ordine, controllo e qualità."
         image={mainHeroImage}
         imageAlt="Cantiere interno per settori serviti"
+        heroVideo={publicFeaturedVideos.international}
         variant="page"
         meta={sectorsServed.slice(0, 6)}
       />
