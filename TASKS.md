@@ -340,3 +340,14 @@ v0.6 — Preparazione Supabase setup
 - Documenti interni esclusi dalla cartella `public`
 - Nessun Supabase, backend, upload reale, IA o gestione documenti interni reali implementata
 - Verifiche eseguite: `npm run download:prototype-images`, `npm run lint`, `npm run build`
+
+## Completato — Ottimizzazione tecnica, CSS e motion system
+
+- Rimossi CSS pubblici duplicati, shader sperimentali disattivati e fix viewport JavaScript che applicava stili inline a ogni resize
+- Unificati durata, easing e comportamento delle animazioni pubbliche in un solo sistema di reveal progressivo basato su `IntersectionObserver`
+- Aggiunto supporto coerente a `prefers-reduced-motion` e rimossi autoplay/animazioni continue pesanti dal carosello servizi
+- Separati gli stili dell'area privata dal bundle pubblico e introdotto il caricamento lazy delle pagine
+- Rimossi componenti, file dati, fogli CSS e asset prototipo non importati o non referenziati
+- Ridotto il bundle pubblico iniziale: CSS da circa 326 kB a 94 kB e JavaScript da circa 758 kB a 279 kB
+- Ridotta la build completa da circa 3,8 MB a 1,2 MB, mantenendo route, contenuti e funzionalità esistenti
+- Verifiche eseguite: `npm run build`, lint mirato sui file modificati, controllo riferimenti rimossi, hash duplicati e `git diff --check`

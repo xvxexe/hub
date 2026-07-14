@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { AppShell } from './components/AppShell'
-import { CantiereDeleteGuard } from './components/CantiereDeleteGuard'
-import { OperationalCantieriPanel } from './components/OperationalCantieriPanel'
 import {
   employees,
   mockUsers,
@@ -9,55 +7,44 @@ import {
 import { useMockStore } from './hooks/useMockStore'
 import { canAccessDashboardPath, normalizePath } from './lib/navigation'
 import { fetchCurrentAuthSession, signInWithPassword, signOutSupabase } from './lib/supabaseClient'
-import { roles } from './lib/roles'
-import { CaricamentiRecenti } from './pages/dashboard/CaricamentiRecenti'
-import { AccountingMovementDetail } from './pages/dashboard/AccountingMovementDetail'
-import { CantiereDetail } from './pages/dashboard/CantiereDetail'
-import { CantieriList } from './pages/dashboard/CantieriList'
-import { ContabilitaMock } from './pages/dashboard/ContabilitaMock'
-import { DashboardHome } from './pages/dashboard/DashboardHome'
-import { DashboardListPage } from './pages/dashboard/DashboardListPage'
-import { DocumentDetail } from './pages/dashboard/DocumentDetail'
-import { DocumentiMock } from './pages/dashboard/DocumentiMock'
-import { DriveDocumentAutomation } from './pages/dashboard/DriveDocumentAutomation'
-import { EstimateDetail } from './pages/dashboard/EstimateDetail'
-import { EstimatesMock } from './pages/dashboard/EstimatesMock'
-import { PhotoDetail } from './pages/dashboard/PhotoDetail'
-import { PhotosMock } from './pages/dashboard/PhotosMock'
-import { LoginMock } from './pages/dashboard/LoginMock'
-import { ReportMock } from './pages/dashboard/ReportMock'
-import { SettingsMock } from './pages/dashboard/SettingsMock'
-import { Unauthorized } from './pages/dashboard/Unauthorized'
-import { UploadMock } from './pages/dashboard/UploadMock'
-import { About } from './pages/public/About'
-import { Contacts } from './pages/public/Contacts'
-import { Home } from './pages/public/Home'
-import { ProjectDetail } from './pages/public/ProjectDetail'
-import { Projects } from './pages/public/Projects'
-import { QuoteRequest } from './pages/public/QuoteRequest'
-import { Sectors } from './pages/public/Sectors'
-import { Services } from './pages/public/Services'
 import './styles/global.css'
 import './styles/public.css'
-import './styles/dashboard-polish.css'
-import './styles/dashboard-mobile-compact.css'
-import './styles/dashboard-real-data.css'
-import './styles/dashboard-typography.css'
-import './styles/dashboard-cost-summary.css'
-import './styles/dashboard-internal-unified.css'
-import './styles/dashboard-cantieri-redesign.css'
-import './styles/dashboard-cantiere-detail-redesign.css'
-import './styles/dashboard-upload-redesign.css'
-import './styles/dashboard-caricamenti-redesign.css'
-import './styles/dashboard-documenti-redesign.css'
-import './styles/dashboard-contabilita-redesign.css'
-import './styles/dashboard-final-uniformity.css'
-import './styles/dashboard-navigation-fix.css'
-import './styles/dashboard-search-sticky.css'
-import './styles/dashboard-mobile-balanced.css'
-import './styles/dashboard-login-mobile-restore.css'
-import './styles/dashboard-drive-automation.css'
 import './styles/europaservice-brand.css'
+
+function lazyNamed(factory, exportName) {
+  return lazy(() => factory().then((module) => ({ default: module[exportName] })))
+}
+
+const DashboardStyles = lazy(() => import('./components/DashboardStyles'))
+const CantiereDeleteGuard = lazyNamed(() => import('./components/CantiereDeleteGuard'), 'CantiereDeleteGuard')
+const OperationalCantieriPanel = lazyNamed(() => import('./components/OperationalCantieriPanel'), 'OperationalCantieriPanel')
+const CaricamentiRecenti = lazyNamed(() => import('./pages/dashboard/CaricamentiRecenti'), 'CaricamentiRecenti')
+const AccountingMovementDetail = lazyNamed(() => import('./pages/dashboard/AccountingMovementDetail'), 'AccountingMovementDetail')
+const CantiereDetail = lazyNamed(() => import('./pages/dashboard/CantiereDetail'), 'CantiereDetail')
+const CantieriList = lazyNamed(() => import('./pages/dashboard/CantieriList'), 'CantieriList')
+const ContabilitaMock = lazyNamed(() => import('./pages/dashboard/ContabilitaMock'), 'ContabilitaMock')
+const DashboardHome = lazyNamed(() => import('./pages/dashboard/DashboardHome'), 'DashboardHome')
+const DashboardListPage = lazyNamed(() => import('./pages/dashboard/DashboardListPage'), 'DashboardListPage')
+const DocumentDetail = lazyNamed(() => import('./pages/dashboard/DocumentDetail'), 'DocumentDetail')
+const DocumentiMock = lazyNamed(() => import('./pages/dashboard/DocumentiMock'), 'DocumentiMock')
+const DriveDocumentAutomation = lazyNamed(() => import('./pages/dashboard/DriveDocumentAutomation'), 'DriveDocumentAutomation')
+const EstimateDetail = lazyNamed(() => import('./pages/dashboard/EstimateDetail'), 'EstimateDetail')
+const EstimatesMock = lazyNamed(() => import('./pages/dashboard/EstimatesMock'), 'EstimatesMock')
+const PhotoDetail = lazyNamed(() => import('./pages/dashboard/PhotoDetail'), 'PhotoDetail')
+const PhotosMock = lazyNamed(() => import('./pages/dashboard/PhotosMock'), 'PhotosMock')
+const LoginMock = lazyNamed(() => import('./pages/dashboard/LoginMock'), 'LoginMock')
+const ReportMock = lazyNamed(() => import('./pages/dashboard/ReportMock'), 'ReportMock')
+const SettingsMock = lazyNamed(() => import('./pages/dashboard/SettingsMock'), 'SettingsMock')
+const Unauthorized = lazyNamed(() => import('./pages/dashboard/Unauthorized'), 'Unauthorized')
+const UploadMock = lazyNamed(() => import('./pages/dashboard/UploadMock'), 'UploadMock')
+const About = lazyNamed(() => import('./pages/public/About'), 'About')
+const Contacts = lazyNamed(() => import('./pages/public/Contacts'), 'Contacts')
+const Home = lazyNamed(() => import('./pages/public/Home'), 'Home')
+const ProjectDetail = lazyNamed(() => import('./pages/public/ProjectDetail'), 'ProjectDetail')
+const Projects = lazyNamed(() => import('./pages/public/Projects'), 'Projects')
+const QuoteRequest = lazyNamed(() => import('./pages/public/QuoteRequest'), 'QuoteRequest')
+const Sectors = lazyNamed(() => import('./pages/public/Sectors'), 'Sectors')
+const Services = lazyNamed(() => import('./pages/public/Services'), 'Services')
 
 function useHashPath() {
   const [path, setPath] = useState(() => normalizePath(window.location.hash))
@@ -90,6 +77,19 @@ function scrollPublicRoute(path, behavior = 'auto') {
 function getDashboardAccountingRows(mockStore) {
   const movements = Array.isArray(mockStore?.movements) ? mockStore.movements : []
   return movements.length ? movements : mockStore?.documents ?? []
+}
+
+function RouteLoading() {
+  return <div className="route-loading" role="status">Caricamento…</div>
+}
+
+function RouteBoundary({ dashboard, children }) {
+  return (
+    <Suspense fallback={<RouteLoading />}>
+      {dashboard ? <DashboardStyles /> : null}
+      {children}
+    </Suspense>
+  )
 }
 
 function renderRoute(path, session, selectedRole, handlers, mockStore) {
@@ -258,10 +258,11 @@ function AuthenticatedDashboardShell({ path, session, selectedRole, handlers, on
       session={session}
       onLogout={onLogout}
       onRoleChange={onRoleChange}
-      roles={roles}
       dataStore={mockStore}
     >
-      {renderRoute(effectivePath, session, selectedRole, handlers, mockStore)}
+      <RouteBoundary dashboard>
+        {renderRoute(effectivePath, session, selectedRole, handlers, mockStore)}
+      </RouteBoundary>
     </AppShell>
   )
 }
@@ -374,10 +375,11 @@ export default function App() {
       session={session}
       onLogout={logout}
       onRoleChange={changeRole}
-      roles={roles}
       dataStore={null}
     >
-      {renderRoute(path, session, selectedRole, routeHandlers, null)}
+      <RouteBoundary dashboard={path.startsWith('/dashboard')}>
+        {renderRoute(path, session, selectedRole, routeHandlers, null)}
+      </RouteBoundary>
     </AppShell>
   )
 }

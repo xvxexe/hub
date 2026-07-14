@@ -8,8 +8,8 @@ import {
   PremiumSection,
   PremiumServiceCard,
   PremiumTextCard,
-  useDragScroll,
 } from '../../components/PublicComponents'
+import { useDragScroll } from '../../hooks/useDragScroll'
 import { SEO } from '../../components/SEO'
 import {
   homeHeroImage,
@@ -20,7 +20,7 @@ import { driveHeroImages, drivePublicProjects } from '../../data/driveProjectPho
 
 const visibleProjects = drivePublicProjects.filter((project) => project.status !== 'Da verificare')
 const featuredProject = visibleProjects[0]
-const serviceCarouselItems = [...premiumServices, ...premiumServices]
+const serviceCarouselItems = premiumServices
 
 export function Home() {
   const servicesCarouselDrag = useDragScroll()

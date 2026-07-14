@@ -4,6 +4,7 @@ import { InternalIcon } from './InternalIcons'
 import europaServiceLogoUrl from '../assets/europaservice-logo.svg'
 import europaServiceFooterLogoUrl from '../assets/europaservice-logo-footer.svg'
 import { company } from '../data/mockData'
+import { usePublicMotion } from '../hooks/usePublicMotion'
 import { isActive, publicNav } from '../lib/navigation'
 import { getDashboardNavForRole, getRole } from '../lib/roles'
 
@@ -41,7 +42,6 @@ function useMediaQuery(query) {
     if (!mediaQuery) return undefined
 
     const onChange = (event) => setMatches(event.matches)
-    setMatches(mediaQuery.matches)
 
     if (typeof mediaQuery.addEventListener === 'function') {
       mediaQuery.addEventListener('change', onChange)
@@ -60,7 +60,7 @@ function BrandLogo({ className = '', variant = 'default' }) {
   return <img className={`brand-logo ${className}`.trim()} src={logoUrl} alt="EuropaService" />
 }
 
-function PublicThemeToggle({ isDarkTheme, onToggle, className = '', style }) {
+function PublicThemeToggle({ isDarkTheme, onToggle, className = '' }) {
   return (
     <button
       className={`public-theme-toggle ${className}`.trim()}
@@ -68,7 +68,6 @@ function PublicThemeToggle({ isDarkTheme, onToggle, className = '', style }) {
       aria-label={isDarkTheme ? 'Attiva modalità chiara' : 'Attiva modalità scura'}
       aria-pressed={isDarkTheme}
       onClick={onToggle}
-      style={style}
     >
       <span aria-hidden="true">{isDarkTheme ? '☀' : '☾'}</span>
       <small>{isDarkTheme ? 'Chiara' : 'Scura'}</small>
@@ -76,8 +75,9 @@ function PublicThemeToggle({ isDarkTheme, onToggle, className = '', style }) {
   )
 }
 
-export function AppShell({ children, currentPath, session, onLogout, roles, dataStore }) {
+export function AppShell({ children, currentPath, session, onLogout, dataStore }) {
   const isDashboard = currentPath.startsWith('/dashboard')
+  usePublicMotion(currentPath, !isDashboard)
   const visibleDashboardNav = session ? getDashboardNavForRole(session.role) : []
   const activeRole = session ? getRole(session.role) : null
   const [activeTopbarPanel, setActiveTopbarPanel] = useState(null)
@@ -475,67 +475,6 @@ function PublicHeader({ currentPath }) {
   const isDarkTheme = publicTheme === 'dark'
   const readableLogoUrl = isDarkTheme ? europaServiceFooterLogoUrl : europaServiceLogoUrl
   const togglePublicTheme = () => setPublicTheme((current) => (current === 'dark' ? 'light' : 'dark'))
-  const mobileThemeToggleStyle = {
-    position: 'fixed',
-    top: 'auto',
-    right: 'max(0.85rem, env(safe-area-inset-right))',
-    bottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)',
-    left: 'auto',
-    zIndex: 10040,
-    width: '3.65rem',
-    height: '3.65rem',
-    minWidth: '3.65rem',
-    pointerEvents: 'auto',
-    transform: 'none',
-    boxShadow: '0 18px 44px rgba(7, 87, 184, 0.24), 0 14px 30px rgba(15, 23, 42, 0.18)',
-  }
-
-  const menuPanelStyle = {
-    position: 'fixed',
-    zIndex: 10000,
-    inset: 0,
-    display: 'grid',
-    gridTemplateRows: 'auto minmax(0, 1fr)',
-    gap: '1rem',
-    width: '100vw',
-    height: '100dvh',
-    minHeight: '100vh',
-    padding: 'max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom))',
-    overflowY: 'auto',
-    overflowX: 'hidden',
-    background: isDarkTheme ? '#070c16' : '#fff',
-    color: isDarkTheme ? '#f8fafc' : '#111827',
-    pointerEvents: isMenuOpen ? 'auto' : 'none',
-    opacity: isMenuOpen ? 1 : 0,
-    transform: isMenuOpen ? 'translateX(0)' : 'translateX(100%)',
-    transition: 'transform 0.34s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease',
-  }
-
-  const menuHeaderStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr)',
-    alignItems: 'start',
-    justifyItems: 'start',
-    gap: '0.75rem',
-    padding: '0 3.75rem 0.85rem 0',
-    borderBottom: isDarkTheme ? '1px solid rgba(148, 163, 184, 0.2)' : '1px solid #e2e8f0',
-  }
-
-  const menuLogoStyle = {
-    display: 'block',
-    width: 'min(52vw, 180px)',
-    maxWidth: '180px',
-    height: 'auto',
-    objectFit: 'contain',
-  }
-
-  const menuLinksStyle = {
-    display: 'grid',
-    alignContent: 'start',
-    gap: '0.7rem',
-    padding: '0.25rem 0 1rem',
-  }
-
   useEffect(() => {
     document.documentElement.dataset.publicTheme = publicTheme
     document.documentElement.style.colorScheme = publicTheme
@@ -552,16 +491,18 @@ function PublicHeader({ currentPath }) {
       if (event.key === 'Escape') setIsMenuOpen(false)
     }
 
+    function onHashChange() {
+      setIsMenuOpen(false)
+    }
+
     window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('hashchange', onHashChange)
     return () => {
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('hashchange', onHashChange)
     }
   }, [isMenuOpen])
-
-  useEffect(() => {
-    setIsMenuOpen(false)
-  }, [currentPath])
 
   return (
     <>
@@ -593,45 +534,30 @@ function PublicHeader({ currentPath }) {
         </nav>
 
         <div className={isMenuOpen ? 'mobile-menu-backdrop open' : 'mobile-menu-backdrop'} onClick={() => setIsMenuOpen(false)} />
-        <nav aria-label="Menu principale mobile" id="public-mobile-menu" style={menuPanelStyle}>
-          <div style={menuHeaderStyle}>
+        <nav aria-label="Menu principale mobile" className={isMenuOpen ? 'open' : ''} id="public-mobile-menu">
+          <div className="mobile-menu-header">
             <div>
               <a href="#/" onClick={() => setIsMenuOpen(false)} aria-label="Vai alla home">
-                <img style={menuLogoStyle} src={readableLogoUrl} alt="EuropaService" />
+                <img className="mobile-menu-logo" src={readableLogoUrl} alt="EuropaService" />
               </a>
-              <small style={{ color: isDarkTheme ? '#a8b5c5' : '#64748b', fontSize: '0.86rem', fontWeight: 850, letterSpacing: '0.02em' }}>Menu principale</small>
+              <small>Menu principale</small>
             </div>
           </div>
 
-          <div style={menuLinksStyle}>
+          <div className="mobile-menu-links">
             {publicMobileNav.map((item) => {
               const active = isActive(currentPath, item.path)
               const privateLink = item.path.startsWith('/dashboard')
               return (
                 <a
                   aria-current={active ? 'page' : undefined}
+                  className={privateLink ? 'mobile-private-link' : undefined}
                   href={`#${item.path}`}
                   key={item.path}
                   onClick={() => setIsMenuOpen(false)}
-                  style={{
-                    display: 'grid',
-                    gap: '0.26rem',
-                    minHeight: '4.35rem',
-                    padding: '0.86rem 1rem',
-                    border: isDarkTheme
-                      ? active ? '1px solid rgba(214, 138, 75, 0.48)' : '1px solid rgba(148, 163, 184, 0.2)'
-                      : privateLink ? '1px solid #111827' : active ? '1px solid rgba(184, 100, 43, 0.32)' : '1px solid #e2e8f0',
-                    borderRadius: '1.05rem',
-                    background: isDarkTheme
-                      ? active ? 'rgba(214, 138, 75, 0.16)' : 'rgba(15, 23, 42, 0.78)'
-                      : privateLink ? '#111827' : active ? '#fff7ed' : '#fff',
-                    color: isDarkTheme ? '#f8fafc' : privateLink ? '#fff' : '#111827',
-                    textDecoration: 'none',
-                    boxShadow: active || privateLink || isDarkTheme ? '0 14px 30px rgba(15, 23, 42, 0.18)' : 'none',
-                  }}
                 >
-                  <span style={{ fontSize: '1.28rem', lineHeight: 1.05, fontWeight: 900 }}>{item.label}</span>
-                  <small style={{ color: isDarkTheme ? '#a8b5c5' : privateLink ? 'rgba(255,255,255,0.68)' : '#64748b', fontSize: '0.98rem', lineHeight: 1.28, fontWeight: 760 }}>{item.description}</small>
+                  <span>{item.label}</span>
+                  <small>{item.description}</small>
                 </a>
               )
             })}
@@ -644,7 +570,6 @@ function PublicHeader({ currentPath }) {
           isDarkTheme={isDarkTheme}
           onToggle={togglePublicTheme}
           className="public-theme-toggle-floating-mobile"
-          style={mobileThemeToggleStyle}
         />
       ) : null}
     </>
