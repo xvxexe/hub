@@ -102,7 +102,6 @@ export function ProjectDetail({ projectId }) {
               <SafeImage
                 alt={photo.alt}
                 className="premium-gallery-image"
-                fallbackSrc="/assets/images/placeholders/placeholder-cantiere.jpg"
                 src={photo.src}
                 title={photo.title}
               />
